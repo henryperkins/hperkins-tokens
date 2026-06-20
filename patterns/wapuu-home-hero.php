@@ -5,11 +5,17 @@
  * Categories: hperkins
  * Description: A homepage or portfolio landing hero featuring the HPerkins Wapuu as signature artwork with restrained proof chips.
  */
+// Signature mascot floating over the elven-star halo, matching the Imladris Home
+// composition (same framed Wapuu-Dalf medallion the design uses).
 $hperkins_wapuu_file = get_stylesheet_directory() . '/assets/img/wapuu-color.png';
 $hperkins_wapuu_src  = get_stylesheet_directory_uri() . '/assets/img/wapuu-color.png';
 // Cache-bust on the file's mtime: assets are served with a 30-day max-age, so a
 // swapped image keeps the same filename and would otherwise stay cached as stale.
 $hperkins_wapuu_url  = esc_url( file_exists( $hperkins_wapuu_file ) ? $hperkins_wapuu_src . '?v=' . filemtime( $hperkins_wapuu_file ) : $hperkins_wapuu_src );
+
+$hperkins_emblem_file = get_stylesheet_directory() . '/assets/img/wapuu-emblem-green.png';
+$hperkins_emblem_src  = get_stylesheet_directory_uri() . '/assets/img/wapuu-emblem-green.png';
+$hperkins_emblem_url  = esc_url( file_exists( $hperkins_emblem_file ) ? $hperkins_emblem_src . '?v=' . filemtime( $hperkins_emblem_file ) : $hperkins_emblem_src );
 ?>
 <!-- wp:group {"align":"full","className":"hp-wapuu-hero-wrap","layout":{"type":"constrained"}} -->
 <div class="wp-block-group alignfull hp-wapuu-hero-wrap">
@@ -17,9 +23,17 @@ $hperkins_wapuu_url  = esc_url( file_exists( $hperkins_wapuu_file ) ? $hperkins_
 	<div class="wp-block-columns alignwide are-vertically-aligned-center hp-wapuu-hero">
 		<!-- wp:column {"verticalAlignment":"center","width":"58%","className":"hp-wapuu-hero__copy"} -->
 		<div class="wp-block-column is-vertically-aligned-center hp-wapuu-hero__copy" style="flex-basis:58%">
-			<!-- wp:paragraph {"className":"hp-wapuu-hero__eyebrow"} -->
-			<p class="hp-wapuu-hero__eyebrow">Portfolio system</p>
-			<!-- /wp:paragraph -->
+			<!-- wp:group {"className":"hp-wapuu-hero__lockup","layout":{"type":"flex","flexWrap":"nowrap"}} -->
+			<div class="wp-block-group hp-wapuu-hero__lockup">
+				<!-- wp:html -->
+				<img class="hp-wapuu-hero__emblem" src="<?php echo $hperkins_emblem_url; ?>" alt="" aria-hidden="true" width="40" height="40" />
+				<!-- /wp:html -->
+
+				<!-- wp:paragraph {"className":"hp-wapuu-hero__eyebrow"} -->
+				<p class="hp-wapuu-hero__eyebrow">Portfolio system</p>
+				<!-- /wp:paragraph -->
+			</div>
+			<!-- /wp:group -->
 
 			<!-- wp:heading {"level":1,"className":"hp-wapuu-hero__title"} -->
 			<h1 class="wp-block-heading hp-wapuu-hero__title">Trust must be structural.</h1>
@@ -48,11 +62,27 @@ $hperkins_wapuu_url  = esc_url( file_exists( $hperkins_wapuu_file ) ? $hperkins_
 				<!-- /wp:paragraph -->
 			</div>
 			<!-- /wp:group -->
+
+			<!-- wp:buttons {"className":"hp-wapuu-hero__cta","layout":{"type":"flex","flexWrap":"wrap"}} -->
+			<div class="wp-block-buttons hp-wapuu-hero__cta">
+				<!-- wp:button -->
+				<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/work/">See the work</a></div>
+				<!-- /wp:button -->
+
+				<!-- wp:button {"className":"is-style-secondary"} -->
+				<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/about/">About</a></div>
+				<!-- /wp:button -->
+			</div>
+			<!-- /wp:buttons -->
 		</div>
 		<!-- /wp:column -->
 
 		<!-- wp:column {"verticalAlignment":"center","width":"42%","className":"hp-wapuu-hero__art"} -->
 		<div class="wp-block-column is-vertically-aligned-center hp-wapuu-hero__art" style="flex-basis:42%">
+			<!-- wp:html -->
+			<span class="hp-wapuu-hero__star" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none"><g stroke="currentColor" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 L63.8 16.7 L83.2 16.8 L83.3 36.2 L97 50 L83.3 63.8 L83.2 83.2 L63.8 83.3 L50 97 L36.2 83.3 L16.8 83.2 L16.7 63.8 L3 50 L16.7 36.2 L16.8 16.8 L36.2 16.7 Z"></path><path d="M50 21 L57.5 42.5 L79 50 L57.5 57.5 L50 79 L42.5 57.5 L21 50 L42.5 42.5 Z" opacity="0.6"></path><circle cx="50" cy="50" r="4.5" fill="currentColor" stroke="none"></circle></g></svg></span>
+			<!-- /wp:html -->
+
 			<!-- wp:image {"sizeSlug":"full","linkDestination":"none","className":"hp-wapuu-hero__figure"} -->
 			<figure class="wp-block-image size-full hp-wapuu-hero__figure"><img src="<?php echo $hperkins_wapuu_url; ?>" alt="Wapuu dressed as a grey-robed wizard with a pointed hat, long beard, and wooden staff, holding a WordPress logo orb." /></figure>
 			<!-- /wp:image -->
