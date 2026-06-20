@@ -119,57 +119,53 @@ add_action( 'init', function () {
 
 /**
  * Clean up legacy global-style posts from prior theme identities and refresh the
- * theme JSON cache so this theme renders from the canonical child tokens.
+ * theme JSON cache when this child theme is activated. This is intentionally an
+ * activation-time migration, not a public-request init task.
  */
-add_action(
-	'init',
-	function () {
-		$theme = wp_get_theme();
-		if ( 'hperkins-tokens' !== $theme->get_stylesheet() ) {
-			return;
+function hperkins_tokens_cleanup_legacy_global_styles() {
+	$theme = wp_get_theme();
+	if ( 'hperkins-tokens' !== $theme->get_stylesheet() ) {
+		return;
+	}
+
+	$option_key = 'hperkins_tokens_global_styles_cleanup_v1';
+	if ( get_option( $option_key ) ) {
+		return;
+	}
+
+	$posts = get_posts(
+		array(
+			'post_type'      => 'wp_global_styles',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+		)
+	);
+
+	$current_style_post = 'wp-global-styles-' . $theme->get_stylesheet();
+	foreach ( $posts as $post_id ) {
+		$post_name = get_post_field( 'post_name', $post_id );
+		if ( ! str_starts_with( $post_name, 'wp-global-styles-' ) ) {
+			continue;
+		}
+		if ( $post_name === $current_style_post ) {
+			continue;
 		}
 
-		$option_key = 'hperkins_tokens_global_styles_cleanup_v1';
-		if ( get_option( $option_key ) ) {
-			return;
+		$decoded_name = rawurldecode( $post_name );
+		if (
+			str_contains( $decoded_name, 'wp-global-styles-pub/' )
+			|| str_contains( $decoded_name, 'wp-global-styles-assembler' )
+			|| str_contains( $post_name, 'wp-global-styles-pub%2F' )
+		) {
+			wp_delete_post( $post_id, true );
 		}
+	}
 
-		$posts = get_posts(
-			array(
-				'post_type'      => 'wp_global_styles',
-				'post_status'    => 'publish',
-				'posts_per_page' => -1,
-				'fields'         => 'ids',
-			)
-		);
+	if ( method_exists( 'WP_Theme_JSON_Resolver', 'clean_cached_data' ) ) {
+		WP_Theme_JSON_Resolver::clean_cached_data();
+	}
 
-		$current_style_post = 'wp-global-styles-' . $theme->get_stylesheet();
-		$deleted_legacy    = false;
-		foreach ( $posts as $post_id ) {
-			$post_name = get_post_field( 'post_name', $post_id );
-			if ( ! str_starts_with( $post_name, 'wp-global-styles-' ) ) {
-				continue;
-			}
-			if ( $post_name === $current_style_post ) {
-				continue;
-			}
-
-			$decoded_name = rawurldecode( $post_name );
-			if (
-				str_contains( $decoded_name, 'wp-global-styles-pub/' )
-				|| str_contains( $decoded_name, 'wp-global-styles-assembler' )
-				|| str_contains( $post_name, 'wp-global-styles-pub%2F' )
-			) {
-				wp_delete_post( $post_id, true );
-				$deleted_legacy = true;
-			}
-		}
-
-		if ( method_exists( 'WP_Theme_JSON_Resolver', 'clean_cached_data' ) ) {
-			WP_Theme_JSON_Resolver::clean_cached_data();
-		}
-
-		update_option( $option_key, gmdate( 'c' ) );
-	},
-	20
-);
+	update_option( $option_key, gmdate( 'c' ) );
+}
+add_action( 'after_switch_theme', 'hperkins_tokens_cleanup_legacy_global_styles' );

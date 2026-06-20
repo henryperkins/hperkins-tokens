@@ -20,10 +20,11 @@ radius are fixed named tokens — fixed per component, never by state — so wit
 a component state changes only the rule color, the surface tint, and a
 filled-vs-hollow dot — never the shape of the thing.
 
-This is a child theme. It overrides only the header and footer template parts and
-ships its own token vocabulary, component CSS, and patterns; all page/post
-templates are inherited from the Assembler parent. The Assembler parent theme
-must be installed for this theme to activate.
+This is a child theme. It overrides the header and footer template parts, ships
+front-page.html, page-about.html, and page-case-study.html as additive block
+templates, and provides its own token vocabulary, component CSS, and patterns.
+Unspecified page/post templates are inherited from the Assembler parent. The
+Assembler parent theme must be installed for this theme to activate.
 
 = Token vocabulary =
 
@@ -124,6 +125,19 @@ when a page does not already provide one.
 Starter pattern links use href="#" placeholders. Replace them with live release,
 pull request, page, review, or documentation URLs before publishing the pattern
 unchanged.
+
+= Template overrides =
+
+The child theme owns three block templates:
+
+* front-page.html - renders the stored Home page content and then appends the
+  Three Rings framework section.
+* page-about.html - wraps the stored About page content in the narrow/wide About
+  composition shell.
+* page-case-study.html - supplies the case-study header, title, and constrained
+  content column only. Evidence boards, proof bars, artifact rows, and links must
+  live in the page content so every published case study carries real, editable
+  proof rather than starter placeholders.
 
 = Portfolio art direction =
 
