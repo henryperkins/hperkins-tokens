@@ -4,7 +4,7 @@ Theme URI: https://hperkins.blog
 Description: Imladris design system child theme for hperkins.blog — a Rivendell-inspired, parchment-and-evergreen serif editorial system with a mallorn-gold accent and a status-verified evidence layer (done/review/pending by rule-colour and a redundant word). Tokens in theme.json are the source of truth; the render is a consequence.
 Author: Henry Perkins
 Template: assembler
-Version: 0.3.0
+Version: 0.3.3
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -1866,6 +1866,36 @@ code, kbd, samp {
 	padding-block: var(--wp--preset--spacing--7);
 }
 
+/* About — break the register/grid sections out of the 44rem reading column to the
+   wide measure on desktop (the impact strip, capability register, and work ledger
+   read as dashboards, not prose). Narrative, lead, headings, and quotes stay at the
+   reading width. Scoped to .hp-about-template so the same classes used in the hero
+   and operational-story are untouched. The section is pulled symmetrically around
+   the column's centre, so it stays centred in the viewport; min() clamps it to the
+   viewport (minus gutters) on smaller screens. */
+@media (min-width: 56rem) {
+	.hp-about-template :is(.hp-signal-strip, .hp-skills, .hp-work) {
+		--hp-about-wide: min(var(--wp--custom--container--wide, 72rem), 100vw - 2 * var(--wp--preset--spacing--6, 2rem));
+		width: var(--hp-about-wide);
+		max-width: none;
+		margin-inline: calc(50% - var(--hp-about-wide) / 2) !important;
+		box-sizing: border-box;
+	}
+
+	/* Use the new width: flow the capability groups into a responsive grid
+	   instead of a single stacked column. */
+	.hp-about-template .hp-skills {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+		gap: var(--wp--preset--spacing--5);
+		align-items: start;
+	}
+
+	.hp-about-template .hp-skill-group + .hp-skill-group {
+		margin-top: 0; /* the grid gap owns the spacing now */
+	}
+}
+
 .hp-case-study-template__article {
 	padding-block: var(--wp--preset--spacing--8);
 }
@@ -1878,4 +1908,379 @@ code, kbd, samp {
 
 .hp-case-study-template__hero .hp-proof-bar {
 	margin-top: var(--wp--preset--spacing--5);
+}
+
+/* === Imladris About — full-composition rebuild (hero, capabilities, skills+education, projects) === */
+/* =====================================================================
+   ABOUT TEMPLATE — composition layer (NEW)
+   Scoped under .hp-about-template so it only affects the About page and
+   never leaks onto the shared hp-* primitives used elsewhere. Append to
+   the end of the theme's style.css. All values resolve to existing
+   theme.json tokens (no raw hex). Reuses the established anatomy:
+   parchment cards, mallorn-gold rules, Cormorant display, Marcellus
+   labels, mono register text.
+
+   Sections styled here that the base theme has no class for:
+     · hero band (copy + gilt circular portrait, role-tag pills, CTAs)
+     · the 5-cell impact strip widening (reuses .hp-signal-strip)
+     · "What I do" 3-up capability cards (gold top-rule)
+     · Skills + Education 2-column split (+ neutralising the base
+       wide-pull/grid rules that target .hp-skills)
+     · Education cards
+     · Selected-projects 3-up cards
+   ===================================================================== */
+
+/* ---- HERO ------------------------------------------------------------ */
+.hp-about-template .hp-about-hero {
+	margin-top: var(--wp--preset--spacing--7);
+	margin-bottom: var(--wp--preset--spacing--7);
+}
+
+.hp-about-template .hp-about-hero__top {
+	gap: var(--wp--preset--spacing--8);
+}
+
+.hp-about-template .hp-about-hero__copy {
+	flex: 1 1 28rem;
+	min-width: min(100%, 18rem);
+}
+
+.hp-about-template .hp-about-hero__kicker {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--xs);
+}
+
+/* Serif positioning headline — the page's single h1. Cormorant display,
+   medium weight, tight tracking, balanced wrap (h1 balance already set in
+   base, repeated scale/family here for the larger hero reading). */
+.hp-about-template .hp-about-hero__title {
+	margin: var(--wp--preset--spacing--4) 0 0;
+	max-width: 22ch;
+	font-family: var(--hp-font-display);
+	font-size: var(--wp--preset--font-size--4xl);
+	font-weight: var(--wp--custom--weight--medium);
+	letter-spacing: var(--wp--custom--tracking--tight);
+	line-height: var(--wp--custom--leading--snug);
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-about-template .hp-about-hero__lead {
+	margin: var(--wp--preset--spacing--5) 0 0;
+	max-width: 52ch;
+	font-size: var(--wp--preset--font-size--lg);
+	line-height: var(--wp--custom--leading--relaxed);
+	color: var(--wp--custom--text--strong);
+}
+
+/* Role-tag pills — outlined parchment chips in the Marcellus label voice.
+   Distinct from .hp-tag (taxonomy) and .hp-chip (status); these are plain
+   role labels, no link, no status. */
+.hp-about-template .hp-role-tags {
+	gap: var(--wp--preset--spacing--2);
+	margin-top: var(--wp--preset--spacing--5);
+}
+
+.hp-about-template .hp-role-tag {
+	margin: 0;
+	padding: 5px 14px;
+	border: 1px solid var(--wp--custom--border--soft);
+	border-radius: var(--hp-radius-pill);
+	background: var(--wp--custom--surface--card);
+	color: var(--wp--custom--text--link);
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--sm);
+	letter-spacing: var(--wp--custom--tracking--wide);
+	line-height: 1.5;
+}
+
+.hp-about-template .hp-about-hero__cta {
+	margin-top: var(--wp--preset--spacing--6);
+}
+
+/* Gilt circular portrait. The frame is the inset gold ring token plus a
+   soft drop shadow; the image itself carries a gold border and is forced
+   to a circle. Larger than the old 150px thumbnail. */
+.hp-about-template .hp-about-hero__portrait {
+	flex: 0 0 auto;
+	display: flex;
+	justify-content: center;
+}
+
+.hp-about-template .hp-about-avatar {
+	margin: 0;
+	width: 188px;
+	max-width: 188px;
+	border-radius: 50%;
+	box-shadow: var(--wp--custom--shadow--md), var(--wp--custom--shadow--gilt);
+}
+
+.hp-about-template .hp-about-avatar img {
+	display: block;
+	width: 188px;
+	height: 188px;
+	border-radius: 50%;
+	object-fit: cover;
+	border: 3px solid var(--wp--preset--color--gold-400);
+}
+
+/* Impact strip: it already widens via the base
+   .hp-about-template :is(.hp-signal-strip, …) rule and lays out as an
+   auto-fit grid. Only add the top breathing room beneath the hero band. */
+.hp-about-template .hp-about-impact {
+	margin-top: var(--wp--preset--spacing--7);
+}
+
+/* ---- CAPABILITIES (3-up cards) -------------------------------------- */
+.hp-about-template .hp-about-capabilities {
+	margin-top: var(--wp--preset--spacing--8);
+}
+
+.hp-about-template .hp-about-capabilities .hp-eyebrow {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--xs);
+}
+
+.hp-about-template .hp-about-capabilities > h2 {
+	margin: var(--wp--preset--spacing--3) 0 var(--wp--preset--spacing--6);
+}
+
+/* Turn the WP columns block into a responsive card grid (mirrors how the
+   theme treats .hp-ring-grid) so 3 cards reflow to 1 on narrow screens
+   instead of squeezing. */
+.hp-about-template .hp-capability-grid.wp-block-columns {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--wp--preset--spacing--5);
+	margin-block: 0;
+	align-items: stretch;
+}
+
+.hp-about-template .hp-capability-grid.wp-block-columns > .wp-block-column {
+	margin: 0;
+	min-width: 0;
+	flex-basis: auto;
+}
+
+.hp-about-template .hp-capability {
+	padding: var(--wp--preset--spacing--5);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-top: 3px solid var(--wp--custom--rule--gold);
+	border-radius: var(--hp-radius-card);
+	background: var(--wp--custom--surface--card);
+	box-shadow: var(--wp--custom--shadow--sm);
+}
+
+.hp-about-template .hp-capability__title {
+	margin: 0 0 var(--wp--preset--spacing--3);
+	font-size: var(--wp--preset--font-size--lg);
+	font-weight: var(--hp-weight-title);
+	line-height: 1.3;
+	letter-spacing: -0.005em;
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-about-template .hp-capability__text {
+	margin: 0 0 var(--wp--preset--spacing--3);
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: var(--wp--custom--leading--relaxed);
+	color: var(--wp--custom--text--muted);
+}
+
+.hp-about-template .hp-capability__text:last-child {
+	margin-bottom: 0;
+}
+
+/* ---- SKILLS + EDUCATION (2-column) ---------------------------------- */
+/* The base theme widens AND grid-flows any .hp-skills inside
+   .hp-about-template (style.css lines ~1877 & ~1887). Inside this 2-col
+   split that would yank the left column to viewport width and re-grid the
+   skill groups. Re-assert normal flow at higher specificity so .hp-skills
+   behaves as an ordinary stacked block within its column. */
+.hp-about-template .hp-about-skills-edu.wp-block-columns {
+	gap: var(--wp--preset--spacing--8);
+	margin-top: var(--wp--preset--spacing--8);
+	align-items: start;
+}
+
+.hp-about-template .hp-about-skills-edu__col {
+	min-width: 0;
+}
+
+.hp-about-template .hp-about-skills-edu__col > h2 {
+	margin-top: 0;
+	margin-bottom: var(--wp--preset--spacing--5);
+}
+
+.hp-about-template .hp-about-skills-edu .hp-skills {
+	display: block;
+	width: auto;
+	max-width: none;
+	margin: 0;
+}
+
+.hp-about-template .hp-about-skills-edu .hp-skill-group + .hp-skill-group {
+	margin-top: var(--wp--preset--spacing--4);
+}
+
+/* Education cards — parchment tiles in the same register as the work
+   ledger rows, minus the status rule. */
+.hp-about-template .hp-edu-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--3);
+}
+
+.hp-about-template .hp-edu-card {
+	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--hp-radius-card);
+	background: var(--wp--custom--surface--card);
+	box-shadow: var(--wp--custom--shadow--xs);
+}
+
+.hp-about-template .hp-edu-card__degree {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--lg);
+	font-weight: var(--hp-weight-title);
+	line-height: 1.3;
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-about-template .hp-edu-card__meta {
+	gap: var(--wp--preset--spacing--3);
+	margin-top: var(--hp-gap-xs);
+}
+
+.hp-about-template .hp-edu-card__school,
+.hp-about-template .hp-edu-card__period {
+	margin: 0;
+	font-family: var(--hp-font-mono);
+	font-size: var(--wp--preset--font-size--xs);
+	color: var(--wp--custom--text--faint);
+}
+
+/* ---- SELECTED PROJECTS (3-up cards) --------------------------------- */
+.hp-about-template .hp-about-projects {
+	margin-top: var(--wp--preset--spacing--8);
+	margin-bottom: var(--wp--preset--spacing--8);
+}
+
+.hp-about-template .hp-about-projects .hp-eyebrow {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--xs);
+}
+
+.hp-about-template .hp-about-projects > h2 {
+	margin: var(--wp--preset--spacing--3) 0 var(--wp--preset--spacing--6);
+}
+
+.hp-about-template .hp-project-grid.wp-block-columns {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: var(--wp--preset--spacing--5);
+	margin-block: 0;
+	align-items: stretch;
+}
+
+.hp-about-template .hp-project-grid.wp-block-columns > .wp-block-column {
+	margin: 0;
+	min-width: 0;
+	flex-basis: auto;
+}
+
+.hp-about-template .hp-project {
+	display: flex;
+	flex-direction: column;
+	padding: var(--wp--preset--spacing--5);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--hp-radius-card);
+	background: var(--wp--custom--surface--card);
+	box-shadow: var(--wp--custom--shadow--sm);
+}
+
+.hp-about-template .hp-project__name {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--lg);
+	font-weight: var(--hp-weight-title);
+	line-height: 1.3;
+	letter-spacing: -0.005em;
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-about-template .hp-project__name a {
+	color: var(--wp--custom--text--strong);
+	text-decoration: none;
+	border-bottom: 1px solid color-mix(in srgb, var(--hp-artifact) 55%, transparent);
+}
+
+.hp-about-template .hp-project__name a:hover {
+	border-bottom-color: var(--hp-artifact);
+}
+
+.hp-about-template .hp-project__impact {
+	flex: 1;
+	margin: var(--wp--preset--spacing--3) 0 var(--wp--preset--spacing--4);
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: var(--wp--custom--leading--relaxed);
+	color: var(--wp--custom--text--muted);
+}
+
+/* Stack chips — mono, hairline-bordered, artifact-blue ink, matching the
+   reference's tech tags. */
+.hp-about-template .hp-project__stack {
+	gap: var(--hp-gap-xs);
+	margin-top: auto;
+}
+
+.hp-about-template .hp-project__tech {
+	margin: 0;
+	padding: 3px 8px;
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--hp-radius-chip);
+	background: var(--wp--custom--surface--sunken);
+	color: var(--hp-artifact);
+	font-family: var(--hp-font-mono);
+	font-size: var(--wp--preset--font-size--2xs);
+	line-height: 1.5;
+}
+
+/* ---- RESPONSIVE COLLAPSE ------------------------------------------- */
+/* Below the wide-pull breakpoint, collapse the new card grids and the
+   2-col split to a single column. (The base theme already stacks the
+   signal strip and re-flows .hp-skills at its own breakpoints; these
+   rules own only the NEW grids.) */
+@media (max-width: 55.99rem) {
+	.hp-about-template .hp-capability-grid.wp-block-columns,
+	.hp-about-template .hp-project-grid.wp-block-columns {
+		grid-template-columns: 1fr;
+	}
+}
+
+@media (max-width: 781px) {
+	.hp-about-template .hp-about-hero__top {
+		gap: var(--wp--preset--spacing--6);
+	}
+
+	.hp-about-template .hp-about-hero__portrait {
+		width: 100%;
+	}
+
+	/* WP stacks the skills/education columns here; restore vertical rhythm
+	   between the two stacked halves. */
+	.hp-about-template .hp-about-skills-edu.wp-block-columns {
+		gap: var(--wp--preset--spacing--7);
+	}
+}
+
+/* About — the new wide rows (capabilities, skills+education, projects) break out
+   explicitly like the impact strip / work ledger, because alignwide does not
+   resolve to wideSize inside page-about.html's explicitly-constrained post-content. */
+@media (min-width: 56rem) {
+	.hp-about-template :is(.hp-capability-grid, .hp-about-skills-edu, .hp-project-grid) {
+		--hp-about-wide: min(var(--wp--custom--container--wide, 72rem), 100vw - 2 * var(--wp--preset--spacing--6, 2rem));
+		width: var(--hp-about-wide);
+		max-width: none;
+		margin-inline: calc(50% - var(--hp-about-wide) / 2) !important;
+		box-sizing: border-box;
+	}
 }
