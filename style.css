@@ -872,18 +872,18 @@ body.home .hp-site-brand__wapuu {
 	font-size: clamp(2.75rem, 6vw, 5rem);
 	font-weight: var(--hp-weight-strong);
 	line-height: 1.08;
-	letter-spacing: 0;
+	/* letter-spacing comes from the Cormorant rule below (tracking-tight). */
 	color: var(--hp-neutral-900);
 }
 
 .hp-wapuu-hero__text {
-	/* Lead reads in the darker text-strong ink at the relaxed measure, like the
-	   Imladris Home lead. */
+	/* Lead sits one ink-step below the headline (body, not strong) at the relaxed
+	   measure, preserving the h1 -> lead hierarchy (per the alignment review). */
 	max-width: 48ch;
 	margin: var(--wp--preset--spacing--5) 0 0;
 	font-size: var(--wp--preset--font-size--lg);
 	line-height: 1.7;
-	color: var(--wp--custom--text--strong);
+	color: var(--wp--custom--text--body);
 }
 
 .hp-wapuu-hero__signals {
@@ -1316,7 +1316,9 @@ h1, h2, h3, .hp-wapuu-hero__title { text-wrap: balance; }
 a:focus-visible, button:focus-visible, input:focus-visible,
 select:focus-visible, textarea:focus-visible, summary:focus-visible,
 .wp-block-button__link:focus-visible {
-	outline: 3px solid color-mix(in srgb, var(--hp-gold) 70%, transparent);
+	/* Deeper gold so the ring clears 3:1 on parchment (~3.8:1) AND on the dark
+	   twilight surfaces (~3.5:1) — the gold-500 mix was ~1.75:1 on parchment. */
+	outline: 3px solid var(--wp--preset--color--gold-700);
 	outline-offset: 2px;
 }
 
