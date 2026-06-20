@@ -1638,13 +1638,28 @@ code, kbd, samp {
 }
 
 .hp-ring-grid.wp-block-columns {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: var(--wp--preset--spacing--6);
 	align-items: stretch;
+}
+
+.hp-ring-grid.wp-block-columns > .wp-block-column {
+	margin: 0;
+	min-width: 0;
+	flex-basis: auto;
+}
+
+@media (max-width: 920px) {
+	.hp-ring-grid.wp-block-columns {
+		grid-template-columns: 1fr;
+	}
 }
 
 .hp-ring-card {
 	--hp-ring-tint: var(--wp--preset--color--river-400);
 	--hp-ring-base: var(--wp--preset--color--twilight-900);
+	--hp-ring-scrim: #141c24;
 	display: flex;
 	flex-direction: column;
 	min-width: 0;
@@ -1658,11 +1673,13 @@ code, kbd, samp {
 .hp-ring-card.is-fire {
 	--hp-ring-tint: var(--wp--preset--color--gold-400);
 	--hp-ring-base: var(--wp--preset--color--rust);
+	--hp-ring-scrim: #1e1512;
 }
 
 .hp-ring-card.is-water {
 	--hp-ring-tint: var(--wp--preset--color--green-200);
 	--hp-ring-base: var(--wp--preset--color--green-700);
+	--hp-ring-scrim: #16261d;
 }
 
 .hp-ring-card__plate {
@@ -1694,7 +1711,12 @@ code, kbd, samp {
 	position: absolute;
 	inset: 0;
 	background:
-		linear-gradient(180deg, color-mix(in srgb, var(--hp-ring-base) 88%, transparent) 0%, transparent 35%, color-mix(in srgb, var(--hp-ring-base) 90%, transparent) 100%);
+		linear-gradient(180deg,
+			color-mix(in srgb, var(--hp-ring-scrim) 82%, transparent) 0%,
+			color-mix(in srgb, var(--hp-ring-scrim) 12%, transparent) 30%,
+			color-mix(in srgb, var(--hp-ring-scrim) 14%, transparent) 52%,
+			color-mix(in srgb, var(--hp-ring-scrim) 88%, transparent) 88%,
+			color-mix(in srgb, var(--hp-ring-scrim) 96%, transparent) 100%);
 }
 
 .hp-ring-card__header,
@@ -1738,6 +1760,7 @@ code, kbd, samp {
 	font-weight: var(--wp--custom--weight--semibold);
 	line-height: 1.15;
 	color: var(--wp--preset--color--parchment-50);
+	text-shadow: 0 1px 8px color-mix(in srgb, var(--hp-ring-scrim) 82%, transparent);
 }
 
 .hp-ring-card__element,
@@ -1747,6 +1770,7 @@ code, kbd, samp {
 	letter-spacing: var(--wp--custom--tracking--caps);
 	text-transform: uppercase;
 	color: var(--hp-ring-tint);
+	text-shadow: 0 1px 8px color-mix(in srgb, var(--hp-ring-scrim) 86%, transparent);
 }
 
 .hp-ring-card__virtues {
@@ -1826,6 +1850,11 @@ code, kbd, samp {
 }
 
 .hp-front-template__rings {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: var(--wp--style--global--wide-size, 72rem);
+	margin-inline: auto;
+	padding-inline: var(--wp--preset--spacing--5);
 	border-top: 1px solid var(--wp--custom--border--hair);
 }
 
