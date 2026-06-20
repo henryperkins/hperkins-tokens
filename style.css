@@ -4,7 +4,7 @@ Theme URI: https://hperkins.blog
 Description: Imladris design system child theme for hperkins.blog — a Rivendell-inspired, parchment-and-evergreen serif editorial system with a mallorn-gold accent and a status-verified evidence layer (done/review/pending by rule-colour and a redundant word). Tokens in theme.json are the source of truth; the render is a consequence.
 Author: Henry Perkins
 Template: assembler
-Version: 0.3.5
+Version: 0.3.6
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -66,7 +66,9 @@ Text Domain: hperkins-tokens
 }
 
 a {
-	transition: border-bottom-color 120ms ease, border-color 120ms ease;
+	transition:
+		border-bottom-color 120ms ease,
+		border-color 120ms ease;
 }
 
 button,
@@ -75,10 +77,10 @@ button,
 }
 
 /* === case-study lead ===
-   One shared opening-paragraph treatment: large scale, muted ink, a calmer 1.45
-   leading (the single non-body line-height, tokenized), and the artifact-terminus
-   space beneath. Promoted out of four hand-styled copies so the hub and demo
-   leads stop drifting from the rest. */
+	 One shared opening-paragraph treatment: large scale, muted ink, a calmer 1.45
+	 leading (the single non-body line-height, tokenized), and the artifact-terminus
+	 space beneath. Promoted out of four hand-styled copies so the hub and demo
+	 leads stop drifting from the rest. */
 .hp-lead {
 	margin-bottom: var(--wp--preset--spacing--6);
 	font-size: var(--wp--preset--font-size--lg);
@@ -94,10 +96,10 @@ button,
 }
 
 /* One anatomy for every line: same mono family, padding, weight, rule width,
-   radius. State changes ONLY the rule color, the surface tint, and the dot
-   fill. Mono lives on the base rule so a chip reads as a machine-set status
-   label even where the block markup omits the mono font class (e.g. the Wapuu
-   homepage hero signals). */
+	 radius. State changes ONLY the rule color, the surface tint, and the dot
+	 fill. Mono lives on the base rule so a chip reads as a machine-set status
+	 label even where the block markup omits the mono font class (e.g. the Wapuu
+	 homepage hero signals). */
 .hp-proof-bar .hp-chip {
 	margin: 0;
 	padding: 0.5rem 0.85rem;
@@ -127,20 +129,28 @@ button,
 	border-left-color: var(--hp-status-merged);
 	background: var(--hp-surface-merged);
 }
-.hp-chip.is-status-merged::before { color: var(--hp-status-merged); }
+.hp-chip.is-status-merged::before {
+	color: var(--hp-status-merged);
+}
 
 .hp-chip.is-status-review {
 	border-left-color: var(--hp-status-review);
 	background: var(--hp-surface-review);
 }
 /* in-review reads as hollow, not filled: the state is not yet resolved. */
-.hp-chip.is-status-review::before { content: "\25CB"; color: var(--hp-status-review); }
+.hp-chip.is-status-review::before {
+	content: "\25CB";
+	color: var(--hp-status-review);
+}
 
 .hp-chip.is-status-pending {
 	border-left-color: var(--hp-status-pending);
 	background: var(--hp-neutral-50);
 }
-.hp-chip.is-status-pending::before { content: "\25CB"; color: var(--hp-status-pending); }
+.hp-chip.is-status-pending::before {
+	content: "\25CB";
+	color: var(--hp-status-pending);
+}
 /* === artifact row === */
 .hp-artifact-row {
 	margin-top: var(--wp--preset--spacing--6);
@@ -174,7 +184,7 @@ button,
 }
 
 /* Core columns stack at ≤781px: turn the column divider into a stacked-row
-   rule so it doesn't dangle as a left accent on a full-width row. */
+	 rule so it doesn't dangle as a left accent on a full-width row. */
 @media (max-width: 781px) {
 	.hp-artifacts .hp-artifact + .hp-artifact {
 		border-left: 0;
@@ -204,13 +214,15 @@ button,
 	border-bottom-color: color-mix(in srgb, var(--hp-action) 35%, transparent);
 }
 
-.hp-artifact__link a:hover { border-bottom-color: var(--hp-action); }
+.hp-artifact__link a:hover {
+	border-bottom-color: var(--hp-action);
+}
 
 /* A ledger line is owed. Two provisional conventions resolve to the same muted
-   reading, so an unverified slot never looks finished: a truly empty slot shows
-   an em-dash, and a written placeholder (e.g. <em>pre-tag</em>, <em>reserved</em>)
-   renders as a deliberate muted mono marker — distinct from a real,
-   action-colored artifact link. */
+	 reading, so an unverified slot never looks finished: a truly empty slot shows
+	 an em-dash, and a written placeholder (e.g. <em>pre-tag</em>, <em>reserved</em>)
+	 renders as a deliberate muted mono marker — distinct from a real,
+	 action-colored artifact link. */
 .hp-artifact__link:empty::after {
 	content: "\2014";
 	color: var(--hp-neutral-600);
@@ -222,8 +234,8 @@ button,
 }
 /* === work ledger === */
 /* The Work list shares the artifact-row anatomy: one bordered register,
-   each entry a row that opens with a mono status label, then the title
-   link, then the consequence. State is the rule color, not decoration. */
+	 each entry a row that opens with a mono status label, then the title
+	 link, then the consequence. State is the rule color, not decoration. */
 .hp-work {
 	margin-top: var(--wp--preset--spacing--5);
 	border: 1px solid var(--hp-neutral-100);
@@ -241,9 +253,15 @@ button,
 	border-top: 1px solid var(--hp-neutral-100);
 }
 
-.hp-work__entry.is-status-merged { border-left-color: var(--hp-status-merged); }
-.hp-work__entry.is-status-review { border-left-color: var(--hp-status-review); }
-.hp-work__entry.is-status-pending { border-left-color: var(--hp-status-pending); }
+.hp-work__entry.is-status-merged {
+	border-left-color: var(--hp-status-merged);
+}
+.hp-work__entry.is-status-review {
+	border-left-color: var(--hp-status-review);
+}
+.hp-work__entry.is-status-pending {
+	border-left-color: var(--hp-status-pending);
+}
 
 .hp-work__label {
 	margin: 0 0 var(--hp-gap-sm);
@@ -269,7 +287,9 @@ button,
 	border-bottom-color: color-mix(in srgb, var(--hp-action) 70%, transparent);
 }
 
-.hp-work__title a:hover { border-bottom-color: var(--hp-action); }
+.hp-work__title a:hover {
+	border-bottom-color: var(--hp-action);
+}
 
 .hp-work__desc {
 	margin: 0;
@@ -285,9 +305,9 @@ button,
 }
 
 /* === skills (capability register) ===
-   Neutral proof-bar chips as capability tags (no status), grouped under mono
-   legends that share the kicker-label rule. The legend needs its own bottom
-   margin because that shared rule sets margin:0. */
+	 Neutral proof-bar chips as capability tags (no status), grouped under mono
+	 legends that share the kicker-label rule. The legend needs its own bottom
+	 margin because that shared rule sets margin:0. */
 .hp-skills {
 	margin-top: var(--wp--preset--spacing--5);
 }
@@ -313,7 +333,7 @@ button,
 }
 
 /* The ceiling: body scale, regular weight, no accent color, no italic
-   display treatment. Nothing the client says renders larger than the work. */
+	 display treatment. Nothing the client says renders larger than the work. */
 .hp-quote.wp-block-quote p {
 	margin: 0;
 	font-size: var(--wp--preset--font-size--base);
@@ -392,9 +412,21 @@ button,
 	height: 32px;
 	border-bottom: 1px solid var(--hp-neutral-100);
 	background:
-		radial-gradient(circle 5px at 18px 50%, var(--hp-chrome-dot-close) 98%, transparent) ,
-		radial-gradient(circle 5px at 38px 50%, var(--hp-chrome-dot-minimize) 98%, transparent),
-		radial-gradient(circle 5px at 58px 50%, var(--hp-chrome-dot-zoom) 98%, transparent),
+		radial-gradient(
+			circle 5px at 18px 50%,
+			var(--hp-chrome-dot-close) 98%,
+			transparent
+		),
+		radial-gradient(
+			circle 5px at 38px 50%,
+			var(--hp-chrome-dot-minimize) 98%,
+			transparent
+		),
+		radial-gradient(
+			circle 5px at 58px 50%,
+			var(--hp-chrome-dot-zoom) 98%,
+			transparent
+		),
 		var(--hp-neutral-50);
 	background-repeat: no-repeat;
 }
@@ -434,8 +466,25 @@ button,
 	border-radius: var(--hp-radius-card);
 	overflow: hidden;
 	background:
-		linear-gradient(90deg, color-mix(in srgb, var(--hp-action) var(--hp-grid-action-tint), transparent) 1px, transparent 1px),
-		linear-gradient(color-mix(in srgb, var(--hp-status-merged) var(--hp-grid-status-tint), transparent) 1px, transparent 1px),
+		linear-gradient(
+			90deg,
+			color-mix(
+					in srgb,
+					var(--hp-action) var(--hp-grid-action-tint),
+					transparent
+				)
+				1px,
+			transparent 1px
+		),
+		linear-gradient(
+			color-mix(
+					in srgb,
+					var(--hp-status-merged) var(--hp-grid-status-tint),
+					transparent
+				)
+				1px,
+			transparent 1px
+		),
 		var(--hp-neutral-0);
 	background-size: var(--hp-grid-pitch) var(--hp-grid-pitch);
 	box-shadow: var(--hp-shadow-panel);
@@ -445,7 +494,11 @@ button,
 	content: "";
 	position: absolute;
 	inset: 0;
-	background: linear-gradient(180deg, color-mix(in srgb, var(--hp-neutral-0) 88%, transparent), color-mix(in srgb, var(--hp-neutral-0) 96%, transparent));
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--hp-neutral-0) 88%, transparent),
+		color-mix(in srgb, var(--hp-neutral-0) 96%, transparent)
+	);
 	pointer-events: none;
 }
 
@@ -519,8 +572,8 @@ button,
 }
 
 /* Carry the proof-bar chip's filled-vs-hollow status dot onto evidence rows so
-   resolved (merged, filled) reads differently from unresolved (review /
-   pending, hollow) by shape, not the left-rule color alone. */
+	 resolved (merged, filled) reads differently from unresolved (review /
+	 pending, hollow) by shape, not the left-rule color alone. */
 .hp-evidence-row__label::before {
 	content: "\25CF";
 	margin-right: 0.5em;
@@ -647,8 +700,25 @@ button,
 	border: 1px solid var(--hp-neutral-100);
 	border-radius: var(--hp-radius-card);
 	background:
-		linear-gradient(90deg, color-mix(in srgb, var(--hp-action) var(--hp-grid-action-tint), transparent) 1px, transparent 1px),
-		linear-gradient(color-mix(in srgb, var(--hp-status-merged) var(--hp-grid-status-tint), transparent) 1px, transparent 1px),
+		linear-gradient(
+			90deg,
+			color-mix(
+					in srgb,
+					var(--hp-action) var(--hp-grid-action-tint),
+					transparent
+				)
+				1px,
+			transparent 1px
+		),
+		linear-gradient(
+			color-mix(
+					in srgb,
+					var(--hp-status-merged) var(--hp-grid-status-tint),
+					transparent
+				)
+				1px,
+			transparent 1px
+		),
 		var(--hp-neutral-50);
 	background-size: var(--hp-grid-pitch) var(--hp-grid-pitch);
 }
@@ -701,11 +771,23 @@ button,
 	opacity: 0.76;
 }
 
-.hp-mini-diagram span:nth-child(1) { height: 40%; }
-.hp-mini-diagram span:nth-child(2) { height: 72%; background: var(--hp-status-merged); }
-.hp-mini-diagram span:nth-child(3) { height: 56%; }
-.hp-mini-diagram span:nth-child(4) { height: 88%; background: var(--hp-status-review); }
-.hp-mini-diagram span:nth-child(5) { height: 64%; }
+.hp-mini-diagram span:nth-child(1) {
+	height: 40%;
+}
+.hp-mini-diagram span:nth-child(2) {
+	height: 72%;
+	background: var(--hp-status-merged);
+}
+.hp-mini-diagram span:nth-child(3) {
+	height: 56%;
+}
+.hp-mini-diagram span:nth-child(4) {
+	height: 88%;
+	background: var(--hp-status-review);
+}
+.hp-mini-diagram span:nth-child(5) {
+	height: 64%;
+}
 
 @media (max-width: 781px) {
 	.hp-signal-strip {
@@ -727,12 +809,12 @@ button,
 }
 
 /* === Site header ===
-   Two tiers, one system. Inner pages get a compact utility bar (wordmark +
-   small Wapuu mark + nav). The home page promotes the same bar into the hero:
-   the bar loses its own background/border and shares the hero's grid band, the
-   small mark steps aside, and the full Wapuu in the hero carries the brand. So
-   the mascot appears exactly once per page — big on home, a quiet chip
-   elsewhere — instead of competing with itself. */
+	 Two tiers, one system. Inner pages get a compact utility bar (wordmark +
+	 small Wapuu mark + nav). The home page promotes the same bar into the hero:
+	 the bar loses its own background/border and shares the hero's grid band, the
+	 small mark steps aside, and the full Wapuu in the hero carries the brand. So
+	 the mascot appears exactly once per page — big on home, a quiet chip
+	 elsewhere — instead of competing with itself. */
 .hp-site-header {
 	position: relative;
 	z-index: 10;
@@ -750,9 +832,9 @@ button,
 }
 
 /* Compact brand mark: a crisp, pre-cropped transparent head of the signature
-   Wapuu sat on a clean disc. No zoom-crop of the busy full figure and no baked
-   white box — the source art's white field is gone, so the disc edge stays
-   clean and the linework reads at avatar scale. */
+	 Wapuu sat on a clean disc. No zoom-crop of the busy full figure and no baked
+	 white box — the source art's white field is gone, so the disc edge stays
+	 clean and the linework reads at avatar scale. */
 .hp-site-brand__wapuu {
 	display: block;
 	width: 2.125rem;
@@ -760,7 +842,8 @@ button,
 	flex: 0 0 auto;
 	border-radius: var(--hp-radius-pill);
 	background:
-		var(--hp-wapuu-mark-url, url("assets/wapuu/wapuu-mark.png")) 50% 36% / 116% auto no-repeat,
+		var(--hp-wapuu-mark-url, url("assets/wapuu/wapuu-mark.png")) 50% 36% / 116%
+			auto no-repeat,
 		var(--hp-neutral-0);
 	box-shadow: var(--hp-shadow-mark);
 }
@@ -794,11 +877,19 @@ button,
 	text-decoration: none;
 }
 
-.hp-site-header .wp-block-navigation:not(.has-background) .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) {
+.hp-site-header
+	.wp-block-navigation:not(.has-background)
+	.wp-block-navigation__responsive-container.is-menu-open:not(
+		.disable-default-overlay
+	) {
 	background-color: color-mix(in srgb, var(--hp-neutral-0) 94%, transparent);
 }
 
-.hp-site-header .wp-block-navigation:not(.has-text-color) .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) {
+.hp-site-header
+	.wp-block-navigation:not(.has-text-color)
+	.wp-block-navigation__responsive-container.is-menu-open:not(
+		.disable-default-overlay
+	) {
 	color: var(--wp--preset--color--contrast, var(--wp--custom--text--body));
 }
 
@@ -811,15 +902,32 @@ button,
 }
 
 /* --- Home: promote the bar into the hero band ---
-   Drop the bar's own surface and divider and lay down the SAME grid as the
-   hero so the two read as one continuous header; retire the small mark since
-   the full Wapuu is about to appear right below it. The grid's vertical lines
-   share the viewport origin with the hero's, so the seam is invisible. */
+	 Drop the bar's own surface and divider and lay down the SAME grid as the
+	 hero so the two read as one continuous header; retire the small mark since
+	 the full Wapuu is about to appear right below it. The grid's vertical lines
+	 share the viewport origin with the hero's, so the seam is invisible. */
 body.home .hp-site-header {
 	border-bottom: 0;
 	background:
-		linear-gradient(90deg, color-mix(in srgb, var(--hp-action) var(--hp-grid-action-tint), transparent) 1px, transparent 1px),
-		linear-gradient(color-mix(in srgb, var(--hp-status-merged) var(--hp-grid-status-tint), transparent) 1px, transparent 1px),
+		linear-gradient(
+			90deg,
+			color-mix(
+					in srgb,
+					var(--hp-action) var(--hp-grid-action-tint),
+					transparent
+				)
+				1px,
+			transparent 1px
+		),
+		linear-gradient(
+			color-mix(
+					in srgb,
+					var(--hp-status-merged) var(--hp-grid-status-tint),
+					transparent
+				)
+				1px,
+			transparent 1px
+		),
 		var(--hp-neutral-0);
 	background-size: var(--hp-grid-pitch) var(--hp-grid-pitch);
 }
@@ -835,8 +943,25 @@ body.home .hp-site-brand__wapuu {
 	padding-block: var(--wp--preset--spacing--9);
 	border-bottom: 1px solid var(--hp-neutral-100);
 	background:
-		linear-gradient(90deg, color-mix(in srgb, var(--hp-action) var(--hp-grid-action-tint), transparent) 1px, transparent 1px),
-		linear-gradient(color-mix(in srgb, var(--hp-status-merged) var(--hp-grid-status-tint), transparent) 1px, transparent 1px),
+		linear-gradient(
+			90deg,
+			color-mix(
+					in srgb,
+					var(--hp-action) var(--hp-grid-action-tint),
+					transparent
+				)
+				1px,
+			transparent 1px
+		),
+		linear-gradient(
+			color-mix(
+					in srgb,
+					var(--hp-status-merged) var(--hp-grid-status-tint),
+					transparent
+				)
+				1px,
+			transparent 1px
+		),
 		var(--hp-neutral-0);
 	background-size: var(--hp-grid-pitch) var(--hp-grid-pitch);
 }
@@ -917,7 +1042,7 @@ body.home .hp-site-brand__wapuu {
 	transform: translate(-50%, -50%);
 	width: min(118%, 33rem);
 	aspect-ratio: 1;
-	color: var(--wp--preset--color--green-400, #6E9479);
+	color: var(--wp--preset--color--green-400, #6e9479);
 	opacity: 0.16;
 	z-index: 0;
 	pointer-events: none;
@@ -978,70 +1103,126 @@ body.home .hp-site-brand__wapuu {
 		width: 100%;
 	}
 
-		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) {
-			top: calc(var(--hp-touch-min) + var(--wp--preset--spacing--9) + var(--wp--preset--spacing--5));
-			right: var(--wp--preset--spacing--3);
-			bottom: auto;
-			left: var(--wp--preset--spacing--3);
-			box-sizing: border-box;
-			width: auto;
-			max-height: calc(100svh - var(--hp-touch-min) - var(--wp--preset--spacing--9) - var(--wp--preset--spacing--5) - var(--wp--preset--spacing--3));
-			padding: var(--wp--preset--spacing--3);
-			overflow: auto;
-			border: 1px solid var(--hp-neutral-100);
-			border-radius: var(--hp-radius-frame);
-			background-image:
-				linear-gradient(180deg, color-mix(in srgb, var(--hp-neutral-0) 96%, transparent), color-mix(in srgb, var(--hp-neutral-50) 92%, transparent)),
-				linear-gradient(90deg, color-mix(in srgb, var(--hp-action) 4%, transparent) 1px, transparent 1px),
-				linear-gradient(color-mix(in srgb, var(--hp-status-merged) 3%, transparent) 1px, transparent 1px);
-			background-size: auto, var(--hp-grid-pitch) var(--hp-grid-pitch), var(--hp-grid-pitch) var(--hp-grid-pitch);
-			box-shadow:
-				0 1px 2px color-mix(in srgb, var(--hp-neutral-900) 8%, transparent),
-				0 18px 46px -22px color-mix(in srgb, var(--hp-neutral-900) 38%, transparent),
-				0 0 0 100vmax color-mix(in srgb, var(--hp-neutral-900) 9%, transparent);
-			backdrop-filter: blur(2px);
-		}
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open:not(
+			.disable-default-overlay
+		) {
+		top: calc(
+			var(--hp-touch-min) + var(--wp--preset--spacing--9) +
+				var(--wp--preset--spacing--5)
+		);
+		right: var(--wp--preset--spacing--3);
+		bottom: auto;
+		left: var(--wp--preset--spacing--3);
+		box-sizing: border-box;
+		width: auto;
+		max-height: calc(
+			100svh - var(--hp-touch-min) - var(--wp--preset--spacing--9) -
+				var(--wp--preset--spacing--5) - var(--wp--preset--spacing--3)
+		);
+		padding: var(--wp--preset--spacing--3);
+		overflow: auto;
+		border: 1px solid var(--hp-neutral-100);
+		border-radius: var(--hp-radius-frame);
+		background-image:
+			linear-gradient(
+				180deg,
+				color-mix(in srgb, var(--hp-neutral-0) 96%, transparent),
+				color-mix(in srgb, var(--hp-neutral-50) 92%, transparent)
+			),
+			linear-gradient(
+				90deg,
+				color-mix(in srgb, var(--hp-action) 4%, transparent) 1px,
+				transparent 1px
+			),
+			linear-gradient(
+				color-mix(in srgb, var(--hp-status-merged) 3%, transparent) 1px,
+				transparent 1px
+			);
+		background-size:
+			auto,
+			var(--hp-grid-pitch) var(--hp-grid-pitch),
+			var(--hp-grid-pitch) var(--hp-grid-pitch);
+		box-shadow:
+			0 1px 2px color-mix(in srgb, var(--hp-neutral-900) 8%, transparent),
+			0 18px 46px -22px
+				color-mix(in srgb, var(--hp-neutral-900) 38%, transparent),
+			0 0 0 100vmax color-mix(in srgb, var(--hp-neutral-900) 9%, transparent);
+		backdrop-filter: blur(2px);
+	}
 
-		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation__responsive-container-content {
-			padding-top: calc(var(--hp-touch-min) + var(--wp--preset--spacing--3));
-		}
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open:not(
+			.disable-default-overlay
+		)
+		.wp-block-navigation__responsive-container-content {
+		padding-top: calc(var(--hp-touch-min) + var(--wp--preset--spacing--3));
+	}
 
-		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation__container,
-		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-page-list {
-			width: 100%;
-			gap: 0;
-			align-items: stretch;
-		}
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open:not(
+			.disable-default-overlay
+		)
+		.wp-block-navigation__container,
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open:not(
+			.disable-default-overlay
+		)
+		.wp-block-page-list {
+		width: 100%;
+		gap: 0;
+		align-items: stretch;
+	}
 
-		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation-item {
-			width: 100%;
-		}
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open:not(
+			.disable-default-overlay
+		)
+		.wp-block-navigation-item {
+		width: 100%;
+	}
 
-		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation-item__content {
-			display: flex;
-			align-items: center;
-			box-sizing: border-box;
-			width: 100%;
-			min-height: var(--hp-touch-min);
-			padding: 0 var(--wp--preset--spacing--3);
-			border-bottom: 1px solid color-mix(in srgb, var(--hp-neutral-100) 72%, transparent);
-			font-weight: var(--hp-weight-strong);
-			line-height: 1.35;
-		}
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open:not(
+			.disable-default-overlay
+		)
+		.wp-block-navigation-item__content {
+		display: flex;
+		align-items: center;
+		box-sizing: border-box;
+		width: 100%;
+		min-height: var(--hp-touch-min);
+		padding: 0 var(--wp--preset--spacing--3);
+		border-bottom: 1px solid
+			color-mix(in srgb, var(--hp-neutral-100) 72%, transparent);
+		font-weight: var(--hp-weight-strong);
+		line-height: 1.35;
+	}
 
-		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation__submenu-container {
-			margin: 0;
-			padding: 0 0 0 var(--wp--preset--spacing--3);
-			border-left: 1px solid var(--hp-neutral-100);
-		}
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open:not(
+			.disable-default-overlay
+		)
+		.wp-block-navigation__submenu-container {
+		margin: 0;
+		padding: 0 0 0 var(--wp--preset--spacing--3);
+		border-left: 1px solid var(--hp-neutral-100);
+	}
 
-		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation__submenu-container .wp-block-navigation-item__content {
-			color: var(--hp-neutral-600);
-			font-weight: var(--hp-weight-title);
-		}
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open:not(
+			.disable-default-overlay
+		)
+		.wp-block-navigation__submenu-container
+		.wp-block-navigation-item__content {
+		color: var(--hp-neutral-600);
+		font-weight: var(--hp-weight-title);
+	}
 
-		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-close {
-			top: var(--wp--preset--spacing--3);
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open
+		.wp-block-navigation__responsive-container-close {
+		top: var(--wp--preset--spacing--3);
 		right: var(--wp--preset--spacing--3);
 	}
 
@@ -1104,19 +1285,25 @@ body.home .hp-site-brand__wapuu {
 }
 
 @media (min-width: 600px) and (max-width: 781px) {
-	.hp-site-header .hp-site-nav .wp-block-navigation__responsive-container:not(.hidden-by-default):not(.is-menu-open) {
+	.hp-site-header
+		.hp-site-nav
+		.wp-block-navigation__responsive-container:not(.hidden-by-default):not(
+			.is-menu-open
+		) {
 		display: none;
 	}
 
-	.hp-site-header .hp-site-nav .wp-block-navigation__responsive-container-open:not(.always-shown) {
+	.hp-site-header
+		.hp-site-nav
+		.wp-block-navigation__responsive-container-open:not(.always-shown) {
 		display: flex;
 	}
 }
 
 /* === case-study cross-link (hub & spoke) === */
 /* The spoke line under a case-study h1 that points back to the hub and across
-   to its sibling page. Mono/xs come from the block; this rule owns the link
-   affordance and the space below it, matching the site's other inline links. */
+	 to its sibling page. Mono/xs come from the block; this rule owns the link
+	 affordance and the space below it, matching the site's other inline links. */
 .hp-spoke-nav {
 	margin: 0 0 var(--wp--preset--spacing--5);
 	color: var(--hp-neutral-600);
@@ -1129,28 +1316,135 @@ body.home .hp-site-brand__wapuu {
 	border-bottom-color: color-mix(in srgb, var(--hp-action) 35%, transparent);
 }
 
-.hp-spoke-nav a:hover { border-bottom-color: var(--hp-action); }
+.hp-spoke-nav a:hover {
+	border-bottom-color: var(--hp-action);
+}
 
 /* === footer (Imladris twilight plate) === */
-.hp-footer { position: relative; overflow: hidden; background: var(--wp--custom--surface--inverse); color: var(--wp--preset--color--parchment-100); border-top: 1px solid var(--hp-gold); }
-.hp-footer__backdrop { position: absolute; inset: 0; pointer-events: none; background: var(--hp-footer-backdrop-url) center / cover no-repeat; opacity: 0.22; }
-.hp-footer__backdrop::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,28,24,0.72), rgba(20,28,24,0.92)); }
-.hp-footer__inner { position: relative; }
-.hp-footer__top { align-items: center; }
-.hp-footer__identity { display: flex; align-items: center; gap: var(--wp--preset--spacing--3); }
-.hp-footer__star { width: 22px; height: 22px; flex: 0 0 auto; color: var(--wp--preset--color--gold-400); }
-.hp-footer__name { margin: 0; font-family: var(--hp-font-display); font-size: var(--wp--preset--font-size--2-xl); font-weight: var(--wp--custom--weight--semibold); letter-spacing: 0; color: var(--wp--preset--color--parchment-50); }
-.hp-footer__meta { margin: var(--wp--preset--spacing--3) 0 0; font-family: var(--hp-font-label); font-size: var(--wp--preset--font-size--xs); letter-spacing: var(--wp--custom--tracking--wide); text-transform: uppercase; color: var(--wp--preset--color--parchment-300); }
-.hp-footer__meta span { color: var(--wp--preset--color--gold-400); }
-.hp-footer__social { display: flex; flex-wrap: wrap; gap: var(--wp--preset--spacing--3); margin: 0; padding: 0; list-style: none; }
-.hp-footer__social a { display: inline-flex; align-items: center; gap: 0.55em; padding: 9px 16px; border-radius: var(--hp-radius-pill); border: 1px solid color-mix(in srgb, var(--wp--preset--color--parchment-50) 18%, transparent); color: var(--wp--preset--color--parchment-100); font-family: var(--hp-font-label); font-size: var(--wp--preset--font-size--sm); text-decoration: none; transition: border-color 140ms var(--wp--custom--ease--out), color 140ms var(--wp--custom--ease--out); }
-.hp-footer__social a:hover { border-color: var(--wp--preset--color--gold-400); color: var(--wp--preset--color--gold-400); }
-.hp-footer__social svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.hp-footer__social a[href*="github.com"] svg { fill: none; }
-.hp-footer__nav { margin: var(--wp--preset--spacing--4) 0 0; font-family: var(--hp-font-mono); font-size: var(--wp--preset--font-size--xs); color: var(--wp--preset--color--parchment-300); }
-.hp-footer__nav a { color: var(--wp--preset--color--parchment-100); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--hp-gold) 45%, transparent); }
-.hp-footer__nav a:hover { border-bottom-color: var(--hp-gold); color: var(--wp--preset--color--gold-400); }
-.hp-footer__colophon { margin: var(--wp--preset--spacing--6) 0 0; padding-top: var(--wp--preset--spacing--5); border-top: 1px solid color-mix(in srgb, var(--wp--preset--color--parchment-50) 14%, transparent); font-family: var(--hp-font-mono); font-size: var(--wp--preset--font-size--2-xs); color: var(--wp--preset--color--parchment-300); }
+.hp-footer {
+	position: relative;
+	overflow: hidden;
+	background: var(--wp--custom--surface--inverse);
+	color: var(--wp--preset--color--parchment-100);
+	border-top: 1px solid var(--hp-gold);
+}
+.hp-footer__backdrop {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: var(--hp-footer-backdrop-url) center / cover no-repeat;
+	opacity: 0.22;
+}
+.hp-footer__backdrop::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		180deg,
+		rgba(20, 28, 24, 0.72),
+		rgba(20, 28, 24, 0.92)
+	);
+}
+.hp-footer__inner {
+	position: relative;
+}
+.hp-footer__top {
+	align-items: center;
+}
+.hp-footer__identity {
+	display: flex;
+	align-items: center;
+	gap: var(--wp--preset--spacing--3);
+}
+.hp-footer__star {
+	width: 22px;
+	height: 22px;
+	flex: 0 0 auto;
+	color: var(--wp--preset--color--gold-400);
+}
+.hp-footer__name {
+	margin: 0;
+	font-family: var(--hp-font-display);
+	font-size: var(--wp--preset--font-size--2-xl);
+	font-weight: var(--wp--custom--weight--semibold);
+	letter-spacing: 0;
+	color: var(--wp--preset--color--parchment-50);
+}
+.hp-footer__meta {
+	margin: var(--wp--preset--spacing--3) 0 0;
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: var(--wp--custom--tracking--wide);
+	text-transform: uppercase;
+	color: var(--wp--preset--color--parchment-300);
+}
+.hp-footer__meta span {
+	color: var(--wp--preset--color--gold-400);
+}
+.hp-footer__social {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--3);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.hp-footer__social a {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.55em;
+	padding: 9px 16px;
+	border-radius: var(--hp-radius-pill);
+	border: 1px solid
+		color-mix(in srgb, var(--wp--preset--color--parchment-50) 18%, transparent);
+	color: var(--wp--preset--color--parchment-100);
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--sm);
+	text-decoration: none;
+	transition:
+		border-color 140ms var(--wp--custom--ease--out),
+		color 140ms var(--wp--custom--ease--out);
+}
+.hp-footer__social a:hover {
+	border-color: var(--wp--preset--color--gold-400);
+	color: var(--wp--preset--color--gold-400);
+}
+.hp-footer__social svg {
+	width: 16px;
+	height: 16px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.8;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.hp-footer__social a[href*="github.com"] svg {
+	fill: none;
+}
+.hp-footer__nav {
+	margin: var(--wp--preset--spacing--4) 0 0;
+	font-family: var(--hp-font-mono);
+	font-size: var(--wp--preset--font-size--xs);
+	color: var(--wp--preset--color--parchment-300);
+}
+.hp-footer__nav a {
+	color: var(--wp--preset--color--parchment-100);
+	text-decoration: none;
+	border-bottom: 1px solid color-mix(in srgb, var(--hp-gold) 45%, transparent);
+}
+.hp-footer__nav a:hover {
+	border-bottom-color: var(--hp-gold);
+	color: var(--wp--preset--color--gold-400);
+}
+.hp-footer__colophon {
+	margin: var(--wp--preset--spacing--6) 0 0;
+	padding-top: var(--wp--preset--spacing--5);
+	border-top: 1px solid
+		color-mix(in srgb, var(--wp--preset--color--parchment-50) 14%, transparent);
+	font-family: var(--hp-font-mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	color: var(--wp--preset--color--parchment-300);
+}
 
 /* === design-tokens reference page === */
 .hp-token-swatches {
@@ -1159,7 +1453,7 @@ body.home .hp-site-brand__wapuu {
 }
 
 /* Uniform tiles with a hairline edge, so the near-white tokens (base, surface,
-   hairline) stay visible on the page background instead of disappearing. */
+	 hairline) stay visible on the page background instead of disappearing. */
 .hp-swatch {
 	display: flex;
 	flex: 1 1 8.5rem;
@@ -1206,13 +1500,13 @@ body.home .hp-site-brand__wapuu {
 }
 
 /* === mobile overlay: close-on-tap collapse ===
-   nav-close-delight.js adds .is-hp-closing to the open overlay container and
-   .is-hp-chosen to the tapped link while the overlay carries .is-menu-open.
-   The panel lifts toward the hamburger and fades; navigation remains owned by
-   the Interactivity Router or browser. The JS closes through core's close
-   control on a short schedule so the closed state survives the router swap.
-   Reduced motion skips the cosmetic classes and closes immediately; the global
-   prefers-reduced-motion block above keeps the stylesheet side neutral. */
+	 nav-close-delight.js adds .is-hp-closing to the open overlay container and
+	 .is-hp-chosen to the tapped link while the overlay carries .is-menu-open.
+	 The panel lifts toward the hamburger and fades; navigation remains owned by
+	 the Interactivity Router or browser. The JS closes through core's close
+	 control on a short schedule so the closed state survives the router swap.
+	 Reduced motion skips the cosmetic classes and closes immediately; the global
+	 prefers-reduced-motion block above keeps the stylesheet side neutral. */
 @keyframes hp-menu-collapse {
 	to {
 		opacity: 0;
@@ -1221,44 +1515,61 @@ body.home .hp-site-brand__wapuu {
 }
 
 @keyframes hp-tap-echo {
-	from { background-color: color-mix(in srgb, var(--hp-action) 12%, transparent); }
-	to   { background-color: transparent; }
+	from {
+		background-color: color-mix(in srgb, var(--hp-action) 12%, transparent);
+	}
+	to {
+		background-color: transparent;
+	}
 }
 
 /* (0,4,0): overrides core's fade-in animation (0,2,0); the theme's open rule
-   at the .is-menu-open positioning block sets no `animation`, and this rule is
-   appended after it. */
-.hp-site-header .wp-block-navigation__responsive-container.is-menu-open.is-hp-closing {
+	 at the .is-menu-open positioning block sets no `animation`, and this rule is
+	 appended after it. */
+.hp-site-header
+	.wp-block-navigation__responsive-container.is-menu-open.is-hp-closing {
 	animation: hp-menu-collapse 150ms cubic-bezier(0.4, 0, 1, 1) forwards;
 	transform-origin: 0 0;
 	pointer-events: none;
 }
 
-.hp-site-header .wp-block-navigation__responsive-container.is-menu-open.is-hp-closing .is-hp-chosen {
+.hp-site-header
+	.wp-block-navigation__responsive-container.is-menu-open.is-hp-closing
+	.is-hp-chosen {
 	animation: hp-tap-echo 140ms ease-out both;
 	box-shadow: inset 0 -2px 0 0 var(--hp-action);
 }
 
 /* =====================================================================
-   IMLADRIS RE-SKIN LAYER
-   The block above re-points the --hp-* tokens onto the Imladris theme.json
-   scales; this layer applies the Imladris look on top: serif display,
-   Marcellus eyebrows, mallorn-gold rules, river artifact links, the gold
-   focus ring, and the button vocabulary. Status still reads by rule-colour
-   AND a redundant word (the filled/hollow dot conventions above are kept).
-   ===================================================================== */
+	 IMLADRIS RE-SKIN LAYER
+	 The block above re-points the --hp-* tokens onto the Imladris theme.json
+	 scales; this layer applies the Imladris look on top: serif display,
+	 Marcellus eyebrows, mallorn-gold rules, river artifact links, the gold
+	 focus ring, and the button vocabulary. Status still reads by rule-colour
+	 AND a redundant word (the filled/hollow dot conventions above are kept).
+	 ===================================================================== */
 :root {
-	--hp-artifact:     var(--wp--custom--artifact-link);   /* river — openable proof refs */
-	--hp-gold:         var(--wp--custom--rule--gold);      /* mallorn accent */
+	--hp-artifact: var(
+		--wp--custom--artifact-link
+	); /* river — openable proof refs */
+	--hp-gold: var(--wp--custom--rule--gold); /* mallorn accent */
 	--hp-font-display: var(--wp--preset--font-family--display);
-	--hp-font-label:   var(--wp--preset--font-family--label);
-	--hp-font-body:    var(--wp--preset--font-family--body);
-	--hp-font-mono:    var(--wp--preset--font-family--mono);
+	--hp-font-label: var(--wp--preset--font-family--label);
+	--hp-font-body: var(--wp--preset--font-family--body);
+	--hp-font-mono: var(--wp--preset--font-family--mono);
 }
 
 /* Headlines balance; prose wraps pretty. */
-h1, h2, h3, .hp-wapuu-hero__title { text-wrap: balance; }
-.wp-block-post-content p, .entry-content p { text-wrap: pretty; }
+h1,
+h2,
+h3,
+.hp-wapuu-hero__title {
+	text-wrap: balance;
+}
+.wp-block-post-content p,
+.entry-content p {
+	text-wrap: pretty;
+}
 
 /* Brand eyebrow -> Marcellus lapidary caps (register/status labels stay mono). */
 .hp-wapuu-hero__eyebrow,
@@ -1276,9 +1587,13 @@ h1, h2, h3, .hp-wapuu-hero__title { text-wrap: balance; }
 }
 
 /* Card / ledger titles keep the grounded reading serif (inherited EB Garamond);
-   a hair of negative tracking for the parchment register. */
-.hp-work__title, .hp-evidence-row__title, .hp-evidence-board__title,
-.hp-operational-story__title { letter-spacing: -0.005em; }
+	 a hair of negative tracking for the parchment register. */
+.hp-work__title,
+.hp-evidence-row__title,
+.hp-evidence-board__title,
+.hp-operational-story__title {
+	letter-spacing: -0.005em;
+}
 
 /* Openable references read in Bruinen river-blue, distinct from evergreen nav. */
 .hp-proof-bar .hp-chip a,
@@ -1296,25 +1611,37 @@ h1, h2, h3, .hp-wapuu-hero__title { text-wrap: balance; }
 }
 
 /* PullQuote / quote: gold left rule, italic — capped at body scale so
-   testimony never outranks the work. */
+	 testimony never outranks the work. */
 .hp-quote.wp-block-quote,
-.wp-block-quote.is-style-imladris { border-left-color: var(--hp-gold); }
+.wp-block-quote.is-style-imladris {
+	border-left-color: var(--hp-gold);
+}
 .hp-quote.wp-block-quote p,
-.wp-block-quote.is-style-imladris p { font-style: italic; }
+.wp-block-quote.is-style-imladris p {
+	font-style: italic;
+}
 
 /* Content links: translucent-gold underline warming to gold. */
-.wp-block-post-content a, .entry-content a, .hp-prose a {
+.wp-block-post-content a,
+.entry-content a,
+.hp-prose a {
 	text-decoration-color: color-mix(in srgb, var(--hp-gold) 55%, transparent);
 	text-underline-offset: 0.14em;
 }
-.wp-block-post-content a:hover, .entry-content a:hover, .hp-prose a:hover {
+.wp-block-post-content a:hover,
+.entry-content a:hover,
+.hp-prose a:hover {
 	text-decoration-color: var(--hp-gold);
 }
 
 /* Gold focus ring (3px translucent gold, 2px offset) — re-added after the
-   theme.json swap dropped the previous styles.css focus rule. */
-a:focus-visible, button:focus-visible, input:focus-visible,
-select:focus-visible, textarea:focus-visible, summary:focus-visible,
+	 theme.json swap dropped the previous styles.css focus rule. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
 .wp-block-button__link:focus-visible {
 	/* Deeper gold so the ring clears 3:1 on parchment (~3.8:1) AND on the dark
 	   twilight surfaces (~3.5:1) — the gold-500 mix was ~1.75:1 on parchment. */
@@ -1323,7 +1650,9 @@ select:focus-visible, textarea:focus-visible, summary:focus-visible,
 }
 
 /* Inline code / data. */
-code, kbd, samp {
+code,
+kbd,
+samp {
 	font-family: var(--hp-font-mono);
 	font-size: 0.92em;
 	background: var(--wp--custom--surface--sunken);
@@ -1332,8 +1661,8 @@ code, kbd, samp {
 }
 
 /* === Buttons — the Imladris control vocabulary ===
-   Marcellus label, evergreen primary, gold accent. Variants are core block
-   styles registered in functions.php (secondary / ghost / accent / link). */
+	 Marcellus label, evergreen primary, gold accent. Variants are core block
+	 styles registered in functions.php (secondary / ghost / accent / link). */
 .wp-block-button__link {
 	font-family: var(--hp-font-label);
 	font-weight: var(--wp--custom--weight--regular);
@@ -1344,28 +1673,40 @@ code, kbd, samp {
 	background-color: var(--wp--custom--brand--default);
 	color: var(--wp--custom--text--inverse);
 	box-shadow: var(--wp--custom--shadow--xs);
-	transition: background-color 140ms var(--wp--custom--ease--calm), transform 140ms var(--wp--custom--ease--calm);
+	transition:
+		background-color 140ms var(--wp--custom--ease--calm),
+		transform 140ms var(--wp--custom--ease--calm);
 }
-.wp-block-button__link:hover { background-color: var(--wp--custom--brand--hover); }
-.wp-block-button__link:active { transform: translateY(0.5px) scale(0.99); }
+.wp-block-button__link:hover {
+	background-color: var(--wp--custom--brand--hover);
+}
+.wp-block-button__link:active {
+	transform: translateY(0.5px) scale(0.99);
+}
 
 .wp-block-button.is-style-secondary > .wp-block-button__link {
 	background-color: transparent;
 	color: var(--wp--custom--text--link);
 	box-shadow: inset 0 0 0 1px var(--wp--custom--border--brand);
 }
-.wp-block-button.is-style-secondary > .wp-block-button__link:hover { background-color: var(--wp--custom--brand--subtle); }
+.wp-block-button.is-style-secondary > .wp-block-button__link:hover {
+	background-color: var(--wp--custom--brand--subtle);
+}
 .wp-block-button.is-style-ghost > .wp-block-button__link {
 	background-color: transparent;
 	color: var(--wp--custom--text--link);
 	box-shadow: none;
 }
-.wp-block-button.is-style-ghost > .wp-block-button__link:hover { background-color: var(--wp--custom--brand--subtle); }
+.wp-block-button.is-style-ghost > .wp-block-button__link:hover {
+	background-color: var(--wp--custom--brand--subtle);
+}
 .wp-block-button.is-style-accent > .wp-block-button__link {
 	background-color: var(--wp--custom--accent--default);
 	color: var(--wp--custom--text--strong);
 }
-.wp-block-button.is-style-accent > .wp-block-button__link:hover { background-color: var(--wp--custom--accent--hover); }
+.wp-block-button.is-style-accent > .wp-block-button__link:hover {
+	background-color: var(--wp--custom--accent--hover);
+}
 .wp-block-button.is-style-link > .wp-block-button__link {
 	background-color: transparent;
 	color: var(--wp--custom--text--link);
@@ -1496,12 +1837,42 @@ code, kbd, samp {
 	background: currentColor;
 }
 
-.hp-badge.has-dot::before { display: inline-block; }
-.hp-badge.is-tone-brand { background: var(--wp--custom--brand--subtle); border-color: var(--wp--preset--color--green-200); color: var(--wp--preset--color--green-800); }
-.hp-badge.is-tone-accent { background: var(--wp--custom--accent--subtle); border-color: var(--wp--preset--color--gold-200); color: var(--wp--preset--color--gold-700); }
-.hp-badge.is-tone-success { background: var(--wp--preset--color--green-050); border-color: var(--wp--preset--color--green-200); color: var(--wp--custom--feedback--success); }
-.hp-badge.is-tone-warning { background: var(--wp--preset--color--gold-100); border-color: var(--wp--preset--color--gold-200); color: var(--wp--custom--feedback--warning); }
-.hp-badge.is-tone-danger { background: color-mix(in srgb, var(--wp--custom--feedback--danger) 12%, var(--wp--preset--color--parchment-50)); border-color: color-mix(in srgb, var(--wp--custom--feedback--danger) 30%, transparent); color: var(--wp--custom--feedback--danger); }
+.hp-badge.has-dot::before {
+	display: inline-block;
+}
+.hp-badge.is-tone-brand {
+	background: var(--wp--custom--brand--subtle);
+	border-color: var(--wp--preset--color--green-200);
+	color: var(--wp--preset--color--green-800);
+}
+.hp-badge.is-tone-accent {
+	background: var(--wp--custom--accent--subtle);
+	border-color: var(--wp--preset--color--gold-200);
+	color: var(--wp--preset--color--gold-700);
+}
+.hp-badge.is-tone-success {
+	background: var(--wp--preset--color--green-050);
+	border-color: var(--wp--preset--color--green-200);
+	color: var(--wp--custom--feedback--success);
+}
+.hp-badge.is-tone-warning {
+	background: var(--wp--preset--color--gold-100);
+	border-color: var(--wp--preset--color--gold-200);
+	color: var(--wp--custom--feedback--warning);
+}
+.hp-badge.is-tone-danger {
+	background: color-mix(
+		in srgb,
+		var(--wp--custom--feedback--danger) 12%,
+		var(--wp--preset--color--parchment-50)
+	);
+	border-color: color-mix(
+		in srgb,
+		var(--wp--custom--feedback--danger) 30%,
+		transparent
+	);
+	color: var(--wp--custom--feedback--danger);
+}
 
 .hp-avatar {
 	display: inline-flex;
@@ -1563,15 +1934,34 @@ code, kbd, samp {
 	color: var(--wp--preset--color--gold-700);
 }
 
-.hp-callout.is-tone-insight { background: var(--wp--preset--color--green-050); border-left-color: var(--wp--preset--color--green-600); }
+.hp-callout.is-tone-insight {
+	background: var(--wp--preset--color--green-050);
+	border-left-color: var(--wp--preset--color--green-600);
+}
 .hp-callout.is-tone-insight .hp-callout__icon,
-.hp-callout.is-tone-insight .hp-callout__title { color: var(--wp--preset--color--green-800); }
-.hp-callout.is-tone-caution { background: var(--wp--preset--color--gold-100); border-left-color: var(--wp--preset--color--amber); }
+.hp-callout.is-tone-insight .hp-callout__title {
+	color: var(--wp--preset--color--green-800);
+}
+.hp-callout.is-tone-caution {
+	background: var(--wp--preset--color--gold-100);
+	border-left-color: var(--wp--preset--color--amber);
+}
 .hp-callout.is-tone-caution .hp-callout__icon,
-.hp-callout.is-tone-caution .hp-callout__title { color: var(--wp--preset--color--amber); }
-.hp-callout.is-tone-risk { background: color-mix(in srgb, var(--wp--preset--color--rust) 8%, var(--wp--preset--color--parchment-50)); border-left-color: var(--wp--preset--color--rust); }
+.hp-callout.is-tone-caution .hp-callout__title {
+	color: var(--wp--preset--color--amber);
+}
+.hp-callout.is-tone-risk {
+	background: color-mix(
+		in srgb,
+		var(--wp--preset--color--rust) 8%,
+		var(--wp--preset--color--parchment-50)
+	);
+	border-left-color: var(--wp--preset--color--rust);
+}
 .hp-callout.is-tone-risk .hp-callout__icon,
-.hp-callout.is-tone-risk .hp-callout__title { color: var(--wp--preset--color--rust); }
+.hp-callout.is-tone-risk .hp-callout__title {
+	color: var(--wp--preset--color--rust);
+}
 
 .hp-input-stack {
 	display: grid;
@@ -1754,8 +2144,11 @@ code, kbd, samp {
 	flex-direction: column;
 	justify-content: space-between;
 	padding: var(--wp--preset--spacing--5);
-	background:
-		radial-gradient(130% 130% at 70% -10%, color-mix(in srgb, var(--hp-ring-tint) 44%, var(--hp-ring-base)), var(--hp-ring-base));
+	background: radial-gradient(
+		130% 130% at 70% -10%,
+		color-mix(in srgb, var(--hp-ring-tint) 44%, var(--hp-ring-base)),
+		var(--hp-ring-base)
+	);
 	overflow: hidden;
 }
 
@@ -1781,14 +2174,15 @@ code, kbd, samp {
 	/* Tonal vignette: dark under the header (top) and the virtues (lower band),
 	   letting the mascot read through the middle. Darkens earlier/stronger than
 	   the source so the virtues stay legible over the bright WordPress orb. */
-	background:
-		linear-gradient(180deg,
-			color-mix(in srgb, var(--hp-ring-scrim) 86%, transparent) 0%,
-			color-mix(in srgb, var(--hp-ring-scrim) 48%, transparent) 16%,
-			color-mix(in srgb, var(--hp-ring-scrim) 18%, transparent) 42%,
-			color-mix(in srgb, var(--hp-ring-scrim) 58%, transparent) 64%,
-			color-mix(in srgb, var(--hp-ring-scrim) 90%, transparent) 84%,
-			color-mix(in srgb, var(--hp-ring-scrim) 97%, transparent) 100%);
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--hp-ring-scrim) 86%, transparent) 0%,
+		color-mix(in srgb, var(--hp-ring-scrim) 48%, transparent) 16%,
+		color-mix(in srgb, var(--hp-ring-scrim) 18%, transparent) 42%,
+		color-mix(in srgb, var(--hp-ring-scrim) 58%, transparent) 64%,
+		color-mix(in srgb, var(--hp-ring-scrim) 90%, transparent) 84%,
+		color-mix(in srgb, var(--hp-ring-scrim) 97%, transparent) 100%
+	);
 }
 
 .hp-ring-card__header,
@@ -1807,7 +2201,8 @@ code, kbd, samp {
 	height: 46px;
 	flex: 0 0 46px;
 	margin: 0;
-	border: 1px solid color-mix(in srgb, var(--wp--preset--color--parchment-50) 18%, transparent);
+	border: 1px solid
+		color-mix(in srgb, var(--wp--preset--color--parchment-50) 18%, transparent);
 	border-radius: 50%;
 	overflow: hidden;
 	box-shadow: var(--wp--custom--shadow--sm), var(--wp--custom--shadow--gilt);
@@ -1832,7 +2227,8 @@ code, kbd, samp {
 	font-weight: var(--wp--custom--weight--semibold);
 	line-height: 1.15;
 	color: var(--wp--preset--color--parchment-50);
-	text-shadow: 0 1px 8px color-mix(in srgb, var(--hp-ring-scrim) 82%, transparent);
+	text-shadow: 0 1px 8px
+		color-mix(in srgb, var(--hp-ring-scrim) 82%, transparent);
 }
 
 .hp-ring-card__element,
@@ -1842,7 +2238,8 @@ code, kbd, samp {
 	letter-spacing: var(--wp--custom--tracking--caps);
 	text-transform: uppercase;
 	color: var(--hp-ring-tint);
-	text-shadow: 0 1px 8px color-mix(in srgb, var(--hp-ring-scrim) 86%, transparent);
+	text-shadow: 0 1px 8px
+		color-mix(in srgb, var(--hp-ring-scrim) 86%, transparent);
 }
 
 .hp-ring-card__virtues {
@@ -1943,32 +2340,25 @@ code, kbd, samp {
 }
 
 /* About — break the register/grid sections out of the 44rem reading column to the
-   wide measure on desktop (the impact strip, capability register, and work ledger
-   read as dashboards, not prose). Narrative, lead, headings, and quotes stay at the
-   reading width. Scoped to .hp-about-template so the same classes used in the hero
-   and operational-story are untouched. The section is pulled symmetrically around
-   the column's centre, so it stays centred in the viewport; min() clamps it to the
-   viewport (minus gutters) on smaller screens. */
+	 wide measure on desktop (the impact strip, capability register, and work ledger
+	 read as dashboards, not prose). Narrative, lead, headings, and quotes stay at the
+	 reading width. Scoped to .hp-about-template so the same classes used in the hero
+	 and operational-story are untouched. The section is pulled symmetrically around
+	 the column's centre, so it stays centred in the viewport; min() clamps it to the
+	 viewport (minus gutters) on smaller screens. */
 @media (min-width: 56rem) {
-	.hp-about-template :is(.hp-signal-strip, .hp-skills, .hp-work) {
-		--hp-about-wide: min(var(--wp--custom--container--wide, 72rem), 100vw - 2 * var(--wp--preset--spacing--6, 2rem));
+	/* Impact strip is a top-level child of the constrained post-content, so
+	   it breaks out to the wide measure on its own. (The wide section
+	   wrappers are pulled out by the rule at the end of the About layer.) */
+	.hp-about-template .hp-about-impact {
+		--hp-about-wide: min(
+			var(--wp--custom--container--wide, 72rem),
+			100vw - 2 * var(--wp--preset--spacing--6, 2rem)
+		);
 		width: var(--hp-about-wide);
 		max-width: none;
 		margin-inline: calc(50% - var(--hp-about-wide) / 2) !important;
 		box-sizing: border-box;
-	}
-
-	/* Use the new width: flow the capability groups into a responsive grid
-	   instead of a single stacked column. */
-	.hp-about-template .hp-skills {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-		gap: var(--wp--preset--spacing--5);
-		align-items: start;
-	}
-
-	.hp-about-template .hp-skill-group + .hp-skill-group {
-		margin-top: 0; /* the grid gap owns the spacing now */
 	}
 }
 
@@ -1988,23 +2378,23 @@ code, kbd, samp {
 
 /* === Imladris About — full-composition rebuild (hero, capabilities, skills+education, projects) === */
 /* =====================================================================
-   ABOUT TEMPLATE — composition layer (NEW)
-   Scoped under .hp-about-template so it only affects the About page and
-   never leaks onto the shared hp-* primitives used elsewhere. Append to
-   the end of the theme's style.css. All values resolve to existing
-   theme.json tokens (no raw hex). Reuses the established anatomy:
-   parchment cards, mallorn-gold rules, Cormorant display, Marcellus
-   labels, mono register text.
+	 ABOUT TEMPLATE — composition layer (NEW)
+	 Scoped under .hp-about-template so it only affects the About page and
+	 never leaks onto the shared hp-* primitives used elsewhere. Append to
+	 the end of the theme's style.css. All values resolve to existing
+	 theme.json tokens (no raw hex). Reuses the established anatomy:
+	 parchment cards, mallorn-gold rules, Cormorant display, Marcellus
+	 labels, mono register text.
 
-   Sections styled here that the base theme has no class for:
-     · hero band (copy + gilt circular portrait, role-tag pills, CTAs)
-     · the 5-cell impact strip widening (reuses .hp-signal-strip)
-     · "What I do" 3-up capability cards (gold top-rule)
-     · Skills + Education 2-column split (+ neutralising the base
-       wide-pull/grid rules that target .hp-skills)
-     · Education cards
-     · Selected-projects 3-up cards
-   ===================================================================== */
+	 Sections styled here that the base theme has no class for:
+		 · hero band (copy + gilt circular portrait, role-tag pills, CTAs)
+		 · the 5-cell impact strip widening (reuses .hp-signal-strip)
+		 · "What I do" 3-up capability cards (gold top-rule)
+		 · Skills + Education 2-column split (+ neutralising the base
+			 wide-pull/grid rules that target .hp-skills)
+		 · Education cards
+		 · Selected-projects 3-up cards
+	 ===================================================================== */
 
 /* ---- HERO ------------------------------------------------------------ */
 .hp-about-template .hp-about-hero {
@@ -2027,8 +2417,8 @@ code, kbd, samp {
 }
 
 /* Serif positioning headline — the page's single h1. Cormorant display,
-   medium weight, tight tracking, balanced wrap (h1 balance already set in
-   base, repeated scale/family here for the larger hero reading). */
+	 medium weight, tight tracking, balanced wrap (h1 balance already set in
+	 base, repeated scale/family here for the larger hero reading). */
 .hp-about-template .hp-about-hero__title {
 	margin: var(--wp--preset--spacing--4) 0 0;
 	max-width: 22ch;
@@ -2048,25 +2438,11 @@ code, kbd, samp {
 	color: var(--wp--custom--text--strong);
 }
 
-/* Role-tag pills — outlined parchment chips in the Marcellus label voice.
-   Distinct from .hp-tag (taxonomy) and .hp-chip (status); these are plain
-   role labels, no link, no status. */
+/* Role-tag row — the hero's role pills use the design Tag pill (.hp-tag
+	 with a gold #); this only sets the row gap and the top rhythm. */
 .hp-about-template .hp-role-tags {
 	gap: var(--wp--preset--spacing--2);
 	margin-top: var(--wp--preset--spacing--5);
-}
-
-.hp-about-template .hp-role-tag {
-	margin: 0;
-	padding: 5px 14px;
-	border: 1px solid var(--wp--custom--border--soft);
-	border-radius: var(--hp-radius-pill);
-	background: var(--wp--custom--surface--card);
-	color: var(--wp--custom--text--link);
-	font-family: var(--hp-font-label);
-	font-size: var(--wp--preset--font-size--sm);
-	letter-spacing: var(--wp--custom--tracking--wide);
-	line-height: 1.5;
 }
 
 .hp-about-template .hp-about-hero__cta {
@@ -2074,8 +2450,8 @@ code, kbd, samp {
 }
 
 /* Gilt circular portrait. The frame is the inset gold ring token plus a
-   soft drop shadow; the image itself carries a gold border and is forced
-   to a circle. Larger than the old 150px thumbnail. */
+	 soft drop shadow; the image itself carries a gold border and is forced
+	 to a circle. Larger than the old 150px thumbnail. */
 .hp-about-template .hp-about-hero__portrait {
 	flex: 0 0 auto;
 	display: flex;
@@ -2100,8 +2476,8 @@ code, kbd, samp {
 }
 
 /* Impact strip: it already widens via the base
-   .hp-about-template :is(.hp-signal-strip, …) rule and lays out as an
-   auto-fit grid. Only add the top breathing room beneath the hero band. */
+	 .hp-about-template :is(.hp-signal-strip, …) rule and lays out as an
+	 auto-fit grid. Only add the top breathing room beneath the hero band. */
 .hp-about-template .hp-about-impact {
 	margin-top: var(--wp--preset--spacing--7);
 }
@@ -2121,8 +2497,8 @@ code, kbd, samp {
 }
 
 /* Turn the WP columns block into a responsive card grid (mirrors how the
-   theme treats .hp-ring-grid) so 3 cards reflow to 1 on narrow screens
-   instead of squeezing. */
+	 theme treats .hp-ring-grid) so 3 cards reflow to 1 on narrow screens
+	 instead of squeezing. */
 .hp-about-template .hp-capability-grid.wp-block-columns {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2139,7 +2515,7 @@ code, kbd, samp {
 
 .hp-about-template .hp-capability {
 	padding: var(--wp--preset--spacing--5);
-	border: 1px solid var(--wp--custom--border--hair);
+	border: 0;
 	border-top: 3px solid var(--wp--custom--rule--gold);
 	border-radius: var(--hp-radius-card);
 	background: var(--wp--custom--surface--card);
@@ -2168,14 +2544,25 @@ code, kbd, samp {
 
 /* ---- SKILLS + EDUCATION (2-column) ---------------------------------- */
 /* The base theme widens AND grid-flows any .hp-skills inside
-   .hp-about-template (style.css lines ~1877 & ~1887). Inside this 2-col
-   split that would yank the left column to viewport width and re-grid the
-   skill groups. Re-assert normal flow at higher specificity so .hp-skills
-   behaves as an ordinary stacked block within its column. */
+	 .hp-about-template (style.css lines ~1877 & ~1887). Inside this 2-col
+	 split that would yank the left column to viewport width and re-grid the
+	 skill groups. Re-assert normal flow at higher specificity so .hp-skills
+	 behaves as an ordinary stacked block within its column. */
 .hp-about-template .hp-about-skills-edu.wp-block-columns {
+	display: grid;
+	/* min(20rem, 100%) lets the single track shrink below 20rem on narrow
+		 screens (≤320px) instead of forcing a 320px track that overflows; on
+		 the wide desktop measure it still yields the 2-up Skills/Education split. */
+	grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
 	gap: var(--wp--preset--spacing--8);
 	margin-top: var(--wp--preset--spacing--8);
 	align-items: start;
+}
+
+.hp-about-template .hp-about-skills-edu.wp-block-columns > .wp-block-column {
+	margin: 0;
+	min-width: 0;
+	flex-basis: auto;
 }
 
 .hp-about-template .hp-about-skills-edu__col {
@@ -2184,7 +2571,7 @@ code, kbd, samp {
 
 .hp-about-template .hp-about-skills-edu__col > h2 {
 	margin-top: 0;
-	margin-bottom: var(--wp--preset--spacing--5);
+	margin-bottom: var(--wp--preset--spacing--6);
 }
 
 .hp-about-template .hp-about-skills-edu .hp-skills {
@@ -2198,8 +2585,15 @@ code, kbd, samp {
 	margin-top: var(--wp--preset--spacing--4);
 }
 
+.hp-about-template .hp-about-skills-edu .hp-skill-group__legend {
+	margin-bottom: var(--wp--preset--spacing--3);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: 0.04em;
+	color: var(--wp--custom--text--faint);
+}
+
 /* Education cards — parchment tiles in the same register as the work
-   ledger rows, minus the status rule. */
+	 ledger rows, minus the status rule. */
 .hp-about-template .hp-edu-list {
 	display: flex;
 	flex-direction: column;
@@ -2211,7 +2605,7 @@ code, kbd, samp {
 	border: 1px solid var(--wp--custom--border--hair);
 	border-radius: var(--hp-radius-card);
 	background: var(--wp--custom--surface--card);
-	box-shadow: var(--wp--custom--shadow--xs);
+	box-shadow: none;
 }
 
 .hp-about-template .hp-edu-card__degree {
@@ -2286,7 +2680,8 @@ code, kbd, samp {
 .hp-about-template .hp-project__name a {
 	color: var(--wp--custom--text--strong);
 	text-decoration: none;
-	border-bottom: 1px solid color-mix(in srgb, var(--hp-artifact) 55%, transparent);
+	border-bottom: 1px solid
+		color-mix(in srgb, var(--hp-artifact) 55%, transparent);
 }
 
 .hp-about-template .hp-project__name a:hover {
@@ -2302,7 +2697,7 @@ code, kbd, samp {
 }
 
 /* Stack chips — mono, hairline-bordered, artifact-blue ink, matching the
-   reference's tech tags. */
+	 reference's tech tags. */
 .hp-about-template .hp-project__stack {
 	gap: var(--hp-gap-xs);
 	margin-top: auto;
@@ -2322,9 +2717,9 @@ code, kbd, samp {
 
 /* ---- RESPONSIVE COLLAPSE ------------------------------------------- */
 /* Below the wide-pull breakpoint, collapse the new card grids and the
-   2-col split to a single column. (The base theme already stacks the
-   signal strip and re-flows .hp-skills at its own breakpoints; these
-   rules own only the NEW grids.) */
+	 2-col split to a single column. (The base theme already stacks the
+	 signal strip and re-flows .hp-skills at its own breakpoints; these
+	 rules own only the NEW grids.) */
 @media (max-width: 55.99rem) {
 	.hp-about-template .hp-capability-grid.wp-block-columns,
 	.hp-about-template .hp-project-grid.wp-block-columns {
@@ -2348,12 +2743,288 @@ code, kbd, samp {
 	}
 }
 
-/* About — the new wide rows (capabilities, skills+education, projects) break out
-   explicitly like the impact strip / work ledger, because alignwide does not
-   resolve to wideSize inside page-about.html's explicitly-constrained post-content. */
+/* =====================================================================
+	 ABOUT — SNAPSHOT-FIDELITY POLISH
+	 Brings the About / Resume page to a complete match with the Imladris
+	 Design System "About" template (the claude.ai/design snapshot). Scoped
+	 to .hp-about-template; every value resolves to an existing theme.json
+	 token. Later in source order than the composition layer above, so these
+	 refinements win at equal specificity. Pairs with the post_content
+	 rebuild (résumé-card Experience, gold-# Tag pills).
+	 ===================================================================== */
+
+/* Eyebrows sing in mallorn-gold here (the snapshot's section kickers are
+	 gold; the global .hp-eyebrow is muted). */
+.hp-about-template .hp-eyebrow {
+	color: var(--wp--custom--text--accent);
+}
+
+/* ---- HERO ----------------------------------------------------------- */
+/* h1 at display tight leading, filling the copy column. */
+.hp-about-template .hp-about-hero__title {
+	max-width: 26ch;
+	line-height: var(--wp--custom--leading--tight);
+}
+
+/* Lead at reading-body scale (the snapshot lead is body, not lg). */
+.hp-about-template .hp-about-hero__lead {
+	font-size: var(--wp--preset--font-size--md);
+}
+
+/* Floating gilt halo: a soft drop shadow on the portrait plus a gold
+	 hairline ring 10px outside it (the snapshot's layered frame). */
+.hp-about-template .hp-about-avatar {
+	position: relative;
+	overflow: visible;
+	box-shadow: var(--wp--custom--shadow--md);
+}
+.hp-about-template .hp-about-avatar::before {
+	content: "";
+	position: absolute;
+	inset: -10px;
+	border-radius: 50%;
+	box-shadow: var(--wp--custom--shadow--gilt);
+	pointer-events: none;
+}
+
+/* ---- IMPACT STRIP --------------------------------------------------- */
+/* The base .hp-signal renders a mono value over an UPPERCASE mono micro-
+	 label. The snapshot's stat cells use a Cormorant semibold value over a
+	 sentence-case muted description — restore that, About-scoped. */
+.hp-about-template .hp-about-impact .hp-signal {
+	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+}
+.hp-about-template .hp-about-impact .hp-signal__value {
+	font-family: var(--hp-font-display);
+	font-size: var(--wp--preset--font-size--base);
+	font-weight: var(--wp--custom--weight--semibold);
+	line-height: 1.2;
+	color: var(--wp--custom--text--strong);
+}
+.hp-about-template .hp-about-impact .hp-signal__label {
+	margin-top: 6px;
+	font-family: var(--hp-font-body);
+	font-size: var(--wp--preset--font-size--xs);
+	font-weight: var(--wp--custom--weight--regular);
+	letter-spacing: var(--wp--custom--tracking--normal);
+	line-height: var(--wp--custom--leading--normal);
+	text-transform: none;
+	color: var(--wp--custom--text--muted);
+}
+
+/* ---- TAG PILLS (hero role tags + skills) ---------------------------- */
+/* Both rows render the design Tag pill (.hp-tag, gold #). Match the
+	 snapshot's tight space-2 gap. */
+.hp-about-template .hp-role-tags,
+.hp-about-template .hp-tag-row {
+	gap: var(--wp--preset--spacing--2);
+}
+
+/* ---- INTRO BLOCKQUOTE: raised parchment card ------------------------ */
+/* The snapshot frames the standfirst quote as a figure: gold left rule,
+	 raised parchment fill, rounded right corners, a display open-quote
+	 glyph, and a Marcellus attribution. Still capped at body scale, so the
+	 theme's "testimony never outranks the work" rule holds. */
+.hp-about-template .hp-quote.wp-block-quote {
+	position: relative;
+	margin-block: var(--wp--preset--spacing--6);
+	padding: var(--wp--preset--spacing--5) var(--wp--preset--spacing--6);
+	border-left: var(--hp-rule-quote) solid var(--hp-gold);
+	border-radius: 0 var(--hp-radius-card) var(--hp-radius-card) 0;
+	background: var(--wp--custom--surface--raised);
+}
+.hp-about-template .hp-quote.wp-block-quote p {
+	color: var(--wp--custom--text--strong);
+}
+.hp-about-template .hp-quote.wp-block-quote p:first-of-type::before {
+	content: "\201C";
+	margin-right: 0.12em;
+	font-family: var(--hp-font-display);
+	font-style: normal;
+	font-size: var(--wp--preset--font-size--2-xl);
+	line-height: 0;
+	vertical-align: -0.35em;
+	color: var(--wp--preset--color--gold-400);
+}
+.hp-about-template .hp-quote.wp-block-quote cite {
+	font-family: var(--hp-font-label);
+	font-style: normal;
+	letter-spacing: var(--wp--custom--tracking--wide);
+	text-transform: none;
+}
+.hp-about-template .hp-quote.wp-block-quote cite::before {
+	content: "\2014\00a0";
+	color: var(--wp--custom--text--faint);
+}
+
+/* ---- CARD TITLES at display h4 -------------------------------------- */
+.hp-about-template .hp-capability__title,
+.hp-about-template .hp-project__name {
+	font-size: var(--wp--preset--font-size--xl);
+	line-height: var(--wp--custom--leading--snug);
+}
+
+/* ---- SELECTED PROJECTS tweaks --------------------------------------- */
+/* Tech chips: hairline outline, no fill, 4px radius (snapshot). */
+.hp-about-template .hp-project__tech {
+	border-radius: var(--hp-radius-register);
+	background: transparent;
+}
+/* Clickable-card affordance (the snapshot wraps the whole card in a link;
+	 we keep the accessible title link and signal the card on hover). */
+.hp-about-template .hp-project {
+	transition:
+		border-color var(--dur-fast, 140ms) var(--wp--custom--ease--calm),
+		box-shadow var(--dur-fast, 140ms) var(--wp--custom--ease--calm);
+}
+.hp-about-template .hp-project:hover {
+	border-color: color-mix(
+		in srgb,
+		var(--hp-artifact) 45%,
+		var(--wp--custom--border--hair)
+	);
+	box-shadow: var(--wp--custom--shadow--md);
+}
+
+/* ---- SKILLS + EDUCATION heads --------------------------------------- */
+/* Section heads at h3 scale over a gold eyebrow (the snapshot uses
+	 type-h3 for Skills / Education). */
+.hp-about-template .hp-about-skills-edu__col > .hp-eyebrow {
+	margin: 0 0 var(--wp--preset--spacing--3);
+	font-size: var(--wp--preset--font-size--xs);
+}
+.hp-about-template .hp-about-skills-edu__col > h2 {
+	font-size: var(--wp--preset--font-size--2-xl);
+	letter-spacing: var(--wp--custom--tracking--tight);
+}
+
+/* ---- EXPERIENCE: résumé cards --------------------------------------- */
+/* Replaces the status-ledger for About: separate parchment cards with a
+	 green (brand) left rule, the role as the card title, a gold Marcellus
+	 company line with a faint location, right-aligned mono dates, and
+	 gold-dot achievement bullets — the snapshot's "Where the work was done"
+	 anatomy. */
+.hp-about-template .hp-about-experience {
+	margin-top: var(--wp--preset--spacing--8);
+}
+.hp-about-template .hp-about-experience .hp-eyebrow {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--xs);
+}
+.hp-about-template .hp-about-experience > h2 {
+	margin: var(--wp--preset--spacing--3) 0 var(--wp--preset--spacing--6);
+}
+.hp-about-template .hp-exp-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--4);
+	margin-top: 0;
+}
+.hp-about-template .hp-exp {
+	padding: var(--wp--preset--spacing--5);
+	border-left: var(--hp-rule-entry) solid var(--wp--custom--border--brand);
+	border-radius: var(--hp-radius-card);
+	background: var(--wp--custom--surface--card);
+	box-shadow: var(--wp--custom--shadow--sm);
+}
+.hp-about-template .hp-exp__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--wp--preset--spacing--3) var(--wp--preset--spacing--4);
+}
+.hp-about-template .hp-exp__role {
+	margin: 0;
+	font-family: var(--hp-font-display);
+	font-size: var(--wp--preset--font-size--xl);
+	font-weight: var(--wp--custom--weight--semibold);
+	line-height: var(--wp--custom--leading--snug);
+	letter-spacing: -0.005em;
+	color: var(--wp--custom--text--strong);
+}
+.hp-about-template .hp-exp__dates {
+	margin: 0;
+	font-family: var(--hp-font-mono);
+	font-size: var(--wp--preset--font-size--xs);
+	color: var(--wp--custom--text--faint);
+	white-space: nowrap;
+}
+.hp-about-template .hp-exp__org {
+	margin: var(--hp-gap-xs) 0 0;
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--sm);
+	letter-spacing: var(--wp--custom--tracking--wide);
+	color: var(--wp--custom--text--accent);
+}
+.hp-about-template .hp-exp__loc {
+	color: var(--wp--custom--text--faint);
+}
+.hp-about-template .hp-exp__points {
+	margin: var(--wp--preset--spacing--4) 0 0;
+	padding: 0;
+	list-style: none;
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--3);
+}
+.hp-about-template .hp-exp__points li {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	gap: var(--wp--preset--spacing--3);
+	margin: 0;
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: var(--wp--custom--leading--relaxed);
+	color: var(--wp--custom--text--muted);
+}
+.hp-about-template .hp-exp__points li::before {
+	content: "";
+	margin-top: 0.55em;
+	width: 5px;
+	height: 5px;
+	flex: 0 0 auto;
+	border-radius: 50%;
+	background: var(--wp--preset--color--gold-500);
+}
+/* Proof refs kept from the ledger, as a quiet river-blue mono footer. */
+.hp-about-template .hp-exp__artifacts {
+	margin: var(--wp--preset--spacing--4) 0 0;
+	padding-top: var(--wp--preset--spacing--3);
+	border-top: 1px solid var(--wp--custom--border--hair);
+	font-family: var(--hp-font-mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	line-height: 1.6;
+	color: var(--wp--custom--text--faint);
+}
+.hp-about-template .hp-exp__artifacts a {
+	color: var(--hp-artifact);
+	text-decoration: none;
+	border-bottom: 1px solid
+		color-mix(in srgb, var(--hp-artifact) 35%, transparent);
+}
+.hp-about-template .hp-exp__artifacts a:hover {
+	border-bottom-color: var(--hp-artifact);
+}
+
+/* ---- WIDE BREAKOUT -------------------------------------------------- */
+/* The wide sections (capabilities, experience, skills+education, projects)
+	 break out to the wide measure as whole wrappers — eyebrow, heading, and
+	 grid together — because alignwide does not resolve to wideSize inside
+	 page-about.html's explicitly-constrained post-content. Pulling the
+	 wrapper (not just the inner grid) keeps each section's eyebrow + h2
+	 left-aligned with its cards, as in the snapshot. */
 @media (min-width: 56rem) {
-	.hp-about-template :is(.hp-capability-grid, .hp-about-skills-edu, .hp-project-grid) {
-		--hp-about-wide: min(var(--wp--custom--container--wide, 72rem), 100vw - 2 * var(--wp--preset--spacing--6, 2rem));
+	.hp-about-template
+		:is(
+			.hp-about-capabilities,
+			.hp-about-experience,
+			.hp-about-skills-edu,
+			.hp-about-projects
+		) {
+		--hp-about-wide: min(
+			var(--wp--custom--container--wide, 72rem),
+			100vw - 2 * var(--wp--preset--spacing--6, 2rem)
+		);
 		width: var(--hp-about-wide);
 		max-width: none;
 		margin-inline: calc(50% - var(--hp-about-wide) / 2) !important;

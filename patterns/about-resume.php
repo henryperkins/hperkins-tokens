@@ -1,0 +1,667 @@
+<?php
+/**
+ * Title: About / Resume
+ * Slug: hperkins-tokens/about-resume
+ * Categories: hperkins
+ * Description: The full About / Resume composition — hero with gilt portrait and impact strip, "What I do" capability cards, résumé-card experience, skills + education, and selected projects — matching the Imladris design system. Place inside the page-about template's constrained content area.
+ */
+?>
+<!-- wp:group {"align":"wide","className":"hp-about-hero","layout":{"type":"default"}} -->
+<div class="wp-block-group alignwide hp-about-hero"><!-- wp:group {"className":"hp-about-hero__top","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"center"}} -->
+<div class="wp-block-group hp-about-hero__top"><!-- wp:group {"className":"hp-about-hero__copy","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-about-hero__copy"><!-- wp:paragraph {"className":"hp-eyebrow hp-about-hero__kicker"} -->
+<p class="hp-eyebrow hp-about-hero__kicker">About · Henry Perkins</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":1,"className":"hp-about-hero__title"} -->
+<h1 class="wp-block-heading hp-about-hero__title">Solutions Engineer &mdash; AI workflows, WordPress, and API integrations</h1>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-about-hero__lead"} -->
+<p class="hp-about-hero__lead">Customer-facing technical delivery across implementation, support, documentation, and enablement. I scope the problem, write the code, document the handoff, and make the proof easy to inspect.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-role-tags","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-role-tags"><!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Solutions Engineer</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Implementation Engineer</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Developer Enablement</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:buttons {"className":"hp-about-hero__cta","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-buttons hp-about-hero__cta"><!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="mailto:henry@lakefrontdigital.io">Get in touch</a></div>
+<!-- /wp:button -->
+
+<!-- wp:button {"className":"is-style-secondary"} -->
+<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="https://hperkins.blog/wp-content/uploads/2026/06/henry-perkins-ats-resume.pdf">View r&eacute;sum&eacute;</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-about-hero__portrait","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-about-hero__portrait"><!-- wp:image {"sizeSlug":"full","linkDestination":"none","className":"hp-about-avatar is-style-rounded"} -->
+<figure class="wp-block-image size-full hp-about-avatar is-style-rounded"><img src="https://hperkins.blog/wp-content/uploads/2026/06/henry-perkins.png" alt="Henry Perkins"/></figure>
+<!-- /wp:image --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-signal-strip hp-about-impact","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-signal-strip hp-about-impact"><!-- wp:group {"className":"hp-signal","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-signal"><!-- wp:paragraph {"className":"hp-signal__value"} -->
+<p class="hp-signal__value">Since 2007</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-signal__label"} -->
+<p class="hp-signal__label">Customer-facing technical, support, community, and operations work</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-signal","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-signal"><!-- wp:paragraph {"className":"hp-signal__value"} -->
+<p class="hp-signal__value">3 public projects</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-signal__label"} -->
+<p class="hp-signal__label">Live or public proof across AI workflows, Cloudflare, and WordPress</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-signal","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-signal"><!-- wp:paragraph {"className":"hp-signal__value"} -->
+<p class="hp-signal__value">Discovery to launch</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-signal__label"} -->
+<p class="hp-signal__label">Implementation ownership across scoping, delivery, and post-launch support</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-signal","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-signal"><!-- wp:paragraph {"className":"hp-signal__value"} -->
+<p class="hp-signal__value">Support &middot; product &middot; eng</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-signal__label"} -->
+<p class="hp-signal__label">Coverage across support, product, engineering, documentation, and community</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-signal","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-signal"><!-- wp:paragraph {"className":"hp-signal__value"} -->
+<p class="hp-signal__value">AI &middot; WordPress &middot; Cloudflare</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-signal__label"} -->
+<p class="hp-signal__label">AI-assisted workflows paired with durable web delivery</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">Throughline</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Before the AI work, there were service counters, WordPress community rooms, and operations shifts where the system either worked or it did not. Those years shaped the way I build now: make the work concrete, keep the failure modes visible, and explain the tradeoffs to the person who needs the outcome.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>What ties my projects together is the same throughline in my support, community, and consulting background: I like taking messy information and turning it into clear workflows, calmer operations, and practical tools that non-specialists can actually use.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>WordPress is where my depth is: PageLines developer community work, WordPress.com support at Automattic, client delivery through Lakefront Digital, and current contributions around the platform&#8217;s AI stack. The broader pattern is portable: anywhere agents act on live systems, teams need bounded operations, review gates, attribution, and rollback.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:quote {"className":"hp-quote is-style-imladris"} -->
+<blockquote class="wp-block-quote hp-quote is-style-imladris"><!-- wp:paragraph {"fontSize":"base"} -->
+<p class="has-base-font-size">I combine support habits, WordPress delivery, TypeScript, and documentation work so teams can ship systems that are easier to maintain, explain, and hand off.</p>
+<!-- /wp:paragraph --><cite>Solutions Engineer</cite></blockquote>
+<!-- /wp:quote -->
+
+<!-- wp:group {"align":"wide","className":"hp-about-capabilities","layout":{"type":"default"}} -->
+<div class="wp-block-group alignwide hp-about-capabilities"><!-- wp:paragraph {"className":"hp-eyebrow"} -->
+<p class="hp-eyebrow">What I do</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">AI all day. Everything else too.</h2>
+<!-- /wp:heading -->
+
+<!-- wp:columns {"align":"wide","className":"hp-capability-grid"} -->
+<div class="wp-block-columns alignwide hp-capability-grid"><!-- wp:column {"className":"hp-capability"} -->
+<div class="wp-block-column hp-capability"><!-- wp:heading {"level":3,"className":"hp-capability__title"} -->
+<h3 class="wp-block-heading hp-capability__title">AI Agents &amp; Prompt Engineering</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-capability__text"} -->
+<p class="hp-capability__text">I design agentic workflows &mdash; prompt pipelines, reasoning chains, autonomous loops &mdash; and the tooling that makes them repeatable. Not demos. Systems that hold up when a real person presses the button.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-capability__text"} -->
+<p class="hp-capability__text">I built Prompt Forge because I needed a place to design, iterate, and organize prompts at scale. Then I shipped it so other people could too.</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:column -->
+
+<!-- wp:column {"className":"hp-capability"} -->
+<div class="wp-block-column hp-capability"><!-- wp:heading {"level":3,"className":"hp-capability__title"} -->
+<h3 class="wp-block-heading hp-capability__title">Technical Consulting &amp; Delivery</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-capability__text"} -->
+<p class="hp-capability__text">Full-arc project ownership: discovery, scoping, build, launch, post-launch. WordPress and WooCommerce platforms. Cloudflare Workers deployments. API integrations and webhook configs. React + TypeScript front ends.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-capability__text"} -->
+<p class="hp-capability__text">I don&#8217;t hand off half-finished work &mdash; I ship it, document it, and make sure someone else can maintain it after I leave.</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:column -->
+
+<!-- wp:column {"className":"hp-capability"} -->
+<div class="wp-block-column hp-capability"><!-- wp:heading {"level":3,"className":"hp-capability__title"} -->
+<h3 class="wp-block-heading hp-capability__title">Documentation &amp; Developer Enablement</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-capability__text"} -->
+<p class="hp-capability__text">The best system in the world fails the moment the person who built it walks away. I write the docs, build the onboarding paths, and create the internal tooling that turns tribal knowledge into something a new hire can follow.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-capability__text"} -->
+<p class="hp-capability__text">I&#8217;ve been doing this since I ran a developer community of WordPress professionals at PageLines.</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:column --></div>
+<!-- /wp:columns --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"align":"wide","className":"hp-about-experience","layout":{"type":"default"}} -->
+<div class="wp-block-group alignwide hp-about-experience"><!-- wp:paragraph {"className":"hp-eyebrow"} -->
+<p class="hp-eyebrow">Experience</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">Where the work was done</h2>
+<!-- /wp:heading -->
+
+<!-- wp:group {"className":"hp-exp-list","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-exp-list"><!-- wp:group {"className":"hp-exp","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"baseline"}} -->
+<div class="wp-block-group hp-exp__head"><!-- wp:heading {"level":3,"className":"hp-exp__role"} -->
+<h3 class="wp-block-heading hp-exp__role">Independent Technology Consultant</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-exp__dates"} -->
+<p class="hp-exp__dates">Oct 2022 &ndash; Present</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:paragraph {"className":"hp-exp__org"} -->
+<p class="hp-exp__org">Lakefront Digital <span class="hp-exp__loc">&middot; Greater Chicago Area, IL</span></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"className":"hp-exp__points"} -->
+<ul class="wp-block-list hp-exp__points"><!-- wp:list-item -->
+<li>Delivered customer-facing implementation projects across WordPress builds, API integrations, documentation, and AI-assisted workflow prototypes from discovery through launch and post-launch support.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Built reusable documentation and API-connected automation that reduced manual handoffs and improved maintainability across client engagements.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Shipped WordPress, WooCommerce, and Cloudflare-backed web experiences with structured content models, smoke-check automation, and deployment workflows.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list -->
+
+<!-- wp:paragraph {"className":"hp-exp__artifacts"} -->
+<p class="hp-exp__artifacts">Artifacts: <a href="/work/flavor-agent/">Flavor Agent</a> &middot; <a href="/work/ai-provider-for-codex/">Scriptorium AI Provider for Codex</a> &middot; <a href="/work/upstream-core-ai-stack/">Core AI stack</a></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-exp","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"baseline"}} -->
+<div class="wp-block-group hp-exp__head"><!-- wp:heading {"level":3,"className":"hp-exp__role"} -->
+<h3 class="wp-block-heading hp-exp__role">Shift Supervisor</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-exp__dates"} -->
+<p class="hp-exp__dates">Apr 2019 &ndash; Sep 2022</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:paragraph {"className":"hp-exp__org"} -->
+<p class="hp-exp__org">Starbucks <span class="hp-exp__loc">&middot; Greater Chicago Area, IL</span></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"className":"hp-exp__points"} -->
+<ul class="wp-block-list hp-exp__points"><!-- wp:list-item -->
+<li>Coordinated frontline teams across high-volume shifts, handling escalations and maintaining service, safety, and workflow standards during peak periods.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Coached baristas on repeatable operating routines so staffing changes and rush windows did not break service consistency.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-exp","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"baseline"}} -->
+<div class="wp-block-group hp-exp__head"><!-- wp:heading {"level":3,"className":"hp-exp__role"} -->
+<h3 class="wp-block-heading hp-exp__role">Happiness Engineer</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-exp__dates"} -->
+<p class="hp-exp__dates">Oct 2012 &ndash; Nov 2012</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:paragraph {"className":"hp-exp__org"} -->
+<p class="hp-exp__org">Automattic, Inc. (WordPress.com) <span class="hp-exp__loc">&middot; Remote</span></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"className":"hp-exp__points"} -->
+<ul class="wp-block-list hp-exp__points"><!-- wp:list-item -->
+<li>Resolved customer issues across WordPress.com publishing, site configuration, billing, and domain/DNS workflows &mdash; turning recurring problems into documentation, bug reports, and reproducible details for product and engineering.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Reduced confusion around account and site configuration by delivering clear written troubleshooting that addressed root causes, not just symptoms.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-exp","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"baseline"}} -->
+<div class="wp-block-group hp-exp__head"><!-- wp:heading {"level":3,"className":"hp-exp__role"} -->
+<h3 class="wp-block-heading hp-exp__role">Developer Community Manager</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-exp__dates"} -->
+<p class="hp-exp__dates">May 2012 &ndash; Oct 2012</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:paragraph {"className":"hp-exp__org"} -->
+<p class="hp-exp__org">PageLines, Inc. <span class="hp-exp__loc">&middot; Remote</span></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"className":"hp-exp__points"} -->
+<ul class="wp-block-list hp-exp__points"><!-- wp:list-item -->
+<li>Supported a developer community around the PageLines ecosystem through onboarding content, tutorials, and day-to-day relationship management.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Translated community questions and feedback into clearer product priorities and developer guidance.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li>Represented PageLines at WordCamps as an official sponsor &mdash; ran the booth, demoed product, and built founder-level relationships across the WordPress industry.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-exp","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"baseline"}} -->
+<div class="wp-block-group hp-exp__head"><!-- wp:heading {"level":3,"className":"hp-exp__role"} -->
+<h3 class="wp-block-heading hp-exp__role">Service &amp; Sales</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-exp__dates"} -->
+<p class="hp-exp__dates">2009 &ndash; 2012</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:paragraph {"className":"hp-exp__org"} -->
+<p class="hp-exp__org">Micro Center <span class="hp-exp__loc">&middot; Greater Chicago Area, IL</span></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"className":"hp-exp__points"} -->
+<ul class="wp-block-list hp-exp__points"><!-- wp:list-item -->
+<li>Delivered troubleshooting and product guidance in a high-volume retail technology environment, translating technical detail into plain guidance for customers.</li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:paragraph {"className":"hp-work__footer"} -->
+<p class="hp-work__footer">Full chronology, including earlier roles, is in the <a href="https://hperkins.blog/wp-content/uploads/2026/06/henry-perkins-ats-resume.pdf">PDF r&eacute;sum&eacute;</a> &middot; interactive version at <a href="https://hperkins.com/resume">hperkins.com/resume</a>.</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:columns {"align":"wide","className":"hp-about-skills-edu"} -->
+<div class="wp-block-columns alignwide hp-about-skills-edu"><!-- wp:column {"className":"hp-about-skills-edu__col"} -->
+<div class="wp-block-column hp-about-skills-edu__col"><!-- wp:paragraph {"className":"hp-eyebrow"} -->
+<p class="hp-eyebrow">Toolkit</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">Skills</h2>
+<!-- /wp:heading -->
+
+<!-- wp:group {"className":"hp-skills","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-skills"><!-- wp:group {"className":"hp-skill-group","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-skill-group"><!-- wp:paragraph {"className":"hp-skill-group__legend"} -->
+<p class="hp-skill-group__legend">Languages &amp; frontend</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>TypeScript</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>JavaScript</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>React</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>PHP</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Python</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-skill-group","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-skill-group"><!-- wp:paragraph {"className":"hp-skill-group__legend"} -->
+<p class="hp-skill-group__legend">AI &amp; automation</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>OpenAI API integrations</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>AI workflow prototyping</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Prompt design</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Workflow automation</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-skill-group","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-skill-group"><!-- wp:paragraph {"className":"hp-skill-group__legend"} -->
+<p class="hp-skill-group__legend">WordPress &amp; web delivery</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>WordPress</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>WooCommerce</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Cloudflare Workers</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Vite</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Tailwind CSS</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-skill-group","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-skill-group"><!-- wp:paragraph {"className":"hp-skill-group__legend"} -->
+<p class="hp-skill-group__legend">Support &amp; enablement</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Technical support</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Escalation triage</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Documentation</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Customer onboarding</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Developer enablement</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-skill-group","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-skill-group"><!-- wp:paragraph {"className":"hp-skill-group__legend"} -->
+<p class="hp-skill-group__legend">Tools &amp; workflow</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Git</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>GitHub</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>REST APIs</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Webhook configuration</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Zendesk</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Jira</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-skill-group","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-skill-group"><!-- wp:paragraph {"className":"hp-skill-group__legend"} -->
+<p class="hp-skill-group__legend">Leadership &amp; operations</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Team coaching</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Cross-functional collaboration</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Process improvement</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-tag"} -->
+<p class="hp-tag"><span>#</span>Stakeholder communication</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
+<!-- /wp:column -->
+
+<!-- wp:column {"className":"hp-about-skills-edu__col"} -->
+<div class="wp-block-column hp-about-skills-edu__col"><!-- wp:paragraph {"className":"hp-eyebrow"} -->
+<p class="hp-eyebrow">Foundations</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">Education</h2>
+<!-- /wp:heading -->
+
+<!-- wp:group {"className":"hp-edu-list","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-edu-list"><!-- wp:group {"className":"hp-edu-card","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-edu-card"><!-- wp:paragraph {"className":"hp-edu-card__degree"} -->
+<p class="hp-edu-card__degree">B.S., Organizational Leadership</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-edu-card__meta","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between"}} -->
+<div class="wp-block-group hp-edu-card__meta"><!-- wp:paragraph {"className":"hp-edu-card__school"} -->
+<p class="hp-edu-card__school">Arizona State University</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-edu-card__period"} -->
+<p class="hp-edu-card__period">Expected May 2026</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-edu-card","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-edu-card"><!-- wp:paragraph {"className":"hp-edu-card__degree"} -->
+<p class="hp-edu-card__degree">A.S., Business Administration &amp; Management</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-edu-card__meta","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between"}} -->
+<div class="wp-block-group hp-edu-card__meta"><!-- wp:paragraph {"className":"hp-edu-card__school"} -->
+<p class="hp-edu-card__school">College of DuPage</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-edu-card__period"} -->
+<p class="hp-edu-card__period">2013</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-edu-card","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-edu-card"><!-- wp:paragraph {"className":"hp-edu-card__degree"} -->
+<p class="hp-edu-card__degree">Studies in Journalism &amp; Mass Communications</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-edu-card__meta","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between"}} -->
+<div class="wp-block-group hp-edu-card__meta"><!-- wp:paragraph {"className":"hp-edu-card__school"} -->
+<p class="hp-edu-card__school">Columbia College Chicago</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-edu-card__period"} -->
+<p class="hp-edu-card__period">2007 &ndash; 2008</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
+<!-- /wp:column --></div>
+<!-- /wp:columns -->
+
+<!-- wp:group {"align":"wide","className":"hp-about-projects","layout":{"type":"default"}} -->
+<div class="wp-block-group alignwide hp-about-projects"><!-- wp:paragraph {"className":"hp-eyebrow"} -->
+<p class="hp-eyebrow">Public proof</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">Selected projects</h2>
+<!-- /wp:heading -->
+
+<!-- wp:columns {"align":"wide","className":"hp-project-grid"} -->
+<div class="wp-block-columns alignwide hp-project-grid"><!-- wp:column {"className":"hp-project"} -->
+<div class="wp-block-column hp-project"><!-- wp:heading {"level":3,"className":"hp-project__name"} -->
+<h3 class="wp-block-heading hp-project__name"><a href="https://github.com/henryperkins/ai-prompt-pro">Prompt Forge</a></h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-project__impact"} -->
+<p class="hp-project__impact">Built a TypeScript-based AI workflow platform with a public repo, production deployment, and features for prompt building, storage, and community sharing.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-project__stack","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-project__stack"><!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">TypeScript</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">React</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">Neon</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">AI</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:column -->
+
+<!-- wp:column {"className":"hp-project"} -->
+<div class="wp-block-column hp-project"><!-- wp:heading {"level":3,"className":"hp-project__name"} -->
+<h3 class="wp-block-heading hp-project__name"><a href="https://hperkins.com">HPerkins.com</a></h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-project__impact"} -->
+<p class="hp-project__impact">Implemented a portfolio stack combining React, TypeScript, GitHub-backed content, CI checks, and Cloudflare deployment workflows.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-project__stack","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-project__stack"><!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">React</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">TypeScript</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">Vite</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">Cloudflare Workers</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:column -->
+
+<!-- wp:column {"className":"hp-project"} -->
+<div class="wp-block-column hp-project"><!-- wp:heading {"level":3,"className":"hp-project__name"} -->
+<h3 class="wp-block-heading hp-project__name"><a href="https://github.com/henryperkins/wp-hperkins-com">WordPress Portfolio</a></h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-project__impact"} -->
+<p class="hp-project__impact">Maintained a custom WordPress portfolio theme (henrys-digital-canvas) in a public repo with smoke-check automation for the WordPress stack.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-project__stack","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-project__stack"><!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">WordPress</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">PHP</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">Theme Development</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:column --></div>
+<!-- /wp:columns --></div>
+<!-- /wp:group -->
