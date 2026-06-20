@@ -5,8 +5,8 @@
  * Categories: hperkins
  * Description: A homepage or portfolio landing hero featuring the HPerkins Wapuu as signature artwork with restrained proof chips.
  */
-$hperkins_wapuu_file = get_stylesheet_directory() . '/assets/wapuu/wapuu-hero.png';
-$hperkins_wapuu_src  = get_stylesheet_directory_uri() . '/assets/wapuu/wapuu-hero.png';
+$hperkins_wapuu_file = get_stylesheet_directory() . '/assets/img/wapuu-color.png';
+$hperkins_wapuu_src  = get_stylesheet_directory_uri() . '/assets/img/wapuu-color.png';
 // Cache-bust on the file's mtime: assets are served with a 30-day max-age, so a
 // swapped image keeps the same filename and would otherwise stay cached as stale.
 $hperkins_wapuu_url  = esc_url( file_exists( $hperkins_wapuu_file ) ? $hperkins_wapuu_src . '?v=' . filemtime( $hperkins_wapuu_file ) : $hperkins_wapuu_src );

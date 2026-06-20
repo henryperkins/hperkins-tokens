@@ -8,8 +8,8 @@
 ?>
 <!-- wp:quote {"className":"hp-quote"} -->
 <blockquote class="wp-block-quote hp-quote">
-	<!-- wp:paragraph {"fontSize":"medium"} -->
-	<p class="has-medium-font-size">The governance layer did exactly what we needed: every status was traceable to an artifact we could open ourselves. Nothing was asserted that wasn't also verifiable.</p>
+	<!-- wp:paragraph {"fontSize":"base"} -->
+	<p class="has-base-font-size">The governance layer did exactly what we needed: every status was traceable to an artifact we could open ourselves. Nothing was asserted that wasn't also verifiable.</p>
 	<!-- /wp:paragraph -->
 	<cite>— Client name, Role, Organization</cite>
 </blockquote>

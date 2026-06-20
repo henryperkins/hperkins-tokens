@@ -34,9 +34,19 @@ add_action( 'wp_enqueue_scripts', function () {
 		$wapuu_mark_url = add_query_arg( 'v', filemtime( $wapuu_mark_file ), $wapuu_mark_url );
 	}
 
+	$footer_backdrop_file = get_stylesheet_directory() . '/assets/img/imagery/valley-twilight.png';
+	$footer_backdrop_url  = get_stylesheet_directory_uri() . '/assets/img/imagery/valley-twilight.png';
+	if ( file_exists( $footer_backdrop_file ) ) {
+		$footer_backdrop_url = add_query_arg( 'v', filemtime( $footer_backdrop_file ), $footer_backdrop_url );
+	}
+
 	wp_add_inline_style(
 		'hperkins-tokens',
-		sprintf( ':root{--hp-wapuu-mark-url:url(%s);}', wp_json_encode( esc_url( $wapuu_mark_url ), JSON_UNESCAPED_SLASHES ) )
+		sprintf(
+			':root{--hp-wapuu-mark-url:url(%1$s);--hp-footer-backdrop-url:url(%2$s);}',
+			wp_json_encode( esc_url( $wapuu_mark_url ), JSON_UNESCAPED_SLASHES ),
+			wp_json_encode( esc_url( $footer_backdrop_url ), JSON_UNESCAPED_SLASHES )
+		)
 	);
 
 	$nav_close_rel  = '/assets/js/nav-close-delight.js';
@@ -70,9 +80,9 @@ add_action( 'after_setup_theme', function () {
 
 	// The Assembler parent preloads InterVariable.woff2 from the stylesheet
 	// directory, which under this child theme resolves to a path that does not
-	// exist (404) — and this theme uses system fonts, so the preload is unused
-	// regardless. Drop it. (after_setup_theme runs after the parent registered
-	// the hook, so remove_action here takes effect.)
+	// exist (404). Imladris now serves its own theme.json font faces, so that
+	// preload remains wrong and unused. Drop it. (after_setup_theme runs after
+	// the parent registered the hook, so remove_action here takes effect.)
 	remove_action( 'wp_head', 'assembler_preload_fonts', 1 );
 }, 20 );
 
@@ -80,6 +90,30 @@ add_action( 'init', function () {
 	register_block_pattern_category(
 		'hperkins',
 		array( 'label' => __( 'hperkins.blog', 'hperkins-tokens' ) )
+	);
+
+	$button_styles = array(
+		'secondary' => __( 'Secondary', 'hperkins-tokens' ),
+		'ghost'     => __( 'Ghost', 'hperkins-tokens' ),
+		'accent'    => __( 'Accent', 'hperkins-tokens' ),
+		'link'      => __( 'Link', 'hperkins-tokens' ),
+	);
+	foreach ( $button_styles as $name => $label ) {
+		register_block_style(
+			'core/button',
+			array(
+				'name'  => $name,
+				'label' => $label,
+			)
+		);
+	}
+
+	register_block_style(
+		'core/quote',
+		array(
+			'name'  => 'imladris',
+			'label' => __( 'Imladris', 'hperkins-tokens' ),
+		)
 	);
 }, 9 );
 
