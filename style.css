@@ -799,7 +799,7 @@ button,
 }
 
 .hp-site-header .wp-block-navigation:not(.has-text-color) .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) {
-	color: var(--hp-neutral-900);
+	color: var(--wp--preset--color--contrast, var(--wp--custom--text--body));
 }
 
 .hp-site-header .wp-block-navigation__responsive-container-open,
