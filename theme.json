@@ -1,347 +1,627 @@
 {
-	"$schema": "https://schemas.wp.org/wp/6.6/theme.json",
-	"version": 3,
-	"templateParts": [
-		{
-			"area": "header",
-			"name": "header",
-			"title": "Header"
-		},
-		{
-			"area": "footer",
-			"name": "footer",
-			"title": "Footer"
-		}
-	],
-	"settings": {
-		"appearanceTools": true,
-		"useRootPaddingAwareAlignments": true,
-		"layout": {
-			"contentSize": "720px",
-			"wideSize": "1080px"
-		},
-		"color": {
-			"defaultPalette": false,
-			"defaultGradients": false,
-			"customGradient": false,
-			"customDuotone": false,
-			"custom": false,
-			"palette": [
-				{
-					"slug": "base",
-					"name": "Base",
-					"color": "#ffffff"
-				},
-				{
-					"slug": "surface",
-					"name": "Surface",
-					"color": "#f6f7f9"
-				},
-				{
-					"slug": "hairline",
-					"name": "Hairline",
-					"color": "#e9ecf1"
-				},
-				{
-					"slug": "muted",
-					"name": "Muted",
-					"color": "#545d6e"
-				},
-				{
-					"slug": "contrast",
-					"name": "Contrast",
-					"color": "#14181f"
-				},
-				{
-					"slug": "action",
-					"name": "Action",
-					"color": "#1a4dbe"
-				},
-				{
-					"slug": "status-merged",
-					"name": "Status / Merged",
-					"color": "#1f7a4d"
-				},
-				{
-					"slug": "status-review",
-					"name": "Status / Review",
-					"color": "#a56408"
-				},
-				{
-					"slug": "status-pending",
-					"name": "Status / Pending",
-					"color": "#6b7280"
-				},
-				{
-					"slug": "surface-merged",
-					"name": "Surface / Merged",
-					"color": "#f1f8f4"
-				},
-				{
-					"slug": "surface-review",
-					"name": "Surface / Review",
-					"color": "#fbf6ed"
-				}
-			]
-		},
-		"typography": {
-			"defaultFontSizes": false,
-			"fluid": true,
-			"fontFamilies": [
-				{
-					"slug": "system-text",
-					"name": "Text",
-					"fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-				},
-				{
-					"slug": "mono",
-					"name": "Mono",
-					"fontFamily": "ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, monospace"
-				}
-			],
-			"fontSizes": [
-				{
-					"slug": "micro",
-					"name": "Micro",
-					"size": "0.6875rem",
-					"fluid": false
-				},
-				{
-					"slug": "xs",
-					"name": "XSmall",
-					"size": "0.75rem",
-					"fluid": false
-				},
-				{
-					"slug": "small",
-					"name": "Small",
-					"size": "0.8125rem",
-					"fluid": false
-				},
-				{
-					"slug": "medium",
-					"name": "Body",
-					"size": "1rem",
-					"fluid": {
-						"min": "1rem",
-						"max": "1.0625rem"
-					}
-				},
-				{
-					"slug": "large",
-					"name": "Lead",
-					"size": "1.25rem",
-					"fluid": {
-						"min": "1.125rem",
-						"max": "1.25rem"
-					}
-				},
-				{
-					"slug": "x-large",
-					"name": "Heading",
-					"size": "1.75rem",
-					"fluid": {
-						"min": "1.5rem",
-						"max": "1.875rem"
-					}
-				},
-				{
-					"slug": "xx-large",
-					"name": "Display",
-					"size": "2.5rem",
-					"fluid": {
-						"min": "2rem",
-						"max": "2.75rem"
-					}
-				}
-			]
-		},
-		"custom": {
-			"neutral-300": "#c3cad6",
-			"touch": {
-				"min": "44px"
-			},
-			"leading": {
-				"lead": "1.45"
-			},
-			"rule": {
-				"chip": "7px",
-				"entry": "3px",
-				"evidence": "5px",
-				"quote": "2px"
-			},
-			"radius": {
-				"chip": "2px",
-				"register": "3px",
-				"tile": "4px",
-				"panel": "5px",
-				"card": "6px",
-				"frame": "8px",
-				"phone": "30px",
-				"pill": "999px"
-			},
-			"weight": {
-				"title": "650",
-				"strong": "700"
-			},
-			"gap": {
-				"xs": "0.25rem",
-				"sm": "0.35rem"
-			},
-			"grid": {
-				"pitch": "32px",
-				"actionTint": "6%",
-				"statusTint": "5%"
-			},
-			"shadow": {
-				"frame": "0 1px 2px color-mix(in srgb, var(--wp--preset--color--contrast) 5%, transparent), 0 12px 32px -12px color-mix(in srgb, var(--wp--preset--color--contrast) 22%, transparent)",
-				"phone": "inset 0 0 0 1px var(--wp--preset--color--surface), 0 1px 2px color-mix(in srgb, var(--wp--preset--color--contrast) 5%, transparent), 0 16px 36px -14px color-mix(in srgb, var(--wp--preset--color--contrast) 28%, transparent)",
-				"panel": "0 1px 2px color-mix(in srgb, var(--wp--preset--color--contrast) 4%, transparent), 0 16px 38px -24px color-mix(in srgb, var(--wp--preset--color--contrast) 18%, transparent)",
-				"mark": "inset 0 0 0 1px var(--wp--preset--color--hairline), 0 1px 2px color-mix(in srgb, var(--wp--preset--color--contrast) 6%, transparent)",
-				"mascot": "0 22px 28px color-mix(in srgb, var(--wp--preset--color--contrast) 18%, transparent)"
-			},
-			"tracking": {
-				"label": "0.08em"
-			}
-		},
-		"spacing": {
-			"defaultSpacingSizes": false,
-			"units": [
-				"px",
-				"rem",
-				"em",
-				"%",
-				"vw",
-				"vh"
-			],
-			"spacingSizes": [
-				{
-					"slug": "10",
-					"name": "Chip row",
-					"size": "0.5rem"
-				},
-				{
-					"slug": "20",
-					"name": "Inline",
-					"size": "0.75rem"
-				},
-				{
-					"slug": "30",
-					"name": "Quote indent",
-					"size": "1.25rem"
-				},
-				{
-					"slug": "40",
-					"name": "Stack",
-					"size": "1.5rem"
-				},
-				{
-					"slug": "50",
-					"name": "Artifact terminus",
-					"size": "2rem"
-				},
-				{
-					"slug": "60",
-					"name": "Section",
-					"size": "3.5rem"
-				},
-				{
-					"slug": "70",
-					"name": "Band",
-					"size": "5rem"
-				}
-			]
-		}
-	},
-	"styles": {
-		"color": {
-			"background": "var(--wp--preset--color--base)",
-			"text": "var(--wp--preset--color--contrast)"
-		},
-		"typography": {
-			"fontFamily": "var(--wp--preset--font-family--system-text)",
-			"fontSize": "var(--wp--preset--font-size--medium)",
-			"lineHeight": "1.6"
-		},
-		"elements": {
-			"link": {
-				"color": {
-					"text": "var(--wp--preset--color--action)"
-				},
-				"typography": {
-					"textDecoration": "underline"
-				},
-				":hover": {
-					"typography": {
-						"textDecoration": "none"
-					}
-				}
-			},
-			"heading": {
-				"typography": {
-					"fontFamily": "var(--wp--preset--font-family--system-text)",
-					"fontWeight": "var(--wp--custom--weight--title)",
-					"lineHeight": "1.2",
-					"letterSpacing": "-0.01em"
-				},
-				"color": {
-					"text": "var(--wp--preset--color--contrast)"
-				}
-			},
-			"h1": {
-				"typography": {
-					"fontSize": "var(--wp--preset--font-size--x-large)",
-					"lineHeight": "1.1"
-				}
-			},
-			"h2": {
-				"typography": {
-					"fontSize": "var(--wp--preset--font-size--large)",
-					"lineHeight": "1.2"
-				}
-			},
-			"h3": {
-				"typography": {
-					"fontSize": "var(--wp--preset--font-size--medium)"
-				}
-			},
-			"h4": {
-				"typography": {
-					"fontSize": "var(--wp--preset--font-size--small)"
-				}
-			},
-			"h5": {
-				"typography": {
-					"fontSize": "var(--wp--preset--font-size--xs)"
-				}
-			},
-			"h6": {
-				"typography": {
-					"fontSize": "var(--wp--preset--font-size--micro)"
-				}
-			},
-			"button": {
-				"color": {
-					"background": "var(--wp--preset--color--action)",
-					"text": "var(--wp--preset--color--base)"
-				},
-				":hover": {
-					"color": {
-						"background": "var(--wp--preset--color--contrast)",
-						"text": "var(--wp--preset--color--base)"
-					}
-				},
-				":focus-visible": {
-					"color": {
-						"background": "var(--wp--preset--color--contrast)",
-						"text": "var(--wp--preset--color--base)"
-					}
-				}
-			}
-		},
-		"spacing": {
-			"blockGap": "var(--wp--preset--spacing--40)"
-		},
-		"css": "a:focus-visible,button:focus-visible,.wp-block-button__link:focus-visible{outline:2px solid var(--wp--preset--color--action);outline-offset:2px}code{font-family:var(--wp--preset--font-family--mono);font-size:0.92em;background:var(--wp--preset--color--surface);padding:0.1em 0.35em;border-radius:var(--wp--custom--radius--chip)}"
-	}
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "templateParts": [
+    { "area": "header", "name": "header", "title": "Header" },
+    { "area": "footer", "name": "footer", "title": "Footer" }
+  ],
+  "settings": {
+    "appearanceTools": true,
+    "useRootPaddingAwareAlignments": true,
+    "layout": {
+      "contentSize": "44rem",
+      "wideSize": "72rem"
+    },
+    "color": {
+      "defaultPalette": false,
+      "defaultGradients": false,
+      "custom": true,
+      "palette": [
+        {
+          "slug": "parchment-50",
+          "color": "#FAF6EC",
+          "name": "Parchment 50"
+        },
+        {
+          "slug": "parchment-100",
+          "color": "#F5EFE1",
+          "name": "Parchment 100"
+        },
+        {
+          "slug": "parchment-200",
+          "color": "#ECE4D2",
+          "name": "Parchment 200"
+        },
+        {
+          "slug": "parchment-300",
+          "color": "#DED2B8",
+          "name": "Parchment 300"
+        },
+        {
+          "slug": "mist-100",
+          "color": "#EEF1ED",
+          "name": "Mist 100"
+        },
+        {
+          "slug": "mist-200",
+          "color": "#DCE3DD",
+          "name": "Mist 200"
+        },
+        {
+          "slug": "ink-900",
+          "color": "#1B231D",
+          "name": "Ink 900"
+        },
+        {
+          "slug": "ink-700",
+          "color": "#313B33",
+          "name": "Ink 700"
+        },
+        {
+          "slug": "ink-500",
+          "color": "#515C52",
+          "name": "Ink 500"
+        },
+        {
+          "slug": "ink-400",
+          "color": "#6E7A6E",
+          "name": "Ink 400"
+        },
+        {
+          "slug": "ink-300",
+          "color": "#94A095",
+          "name": "Ink 300"
+        },
+        {
+          "slug": "green-900",
+          "color": "#1C2E24",
+          "name": "Evergreen 900"
+        },
+        {
+          "slug": "green-800",
+          "color": "#24402F",
+          "name": "Evergreen 800"
+        },
+        {
+          "slug": "green-700",
+          "color": "#2E4A3A",
+          "name": "Evergreen 700 (brand)"
+        },
+        {
+          "slug": "green-600",
+          "color": "#3A5C49",
+          "name": "Evergreen 600"
+        },
+        {
+          "slug": "green-500",
+          "color": "#4E7459",
+          "name": "Evergreen 500"
+        },
+        {
+          "slug": "green-400",
+          "color": "#6E9479",
+          "name": "Evergreen 400"
+        },
+        {
+          "slug": "green-200",
+          "color": "#BCD0BF",
+          "name": "Evergreen 200"
+        },
+        {
+          "slug": "green-100",
+          "color": "#DCE8DD",
+          "name": "Evergreen 100"
+        },
+        {
+          "slug": "green-050",
+          "color": "#EDF3ED",
+          "name": "Evergreen 050"
+        },
+        {
+          "slug": "river-900",
+          "color": "#1E3040",
+          "name": "River 900"
+        },
+        {
+          "slug": "river-700",
+          "color": "#2C4D63",
+          "name": "River 700"
+        },
+        {
+          "slug": "river-500",
+          "color": "#3F6E89",
+          "name": "River 500"
+        },
+        {
+          "slug": "river-400",
+          "color": "#5E8CA6",
+          "name": "River 400"
+        },
+        {
+          "slug": "river-200",
+          "color": "#BAD2DF",
+          "name": "River 200"
+        },
+        {
+          "slug": "river-100",
+          "color": "#DCE9F0",
+          "name": "River 100"
+        },
+        {
+          "slug": "gold-700",
+          "color": "#9A7530",
+          "name": "Gold 700"
+        },
+        {
+          "slug": "gold-600",
+          "color": "#B08A3A",
+          "name": "Gold 600"
+        },
+        {
+          "slug": "gold-500",
+          "color": "#C29A44",
+          "name": "Gold 500 (accent)"
+        },
+        {
+          "slug": "gold-400",
+          "color": "#D2B062",
+          "name": "Gold 400"
+        },
+        {
+          "slug": "gold-200",
+          "color": "#EAD9A8",
+          "name": "Gold 200"
+        },
+        {
+          "slug": "gold-100",
+          "color": "#F4EBCF",
+          "name": "Gold 100"
+        },
+        {
+          "slug": "twilight-900",
+          "color": "#161D24",
+          "name": "Twilight 900"
+        },
+        {
+          "slug": "twilight-800",
+          "color": "#1E2730",
+          "name": "Twilight 800"
+        },
+        {
+          "slug": "twilight-700",
+          "color": "#283440",
+          "name": "Twilight 700"
+        },
+        {
+          "slug": "leaf",
+          "color": "#4E7459",
+          "name": "Leaf (success)"
+        },
+        {
+          "slug": "amber",
+          "color": "#B7842F",
+          "name": "Amber (warning)"
+        },
+        {
+          "slug": "rust",
+          "color": "#9C4A33",
+          "name": "Rust (danger)"
+        },
+        {
+          "slug": "slate",
+          "color": "#3F6E89",
+          "name": "Slate (info)"
+        }
+      ]
+    },
+    "spacing": {
+      "defaultSpacingSizes": false,
+      "units": [
+        "px",
+        "rem",
+        "em",
+        "vw",
+        "vh",
+        "%",
+        "ch"
+      ],
+      "spacingSizes": [
+        {
+          "slug": "1",
+          "size": "0.25rem",
+          "name": "1 · 4px"
+        },
+        {
+          "slug": "2",
+          "size": "0.5rem",
+          "name": "2 · 8px"
+        },
+        {
+          "slug": "3",
+          "size": "0.75rem",
+          "name": "3 · 12px"
+        },
+        {
+          "slug": "4",
+          "size": "1rem",
+          "name": "4 · 16px"
+        },
+        {
+          "slug": "5",
+          "size": "1.5rem",
+          "name": "5 · 24px"
+        },
+        {
+          "slug": "6",
+          "size": "2rem",
+          "name": "6 · 32px"
+        },
+        {
+          "slug": "7",
+          "size": "2.5rem",
+          "name": "7 · 40px"
+        },
+        {
+          "slug": "8",
+          "size": "3rem",
+          "name": "8 · 48px"
+        },
+        {
+          "slug": "9",
+          "size": "4rem",
+          "name": "9 · 64px"
+        },
+        {
+          "slug": "10",
+          "size": "5rem",
+          "name": "10 · 80px"
+        },
+        {
+          "slug": "12",
+          "size": "7rem",
+          "name": "12 · 112px"
+        },
+        {
+          "slug": "16",
+          "size": "10rem",
+          "name": "16 · 160px"
+        }
+      ]
+    },
+    "typography": {
+      "defaultFontSizes": false,
+      "fluid": false,
+      "fontFamilies": [
+        {
+          "slug": "display",
+          "name": "Display — Cormorant Garamond",
+          "fontFamily": "'Cormorant Garamond', 'Hoefler Text', Georgia, serif",
+          "fontFace": [
+            {
+              "fontFamily": "Cormorant Garamond",
+              "fontWeight": "400 700",
+              "fontStyle": "normal",
+              "fontStretch": "normal",
+              "src": [
+                "file:./assets/fonts/cormorant-garamond.woff2"
+              ]
+            },
+            {
+              "fontFamily": "Cormorant Garamond",
+              "fontWeight": "400 500",
+              "fontStyle": "italic",
+              "fontStretch": "normal",
+              "src": [
+                "file:./assets/fonts/cormorant-garamond-italic.woff2"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "label",
+          "name": "Label — Marcellus",
+          "fontFamily": "'Marcellus', 'Optima', 'Palatino Linotype', serif",
+          "fontFace": [
+            {
+              "fontFamily": "Marcellus",
+              "fontWeight": "400",
+              "fontStyle": "normal",
+              "src": [
+                "file:./assets/fonts/marcellus.woff2"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "body",
+          "name": "Body — EB Garamond",
+          "fontFamily": "'EB Garamond', 'Iowan Old Style', Georgia, serif",
+          "fontFace": [
+            {
+              "fontFamily": "EB Garamond",
+              "fontWeight": "400 600",
+              "fontStyle": "normal",
+              "src": [
+                "file:./assets/fonts/eb-garamond.woff2"
+              ]
+            },
+            {
+              "fontFamily": "EB Garamond",
+              "fontWeight": "400",
+              "fontStyle": "italic",
+              "src": [
+                "file:./assets/fonts/eb-garamond-italic.woff2"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "mono",
+          "name": "Mono — JetBrains Mono",
+          "fontFamily": "'JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace",
+          "fontFace": [
+            {
+              "fontFamily": "JetBrains Mono",
+              "fontWeight": "400 500",
+              "fontStyle": "normal",
+              "src": [
+                "file:./assets/fonts/jetbrains-mono.woff2"
+              ]
+            }
+          ]
+        }
+      ],
+      "fontSizes": [
+        {
+          "slug": "2xs",
+          "size": "0.75rem",
+          "name": "2XS · 12"
+        },
+        {
+          "slug": "xs",
+          "size": "0.8125rem",
+          "name": "XS · 13"
+        },
+        {
+          "slug": "sm",
+          "size": "0.9375rem",
+          "name": "SM · 15"
+        },
+        {
+          "slug": "base",
+          "size": "1.0625rem",
+          "name": "Base · 17"
+        },
+        {
+          "slug": "md",
+          "size": "1.1875rem",
+          "name": "MD · 19 (reading)"
+        },
+        {
+          "slug": "lg",
+          "size": "1.375rem",
+          "name": "LG · 22"
+        },
+        {
+          "slug": "xl",
+          "size": "1.75rem",
+          "name": "XL · 28"
+        },
+        {
+          "slug": "2xl",
+          "size": "2.25rem",
+          "name": "2XL · 36"
+        },
+        {
+          "slug": "3xl",
+          "size": "3rem",
+          "name": "3XL · 48"
+        },
+        {
+          "slug": "4xl",
+          "size": "4rem",
+          "name": "4XL · 64"
+        },
+        {
+          "slug": "5xl",
+          "size": "5.5rem",
+          "name": "5XL · 88"
+        }
+      ]
+    },
+    "custom": {
+      "surface": {
+        "page": "#F5EFE1",
+        "raised": "#FAF6EC",
+        "card": "#FAF6EC",
+        "sunken": "#ECE4D2",
+        "cool": "#EEF1ED",
+        "inverse": "#1E2730",
+        "brand": "#2E4A3A",
+        "done": "#EDF3ED",
+        "review": "#F4EBCF",
+        "pending": "#ECE4D2"
+      },
+      "text": {
+        "strong": "#1B231D",
+        "body": "#313B33",
+        "muted": "#515C52",
+        "faint": "#6E7A6E",
+        "disabled": "#94A095",
+        "inverse": "#FAF6EC",
+        "link": "#2E4A3A",
+        "accent": "#9A7530"
+      },
+      "border": {
+        "hair": "#DED2B8",
+        "soft": "#DCE3DD",
+        "strong": "#94A095",
+        "brand": "#3A5C49"
+      },
+      "rule": {
+        "gold": "#C29A44"
+      },
+      "brand": {
+        "default": "#2E4A3A",
+        "hover": "#24402F",
+        "press": "#1C2E24",
+        "subtle": "#EDF3ED"
+      },
+      "accent": {
+        "default": "#C29A44",
+        "hover": "#B08A3A",
+        "press": "#9A7530",
+        "subtle": "#F4EBCF"
+      },
+      "feedback": {
+        "success": "#4E7459",
+        "warning": "#B7842F",
+        "danger": "#9C4A33",
+        "info": "#3F6E89"
+      },
+      "status": {
+        "done": "#4E7459",
+        "review": "#B7842F",
+        "pending": "#6E7A6E"
+      },
+      "on": {
+        "done": "#24402F",
+        "review": "#9A7530",
+        "pending": "#515C52"
+      },
+      "artifactLink": "#3F6E89",
+      "type": {
+        "hero": "500 5.5rem/1.08 'Cormorant Garamond', Georgia, serif",
+        "h1": "500 4rem/1.08 'Cormorant Garamond', Georgia, serif",
+        "h2": "500 3rem/1.22 'Cormorant Garamond', Georgia, serif",
+        "h3": "500 2.25rem/1.22 'Cormorant Garamond', Georgia, serif",
+        "h4": "600 1.75rem/1.22 'Cormorant Garamond', Georgia, serif",
+        "lead": "400 1.375rem/1.7 'EB Garamond', Georgia, serif",
+        "body": "400 1.1875rem/1.7 'EB Garamond', Georgia, serif",
+        "ui": "400 1.0625rem/1.5 'EB Garamond', Georgia, serif",
+        "meta": "400 0.8125rem/1.5 'Marcellus', serif",
+        "mono": "400 0.9375rem/1.5 'JetBrains Mono', monospace"
+      },
+      "weight": {
+        "regular": "400",
+        "medium": "500",
+        "semibold": "600",
+        "bold": "700"
+      },
+      "leading": {
+        "tight": "1.08",
+        "snug": "1.22",
+        "normal": "1.5",
+        "relaxed": "1.7"
+      },
+      "tracking": {
+        "tight": "-0.01em",
+        "normal": "0",
+        "wide": "0.04em",
+        "caps": "0.18em"
+      },
+      "measure": {
+        "prose": "68ch",
+        "narrow": "46ch"
+      },
+      "container": {
+        "text": "44rem",
+        "wide": "72rem",
+        "full": "84rem"
+      },
+      "radius": {
+        "xs": "2px",
+        "sm": "4px",
+        "md": "7px",
+        "lg": "12px",
+        "xl": "20px",
+        "pill": "999px"
+      },
+      "borderWidth": {
+        "thin": "1px",
+        "regular": "1.5px",
+        "thick": "2px"
+      },
+      "shadow": {
+        "xs": "0 1px 2px rgba(27,35,29,0.06)",
+        "sm": "0 1px 3px rgba(27,35,29,0.07), 0 1px 2px rgba(27,35,29,0.05)",
+        "md": "0 4px 14px rgba(27,35,29,0.08), 0 2px 5px rgba(27,35,29,0.05)",
+        "lg": "0 12px 32px rgba(27,35,29,0.12), 0 4px 10px rgba(27,35,29,0.06)",
+        "xl": "0 24px 60px rgba(22,29,36,0.18), 0 8px 18px rgba(22,29,36,0.08)",
+        "inset": "inset 0 1px 2px rgba(27,35,29,0.07)",
+        "gilt": "inset 0 0 0 1px rgba(194,154,68,0.38)"
+      },
+      "ease": {
+        "calm": "cubic-bezier(0.22,0.61,0.36,1)",
+        "out": "cubic-bezier(0.16,1,0.3,1)",
+        "inOut": "cubic-bezier(0.65,0,0.35,1)"
+      },
+      "dur": {
+        "fast": "140ms",
+        "base": "240ms",
+        "slow": "420ms",
+        "veil": "700ms"
+      }
+    }
+  },
+  "styles": {
+    "color": {
+      "background": "var(--wp--preset--color--parchment-100)",
+      "text": "var(--wp--preset--color--ink-700)"
+    },
+    "typography": {
+      "fontFamily": "var(--wp--preset--font-family--body)",
+      "fontSize": "var(--wp--preset--font-size--md)",
+      "lineHeight": "1.7"
+    },
+    "elements": {
+      "heading": {
+        "typography": {
+          "fontFamily": "var(--wp--preset--font-family--display)",
+          "fontWeight": "500",
+          "letterSpacing": "-0.01em"
+        },
+        "color": {
+          "text": "var(--wp--preset--color--ink-900)"
+        }
+      },
+      "h1": {
+        "typography": {
+          "fontSize": "var(--wp--preset--font-size--4xl)",
+          "lineHeight": "1.08"
+        }
+      },
+      "h2": {
+        "typography": {
+          "fontSize": "var(--wp--preset--font-size--3xl)",
+          "lineHeight": "1.22"
+        }
+      },
+      "h3": {
+        "typography": {
+          "fontSize": "var(--wp--preset--font-size--2xl)",
+          "lineHeight": "1.22"
+        }
+      },
+      "h4": {
+        "typography": {
+          "fontSize": "var(--wp--preset--font-size--xl)",
+          "lineHeight": "1.22"
+        }
+      },
+      "link": {
+        "color": {
+          "text": "var(--wp--preset--color--green-700)"
+        },
+        ":hover": {
+          "color": {
+            "text": "var(--wp--preset--color--gold-700)"
+          }
+        }
+      }
+    },
+    "spacing": {
+      "blockGap": "var(--wp--preset--spacing--5)"
+    }
+  }
 }
