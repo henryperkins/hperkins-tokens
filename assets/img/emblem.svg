@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="Imladris emblem">
+  <g stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="50" cy="50" r="46.5" stroke-width="1" opacity="0.3"></circle>
+    <path d="M50 3 L63.8 16.7 L83.2 16.8 L83.3 36.2 L97 50 L83.3 63.8 L83.2 83.2 L63.8 83.3 L50 97 L36.2 83.3 L16.8 83.2 L16.7 63.8 L3 50 L16.7 36.2 L16.8 16.8 L36.2 16.7 Z"></path>
+    <path d="M50 21 L57.5 42.5 L79 50 L57.5 57.5 L50 79 L42.5 57.5 L21 50 L42.5 42.5 Z" opacity="0.45"></path>
+    <circle cx="50" cy="50" r="4.5" fill="currentColor" stroke="none"></circle>
+  </g>
+</svg>
