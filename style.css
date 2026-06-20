@@ -1777,3 +1777,76 @@ code, kbd, samp {
 	color: var(--wp--preset--color--green-200);
 	line-height: var(--wp--custom--leading--relaxed);
 }
+
+/* === Imladris page templates === */
+.hp-front-template,
+.hp-about-template,
+.hp-case-study-template {
+	background: var(--wp--custom--surface--page);
+	color: var(--wp--custom--text--body);
+}
+
+.hp-front-template > .wp-block-post-content {
+	margin-top: 0;
+}
+
+.hp-template-hero {
+	padding-block: var(--wp--preset--spacing--8);
+}
+
+.hp-template-hero__kicker,
+.hp-template-hero__lead {
+	margin: 0;
+}
+
+.hp-template-hero__kicker {
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+	color: var(--wp--custom--text--accent);
+}
+
+.hp-template-hero__title {
+	margin: var(--wp--preset--spacing--3) 0 0;
+	color: var(--wp--custom--text--strong);
+	font-family: var(--hp-font-display);
+	font-size: var(--wp--preset--font-size--3xl);
+	font-weight: var(--wp--custom--weight--medium);
+	letter-spacing: var(--wp--custom--tracking--tight);
+	line-height: var(--wp--custom--leading--snug);
+}
+
+.hp-template-hero__lead {
+	max-width: var(--wp--custom--measure--narrow);
+	margin-top: var(--wp--preset--spacing--4);
+	color: var(--wp--custom--text--muted);
+	font-size: var(--wp--preset--font-size--base);
+	line-height: var(--wp--custom--leading--relaxed);
+}
+
+.hp-front-template__rings {
+	border-top: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-front-template__rings .hp-ring-framework {
+	margin-top: var(--wp--preset--spacing--6);
+}
+
+.hp-about-template__content {
+	padding-block: var(--wp--preset--spacing--7);
+}
+
+.hp-case-study-template__article {
+	padding-block: var(--wp--preset--spacing--8);
+}
+
+.hp-case-study-template__hero {
+	margin-bottom: var(--wp--preset--spacing--7);
+	padding-bottom: var(--wp--preset--spacing--7);
+	border-bottom: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-case-study-template__hero .hp-proof-bar {
+	margin-top: var(--wp--preset--spacing--5);
+}

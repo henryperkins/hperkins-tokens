@@ -5,6 +5,13 @@
     { "area": "header", "name": "header", "title": "Header" },
     { "area": "footer", "name": "footer", "title": "Footer" }
   ],
+  "customTemplates": [
+    {
+      "name": "page-case-study",
+      "title": "Case study",
+      "postTypes": [ "page" ]
+    }
+  ],
   "settings": {
     "appearanceTools": true,
     "useRootPaddingAwareAlignments": true,
