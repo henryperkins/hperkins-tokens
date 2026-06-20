@@ -1,0 +1,53 @@
+<!-- wp:template-part {"slug":"header"} /-->
+
+<!-- wp:cover {"useFeaturedImage":true,"dimRatio":70,"overlayColor":"twilight-900","isUserOverlayColor":true,"minHeight":440,"minHeightUnit":"px","align":"full","className":"hp-reader-hero","contentPosition":"center center"} -->
+<div class="wp-block-cover alignfull is-position-center-center hp-reader-hero" style="min-height:440px"><span aria-hidden="true" class="wp-block-cover__background has-twilight-900-background-color has-background-dim-70 has-background-dim"></span><div class="wp-block-cover__inner-container"><!-- wp:post-terms {"term":"category","className":"hp-reader-hero__topic"} /-->
+
+<!-- wp:post-title {"level":1,"className":"hp-reader-hero__title"} /-->
+
+<!-- wp:post-excerpt {"showMoreOnNewLine":false,"excerptLength":40,"className":"hp-reader-hero__standfirst"} /-->
+
+<!-- wp:group {"className":"hp-reader-hero__meta","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"center"}} -->
+<div class="wp-block-group hp-reader-hero__meta"><!-- wp:post-author-name {"isLink":false} /-->
+
+<!-- wp:post-date /--></div>
+<!-- /wp:group --></div></div>
+<!-- /wp:cover -->
+
+<!-- wp:group {"tagName":"main","align":"full","className":"hp-page-main hp-reader","style":{"spacing":{"margin":{"top":"0"},"padding":{"top":"var:preset|spacing|8","bottom":"var:preset|spacing|10"}}},"layout":{"type":"constrained","contentSize":"44rem","wideSize":"72rem"}} -->
+<main class="wp-block-group alignfull hp-page-main hp-reader" style="margin-top:0;padding-top:var(--wp--preset--spacing--8);padding-bottom:var(--wp--preset--spacing--10)"><!-- wp:paragraph {"className":"hp-reader__back"} -->
+<p class="hp-reader__back"><a href="/">&larr; All essays</a></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:post-content {"className":"hp-prose","layout":{"type":"constrained"}} /-->
+
+<!-- wp:post-terms {"term":"post_tag","separator":"  ","prefix":"","className":"hp-reader-tags","style":{"spacing":{"margin":{"top":"var:preset|spacing|8"}}}} /-->
+
+<!-- wp:pattern {"slug":"hperkins-tokens/imladris-subscribe"} /-->
+
+<!-- wp:group {"align":"wide","className":"hp-related","style":{"spacing":{"padding":{"top":"var:preset|spacing|10"}}},"layout":{"type":"constrained"}} -->
+<div class="wp-block-group alignwide hp-related" style="padding-top:var(--wp--preset--spacing--10)"><!-- wp:heading {"level":3,"className":"hp-related__title"} -->
+<h3 class="wp-block-heading hp-related__title">Continue reading</h3>
+<!-- /wp:heading -->
+
+<!-- wp:query {"queryId":12,"query":{"perPage":3,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","author":"","search":"","exclude":[],"sticky":"exclude","inherit":false},"className":"hp-postcards","layout":{"type":"default"}} -->
+<div class="wp-block-query hp-postcards"><!-- wp:post-template {"layout":{"type":"grid","minimumColumnWidth":"18rem"}} -->
+<!-- wp:group {"className":"hp-postcard__media","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-postcard__media"><!-- wp:post-featured-image {"isLink":true} /--></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-postcard__body","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-postcard__body"><!-- wp:post-terms {"term":"category","className":"hp-postcard__topic"} /-->
+
+<!-- wp:post-title {"level":3,"isLink":true,"className":"hp-postcard__title"} /-->
+
+<!-- wp:group {"className":"hp-postcard__meta","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-postcard__meta"><!-- wp:post-date /--></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+<!-- /wp:post-template --></div>
+<!-- /wp:query --></div>
+<!-- /wp:group --></main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer"} /-->

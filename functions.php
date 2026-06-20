@@ -28,6 +28,20 @@ add_action( 'wp_enqueue_scripts', function () {
 		wp_get_theme()->get( 'Version' )
 	);
 
+	// Page-layout CSS for the designs pulled from the Imladris Design System
+	// (ai-enablement essay, contact, work index). Kept out of style.css so the
+	// hand-authored sheet stays untouched; depends on it so the cascade is right.
+	$pages_css_rel  = '/assets/imladris-pages.css';
+	$pages_css_file = get_stylesheet_directory() . $pages_css_rel;
+	if ( file_exists( $pages_css_file ) ) {
+		wp_enqueue_style(
+			'hperkins-pages',
+			get_stylesheet_directory_uri() . $pages_css_rel,
+			array( 'hperkins-tokens' ),
+			filemtime( $pages_css_file )
+		);
+	}
+
 	$wapuu_mark_file = get_stylesheet_directory() . '/assets/wapuu/wapuu-mark.png';
 	$wapuu_mark_url  = get_stylesheet_directory_uri() . '/assets/wapuu/wapuu-mark.png';
 	if ( file_exists( $wapuu_mark_file ) ) {
@@ -77,6 +91,7 @@ add_action( 'after_setup_theme', function () {
 	$editor_styles = array_values( array_diff( (array) $editor_styles, array( 'style.css' ) ) );
 	add_editor_style( get_template_directory_uri() . '/style.css' );
 	add_editor_style( get_stylesheet_directory_uri() . '/style.css' );
+	add_editor_style( get_stylesheet_directory_uri() . '/assets/imladris-pages.css' );
 
 	// The Assembler parent preloads InterVariable.woff2 from the stylesheet
 	// directory, which under this child theme resolves to a path that does not

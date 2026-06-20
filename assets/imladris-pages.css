@@ -1,0 +1,443 @@
+/* ===========================================================================
+   Imladris — page layouts
+   ---------------------------------------------------------------------------
+   Layout glue for the page designs pulled from the Imladris Design System
+   (claude.ai/design project 89e0d236). Foundational tokens live in theme.json
+   and the component/pattern styling in style.css; this file only adds the
+   page-level composition (heroes, the contact grid, the essay's ring markers)
+   that those pages need. All values reference the WordPress-generated
+   --wp--preset--* / --wp--custom--* variables so nothing drifts from the tokens.
+   Enqueued by functions.php after the main stylesheet.
+   ========================================================================= */
+
+/* --- Shared page hero ------------------------------------------------ */
+.hp-page-hero {
+  border-bottom: 1px solid var(--wp--custom--border--hair);
+  padding-bottom: var(--wp--preset--spacing--7);
+}
+.hp-page-hero__eyebrow {
+  margin: 0;
+  font-family: var(--wp--preset--font-family--label);
+  font-size: var(--wp--preset--font-size--xs);
+  letter-spacing: var(--wp--custom--tracking--caps);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--accent);
+}
+.hp-page-hero__lead {
+  margin: var(--wp--preset--spacing--5) 0 0;
+  max-width: 60ch;
+  font-family: var(--wp--preset--font-family--body);
+  font-size: var(--wp--preset--font-size--lg);
+  line-height: var(--wp--custom--leading--relaxed);
+  color: var(--wp--custom--text--strong);
+}
+
+/* Small lapidary caps label, reused by asides and captions. */
+.hp-label-caps {
+  font-family: var(--wp--preset--font-family--label);
+  font-size: var(--wp--preset--font-size--xs);
+  letter-spacing: var(--wp--custom--tracking--caps);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--accent);
+}
+
+/* ===========================================================================
+   AI Enablement — the "Expose, Govern, Attest" essay
+   ========================================================================= */
+.hp-aie__lede {
+  font-family: var(--wp--preset--font-family--body);
+  color: var(--wp--custom--text--body);
+  line-height: var(--wp--custom--leading--relaxed);
+}
+
+/* The Three Rings map header (centered). */
+.hp-aie__ringsmap-head {
+  max-width: 46ch;
+  margin: 0 auto var(--wp--preset--spacing--7);
+  text-align: center;
+}
+.hp-aie__ringsmap-head .hp-label-caps { display: block; }
+
+/* Maturity caption above the ring proof bar. */
+.hp-aie__maturity-caption {
+  margin: 0 0 var(--wp--preset--spacing--3);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--wp--custom--text--faint);
+  text-align: center;
+}
+
+/* Ring section marker — a tinted dot + eyebrow at the head of Expose/Govern/Attest. */
+.hp-aie__ringmark {
+  display: flex;
+  align-items: center;
+  gap: var(--wp--preset--spacing--3);
+  margin-bottom: var(--wp--preset--spacing--3);
+}
+.hp-aie__ringmark .hp-label-caps { margin: 0; }
+.hp-aie__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+.hp-aie__dot.is-air {
+  background: var(--wp--preset--color--river-500);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--wp--preset--color--river-400) 22%, transparent);
+}
+.hp-aie__dot.is-fire {
+  background: var(--wp--preset--color--gold-500);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--wp--preset--color--gold-500) 18%, transparent);
+}
+.hp-aie__dot.is-water {
+  background: var(--wp--preset--color--green-600);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--wp--preset--color--green-600) 18%, transparent);
+}
+
+/* Footnote at the foot of the essay. */
+.hp-aie__footnote {
+  margin-top: var(--wp--preset--spacing--8);
+  padding-top: var(--wp--preset--spacing--5);
+  border-top: 1px solid var(--wp--custom--border--hair);
+}
+.hp-aie__footnote p {
+  margin: 0;
+  font-family: var(--wp--preset--font-family--body);
+  font-size: var(--wp--preset--font-size--sm);
+  color: var(--wp--custom--text--muted);
+  line-height: var(--wp--custom--leading--relaxed);
+}
+
+/* ===========================================================================
+   Contact
+   ========================================================================= */
+.hp-contact-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: var(--wp--preset--spacing--9);
+  align-items: start;
+}
+@media (max-width: 781px) {
+  .hp-contact-grid {
+    grid-template-columns: 1fr;
+    gap: var(--wp--preset--spacing--7);
+  }
+}
+
+.hp-contact-form { display: flex; flex-direction: column; gap: var(--wp--preset--spacing--5); }
+.hp-contact-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--wp--preset--spacing--5);
+}
+@media (max-width: 600px) { .hp-contact-form__row { grid-template-columns: 1fr; } }
+
+/* Message textarea, matched to the hp-input control treatment. */
+.hp-contact-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--wp--preset--font-family--body);
+  font-size: var(--wp--preset--font-size--base);
+  color: var(--wp--custom--text--strong);
+  background: var(--wp--custom--surface--card);
+  border: 1.5px solid var(--wp--custom--border--strong);
+  border-radius: var(--wp--custom--radius--md);
+  padding: 12px 14px;
+  resize: vertical;
+  min-height: 140px;
+  box-shadow: var(--wp--custom--shadow--inset);
+  transition: border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+              box-shadow var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+.hp-contact-form textarea:focus {
+  outline: none;
+  border-color: var(--wp--preset--color--gold-500);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wp--preset--color--gold-500) 70%, transparent);
+}
+.hp-contact-form__hint {
+  font-family: var(--wp--preset--font-family--body);
+  font-size: var(--wp--preset--font-size--xs);
+  color: var(--wp--custom--text--faint);
+}
+.hp-contact-form__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--wp--preset--spacing--4);
+  flex-wrap: wrap;
+}
+
+.hp-contact-aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--wp--preset--spacing--6);
+}
+
+/* Direct channels — artifact-style cells. */
+.hp-channels {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--wp--custom--border--hair);
+  border-radius: var(--wp--custom--radius--lg);
+  overflow: hidden;
+  background: var(--wp--custom--surface--card);
+}
+.hp-channels a {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--wp--preset--spacing--4);
+  padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+  border-bottom: 1px solid var(--wp--custom--border--hair);
+  text-decoration: none;
+}
+.hp-channels a:last-child { border-bottom: 0; }
+.hp-channels a:hover .hp-channels__value { text-decoration: underline; text-underline-offset: 2px; }
+.hp-channels__label {
+  flex: none;
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--wp--custom--text--faint);
+}
+.hp-channels__value {
+  font-family: var(--wp--preset--font-family--body);
+  font-size: var(--wp--preset--font-size--base);
+  color: var(--wp--custom--artifact-link);
+  text-align: right;
+}
+
+/* Office-hours note. */
+.hp-officehours {
+  padding: var(--wp--preset--spacing--5);
+  border: 1px dashed var(--wp--custom--border--strong);
+  border-radius: var(--wp--custom--radius--lg);
+}
+.hp-officehours__label { margin: 0 0 var(--wp--preset--spacing--3); }
+.hp-officehours p {
+  margin: 0;
+  font-family: var(--wp--preset--font-family--body);
+  font-size: var(--wp--preset--font-size--base);
+  color: var(--wp--custom--text--muted);
+  line-height: var(--wp--custom--leading--relaxed);
+}
+
+/* ===========================================================================
+   Work — index ledger
+   ========================================================================= */
+.hp-workindex__summary { margin-top: var(--wp--preset--spacing--6); }
+.hp-workindex__colophon {
+  margin: var(--wp--preset--spacing--9) 0 0;
+  padding-top: var(--wp--preset--spacing--5);
+  border-top: 1px solid var(--wp--custom--border--hair);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  color: var(--wp--custom--text--faint);
+}
+
+/* --- Component tweak: contact submit -------------------------------- */
+/* Primary action styled directly, so the raw form button matches the
+   Imladris Button without depending on core button block output. */
+.hp-contact-form button[type="submit"] {
+  align-self: flex-start;
+  font-family: var(--wp--preset--font-family--label);
+  font-size: var(--wp--preset--font-size--base);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  color: var(--wp--custom--text--inverse);
+  background: var(--wp--custom--brand--default);
+  border: 1.5px solid var(--wp--custom--brand--default);
+  border-radius: var(--wp--custom--radius--md);
+  padding: 13px 28px;
+  cursor: pointer;
+  transition: background var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+              border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+.hp-contact-form button[type="submit"]:hover {
+  background: var(--wp--custom--brand--hover);
+  border-color: var(--wp--custom--brand--hover);
+}
+
+/* ===========================================================================
+   Blog — the Imladris Journal (home index + single reader)
+   ========================================================================= */
+
+/* Journal masthead. */
+.hp-masthead { text-align: center; }
+.hp-masthead__title {
+  margin: 0;
+  font-family: var(--wp--preset--font-family--display);
+  font-weight: 500;
+  font-size: var(--wp--preset--font-size--5-xl);
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  color: var(--wp--custom--text--strong);
+}
+.hp-masthead__lead {
+  margin: var(--wp--preset--spacing--5) auto 0;
+  max-width: 52ch;
+  font-family: var(--wp--preset--font-family--body);
+  font-size: var(--wp--preset--font-size--lg);
+  line-height: var(--wp--custom--leading--relaxed);
+  color: var(--wp--custom--text--muted);
+}
+
+/* Topic filter row (core categories list as pills). */
+.hp-topic-filter { border-bottom: 1px solid var(--wp--custom--border--hair); }
+.hp-topic-filter .wp-block-categories {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hp-topic-filter li { list-style: none; }
+.hp-topic-filter a {
+  display: inline-block;
+  padding: 5px 14px;
+  border: 1px solid var(--wp--custom--border--hair);
+  border-radius: var(--wp--custom--radius--pill);
+  font-family: var(--wp--preset--font-family--label);
+  font-size: var(--wp--preset--font-size--xs);
+  letter-spacing: var(--wp--custom--tracking--wide);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--body);
+  text-decoration: none;
+  background: var(--wp--custom--surface--card);
+  transition: background var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+              border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+.hp-topic-filter a:hover {
+  background: var(--wp--custom--brand--subtle);
+  border-color: var(--wp--preset--color--green-200);
+}
+
+/* Post cards — shared by featured, grid, and related Query Loops. */
+.hp-postcards .wp-block-post-template { gap: var(--wp--preset--spacing--6); }
+.hp-postcards .wp-block-post-template > li {
+  display: flex;
+  flex-direction: column;
+  background: var(--wp--custom--surface--card);
+  border: 1px solid var(--wp--custom--border--hair);
+  border-radius: var(--wp--custom--radius--lg);
+  overflow: hidden;
+  box-shadow: var(--wp--custom--shadow--sm);
+  transition: box-shadow var(--wp--custom--dur--base) var(--wp--custom--ease--calm),
+              transform var(--wp--custom--dur--base) var(--wp--custom--ease--calm),
+              border-color var(--wp--custom--dur--base) var(--wp--custom--ease--calm);
+}
+.hp-postcards .wp-block-post-template > li:hover {
+  box-shadow: var(--wp--custom--shadow--lg);
+  transform: translateY(-3px);
+  border-color: var(--wp--preset--color--green-200);
+}
+.hp-postcard__media {
+  margin: 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: radial-gradient(120% 140% at 80% -10%, var(--wp--preset--color--twilight-700) 0%, var(--wp--preset--color--twilight-800) 45%, var(--wp--preset--color--twilight-900) 100%);
+}
+.hp-postcard__media img,
+.hp-postcard__media .wp-post-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hp-postcard__body {
+  padding: var(--wp--preset--spacing--5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--wp--preset--spacing--3);
+  flex: 1;
+}
+.hp-postcard__topic,
+.hp-postcard__topic a {
+  font-family: var(--wp--preset--font-family--label);
+  font-size: var(--wp--preset--font-size--2-xs);
+  letter-spacing: var(--wp--custom--tracking--caps);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--accent);
+  text-decoration: none;
+}
+.hp-postcard__title { margin: 0; }
+.hp-postcard__title a {
+  font-family: var(--wp--preset--font-family--display);
+  font-weight: 500;
+  font-size: var(--wp--preset--font-size--xl);
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--wp--custom--text--strong);
+  text-decoration: none;
+}
+.hp-postcard__title a:hover { color: var(--wp--custom--text--link); }
+.hp-postcard__excerpt {
+  margin: 0;
+  color: var(--wp--custom--text--muted);
+  font-size: var(--wp--preset--font-size--base);
+  line-height: var(--wp--custom--leading--relaxed);
+}
+.hp-postcard__meta {
+  margin-top: auto;
+  padding-top: var(--wp--preset--spacing--3);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  color: var(--wp--custom--text--faint);
+}
+.hp-postcard__meta a { color: inherit; text-decoration: none; }
+
+/* Featured lead — a wide row card above the grid. */
+.hp-postcards--featured .wp-block-post-template > li { overflow: hidden; }
+@media (min-width: 782px) {
+  .hp-postcards--featured .wp-block-post-template > li { flex-direction: row; }
+  .hp-postcards--featured .hp-postcard__media { flex: 1 1 52%; aspect-ratio: 16 / 11; }
+  .hp-postcards--featured .hp-postcard__body { flex: 1 1 48%; justify-content: center; padding: var(--wp--preset--spacing--7); }
+  .hp-postcards--featured .hp-postcard__title a { font-size: var(--wp--preset--font-size--3-xl); line-height: 1.1; }
+}
+
+/* Reader hero (single). */
+.hp-reader-hero .wp-block-cover__inner-container {
+  max-width: var(--wp--custom--container--text);
+  margin: 0 auto;
+  text-align: center;
+}
+.hp-reader-hero__topic,
+.hp-reader-hero__topic a {
+  font-family: var(--wp--preset--font-family--label);
+  font-size: var(--wp--preset--font-size--2-xs);
+  letter-spacing: var(--wp--custom--tracking--caps);
+  text-transform: uppercase;
+  color: var(--wp--preset--color--gold-200);
+  text-decoration: none;
+}
+.hp-reader-hero__title { color: var(--wp--preset--color--parchment-50); margin: var(--wp--preset--spacing--4) 0 0; }
+.hp-reader-hero__standfirst {
+  color: var(--wp--preset--color--green-200);
+  margin: var(--wp--preset--spacing--5) auto 0;
+  max-width: 46ch;
+  font-size: var(--wp--preset--font-size--lg);
+  line-height: var(--wp--custom--leading--relaxed);
+}
+.hp-reader-hero__meta,
+.hp-reader-hero__meta a {
+  margin-top: var(--wp--preset--spacing--5);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  color: var(--wp--preset--color--green-200);
+}
+
+/* Reader body — back link + related. */
+.hp-reader__back a {
+  font-family: var(--wp--preset--font-family--label);
+  font-size: var(--wp--preset--font-size--xs);
+  letter-spacing: var(--wp--custom--tracking--caps);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--muted);
+  text-decoration: none;
+}
+.hp-reader__back a:hover { color: var(--wp--custom--text--accent); }
+.hp-related__title {
+  font-family: var(--wp--preset--font-family--display);
+  font-weight: 500;
+  font-size: var(--wp--preset--font-size--2-xl);
+  margin: 0 0 var(--wp--preset--spacing--5);
+}

@@ -25,3 +25,6 @@ coverage/
 *.tgz
 *.bak
 *.sql
+
+# Design-pull staging mirror (re-pullable; provenance lives in docs/design-system/)
+.design-pull/
