@@ -1,0 +1,1189 @@
+/*
+Theme Name: HPerkins Tokens
+Theme URI: https://hperkins.blog
+Description: Governance-first child theme for hperkins.blog. The design system is authored at the theme.json schema level: a semantic status palette (status-merged / status-review / status-pending), one ink-blue action color on a neutral base, a tight type scale, and named spacing slots for the proof-bar, artifact-row, and quote-block patterns. Tokens are the source of truth; the render is a consequence.
+Author: Henry Perkins
+Template: assembler
+Version: 0.2.9
+Requires at least: 6.6
+Tested up to: 7.0
+Requires PHP: 8.0
+Text Domain: hperkins-tokens
+*/
+
+:root {
+	/* Aliases onto the theme.json-generated presets so the tokens stay a
+	   single source of truth (no parallel hex copies that can drift). */
+	--hp-neutral-0: var(--wp--preset--color--base);
+	--hp-neutral-50: var(--wp--preset--color--surface);
+	--hp-neutral-100: var(--wp--preset--color--hairline);
+	--hp-neutral-300: var(--wp--custom--neutral-300);
+	--hp-neutral-600: var(--wp--preset--color--muted);
+	--hp-neutral-900: var(--wp--preset--color--contrast);
+	--hp-action: var(--wp--preset--color--action);
+	--hp-status-merged: var(--wp--preset--color--status-merged);
+	--hp-status-review: var(--wp--preset--color--status-review);
+	--hp-status-pending: var(--wp--preset--color--status-pending);
+	--hp-surface-merged: var(--wp--preset--color--surface-merged);
+	--hp-surface-review: var(--wp--preset--color--surface-review);
+	--hp-touch-min: var(--wp--custom--touch--min);
+	/* Geometry, weight, and label-rhythm tokens follow the same single-source
+	   rule as the colors above: the values live in theme.json (settings.custom)
+	   and these aliases just give them short local names. The status-bearing
+	   left rule is a fixed width PER component (chip/entry/evidence/quote) — the
+	   anatomy is fixed, state only swaps its color. */
+	--hp-rule-chip: var(--wp--custom--rule--chip);
+	--hp-rule-entry: var(--wp--custom--rule--entry);
+	--hp-rule-evidence: var(--wp--custom--rule--evidence);
+	--hp-rule-quote: var(--wp--custom--rule--quote);
+	--hp-radius-chip: var(--wp--custom--radius--chip);
+	--hp-radius-register: var(--wp--custom--radius--register);
+	--hp-radius-tile: var(--wp--custom--radius--tile);
+	--hp-radius-panel: var(--wp--custom--radius--panel);
+	--hp-radius-card: var(--wp--custom--radius--card);
+	--hp-radius-frame: var(--wp--custom--radius--frame);
+	--hp-radius-phone: var(--wp--custom--radius--phone);
+	--hp-radius-pill: var(--wp--custom--radius--pill);
+	--hp-weight-title: var(--wp--custom--weight--title);
+	--hp-weight-strong: var(--wp--custom--weight--strong);
+	--hp-gap-xs: var(--wp--custom--gap--xs);
+	--hp-gap-sm: var(--wp--custom--gap--sm);
+	--hp-grid-pitch: var(--wp--custom--grid--pitch);
+	--hp-grid-action-tint: var(--wp--custom--grid--action-tint);
+	--hp-grid-status-tint: var(--wp--custom--grid--status-tint);
+	--hp-shadow-frame: var(--wp--custom--shadow--frame);
+	--hp-shadow-phone: var(--wp--custom--shadow--phone);
+	--hp-shadow-panel: var(--wp--custom--shadow--panel);
+	--hp-shadow-mark: var(--wp--custom--shadow--mark);
+	--hp-shadow-mascot: var(--wp--custom--shadow--mascot);
+	--hp-tracking-label: var(--wp--custom--tracking--label);
+	--hp-leading-lead: var(--wp--custom--leading--lead);
+	/* Browser chrome dots intentionally mirror familiar OS controls rather
+	   than theme status tokens. */
+	--hp-chrome-dot-close: #ec6a5e;
+	--hp-chrome-dot-minimize: #f4bf4f;
+	--hp-chrome-dot-zoom: #61c554;
+}
+
+a {
+	transition: border-bottom-color 120ms ease, border-color 120ms ease;
+}
+
+button,
+.wp-block-button__link {
+	transition: background-color 120ms ease;
+}
+
+/* === case-study lead ===
+   One shared opening-paragraph treatment: large scale, muted ink, a calmer 1.45
+   leading (the single non-body line-height, tokenized), and the artifact-terminus
+   space beneath. Promoted out of four hand-styled copies so the hub and demo
+   leads stop drifting from the rest. */
+.hp-lead {
+	margin-bottom: var(--wp--preset--spacing--50);
+	font-size: var(--wp--preset--font-size--large);
+	line-height: var(--hp-leading-lead);
+	color: var(--hp-neutral-600);
+}
+
+/* === status chips (box-ledger anatomy) === */
+.hp-proof-bar {
+	gap: var(--wp--preset--spacing--20);
+	margin-block: var(--wp--preset--spacing--50);
+	align-items: flex-start;
+}
+
+/* One anatomy for every line: same mono family, padding, weight, rule width,
+   radius. State changes ONLY the rule color, the surface tint, and the dot
+   fill. Mono lives on the base rule so a chip reads as a machine-set status
+   label even where the block markup omits the mono font class (e.g. the Wapuu
+   homepage hero signals). */
+.hp-proof-bar .hp-chip {
+	margin: 0;
+	padding: 0.5rem 0.85rem;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+	line-height: 1.4;
+	color: var(--hp-neutral-900);
+	background: var(--hp-neutral-50);
+	border: 1px solid var(--hp-neutral-100);
+	border-left: var(--hp-rule-chip) solid var(--hp-neutral-300);
+	border-radius: var(--hp-radius-chip);
+}
+
+.hp-proof-bar .hp-chip a {
+	color: var(--hp-neutral-900);
+	text-decoration: none;
+	border-bottom: 1px solid var(--hp-neutral-300);
+}
+
+.hp-proof-bar .hp-chip::before {
+	content: "\25CF";
+	margin-right: 0.5em;
+	color: var(--hp-neutral-300);
+}
+
+.hp-chip.is-status-merged {
+	border-left-color: var(--hp-status-merged);
+	background: var(--hp-surface-merged);
+}
+.hp-chip.is-status-merged::before { color: var(--hp-status-merged); }
+
+.hp-chip.is-status-review {
+	border-left-color: var(--hp-status-review);
+	background: var(--hp-surface-review);
+}
+/* in-review reads as hollow, not filled: the state is not yet resolved. */
+.hp-chip.is-status-review::before { content: "\25CB"; color: var(--hp-status-review); }
+
+.hp-chip.is-status-pending {
+	border-left-color: var(--hp-status-pending);
+	background: var(--hp-neutral-50);
+}
+.hp-chip.is-status-pending::before { content: "\25CB"; color: var(--hp-status-pending); }
+/* === artifact row === */
+.hp-artifact-row {
+	margin-top: var(--wp--preset--spacing--50);
+	padding-top: var(--wp--preset--spacing--40);
+	border-top: 1px solid var(--hp-neutral-100);
+}
+
+.hp-artifact-row__legend {
+	margin: 0 0 var(--wp--preset--spacing--20);
+	font-family: var(--wp--preset--font-family--mono);
+	text-transform: uppercase;
+	letter-spacing: var(--hp-tracking-label);
+	font-size: var(--wp--preset--font-size--micro);
+	color: var(--hp-neutral-600);
+}
+
+.hp-artifacts.wp-block-columns {
+	gap: 0;
+	margin: 0;
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-register);
+	overflow: hidden;
+}
+
+.hp-artifacts .hp-artifact {
+	padding: var(--wp--preset--spacing--20) var(--wp--preset--spacing--30);
+}
+
+.hp-artifacts .hp-artifact + .hp-artifact {
+	border-left: 1px solid var(--hp-neutral-100);
+}
+
+/* Core columns stack at ≤781px: turn the column divider into a stacked-row
+   rule so it doesn't dangle as a left accent on a full-width row. */
+@media (max-width: 781px) {
+	.hp-artifacts .hp-artifact + .hp-artifact {
+		border-left: 0;
+		border-top: 1px solid var(--hp-neutral-100);
+	}
+}
+
+.hp-artifact__verifies {
+	margin: 0 0 var(--hp-gap-xs);
+	font-family: var(--wp--preset--font-family--mono);
+	text-transform: uppercase;
+	letter-spacing: var(--hp-tracking-label);
+	font-size: var(--wp--preset--font-size--micro);
+	color: var(--hp-neutral-600);
+}
+
+.hp-artifact__link {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--small);
+}
+
+.hp-artifact__link a {
+	color: var(--hp-action);
+	text-decoration: none;
+	border-bottom: 1px solid var(--hp-neutral-300);
+	border-bottom-color: color-mix(in srgb, var(--hp-action) 35%, transparent);
+}
+
+.hp-artifact__link a:hover { border-bottom-color: var(--hp-action); }
+
+/* A ledger line is owed. Two provisional conventions resolve to the same muted
+   reading, so an unverified slot never looks finished: a truly empty slot shows
+   an em-dash, and a written placeholder (e.g. <em>pre-tag</em>, <em>reserved</em>)
+   renders as a deliberate muted mono marker — distinct from a real,
+   action-colored artifact link. */
+.hp-artifact__link:empty::after {
+	content: "\2014";
+	color: var(--hp-neutral-600);
+}
+
+.hp-artifact__link em {
+	font-style: italic;
+	color: var(--hp-neutral-600);
+}
+/* === work ledger === */
+/* The Work list shares the artifact-row anatomy: one bordered register,
+   each entry a row that opens with a mono status label, then the title
+   link, then the consequence. State is the rule color, not decoration. */
+.hp-work {
+	margin-top: var(--wp--preset--spacing--40);
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-register);
+	overflow: hidden;
+}
+
+.hp-work__entry {
+	margin: 0;
+	padding: var(--wp--preset--spacing--30) var(--wp--preset--spacing--40);
+	border-left: var(--hp-rule-entry) solid var(--hp-neutral-300);
+}
+
+.hp-work__entry + .hp-work__entry {
+	border-top: 1px solid var(--hp-neutral-100);
+}
+
+.hp-work__entry.is-status-merged { border-left-color: var(--hp-status-merged); }
+.hp-work__entry.is-status-review { border-left-color: var(--hp-status-review); }
+.hp-work__entry.is-status-pending { border-left-color: var(--hp-status-pending); }
+
+.hp-work__label {
+	margin: 0 0 var(--hp-gap-sm);
+	font-family: var(--wp--preset--font-family--mono);
+	text-transform: uppercase;
+	letter-spacing: var(--hp-tracking-label);
+	font-size: var(--wp--preset--font-size--micro);
+	color: var(--hp-neutral-600);
+}
+
+.hp-work__title {
+	margin: 0 0 var(--hp-gap-xs);
+	font-size: var(--wp--preset--font-size--medium);
+	font-weight: var(--hp-weight-title);
+	line-height: 1.3;
+	letter-spacing: -0.01em;
+}
+
+.hp-work__title a {
+	color: var(--hp-neutral-900);
+	text-decoration: none;
+	border-bottom: 1px solid var(--hp-action);
+	border-bottom-color: color-mix(in srgb, var(--hp-action) 70%, transparent);
+}
+
+.hp-work__title a:hover { border-bottom-color: var(--hp-action); }
+
+.hp-work__desc {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--small);
+	line-height: 1.55;
+	color: var(--hp-neutral-600);
+}
+
+.hp-work__footer {
+	margin-top: var(--wp--preset--spacing--30);
+	font-size: var(--wp--preset--font-size--small);
+	color: var(--hp-neutral-600);
+}
+
+/* === skills (capability register) ===
+   Neutral proof-bar chips as capability tags (no status), grouped under mono
+   legends that share the kicker-label rule. The legend needs its own bottom
+   margin because that shared rule sets margin:0. */
+.hp-skills {
+	margin-top: var(--wp--preset--spacing--40);
+}
+
+.hp-skill-group + .hp-skill-group {
+	margin-top: var(--wp--preset--spacing--30);
+}
+
+.hp-skill-group__legend {
+	margin-bottom: var(--wp--preset--spacing--20);
+}
+
+.hp-skills .hp-proof-bar {
+	margin-block: 0;
+	gap: var(--wp--preset--spacing--10);
+}
+
+/* === quote block === */
+.hp-quote.wp-block-quote {
+	margin-block: var(--wp--preset--spacing--40);
+	padding-left: var(--wp--preset--spacing--30);
+	border-left: var(--hp-rule-quote) solid var(--hp-neutral-300);
+}
+
+/* The ceiling: body scale, regular weight, no accent color, no italic
+   display treatment. Nothing the client says renders larger than the work. */
+.hp-quote.wp-block-quote p {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--medium);
+	font-style: normal;
+	font-weight: 400;
+	line-height: 1.6;
+	color: var(--hp-neutral-900);
+}
+
+/* A reserved quote slot reads as visibly provisional, not finished content. */
+.hp-quote.is-reserved {
+	border-left-style: dashed;
+	border-left-color: var(--hp-neutral-300);
+}
+
+.hp-quote.is-reserved p,
+.hp-quote.is-reserved cite {
+	color: var(--hp-neutral-600);
+	font-style: italic;
+}
+
+.hp-quote.wp-block-quote cite {
+	display: block;
+	margin-top: var(--wp--preset--spacing--20);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--small);
+	font-style: normal;
+	color: var(--hp-neutral-600);
+}
+/* === product screenshots: device frames === */
+.hp-shot {
+	margin-block: var(--wp--preset--spacing--50);
+}
+
+.hp-shot img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
+.hp-shot .wp-element-caption,
+.hp-shot .wp-block-image__caption {
+	margin-top: var(--wp--preset--spacing--30);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--small);
+	line-height: 1.5;
+	color: var(--hp-neutral-600);
+}
+
+.hp-shot .wp-element-caption a,
+.hp-shot .wp-block-image__caption a {
+	color: var(--hp-action);
+	text-decoration: none;
+	border-bottom: 1px solid var(--hp-neutral-300);
+	border-bottom-color: color-mix(in srgb, var(--hp-action) 35%, transparent);
+}
+
+.hp-shot .wp-element-caption a:hover,
+.hp-shot .wp-block-image__caption a:hover {
+	border-bottom-color: var(--hp-action);
+}
+
+/* --- browser frame (desktop homepage shot) --- */
+.hp-shot--browser {
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-frame);
+	overflow: hidden;
+	background: var(--hp-neutral-50);
+	box-shadow: var(--hp-shadow-frame);
+}
+
+/* chrome bar with traffic-light dots, drawn with a gradient so no extra markup is needed */
+.hp-shot--browser::before {
+	content: "";
+	display: block;
+	height: 32px;
+	border-bottom: 1px solid var(--hp-neutral-100);
+	background:
+		radial-gradient(circle 5px at 18px 50%, var(--hp-chrome-dot-close) 98%, transparent) ,
+		radial-gradient(circle 5px at 38px 50%, var(--hp-chrome-dot-minimize) 98%, transparent),
+		radial-gradient(circle 5px at 58px 50%, var(--hp-chrome-dot-zoom) 98%, transparent),
+		var(--hp-neutral-50);
+	background-repeat: no-repeat;
+}
+
+.hp-shot--browser img {
+	border-radius: 0;
+}
+
+/* the caption sits outside the framed surface */
+.hp-shot--browser .wp-element-caption,
+.hp-shot--browser .wp-block-image__caption {
+	padding: 0 var(--wp--preset--spacing--30) var(--wp--preset--spacing--20);
+	background: var(--hp-neutral-0);
+}
+
+/* --- phone frame (booking funnel shot) --- */
+.hp-shot--phone {
+	width: min(100%, 300px);
+}
+
+.hp-shot--phone img {
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 300px;
+	padding: 12px;
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-phone);
+	background: var(--hp-neutral-0);
+	box-shadow: var(--hp-shadow-phone);
+}
+
+/* === portfolio operations art === */
+.hp-evidence-board {
+	position: relative;
+	margin-block: var(--wp--preset--spacing--50);
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-card);
+	overflow: hidden;
+	background:
+		linear-gradient(90deg, color-mix(in srgb, var(--hp-action) var(--hp-grid-action-tint), transparent) 1px, transparent 1px),
+		linear-gradient(color-mix(in srgb, var(--hp-status-merged) var(--hp-grid-status-tint), transparent) 1px, transparent 1px),
+		var(--hp-neutral-0);
+	background-size: var(--hp-grid-pitch) var(--hp-grid-pitch);
+	box-shadow: var(--hp-shadow-panel);
+}
+
+.hp-evidence-board::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, color-mix(in srgb, var(--hp-neutral-0) 88%, transparent), color-mix(in srgb, var(--hp-neutral-0) 96%, transparent));
+	pointer-events: none;
+}
+
+.hp-evidence-board > * {
+	position: relative;
+}
+
+.hp-evidence-board__header {
+	margin: 0;
+	padding: var(--wp--preset--spacing--30) var(--wp--preset--spacing--40);
+	border-bottom: 1px solid var(--hp-neutral-100);
+	background: color-mix(in srgb, var(--hp-neutral-0) 88%, var(--hp-neutral-50));
+}
+
+.hp-evidence-board__kicker,
+.hp-evidence-row__label,
+.hp-signal__label,
+.hp-operational-story__kicker,
+.hp-skill-group__legend {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	text-transform: uppercase;
+	letter-spacing: var(--hp-tracking-label);
+	font-size: var(--wp--preset--font-size--micro);
+	line-height: 1.4;
+	color: var(--hp-neutral-600);
+}
+
+.hp-evidence-board__title {
+	margin: var(--hp-gap-sm) 0 0;
+	font-size: var(--wp--preset--font-size--large);
+	font-weight: var(--hp-weight-title);
+	line-height: 1.25;
+	color: var(--hp-neutral-900);
+}
+
+.hp-evidence-board__summary {
+	margin: var(--wp--preset--spacing--10) 0 0;
+	max-width: 60ch;
+	font-size: var(--wp--preset--font-size--small);
+	line-height: 1.55;
+	color: var(--hp-neutral-600);
+}
+
+.hp-evidence-board__rows {
+	margin: 0;
+}
+
+.hp-evidence-row {
+	margin: 0;
+	padding: var(--wp--preset--spacing--30) var(--wp--preset--spacing--40);
+	border-top: 1px solid var(--hp-neutral-100);
+	border-left: var(--hp-rule-evidence) solid var(--hp-neutral-300);
+	background: color-mix(in srgb, var(--hp-neutral-0) 88%, var(--hp-neutral-50));
+}
+
+.hp-evidence-row:first-child {
+	border-top: 0;
+}
+
+.hp-evidence-row.is-status-merged {
+	border-left-color: var(--hp-status-merged);
+}
+
+.hp-evidence-row.is-status-review {
+	border-left-color: var(--hp-status-review);
+}
+
+.hp-evidence-row.is-status-pending {
+	border-left-color: var(--hp-status-pending);
+}
+
+/* Carry the proof-bar chip's filled-vs-hollow status dot onto evidence rows so
+   resolved (merged, filled) reads differently from unresolved (review /
+   pending, hollow) by shape, not the left-rule color alone. */
+.hp-evidence-row__label::before {
+	content: "\25CF";
+	margin-right: 0.5em;
+	color: var(--hp-neutral-300);
+}
+
+.hp-evidence-row.is-status-merged .hp-evidence-row__label::before {
+	color: var(--hp-status-merged);
+}
+
+.hp-evidence-row.is-status-review .hp-evidence-row__label::before {
+	content: "\25CB";
+	color: var(--hp-status-review);
+}
+
+.hp-evidence-row.is-status-pending .hp-evidence-row__label::before {
+	content: "\25CB";
+	color: var(--hp-status-pending);
+}
+
+.hp-evidence-row__title {
+	margin: var(--hp-gap-xs) 0 0;
+	font-size: var(--wp--preset--font-size--medium);
+	font-weight: var(--hp-weight-title);
+	line-height: 1.35;
+	color: var(--hp-neutral-900);
+}
+
+.hp-evidence-row__title a {
+	color: var(--hp-neutral-900);
+	text-decoration: none;
+	border-bottom: 1px solid var(--hp-action);
+	border-bottom-color: color-mix(in srgb, var(--hp-action) 70%, transparent);
+}
+
+.hp-evidence-row__title a:hover {
+	border-bottom-color: var(--hp-action);
+}
+
+.hp-evidence-row__meta {
+	margin: var(--hp-gap-sm) 0 0;
+	font-size: var(--wp--preset--font-size--small);
+	line-height: 1.5;
+	color: var(--hp-neutral-600);
+}
+
+.hp-evidence-board--compact .hp-evidence-board__header,
+.hp-evidence-board--compact .hp-evidence-row {
+	padding: var(--wp--preset--spacing--20) var(--wp--preset--spacing--30);
+}
+
+.hp-evidence-board--compact .hp-evidence-board__title {
+	font-size: var(--wp--preset--font-size--medium);
+}
+
+.hp-signal-strip {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+	margin-block: var(--wp--preset--spacing--40);
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-panel);
+	overflow: hidden;
+	background: var(--hp-neutral-0);
+}
+
+.hp-signal {
+	margin: 0;
+	padding: var(--wp--preset--spacing--20) var(--wp--preset--spacing--30);
+	border-left: 1px solid var(--hp-neutral-100);
+}
+
+.hp-signal:first-child {
+	border-left: 0;
+}
+
+.hp-signal__value {
+	margin: 0 0 var(--hp-gap-xs);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--medium);
+	font-weight: var(--hp-weight-strong);
+	line-height: 1.2;
+	color: var(--hp-neutral-900);
+}
+
+.hp-signal__label {
+	display: block;
+}
+
+.hp-proof-product.wp-block-columns {
+	gap: var(--wp--preset--spacing--50);
+	align-items: flex-start;
+	margin-block: var(--wp--preset--spacing--50);
+}
+
+.hp-proof-product .wp-block-column {
+	min-width: 0;
+}
+
+.hp-shot-stack {
+	display: grid;
+	gap: var(--wp--preset--spacing--30);
+}
+
+.hp-shot-note {
+	margin-block: 0;
+	padding: var(--wp--preset--spacing--30);
+	border: 1px solid var(--hp-neutral-100);
+	border-style: dashed;
+	border-radius: var(--hp-radius-card);
+	background: var(--hp-neutral-50);
+}
+
+.hp-shot-note p {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--small);
+	line-height: 1.5;
+	color: var(--hp-neutral-600);
+}
+
+.hp-operational-story {
+	margin-block: var(--wp--preset--spacing--60);
+	padding: var(--wp--preset--spacing--40);
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-card);
+	background:
+		linear-gradient(90deg, color-mix(in srgb, var(--hp-action) var(--hp-grid-action-tint), transparent) 1px, transparent 1px),
+		linear-gradient(color-mix(in srgb, var(--hp-status-merged) var(--hp-grid-status-tint), transparent) 1px, transparent 1px),
+		var(--hp-neutral-50);
+	background-size: var(--hp-grid-pitch) var(--hp-grid-pitch);
+}
+
+.hp-operational-story__grid.wp-block-columns {
+	gap: var(--wp--preset--spacing--40);
+	margin: 0;
+	align-items: stretch;
+}
+
+.hp-operational-story__panel {
+	margin: 0;
+	padding: var(--wp--preset--spacing--30);
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-panel);
+	background: color-mix(in srgb, var(--hp-neutral-0) 92%, var(--hp-neutral-50));
+}
+
+.hp-operational-story__title {
+	margin: var(--hp-gap-sm) 0 0;
+	font-size: var(--wp--preset--font-size--x-large);
+	font-weight: var(--hp-weight-title);
+	line-height: 1.2;
+	color: var(--hp-neutral-900);
+}
+
+.hp-operational-story__text {
+	margin: var(--wp--preset--spacing--20) 0 0;
+	font-size: var(--wp--preset--font-size--small);
+	line-height: 1.55;
+	color: var(--hp-neutral-600);
+}
+
+.hp-mini-diagram {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 0.35rem;
+	align-items: end;
+	min-height: 8rem;
+	margin-top: var(--wp--preset--spacing--30);
+	padding-top: var(--wp--preset--spacing--30);
+	border-top: 1px solid var(--hp-neutral-100);
+}
+
+.hp-mini-diagram span {
+	display: block;
+	min-height: 2rem;
+	border-radius: var(--hp-radius-chip) var(--hp-radius-chip) 0 0;
+	background: var(--hp-action);
+	opacity: 0.76;
+}
+
+.hp-mini-diagram span:nth-child(1) { height: 40%; }
+.hp-mini-diagram span:nth-child(2) { height: 72%; background: var(--hp-status-merged); }
+.hp-mini-diagram span:nth-child(3) { height: 56%; }
+.hp-mini-diagram span:nth-child(4) { height: 88%; background: var(--hp-status-review); }
+.hp-mini-diagram span:nth-child(5) { height: 64%; }
+
+@media (max-width: 781px) {
+	.hp-signal-strip {
+		grid-template-columns: 1fr;
+	}
+
+	.hp-signal {
+		border-left: 0;
+		border-top: 1px solid var(--hp-neutral-100);
+	}
+
+	.hp-signal:first-child {
+		border-top: 0;
+	}
+
+	.hp-operational-story {
+		padding: var(--wp--preset--spacing--30);
+	}
+}
+
+/* === Site header ===
+   Two tiers, one system. Inner pages get a compact utility bar (wordmark +
+   small Wapuu mark + nav). The home page promotes the same bar into the hero:
+   the bar loses its own background/border and shares the hero's grid band, the
+   small mark steps aside, and the full Wapuu in the hero carries the brand. So
+   the mascot appears exactly once per page — big on home, a quiet chip
+   elsewhere — instead of competing with itself. */
+.hp-site-header {
+	position: relative;
+	z-index: 10;
+	border-bottom: 1px solid var(--hp-neutral-100);
+	background: color-mix(in srgb, var(--hp-neutral-0) 94%, var(--hp-neutral-50));
+}
+
+.hp-site-header__inner {
+	gap: var(--wp--preset--spacing--30);
+}
+
+.hp-site-brand {
+	min-width: 0;
+	align-items: center;
+}
+
+/* Compact brand mark: a crisp, pre-cropped transparent head of the signature
+   Wapuu sat on a clean disc. No zoom-crop of the busy full figure and no baked
+   white box — the source art's white field is gone, so the disc edge stays
+   clean and the linework reads at avatar scale. */
+.hp-site-brand__wapuu {
+	display: block;
+	width: 2.125rem;
+	aspect-ratio: 1;
+	flex: 0 0 auto;
+	border-radius: var(--hp-radius-pill);
+	background:
+		var(--hp-wapuu-mark-url, url("assets/wapuu/wapuu-mark.png")) 50% 36% / 116% auto no-repeat,
+		var(--hp-neutral-0);
+	box-shadow: var(--hp-shadow-mark);
+}
+
+.hp-site-brand .wp-block-site-title {
+	margin: 0;
+	font-weight: var(--hp-weight-strong);
+	line-height: 1.1;
+	letter-spacing: 0;
+}
+
+.hp-site-brand .wp-block-site-title a {
+	color: var(--hp-neutral-900);
+	text-decoration: none;
+}
+
+.hp-site-brand .wp-block-site-title a:hover {
+	border-bottom: 1px solid var(--hp-action);
+}
+
+.hp-site-nav {
+	min-width: 0;
+}
+
+.hp-site-header .wp-block-navigation {
+	font-size: var(--wp--preset--font-size--small);
+	line-height: 1.3;
+}
+
+.hp-site-header .wp-block-navigation a {
+	text-decoration: none;
+}
+
+.hp-site-header .wp-block-navigation:not(.has-background) .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) {
+	background-color: color-mix(in srgb, var(--hp-neutral-0) 94%, transparent);
+}
+
+.hp-site-header .wp-block-navigation:not(.has-text-color) .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) {
+	color: var(--hp-neutral-900);
+}
+
+.hp-site-header .wp-block-navigation__responsive-container-open,
+.hp-site-header .wp-block-navigation__responsive-container-close {
+	min-inline-size: var(--hp-touch-min);
+	min-block-size: var(--hp-touch-min);
+	align-items: center;
+	justify-content: center;
+}
+
+/* --- Home: promote the bar into the hero band ---
+   Drop the bar's own surface and divider and lay down the SAME grid as the
+   hero so the two read as one continuous header; retire the small mark since
+   the full Wapuu is about to appear right below it. The grid's vertical lines
+   share the viewport origin with the hero's, so the seam is invisible. */
+body.home .hp-site-header {
+	border-bottom: 0;
+	background:
+		linear-gradient(90deg, color-mix(in srgb, var(--hp-action) var(--hp-grid-action-tint), transparent) 1px, transparent 1px),
+		linear-gradient(color-mix(in srgb, var(--hp-status-merged) var(--hp-grid-status-tint), transparent) 1px, transparent 1px),
+		var(--hp-neutral-0);
+	background-size: var(--hp-grid-pitch) var(--hp-grid-pitch);
+}
+
+body.home .hp-site-brand__wapuu {
+	display: none;
+}
+
+.hp-wapuu-hero-wrap {
+	/* abut the header so the grid band is continuous through the nav */
+	margin-block: 0 var(--wp--preset--spacing--60);
+	padding-block: var(--wp--preset--spacing--40) var(--wp--preset--spacing--60);
+	border-bottom: 1px solid var(--hp-neutral-100);
+	background:
+		linear-gradient(90deg, color-mix(in srgb, var(--hp-action) var(--hp-grid-action-tint), transparent) 1px, transparent 1px),
+		linear-gradient(color-mix(in srgb, var(--hp-status-merged) var(--hp-grid-status-tint), transparent) 1px, transparent 1px),
+		var(--hp-neutral-0);
+	background-size: var(--hp-grid-pitch) var(--hp-grid-pitch);
+}
+
+.hp-wapuu-hero.wp-block-columns {
+	gap: var(--wp--preset--spacing--70);
+	align-items: center;
+	margin-block: 0;
+}
+
+.hp-wapuu-hero .wp-block-column {
+	min-width: 0;
+}
+
+.hp-wapuu-hero__copy {
+	max-width: 39rem;
+}
+
+.hp-wapuu-hero__eyebrow {
+	margin: 0 0 var(--wp--preset--spacing--20);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--micro);
+	line-height: 1.4;
+	letter-spacing: var(--hp-tracking-label);
+	text-transform: uppercase;
+	color: var(--hp-neutral-600);
+}
+
+.hp-wapuu-hero__title {
+	max-width: 13ch;
+	margin: 0;
+	font-size: var(--wp--preset--font-size--xx-large);
+	font-weight: var(--hp-weight-strong);
+	line-height: 1.08;
+	letter-spacing: 0;
+	color: var(--hp-neutral-900);
+}
+
+.hp-wapuu-hero__text {
+	max-width: 58ch;
+	margin: var(--wp--preset--spacing--30) 0 0;
+	font-size: var(--wp--preset--font-size--large);
+	line-height: 1.5;
+	color: var(--hp-neutral-600);
+}
+
+.hp-wapuu-hero__signals {
+	margin-top: var(--wp--preset--spacing--40);
+}
+
+.hp-wapuu-hero__art {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.hp-wapuu-hero__figure {
+	margin: 0;
+	width: min(100%, 26rem);
+}
+
+.hp-wapuu-hero__figure img {
+	display: block;
+	width: 100%;
+	height: auto;
+	filter: drop-shadow(var(--hp-shadow-mascot));
+}
+
+@media (max-width: 781px) {
+	.hp-site-header__inner {
+		flex-wrap: wrap !important;
+		row-gap: var(--wp--preset--spacing--20);
+	}
+
+	.hp-site-brand__wapuu {
+		width: 2rem;
+	}
+
+	.hp-site-nav {
+		width: 100%;
+	}
+
+	.hp-site-header .wp-block-navigation {
+		width: 100%;
+	}
+
+		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) {
+			top: calc(var(--hp-touch-min) + var(--wp--preset--spacing--60) + var(--wp--preset--spacing--40));
+			right: var(--wp--preset--spacing--20);
+			bottom: auto;
+			left: var(--wp--preset--spacing--20);
+			box-sizing: border-box;
+			width: auto;
+			max-height: calc(100svh - var(--hp-touch-min) - var(--wp--preset--spacing--60) - var(--wp--preset--spacing--40) - var(--wp--preset--spacing--20));
+			padding: var(--wp--preset--spacing--20);
+			overflow: auto;
+			border: 1px solid var(--hp-neutral-100);
+			border-radius: var(--hp-radius-frame);
+			background-image:
+				linear-gradient(180deg, color-mix(in srgb, var(--hp-neutral-0) 96%, transparent), color-mix(in srgb, var(--hp-neutral-50) 92%, transparent)),
+				linear-gradient(90deg, color-mix(in srgb, var(--hp-action) 4%, transparent) 1px, transparent 1px),
+				linear-gradient(color-mix(in srgb, var(--hp-status-merged) 3%, transparent) 1px, transparent 1px);
+			background-size: auto, var(--hp-grid-pitch) var(--hp-grid-pitch), var(--hp-grid-pitch) var(--hp-grid-pitch);
+			box-shadow:
+				0 1px 2px color-mix(in srgb, var(--hp-neutral-900) 8%, transparent),
+				0 18px 46px -22px color-mix(in srgb, var(--hp-neutral-900) 38%, transparent),
+				0 0 0 100vmax color-mix(in srgb, var(--hp-neutral-900) 9%, transparent);
+			backdrop-filter: blur(2px);
+		}
+
+		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation__responsive-container-content {
+			padding-top: calc(var(--hp-touch-min) + var(--wp--preset--spacing--20));
+		}
+
+		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation__container,
+		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-page-list {
+			width: 100%;
+			gap: 0;
+			align-items: stretch;
+		}
+
+		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation-item {
+			width: 100%;
+		}
+
+		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation-item__content {
+			display: flex;
+			align-items: center;
+			box-sizing: border-box;
+			width: 100%;
+			min-height: var(--hp-touch-min);
+			padding: 0 var(--wp--preset--spacing--20);
+			border-bottom: 1px solid color-mix(in srgb, var(--hp-neutral-100) 72%, transparent);
+			font-weight: var(--hp-weight-strong);
+			line-height: 1.35;
+		}
+
+		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation__submenu-container {
+			margin: 0;
+			padding: 0 0 0 var(--wp--preset--spacing--20);
+			border-left: 1px solid var(--hp-neutral-100);
+		}
+
+		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open:not(.disable-default-overlay) .wp-block-navigation__submenu-container .wp-block-navigation-item__content {
+			color: var(--hp-neutral-600);
+			font-weight: var(--hp-weight-title);
+		}
+
+		.hp-site-header .wp-block-navigation__responsive-container.is-menu-open .wp-block-navigation__responsive-container-close {
+			top: var(--wp--preset--spacing--20);
+		right: var(--wp--preset--spacing--20);
+	}
+
+	.hp-wapuu-hero-wrap {
+		padding-block: var(--wp--preset--spacing--40);
+	}
+
+	.hp-wapuu-hero.wp-block-columns {
+		display: grid !important;
+		gap: var(--wp--preset--spacing--40);
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.hp-wapuu-hero .wp-block-column {
+		flex-basis: 100% !important;
+		width: 100%;
+	}
+
+	.hp-wapuu-hero__copy,
+	.hp-wapuu-hero__text {
+		max-width: 100%;
+		overflow-wrap: anywhere;
+	}
+
+	.hp-wapuu-hero__signals {
+		display: grid !important;
+		grid-template-columns: minmax(0, 1fr);
+		width: 100%;
+	}
+
+	.hp-wapuu-hero__signals .hp-chip {
+		box-sizing: border-box;
+		width: 100%;
+	}
+
+	/* The full Wapuu becomes a centered accent BELOW the copy, capped small so it
+	   never dominates the fold or bleeds past the column the way the old
+	   white-boxed image did. */
+	.hp-wapuu-hero__art {
+		justify-content: center;
+	}
+
+	.hp-wapuu-hero__figure {
+		width: auto;
+		max-width: 100%;
+		margin-inline: auto;
+	}
+
+	.hp-wapuu-hero__figure img {
+		width: auto;
+		max-width: 100%;
+		max-height: 12rem;
+	}
+}
+
+@media (min-width: 600px) and (max-width: 781px) {
+	.hp-site-header .hp-site-nav .wp-block-navigation__responsive-container:not(.hidden-by-default):not(.is-menu-open) {
+		display: none;
+	}
+
+	.hp-site-header .hp-site-nav .wp-block-navigation__responsive-container-open:not(.always-shown) {
+		display: flex;
+	}
+}
+
+/* === case-study cross-link (hub & spoke) === */
+/* The spoke line under a case-study h1 that points back to the hub and across
+   to its sibling page. Mono/xs come from the block; this rule owns the link
+   affordance and the space below it, matching the site's other inline links. */
+.hp-spoke-nav {
+	margin: 0 0 var(--wp--preset--spacing--40);
+	color: var(--hp-neutral-600);
+}
+
+.hp-spoke-nav a {
+	color: var(--hp-action);
+	text-decoration: none;
+	border-bottom: 1px solid var(--hp-neutral-300);
+	border-bottom-color: color-mix(in srgb, var(--hp-action) 35%, transparent);
+}
+
+.hp-spoke-nav a:hover { border-bottom-color: var(--hp-action); }
+
+/* === footer === */
+.hp-footer {
+	color: var(--hp-neutral-900);
+}
+
+.hp-footer__name,
+.hp-footer__links,
+.hp-footer__meta,
+.hp-footer__tagline {
+	margin: 0;
+}
+
+.hp-footer__name {
+	letter-spacing: 0;
+}
+
+.hp-footer__links a,
+.hp-footer__meta a {
+	color: var(--hp-action);
+	text-decoration: none;
+	border-bottom: 1px solid var(--hp-neutral-300);
+	border-bottom-color: color-mix(in srgb, var(--hp-action) 35%, transparent);
+}
+
+.hp-footer__links a:hover,
+.hp-footer__meta a:hover {
+	border-bottom-color: var(--hp-action);
+}
+
+.hp-footer__tagline {
+	max-width: 42rem;
+}
+
+/* === design-tokens reference page === */
+.hp-token-swatches {
+	gap: var(--wp--preset--spacing--20);
+	margin-block: var(--wp--preset--spacing--40);
+}
+
+/* Uniform tiles with a hairline edge, so the near-white tokens (base, surface,
+   hairline) stay visible on the page background instead of disappearing. */
+.hp-swatch {
+	display: flex;
+	flex: 1 1 8.5rem;
+	min-width: 8.5rem;
+	min-height: 4.5rem;
+	align-items: flex-end;
+	padding: var(--wp--preset--spacing--20);
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-tile);
+}
+
+.hp-swatch p {
+	margin: 0;
+}
+
+/* The type scale as a spec sheet: one sample per row, divided by hairlines. */
+.hp-type-samples {
+	margin-block: var(--wp--preset--spacing--40);
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-tile);
+	overflow: hidden;
+}
+
+.hp-type-samples p {
+	margin: 0;
+	padding: var(--wp--preset--spacing--20) var(--wp--preset--spacing--30);
+	border-top: 1px solid var(--hp-neutral-100);
+}
+
+.hp-type-samples p:first-child {
+	border-top: 0;
+}
+
+/* === reduced motion === */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+/* === mobile overlay: close-on-tap collapse ===
+   nav-close-delight.js adds .is-hp-closing to the open overlay container and
+   .is-hp-chosen to the tapped link while the overlay carries .is-menu-open.
+   The panel lifts toward the hamburger and fades; navigation remains owned by
+   the Interactivity Router or browser. The JS closes through core's close
+   control on a short schedule so the closed state survives the router swap.
+   Reduced motion skips the cosmetic classes and closes immediately; the global
+   prefers-reduced-motion block above keeps the stylesheet side neutral. */
+@keyframes hp-menu-collapse {
+	to {
+		opacity: 0;
+		transform: translateY(-6px) scale(0.97);
+	}
+}
+
+@keyframes hp-tap-echo {
+	from { background-color: color-mix(in srgb, var(--hp-action) 12%, transparent); }
+	to   { background-color: transparent; }
+}
+
+/* (0,4,0): overrides core's fade-in animation (0,2,0); the theme's open rule
+   at the .is-menu-open positioning block sets no `animation`, and this rule is
+   appended after it. */
+.hp-site-header .wp-block-navigation__responsive-container.is-menu-open.is-hp-closing {
+	animation: hp-menu-collapse 150ms cubic-bezier(0.4, 0, 1, 1) forwards;
+	transform-origin: 0 0;
+	pointer-events: none;
+}
+
+.hp-site-header .wp-block-navigation__responsive-container.is-menu-open.is-hp-closing .is-hp-chosen {
+	animation: hp-tap-echo 140ms ease-out both;
+	box-shadow: inset 0 -2px 0 0 var(--hp-action);
+}

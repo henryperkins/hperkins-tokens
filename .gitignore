@@ -1,0 +1,27 @@
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Local env/logs
+.env
+.env.*
+!.env.example
+*.log
+
+# Dependency/build caches
+node_modules/
+vendor/
+.cache/
+coverage/
+
+# Archives/backups
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.bak
+*.sql

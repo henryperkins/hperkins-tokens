@@ -1,0 +1,347 @@
+{
+	"$schema": "https://schemas.wp.org/wp/6.6/theme.json",
+	"version": 3,
+	"templateParts": [
+		{
+			"area": "header",
+			"name": "header",
+			"title": "Header"
+		},
+		{
+			"area": "footer",
+			"name": "footer",
+			"title": "Footer"
+		}
+	],
+	"settings": {
+		"appearanceTools": true,
+		"useRootPaddingAwareAlignments": true,
+		"layout": {
+			"contentSize": "720px",
+			"wideSize": "1080px"
+		},
+		"color": {
+			"defaultPalette": false,
+			"defaultGradients": false,
+			"customGradient": false,
+			"customDuotone": false,
+			"custom": false,
+			"palette": [
+				{
+					"slug": "base",
+					"name": "Base",
+					"color": "#ffffff"
+				},
+				{
+					"slug": "surface",
+					"name": "Surface",
+					"color": "#f6f7f9"
+				},
+				{
+					"slug": "hairline",
+					"name": "Hairline",
+					"color": "#e9ecf1"
+				},
+				{
+					"slug": "muted",
+					"name": "Muted",
+					"color": "#545d6e"
+				},
+				{
+					"slug": "contrast",
+					"name": "Contrast",
+					"color": "#14181f"
+				},
+				{
+					"slug": "action",
+					"name": "Action",
+					"color": "#1a4dbe"
+				},
+				{
+					"slug": "status-merged",
+					"name": "Status / Merged",
+					"color": "#1f7a4d"
+				},
+				{
+					"slug": "status-review",
+					"name": "Status / Review",
+					"color": "#a56408"
+				},
+				{
+					"slug": "status-pending",
+					"name": "Status / Pending",
+					"color": "#6b7280"
+				},
+				{
+					"slug": "surface-merged",
+					"name": "Surface / Merged",
+					"color": "#f1f8f4"
+				},
+				{
+					"slug": "surface-review",
+					"name": "Surface / Review",
+					"color": "#fbf6ed"
+				}
+			]
+		},
+		"typography": {
+			"defaultFontSizes": false,
+			"fluid": true,
+			"fontFamilies": [
+				{
+					"slug": "system-text",
+					"name": "Text",
+					"fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+				},
+				{
+					"slug": "mono",
+					"name": "Mono",
+					"fontFamily": "ui-monospace, 'SF Mono', 'Cascadia Code', 'Roboto Mono', Menlo, Consolas, monospace"
+				}
+			],
+			"fontSizes": [
+				{
+					"slug": "micro",
+					"name": "Micro",
+					"size": "0.6875rem",
+					"fluid": false
+				},
+				{
+					"slug": "xs",
+					"name": "XSmall",
+					"size": "0.75rem",
+					"fluid": false
+				},
+				{
+					"slug": "small",
+					"name": "Small",
+					"size": "0.8125rem",
+					"fluid": false
+				},
+				{
+					"slug": "medium",
+					"name": "Body",
+					"size": "1rem",
+					"fluid": {
+						"min": "1rem",
+						"max": "1.0625rem"
+					}
+				},
+				{
+					"slug": "large",
+					"name": "Lead",
+					"size": "1.25rem",
+					"fluid": {
+						"min": "1.125rem",
+						"max": "1.25rem"
+					}
+				},
+				{
+					"slug": "x-large",
+					"name": "Heading",
+					"size": "1.75rem",
+					"fluid": {
+						"min": "1.5rem",
+						"max": "1.875rem"
+					}
+				},
+				{
+					"slug": "xx-large",
+					"name": "Display",
+					"size": "2.5rem",
+					"fluid": {
+						"min": "2rem",
+						"max": "2.75rem"
+					}
+				}
+			]
+		},
+		"custom": {
+			"neutral-300": "#c3cad6",
+			"touch": {
+				"min": "44px"
+			},
+			"leading": {
+				"lead": "1.45"
+			},
+			"rule": {
+				"chip": "7px",
+				"entry": "3px",
+				"evidence": "5px",
+				"quote": "2px"
+			},
+			"radius": {
+				"chip": "2px",
+				"register": "3px",
+				"tile": "4px",
+				"panel": "5px",
+				"card": "6px",
+				"frame": "8px",
+				"phone": "30px",
+				"pill": "999px"
+			},
+			"weight": {
+				"title": "650",
+				"strong": "700"
+			},
+			"gap": {
+				"xs": "0.25rem",
+				"sm": "0.35rem"
+			},
+			"grid": {
+				"pitch": "32px",
+				"actionTint": "6%",
+				"statusTint": "5%"
+			},
+			"shadow": {
+				"frame": "0 1px 2px color-mix(in srgb, var(--wp--preset--color--contrast) 5%, transparent), 0 12px 32px -12px color-mix(in srgb, var(--wp--preset--color--contrast) 22%, transparent)",
+				"phone": "inset 0 0 0 1px var(--wp--preset--color--surface), 0 1px 2px color-mix(in srgb, var(--wp--preset--color--contrast) 5%, transparent), 0 16px 36px -14px color-mix(in srgb, var(--wp--preset--color--contrast) 28%, transparent)",
+				"panel": "0 1px 2px color-mix(in srgb, var(--wp--preset--color--contrast) 4%, transparent), 0 16px 38px -24px color-mix(in srgb, var(--wp--preset--color--contrast) 18%, transparent)",
+				"mark": "inset 0 0 0 1px var(--wp--preset--color--hairline), 0 1px 2px color-mix(in srgb, var(--wp--preset--color--contrast) 6%, transparent)",
+				"mascot": "0 22px 28px color-mix(in srgb, var(--wp--preset--color--contrast) 18%, transparent)"
+			},
+			"tracking": {
+				"label": "0.08em"
+			}
+		},
+		"spacing": {
+			"defaultSpacingSizes": false,
+			"units": [
+				"px",
+				"rem",
+				"em",
+				"%",
+				"vw",
+				"vh"
+			],
+			"spacingSizes": [
+				{
+					"slug": "10",
+					"name": "Chip row",
+					"size": "0.5rem"
+				},
+				{
+					"slug": "20",
+					"name": "Inline",
+					"size": "0.75rem"
+				},
+				{
+					"slug": "30",
+					"name": "Quote indent",
+					"size": "1.25rem"
+				},
+				{
+					"slug": "40",
+					"name": "Stack",
+					"size": "1.5rem"
+				},
+				{
+					"slug": "50",
+					"name": "Artifact terminus",
+					"size": "2rem"
+				},
+				{
+					"slug": "60",
+					"name": "Section",
+					"size": "3.5rem"
+				},
+				{
+					"slug": "70",
+					"name": "Band",
+					"size": "5rem"
+				}
+			]
+		}
+	},
+	"styles": {
+		"color": {
+			"background": "var(--wp--preset--color--base)",
+			"text": "var(--wp--preset--color--contrast)"
+		},
+		"typography": {
+			"fontFamily": "var(--wp--preset--font-family--system-text)",
+			"fontSize": "var(--wp--preset--font-size--medium)",
+			"lineHeight": "1.6"
+		},
+		"elements": {
+			"link": {
+				"color": {
+					"text": "var(--wp--preset--color--action)"
+				},
+				"typography": {
+					"textDecoration": "underline"
+				},
+				":hover": {
+					"typography": {
+						"textDecoration": "none"
+					}
+				}
+			},
+			"heading": {
+				"typography": {
+					"fontFamily": "var(--wp--preset--font-family--system-text)",
+					"fontWeight": "var(--wp--custom--weight--title)",
+					"lineHeight": "1.2",
+					"letterSpacing": "-0.01em"
+				},
+				"color": {
+					"text": "var(--wp--preset--color--contrast)"
+				}
+			},
+			"h1": {
+				"typography": {
+					"fontSize": "var(--wp--preset--font-size--x-large)",
+					"lineHeight": "1.1"
+				}
+			},
+			"h2": {
+				"typography": {
+					"fontSize": "var(--wp--preset--font-size--large)",
+					"lineHeight": "1.2"
+				}
+			},
+			"h3": {
+				"typography": {
+					"fontSize": "var(--wp--preset--font-size--medium)"
+				}
+			},
+			"h4": {
+				"typography": {
+					"fontSize": "var(--wp--preset--font-size--small)"
+				}
+			},
+			"h5": {
+				"typography": {
+					"fontSize": "var(--wp--preset--font-size--xs)"
+				}
+			},
+			"h6": {
+				"typography": {
+					"fontSize": "var(--wp--preset--font-size--micro)"
+				}
+			},
+			"button": {
+				"color": {
+					"background": "var(--wp--preset--color--action)",
+					"text": "var(--wp--preset--color--base)"
+				},
+				":hover": {
+					"color": {
+						"background": "var(--wp--preset--color--contrast)",
+						"text": "var(--wp--preset--color--base)"
+					}
+				},
+				":focus-visible": {
+					"color": {
+						"background": "var(--wp--preset--color--contrast)",
+						"text": "var(--wp--preset--color--base)"
+					}
+				}
+			}
+		},
+		"spacing": {
+			"blockGap": "var(--wp--preset--spacing--40)"
+		},
+		"css": "a:focus-visible,button:focus-visible,.wp-block-button__link:focus-visible{outline:2px solid var(--wp--preset--color--action);outline-offset:2px}code{font-family:var(--wp--preset--font-family--mono);font-size:0.92em;background:var(--wp--preset--color--surface);padding:0.1em 0.35em;border-radius:var(--wp--custom--radius--chip)}"
+	}
+}
