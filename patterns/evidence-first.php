@@ -26,8 +26,8 @@
 
 	<!-- wp:group {"className":"hp-evidence-board__rows","layout":{"type":"default"}} -->
 	<div class="wp-block-group hp-evidence-board__rows">
-		<!-- wp:group {"className":"hp-evidence-row is-status-merged","layout":{"type":"default"}} -->
-		<div class="wp-block-group hp-evidence-row is-status-merged">
+		<!-- wp:group {"className":"hp-evidence-row is-kind-release","layout":{"type":"default"}} -->
+		<div class="wp-block-group hp-evidence-row is-kind-release">
 			<!-- wp:paragraph {"className":"hp-evidence-row__label"} -->
 			<p class="hp-evidence-row__label">release</p>
 			<!-- /wp:paragraph -->
@@ -42,8 +42,8 @@
 		</div>
 		<!-- /wp:group -->
 
-		<!-- wp:group {"className":"hp-evidence-row is-status-merged","layout":{"type":"default"}} -->
-		<div class="wp-block-group hp-evidence-row is-status-merged">
+		<!-- wp:group {"className":"hp-evidence-row is-kind-source","layout":{"type":"default"}} -->
+		<div class="wp-block-group hp-evidence-row is-kind-source">
 			<!-- wp:paragraph {"className":"hp-evidence-row__label"} -->
 			<p class="hp-evidence-row__label">source</p>
 			<!-- /wp:paragraph -->
@@ -58,8 +58,8 @@
 		</div>
 		<!-- /wp:group -->
 
-		<!-- wp:group {"className":"hp-evidence-row is-status-review","layout":{"type":"default"}} -->
-		<div class="wp-block-group hp-evidence-row is-status-review">
+		<!-- wp:group {"className":"hp-evidence-row is-kind-review","layout":{"type":"default"}} -->
+		<div class="wp-block-group hp-evidence-row is-kind-review">
 			<!-- wp:paragraph {"className":"hp-evidence-row__label"} -->
 			<p class="hp-evidence-row__label">review</p>
 			<!-- /wp:paragraph -->

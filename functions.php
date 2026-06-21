@@ -77,6 +77,25 @@ add_action( 'wp_enqueue_scripts', function () {
 			)
 		);
 	}
+
+	// Progressive enhancement for the contact + subscribe forms: inline email
+	// validation and a confirmation-state swap (the Imladris Design System's
+	// Contact/Subscribe interaction). Both forms keep a working mailto: action
+	// as the no-JS fallback.
+	$form_enhance_rel  = '/assets/js/form-enhance.js';
+	$form_enhance_file = get_stylesheet_directory() . $form_enhance_rel;
+	if ( file_exists( $form_enhance_file ) ) {
+		wp_enqueue_script(
+			'hperkins-form-enhance',
+			get_stylesheet_directory_uri() . $form_enhance_rel,
+			array(),
+			filemtime( $form_enhance_file ),
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
+		);
+	}
 }, 20 );
 
 add_action( 'after_setup_theme', function () {

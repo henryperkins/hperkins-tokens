@@ -4,7 +4,7 @@ Theme URI: https://hperkins.blog
 Description: Imladris design system child theme for hperkins.blog — a Rivendell-inspired, parchment-and-evergreen serif editorial system with a mallorn-gold accent and a status-verified evidence layer (done/review/pending by rule-colour and a redundant word). Tokens in theme.json are the source of truth; the render is a consequence.
 Author: Henry Perkins
 Template: assembler
-Version: 0.3.6
+Version: 0.3.7
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -2423,7 +2423,7 @@ samp {
 	margin: var(--wp--preset--spacing--4) 0 0;
 	max-width: 22ch;
 	font-family: var(--hp-font-display);
-	font-size: var(--wp--preset--font-size--4-xl);
+	font-size: clamp(2.75rem, 6vw, 4rem);
 	font-weight: var(--wp--custom--weight--medium);
 	letter-spacing: var(--wp--custom--tracking--tight);
 	line-height: var(--wp--custom--leading--snug);
@@ -2887,14 +2887,12 @@ samp {
 }
 
 /* ---- SKILLS + EDUCATION heads --------------------------------------- */
-/* Section heads at h3 scale over a gold eyebrow (the snapshot uses
-	 type-h3 for Skills / Education). */
+/* Eyebrows match the section register; h2s inherit the shared section scale. */
 .hp-about-template .hp-about-skills-edu__col > .hp-eyebrow {
 	margin: 0 0 var(--wp--preset--spacing--3);
 	font-size: var(--wp--preset--font-size--xs);
 }
 .hp-about-template .hp-about-skills-edu__col > h2 {
-	font-size: var(--wp--preset--font-size--2-xl);
 	letter-spacing: var(--wp--custom--tracking--tight);
 }
 
@@ -3007,15 +3005,16 @@ samp {
 }
 
 /* ---- WIDE BREAKOUT -------------------------------------------------- */
-/* The wide sections (capabilities, experience, skills+education, projects)
-	 break out to the wide measure as whole wrappers — eyebrow, heading, and
-	 grid together — because alignwide does not resolve to wideSize inside
-	 page-about.html's explicitly-constrained post-content. Pulling the
+/* The wide sections (hero, capabilities, experience, skills+education,
+	 projects) break out to the wide measure as whole wrappers — eyebrow,
+	 heading, and grid together — because alignwide does not resolve to wideSize
+	 inside page-about.html's explicitly-constrained post-content. Pulling the
 	 wrapper (not just the inner grid) keeps each section's eyebrow + h2
 	 left-aligned with its cards, as in the snapshot. */
 @media (min-width: 56rem) {
 	.hp-about-template
 		:is(
+			.hp-about-hero,
 			.hp-about-capabilities,
 			.hp-about-experience,
 			.hp-about-skills-edu,
@@ -3029,5 +3028,218 @@ samp {
 		max-width: none;
 		margin-inline: calc(50% - var(--hp-about-wide) / 2) !important;
 		box-sizing: border-box;
+	}
+}
+
+/* ============================================================
+   Imladris Design System parity pass (2026-06).
+   Additive only — appended so the hand-authored sheet above is
+   untouched. Covers: RingCard instrument-slot CTA, EvidenceBoard
+   kind colours, OperationalStory signal emphasis, Callout stack,
+   contact/subscribe confirmation state, and the header actions.
+   ============================================================ */
+
+/* RingCard — the per-ring instrument slot (inspect the schema / audit the
+   log / verify the signature). Colour follows the ring's element tint. */
+.hp-ring-card__cta {
+	margin: var(--wp--preset--spacing--4) 0 0;
+	padding-top: var(--wp--preset--spacing--4);
+	border-top: 1px solid color-mix(in srgb, var(--wp--preset--color--parchment-50) 16%, transparent);
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+}
+
+.hp-ring-card__cta a {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--wp--preset--spacing--2);
+	color: var(--hp-ring-tint);
+	font-weight: var(--wp--custom--weight--semibold, 600);
+	text-decoration: none;
+	transition: color 140ms var(--wp--custom--ease--calm, ease);
+}
+
+.hp-ring-card__cta a:hover {
+	color: var(--wp--preset--color--parchment-50);
+}
+
+.hp-ring-card__cta.is-in-review {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--wp--preset--spacing--2);
+	color: color-mix(in srgb, var(--wp--preset--color--parchment-50) 78%, transparent);
+}
+
+.hp-ring-card__pill {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 9px;
+	border-radius: var(--wp--custom--radius--pill, 999px);
+	border: 1px solid color-mix(in srgb, var(--wp--preset--color--parchment-50) 28%, transparent);
+	background: color-mix(in srgb, var(--wp--preset--color--parchment-50) 6%, transparent);
+	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: 0.1em;
+	color: var(--wp--preset--color--gold-200);
+}
+
+.hp-ring-card__pill-dot {
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+/* EvidenceBoard — marker colour by KIND, not status: release/live/governance
+   evergreen, source/demo river, review amber, issue rust, docs muted. */
+.hp-evidence-row.is-kind-release,
+.hp-evidence-row.is-kind-live,
+.hp-evidence-row.is-kind-governance {
+	border-left-color: var(--wp--preset--color--green-700);
+}
+.hp-evidence-row.is-kind-source,
+.hp-evidence-row.is-kind-demo {
+	border-left-color: var(--wp--preset--color--river-500);
+}
+.hp-evidence-row.is-kind-review {
+	border-left-color: var(--wp--preset--color--gold-500);
+}
+.hp-evidence-row.is-kind-issue {
+	border-left-color: var(--wp--preset--color--rust);
+}
+.hp-evidence-row.is-kind-docs {
+	border-left-color: var(--wp--preset--color--ink-400);
+}
+.hp-evidence-row.is-kind-release .hp-evidence-row__label::before,
+.hp-evidence-row.is-kind-live .hp-evidence-row__label::before,
+.hp-evidence-row.is-kind-governance .hp-evidence-row__label::before {
+	color: var(--wp--preset--color--green-700);
+}
+.hp-evidence-row.is-kind-source .hp-evidence-row__label::before,
+.hp-evidence-row.is-kind-demo .hp-evidence-row__label::before {
+	color: var(--wp--preset--color--river-500);
+}
+.hp-evidence-row.is-kind-review .hp-evidence-row__label::before {
+	color: var(--wp--preset--color--gold-500);
+}
+.hp-evidence-row.is-kind-issue .hp-evidence-row__label::before {
+	color: var(--wp--preset--color--rust);
+}
+.hp-evidence-row.is-kind-docs .hp-evidence-row__label::before {
+	color: var(--wp--preset--color--ink-400);
+}
+
+/* OperationalStory — emphasize the synthesis ("FA") signal. */
+.hp-signal.is-emphasis {
+	background: color-mix(in srgb, var(--wp--preset--color--gold-500) 12%, transparent);
+}
+.hp-signal.is-emphasis .hp-signal__value {
+	color: var(--wp--custom--text--accent, var(--wp--preset--color--gold-700));
+}
+
+/* Callout library pattern — stack the four tone specimens. */
+.hp-callout-stack {
+	display: grid;
+	gap: var(--wp--preset--spacing--4);
+}
+
+/* Contact + Subscribe confirmation state (form-enhance.js progressive enhancement). */
+.hp-form-confirm {
+	display: grid;
+	gap: var(--wp--preset--spacing--2);
+	padding: var(--wp--preset--spacing--6);
+	border: 1px solid var(--wp--custom--border--hair, var(--hp-neutral-200));
+	border-left: 3px solid var(--wp--preset--color--gold-500);
+	border-radius: var(--wp--custom--radius--lg, 12px);
+	background: var(--wp--custom--surface--raised, #fff);
+}
+.hp-form-confirm__mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+	background: color-mix(in srgb, var(--wp--preset--color--green-600) 16%, transparent);
+	color: var(--wp--preset--color--green-700);
+}
+.hp-form-confirm__mark svg {
+	width: 1.1rem;
+	height: 1.1rem;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.hp-form-confirm__title {
+	margin: 0;
+	font-family: var(--hp-font-display);
+	font-size: var(--wp--preset--font-size--lg);
+	color: var(--wp--custom--text--strong, var(--hp-neutral-900));
+}
+.hp-form-confirm__body {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--sm);
+	color: var(--wp--custom--text--muted, var(--hp-neutral-600));
+}
+.hp-form-confirm__again {
+	justify-self: start;
+	margin-top: var(--wp--preset--spacing--2);
+	padding: 0;
+	border: 0;
+	background: none;
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: var(--wp--custom--tracking--wide, 0.04em);
+	text-transform: uppercase;
+	color: var(--wp--custom--text--accent, var(--wp--preset--color--gold-700));
+	cursor: pointer;
+}
+.hp-form-confirm--inverse {
+	border-color: var(--wp--preset--color--gold-500);
+	background: var(--wp--custom--surface--inverse);
+}
+.hp-form-confirm--inverse .hp-form-confirm__title {
+	color: var(--wp--preset--color--parchment-50);
+}
+.hp-form-confirm--inverse .hp-form-confirm__body {
+	color: var(--wp--preset--color--green-200);
+}
+
+/* Header action cluster — search + Subscribe (desktop). Hidden on the stacked
+   mobile header where the nav collapses to a toggle, so it never crowds 320px. */
+.hp-site-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--wp--preset--spacing--2);
+	flex: none;
+}
+.hp-site-actions .wp-block-search__button {
+	color: var(--wp--custom--text--strong, var(--hp-neutral-900));
+	background: transparent;
+	border: 0;
+	min-width: 44px;
+	min-height: 44px;
+	padding: 8px;
+	border-radius: var(--wp--custom--radius--md, 7px);
+	cursor: pointer;
+}
+.hp-site-actions .wp-block-search__button:hover {
+	color: var(--wp--custom--text--accent, var(--wp--preset--color--gold-700));
+	background: color-mix(in srgb, var(--wp--preset--color--gold-500) 12%, transparent);
+}
+.hp-site-actions .hp-site-subscribe .wp-block-button__link {
+	padding: 0.45rem 1rem;
+	font-size: var(--wp--preset--font-size--xs);
+}
+@media (max-width: 781px) {
+	.hp-site-header .hp-site-actions {
+		display: none;
 	}
 }

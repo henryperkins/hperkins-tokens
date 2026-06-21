@@ -63,7 +63,11 @@ foreach (
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-ring-card__description"} -->
-<p class="hp-ring-card__description">Expose capability openly so the system can be seen.</p>
+<p class="hp-ring-card__description">Expose capability so an agent can discover it &mdash; inspectable, not asserted.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-ring-card__cta"} -->
+<p class="hp-ring-card__cta"><a href="https://make.wordpress.org/core/2025/11/10/abilities-api-in-wordpress-6-9/">Inspect the schema <span aria-hidden="true">&rarr;</span></a></p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:column -->
@@ -105,7 +109,11 @@ foreach (
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-ring-card__description"} -->
-<p class="hp-ring-card__description">Govern usage and access so the system can be trusted.</p>
+<p class="hp-ring-card__description">Govern usage and access so the owner can audit it &mdash; read, not trusted.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-ring-card__cta"} -->
+<p class="hp-ring-card__cta"><a href="https://make.wordpress.org/ai/2026/05/21/whats-new-in-ai-1-0-0/">Audit the log <span aria-hidden="true">&rarr;</span></a></p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:column -->
@@ -147,7 +155,11 @@ foreach (
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-ring-card__description"} -->
-<p class="hp-ring-card__description">Attest actions and provenance so the system can be verified.</p>
+<p class="hp-ring-card__description">Attest the output&rsquo;s provenance so a stranger can verify it &mdash; signed, not claimed.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-ring-card__cta is-in-review"} -->
+<p class="hp-ring-card__cta is-in-review"><span class="hp-ring-card__cta-text">Verify the signature</span><span class="hp-ring-card__pill"><span class="hp-ring-card__pill-dot" aria-hidden="true"></span>In review</span></p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:column --></div>

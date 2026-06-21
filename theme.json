@@ -22,7 +22,10 @@
     "color": {
       "defaultPalette": false,
       "defaultGradients": false,
-      "custom": true,
+      "defaultDuotone": false,
+      "custom": false,
+      "customGradient": false,
+      "customDuotone": false,
       "palette": [
         {
           "slug": "parchment-50",

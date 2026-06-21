@@ -1,3 +1,10 @@
+> **✅ COMPLETED / HISTORICAL — do not action.** The Imladris migration shipped:
+> it merged to **`main`** in the theme repo, the theme is now at **v0.3.7**, and
+> `templates/` exists (front-page, home, single, page-about, page-ai-enablement,
+> page-contact, page-case-study). The "resume" instructions below — branch
+> `imladris`, v0.3.0, "Theme has NO templates/ dir today" — are kept only as a
+> record of the original migration plan and no longer describe the live theme.
+
 # HAND-OFF — Imladris migration of hperkins.blog (resume prompt)
 
 Paste this into a fresh Claude Code session opened at `/home/dev/hperkinsblog` to resume.

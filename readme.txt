@@ -28,55 +28,71 @@ Assembler parent theme must be installed for this theme to activate.
 
 = Token vocabulary =
 
-Color palette (settings.color.palette — default palette, custom gradients,
-custom duotones, and the custom color picker are disabled, so authors pick only
-from these named tokens):
+The Imladris token layer lives in theme.json and round-trips 1:1 with the design
+system; style.css aliases onto the generated --wp--preset--* / --wp--custom--*
+variables rather than duplicating any hex.
 
-* base            #ffffff   page background
-* surface         #f6f7f9   raised surface / neutral chip
-* hairline        #e9ecf1   1px rules and dividers
-* muted           #545d6e   secondary text (6.6:1 on base — passes WCAG AA)
-* contrast        #14181f   primary text
-* action          #1a4dbe   links and buttons (ink blue)
-* status-merged   #1f7a4d   resolved / shipped
-* status-review   #a56408   in review (4.7:1 for white-on-fill — passes WCAG AA)
-* status-pending  #6b7280   not yet started
-* surface-merged  #f1f8f4   merged chip tint
-* surface-review  #fbf6ed   review chip tint
+Color palette (settings.color.palette — defaultPalette, defaultGradients,
+defaultDuotone, custom, customGradient, and customDuotone are all false, so the
+stock swatches and every custom color, gradient, and duotone picker are off and
+authors choose only from these named tokens):
 
-Typography (defaultFontSizes disabled; fluid where noted):
+* Parchment — parchment-50 #FAF6EC / parchment-100 #F5EFE1 /
+  parchment-200 #ECE4D2 / parchment-300 #DED2B8 (grounds, raised surfaces,
+  sunken tints, hairlines)
+* Mist — mist-100 #EEF1ED / mist-200 #DCE3DD (cool neutral surface and soft
+  border)
+* Ink — ink-900 #1B231D / ink-700 #313B33 / ink-500 #515C52 / ink-400 #6E7A6E /
+  ink-300 #94A095 (text, strong to disabled)
+* Evergreen (brand) — green-900 #1C2E24 … green-050 #EDF3ED; green-700 #2E4A3A is
+  the brand and link color, green-050 the merged-chip tint
+* River (links / info) — river-900 #1E3040 … river-100 #DCE9F0; the Bruinen blue
+  used for artifact links
+* Gold (accent) — gold-700 #9A7530 … gold-100 #F4EBCF; gold-500 #C29A44 is the
+  accent and the 3px focus ring
+* Twilight (inverse plates) — twilight-900 #161D24 / twilight-800 #1E2730 /
+  twilight-700 #283440 (footer and hero plates)
+* Status (semantic; rule-color AND a redundant word, never color alone) —
+  leaf #4E7459 (done) / amber #B7842F (review) / rust #9C4A33 (danger) /
+  slate #3F6E89 (info)
 
-* Font families: system-text (Text), mono (Mono)
-* Font sizes: micro 0.6875 / xs 0.75 / small 0.8125 / medium 1 / large 1.25 / x-large 1.75 / xx-large 2.5 (rem)
+Typography (defaultFontSizes disabled; non-fluid). Four self-hosted families:
 
-Spacing slots (defaultSpacingSizes disabled; slots are named for where they are
-spent):
+* display — Cormorant Garamond (headings and hero)
+* body — EB Garamond (reading copy)
+* label — Marcellus (uppercase eyebrows / meta)
+* mono — JetBrains Mono (status labels, code, artifact rows)
+* Font sizes (rem): 2xs 0.75 / xs 0.8125 / sm 0.9375 / base 1.0625 / md 1.1875 /
+  lg 1.375 / xl 1.75 / 2xl 2.25 / 3xl 3 / 4xl 4 / 5xl 5.5
 
-* 10 Chip row 0.5rem / 20 Inline 0.75rem / 30 Quote indent 1.25rem /
-  40 Stack 1.5rem / 50 Artifact terminus 2rem / 60 Section 3.5rem / 70 Band 5rem
+Spacing slots (defaultSpacingSizes disabled; slug · pixel value):
 
-Layout: contentSize 720px, wideSize 1080px.
+* 1·4 / 2·8 / 3·12 / 4·16 / 5·24 / 6·32 / 7·40 / 8·48 / 9·64 / 10·80 / 12·112 /
+  16·160
 
-Geometry, weight, and label rhythm (settings.custom — kept out of the editor
-controls, used only by the component CSS, aliased to --hp-* names in style.css):
+Layout: contentSize 44rem, wideSize 72rem.
 
-* Status rule width: rule-chip 7px / rule-entry 3px / rule-evidence 5px /
-  rule-quote 2px (the left rule is a fixed width per component; state only
-  swaps its color)
-* Radius: radius-chip 2px / radius-register 3px / radius-tile 4px /
-  radius-panel 5px / radius-card 6px / radius-frame 8px / radius-phone 30px /
-  radius-pill 999px
-* Weight: weight-title 650 / weight-strong 700
-* Label gap: gap-xs 0.25rem / gap-sm 0.35rem (intra-block vertical rhythm)
-* Grid: grid-pitch 32px / grid-action-tint 6% / grid-status-tint 5%
-* Elevation: shadow-frame / shadow-phone / shadow-panel / shadow-mark /
-  shadow-mascot
-* Tracking: tracking-label 0.08em (every uppercase mono micro-label)
-* Leading: leading-lead 1.45 (the calmer line-height of the .hp-lead opening
-  paragraph — the one recurring non-body leading, so it lives as a token)
+Design tokens (settings.custom — kept out of the editor controls, consumed by the
+component CSS and aliased to --hp-* names in style.css):
 
-1px hairline rules, the chrome-dot hexes, and the mini-diagram bar percentages
-are the only visual values intentionally left literal.
+* surface / text / border / rule — semantic neutrals (page, raised, card, sunken,
+  cool, inverse, brand surfaces; strong→disabled text; hair/soft/strong/brand
+  borders; the gold rule)
+* brand / accent / feedback — interaction ramps (default/hover/press/subtle) plus
+  success/warning/danger/info
+* status + on — the three status fills (done/review/pending) and their on-colors
+* type — composite font shorthands (hero, h1–h4, lead, body, ui, meta, mono)
+* weight 400/500/600/700 · leading tight 1.08 / snug 1.22 / normal 1.5 /
+  relaxed 1.7 · tracking wide 0.04em / caps 0.18em
+* measure prose 68ch / narrow 46ch · container text 44rem / wide 72rem /
+  full 84rem
+* radius xs 2px / sm 4px / md 7px / lg 12px / xl 20px / pill · borderWidth
+  thin 1px / regular 1.5px / thick 2px
+* shadow xs…xl plus inset and gilt · ease calm / out / inOut · dur fast 140ms /
+  base 240ms / slow 420ms / veil 700ms
+
+The 1px hairline rules and the mini-diagram bar percentages are the only visual
+values intentionally left literal; everything else resolves from a named token.
 
 = Patterns =
 
@@ -128,16 +144,29 @@ unchanged.
 
 = Template overrides =
 
-The child theme owns three block templates:
+The child theme owns seven block templates (page-case-study is also registered as
+a selectable "Case study" template in theme.json; the others map by the WordPress
+template hierarchy):
 
-* front-page.html - renders the stored Home page content and then appends the
-  Three Rings framework section.
-* page-about.html - wraps the stored About page content in the narrow/wide About
+* front-page.html — the portfolio landing: renders the stored Home page content,
+  then appends the Three Rings (Vilya / Narya / Nenya) framework section.
+* home.html — the journal index: masthead, category filter, a featured essay,
+  then a grid of recent essay postcards.
+* single.html — the essay reader: a twilight cover hero (title, standfirst, meta)
+  over constrained prose, post tags, the subscribe block, and a "Continue
+  reading" related-posts grid.
+* page-about.html — wraps the stored About page content in the narrow/wide About
   composition shell.
-* page-case-study.html - supplies the case-study header, title, and constrained
+* page-ai-enablement.html — the AI-enablement essay page; renders the
+  "ai-enablement" pattern in the 44/72rem reading column.
+* page-contact.html — the contact page; renders the "contact" pattern in a 72rem
+  column.
+* page-case-study.html — supplies the case-study header, title, and constrained
   content column only. Evidence boards, proof bars, artifact rows, and links must
   live in the page content so every published case study carries real, editable
   proof rather than starter placeholders.
+
+Unspecified page/post templates are inherited from the Assembler parent.
 
 = Portfolio art direction =
 
@@ -206,6 +235,37 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.7 =
+* Mobile header: the desktop search + Subscribe action cluster now reliably hides
+  below 781px. WordPress layout support emits a single-class display:flex for the
+  flex group, which tied the equal-specificity hide rule and won on source order,
+  so the cluster stayed visible at 320px and overlapped the nav sheet; the hide is
+  now scoped to .hp-site-header and wins regardless of source order.
+* theme.json: restored the locked color contract — defaultDuotone, custom,
+  customGradient, and customDuotone are false, so the editor exposes only the
+  named palette (the Imladris migration had reopened the custom pickers).
+* Tracked the contact/subscribe progressive-enhancement script
+  assets/js/form-enhance.js that functions.php enqueues.
+* Docs: refreshed the readme token vocabulary and template list to the Imladris
+  design system and marked the migration hand-off note completed.
+
+= 0.3.0–0.3.6 — Imladris design system =
+* Re-skinned the theme to the Imladris design system — a Rivendell-inspired
+  parchment / evergreen / mallorn-gold serif editorial language with a
+  status-verified evidence layer — authored at the theme.json token level so the
+  tokens round-trip 1:1 with the design system.
+* theme.json: adopted the Imladris palette, the Cormorant Garamond / EB Garamond /
+  Marcellus / JetBrains Mono families, the 2xs–5xl type scale, the 1–16 spacing
+  slots, the 44/72rem layout, and the settings.custom design-token tree; style.css
+  re-pointed its --hp-* alias layer onto the new tokens.
+* Self-hosted the four font families as theme.json @font-face (latin variable
+  woff2) and added the Imladris imagery (Wapuu, Ring-bearers, ring badges, valley
+  and twilight art).
+* Rebuilt parts/footer.html as the twilight footer plate; added the imladris-*
+  component patterns (RingCard, Callout, Subscribe, and the page patterns) and the
+  page/blog templates (front-page, home, single, page-about, page-ai-enablement,
+  page-contact, page-case-study).
 
 = 0.2.9 =
 * Aligned the mobile navigation close-on-tap source comments and implementation

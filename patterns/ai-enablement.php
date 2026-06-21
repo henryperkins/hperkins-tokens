@@ -114,7 +114,17 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:pattern {"slug":"hperkins-tokens/imladris-callout"} /-->
+<!-- wp:html -->
+<aside class="hp-callout is-tone-caution" role="note">
+	<div class="hp-callout__icon" aria-hidden="true">
+		<svg viewBox="0 0 24 24" focusable="false"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
+	</div>
+	<div class="hp-callout__body">
+		<p class="hp-callout__title">A gap I hit in my own work</p>
+		<p>Request Logging cannot yet see providers that bypass the SDK&rsquo;s HTTP transporter (<a href="https://github.com/WordPress/ai/issues/732">#732</a>), as the local sidecar in my <a href="https://github.com/henryperkins/ai-provider-for-codex"><code>ai-provider-for-codex</code></a> project does. The principle is not that the log is complete today; it is that accountable AI use requires an inspectable record, and that gaps should become visible engineering work rather than disappear behind a trust claim.</p>
+	</div>
+</aside>
+<!-- /wp:html -->
 
 <!-- wp:html -->
 <div class="hp-aie__ringmark"><span class="hp-aie__dot is-water" aria-hidden="true"></span><span class="hp-label-caps">Ring III &middot; Artifact</span></div>
