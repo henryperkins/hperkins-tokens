@@ -28,3 +28,11 @@ coverage/
 
 # Design-pull staging mirror (re-pullable; provenance lives in docs/design-system/)
 .design-pull/
+
+# Dev-only artifacts — kept on disk for local reference, not tracked or shipped
+# with the theme (review finding M8). The lone screenshot used at runtime by
+# patterns/proof-product.php is re-included.
+/assets/screenshots/*
+!/assets/screenshots/flavor-agent-activity-log.png
+/assets/wapuu/_backup-developer-wapuu/
+/docs/superpowers/
