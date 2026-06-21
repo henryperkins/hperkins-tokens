@@ -22,12 +22,12 @@ filled-vs-hollow dot — never the shape of the thing.
 
 This is a child theme. It overrides the header and footer template parts; ships
 front-page.html, home.html, single.html, page-about.html,
-page-ai-enablement.html, page-contact.html, page-work.html, and
-page-case-study.html as additive block templates (each detailed under Template
-overrides below); and provides its own token vocabulary, component CSS, and
-patterns. Unspecified page/post templates are inherited from the Assembler
-parent. The Assembler parent theme must be installed for this theme to
-activate.
+page-ai-enablement.html, page-contact.html, page-work.html,
+page-plato-artifacts.html, and page-case-study.html as additive block templates
+(each detailed under Template overrides below); and provides its own token
+vocabulary, component CSS, and patterns. Unspecified page/post templates are
+inherited from the Assembler parent. The Assembler parent theme must be
+installed for this theme to activate.
 
 = Token vocabulary =
 
@@ -147,7 +147,7 @@ unchanged.
 
 = Template overrides =
 
-The child theme owns eight block templates (page-case-study is also registered as
+The child theme owns nine block templates (page-case-study is also registered as
 a selectable "Case study" template in theme.json; the others map by the WordPress
 template hierarchy):
 
@@ -166,6 +166,9 @@ template hierarchy):
   column.
 * page-work.html — the work index page; wraps the "work-index" pattern in a
   44/72rem composition with ledger cards and proof sections.
+* page-plato-artifacts.html — the Plato Artifacts archive page; preserves the
+  stored page content while applying the same 44/72rem work-template shell used
+  by the ledger pages.
 * page-case-study.html — supplies the case-study header, title, and constrained
   content column only. Evidence boards, proof bars, artifact rows, and links must
   live in the page content so every published case study carries real, editable
@@ -255,6 +258,9 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
     root-relative /wp-content/uploads/... paths instead of the absolute
     production hostname, so they resolve on local / staging / migration hosts
     (the external hperkins.com interactive resume link is unchanged).
+  - Release surface: page-plato-artifacts.html is now part of the versioned
+    template inventory instead of a live-only file, and the template list names
+    the page-slug archive explicitly.
 
 = 0.3.10 =
 * Work page type regression: style.css referenced var(--wp--custom--type--h1)
