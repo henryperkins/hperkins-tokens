@@ -244,6 +244,15 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
 
+= 0.3.12 =
+* Site Editor contract: hide inherited Assembler style variations from the
+  hperkins-tokens global-styles variations endpoint so the editor cannot switch
+  the child theme onto parent palettes or font pairings that bypass the locked
+  theme.json token vocabulary; also stop the editor/admin styles pass from
+  printing inherited variation font faces that are no longer selectable, and
+  strip Assembler's inherited section block styles from global-styles and
+  block-type REST responses.
+
 = 0.3.11 =
 * Accessibility + portability follow-ups from the theme review:
   - Subscribe form (form-enhance.js): an invalid email now shows the same

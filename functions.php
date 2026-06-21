@@ -158,6 +158,222 @@ add_action( 'init', function () {
 }, 9 );
 
 /**
+ * Hide inherited Assembler style variations from this child theme's Site Editor
+ * variations endpoint. The token contract lives in hperkins-tokens/theme.json;
+ * parent style variations would reintroduce generic palettes and font pairings.
+ *
+ * @param mixed           $dispatch_result Short-circuit response, or null.
+ * @param WP_REST_Request $request         Current REST request.
+ * @return mixed
+ */
+function hperkins_tokens_filter_global_style_variations( $dispatch_result, $request ) {
+	if ( null !== $dispatch_result ) {
+		return $dispatch_result;
+	}
+
+	if ( ! $request instanceof WP_REST_Request ) {
+		return $dispatch_result;
+	}
+
+	if ( 'GET' !== $request->get_method() ) {
+		return $dispatch_result;
+	}
+
+	if ( 'hperkins-tokens' !== get_stylesheet() ) {
+		return $dispatch_result;
+	}
+
+	if ( 'hperkins-tokens' !== $request['stylesheet'] ) {
+		return $dispatch_result;
+	}
+
+	if ( ! preg_match( '#^/wp/v2/global-styles/themes/[^/]+/variations$#', $request->get_route() ) ) {
+		return $dispatch_result;
+	}
+
+	return array();
+}
+add_filter( 'rest_dispatch_request', 'hperkins_tokens_filter_global_style_variations', 10, 2 );
+
+/**
+ * Blocks that inherit Assembler's generic section style partials unless this
+ * child theme removes them.
+ *
+ * @return string[]
+ */
+function hperkins_tokens_get_inherited_assembler_section_blocks() {
+	return array( 'core/group', 'core/columns', 'core/column', 'core/cover' );
+}
+
+/**
+ * Style slugs used by Assembler's inherited section partials.
+ *
+ * @return string[]
+ */
+function hperkins_tokens_get_inherited_assembler_section_styles() {
+	return array( 'section-1', 'section-2', 'section-3' );
+}
+
+/**
+ * Remove inherited Assembler section variations from the block-style registry.
+ */
+function hperkins_tokens_unregister_inherited_assembler_section_styles() {
+	if ( ! class_exists( 'WP_Block_Styles_Registry' ) ) {
+		return;
+	}
+
+	$registry = WP_Block_Styles_Registry::get_instance();
+	foreach ( hperkins_tokens_get_inherited_assembler_section_blocks() as $block_name ) {
+		foreach ( hperkins_tokens_get_inherited_assembler_section_styles() as $style_name ) {
+			if ( $registry->is_registered( $block_name, $style_name ) ) {
+				$registry->unregister( $block_name, $style_name );
+			}
+		}
+	}
+}
+add_action( 'init', 'hperkins_tokens_unregister_inherited_assembler_section_styles', 100 );
+add_action( 'admin_init', 'hperkins_tokens_unregister_inherited_assembler_section_styles', 0 );
+
+/**
+ * Remove inherited Assembler section variation data from a theme.json-shaped
+ * array.
+ *
+ * @param array $data Theme JSON data.
+ * @return array
+ */
+function hperkins_tokens_without_inherited_assembler_section_variations( $data ) {
+	if ( ! is_array( $data ) ) {
+		return $data;
+	}
+
+	foreach ( hperkins_tokens_get_inherited_assembler_section_blocks() as $block_name ) {
+		foreach ( hperkins_tokens_get_inherited_assembler_section_styles() as $style_name ) {
+			unset( $data['styles']['blocks'][ $block_name ]['variations'][ $style_name ] );
+		}
+
+		if ( empty( $data['styles']['blocks'][ $block_name ]['variations'] ) ) {
+			unset( $data['styles']['blocks'][ $block_name ]['variations'] );
+		}
+	}
+
+	return $data;
+}
+
+/**
+ * Strip inherited Assembler section variations from the theme-origin JSON before
+ * the merged global-styles payload reaches the editor.
+ *
+ * @param WP_Theme_JSON_Data $theme_json Theme-origin JSON data.
+ * @return WP_Theme_JSON_Data
+ */
+function hperkins_tokens_filter_theme_json_data( $theme_json ) {
+	if ( 'hperkins-tokens' !== get_stylesheet() ) {
+		return $theme_json;
+	}
+
+	if ( ! $theme_json instanceof WP_Theme_JSON_Data ) {
+		return $theme_json;
+	}
+
+	$data = hperkins_tokens_without_inherited_assembler_section_variations( $theme_json->get_data() );
+
+	hperkins_tokens_unregister_inherited_assembler_section_styles();
+
+	return new WP_Theme_JSON_Data( $data, 'theme' );
+}
+add_filter( 'wp_theme_json_data_theme', 'hperkins_tokens_filter_theme_json_data', 20 );
+
+/**
+ * Strip inherited Assembler section variations from the global-styles REST
+ * response after core assembles the editor-facing payload.
+ *
+ * @param mixed           $response REST response.
+ * @param array           $handler  Route handler.
+ * @param WP_REST_Request $request  REST request.
+ * @return mixed
+ */
+function hperkins_tokens_filter_global_styles_response( $response, $handler, $request ) {
+	if ( 'hperkins-tokens' !== get_stylesheet() ) {
+		return $response;
+	}
+
+	if ( ! $response instanceof WP_REST_Response || ! $request instanceof WP_REST_Request ) {
+		return $response;
+	}
+
+	if ( 'GET' !== $request->get_method() ) {
+		return $response;
+	}
+
+	if ( 'hperkins-tokens' !== $request['stylesheet'] ) {
+		return $response;
+	}
+
+	if ( ! preg_match( '#^/wp/v2/global-styles/themes/[^/]+$#', $request->get_route() ) ) {
+		return $response;
+	}
+
+	$data = hperkins_tokens_without_inherited_assembler_section_variations( $response->get_data() );
+	$response->set_data( $data );
+
+	hperkins_tokens_unregister_inherited_assembler_section_styles();
+
+	return $response;
+}
+add_filter( 'rest_request_after_callbacks', 'hperkins_tokens_filter_global_styles_response', 10, 3 );
+
+/**
+ * Remove inherited Assembler section styles from block-type REST responses.
+ *
+ * @param WP_REST_Response $response   Block type response.
+ * @param WP_Block_Type    $block_type Block type object.
+ * @return WP_REST_Response
+ */
+function hperkins_tokens_filter_block_type_styles_response( $response, $block_type ) {
+	if ( 'hperkins-tokens' !== get_stylesheet() ) {
+		return $response;
+	}
+
+	if ( ! $response instanceof WP_REST_Response || ! $block_type instanceof WP_Block_Type ) {
+		return $response;
+	}
+
+	if ( ! in_array( $block_type->name, hperkins_tokens_get_inherited_assembler_section_blocks(), true ) ) {
+		return $response;
+	}
+
+	$data = $response->get_data();
+	if ( empty( $data['styles'] ) || ! is_array( $data['styles'] ) ) {
+		return $response;
+	}
+
+	$inherited_style_names = hperkins_tokens_get_inherited_assembler_section_styles();
+	$data['styles']       = array_values(
+		array_filter(
+			$data['styles'],
+			static function ( $style ) use ( $inherited_style_names ) {
+				return ! in_array( $style['name'] ?? '', $inherited_style_names, true );
+			}
+		)
+	);
+
+	$response->set_data( $data );
+
+	return $response;
+}
+add_filter( 'rest_prepare_block_type', 'hperkins_tokens_filter_block_type_styles_response', 10, 2 );
+
+/**
+ * Stop editor/admin styles from printing font faces for inherited Assembler
+ * style variations that this child theme deliberately hides.
+ */
+function hperkins_tokens_remove_inherited_style_variation_font_faces() {
+	remove_action( 'admin_print_styles', 'wp_print_font_faces_from_style_variations', 50 );
+}
+add_action( 'init', 'hperkins_tokens_remove_inherited_style_variation_font_faces', 100 );
+add_action( 'admin_init', 'hperkins_tokens_remove_inherited_style_variation_font_faces', 0 );
+
+/**
  * Clean up legacy global-style posts from prior theme identities and refresh the
  * theme JSON cache when this child theme is activated. This is intentionally an
  * activation-time migration, not a public-request init task.
