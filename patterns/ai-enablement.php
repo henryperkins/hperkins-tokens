@@ -45,7 +45,7 @@
 <!-- /wp:group -->
 
 <!-- wp:group {"align":"wide","className":"hp-aie__ringsmap","style":{"spacing":{"margin":{"top":"var:preset|spacing|7"}}},"layout":{"type":"constrained"}} -->
-<div class="wp-block-group alignwide hp-aie__ringsmap" style="margin-top:var(--wp--preset--spacing--7)"><!-- wp:group {"className":"hp-aie__ringsmap-head","layout":{"type":"constrained","contentSize":"46ch"}} -->
+<div class="wp-block-group alignwide hp-aie__ringsmap" style="margin-top:var(--wp--preset--spacing--7)"><!-- wp:group {"className":"hp-aie__ringsmap-head","layout":{"type":"constrained"}} -->
 <div class="wp-block-group hp-aie__ringsmap-head"><!-- wp:paragraph {"className":"hp-label-caps"} -->
 <p class="hp-label-caps">The Three Rings</p>
 <!-- /wp:paragraph -->
@@ -61,7 +61,7 @@
 
 <!-- wp:pattern {"slug":"hperkins-tokens/imladris-ring-card"} /-->
 
-<!-- wp:group {"className":"hp-aie__maturity","style":{"spacing":{"margin":{"top":"var:preset|spacing|7"}}},"layout":{"type":"constrained","contentSize":"44rem"}} -->
+<!-- wp:group {"className":"hp-aie__maturity","style":{"spacing":{"margin":{"top":"var:preset|spacing|7"}}},"layout":{"type":"constrained"}} -->
 <div class="wp-block-group hp-aie__maturity" style="margin-top:var(--wp--preset--spacing--7)"><!-- wp:paragraph {"className":"hp-aie__maturity-caption"} -->
 <p class="hp-aie__maturity-caption">Maturity &mdash; state, not intent</p>
 <!-- /wp:paragraph -->
@@ -190,6 +190,6 @@
 
 <!-- wp:group {"className":"hp-aie__footnote","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-aie__footnote"><!-- wp:paragraph -->
-<p><sup>1</sup> A <a href="https://www.consilium.europa.eu/en/press/press-releases/2026/05/07/artificial-intelligence-council-and-parliament-agree-to-simplify-and-streamline-rules/">May 2026 provisional agreement</a> would give systems already on the market before 2 August 2026 until 2 December 2026 to comply with Article 50(2). The <a href="https://data.consilium.europa.eu/doc/document/ST-9247-2026-INIT/en/pdf">Council compromise text</a> contains the proposed amendment. Because it is not yet final, the body states the current rule and treats the grace period as pending.</p>
+<p><sup>1</sup> A May 2026 provisional agreement would give systems already on the market before 2 August 2026 until 2 December 2026 to comply with Article 50(2). The <a href="https://data.consilium.europa.eu/doc/document/ST-9247-2026-INIT/en/pdf">Council compromise text</a> contains the proposed amendment. Because it is not yet final, the body states the current rule and treats the grace period as pending.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->

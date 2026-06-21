@@ -31,7 +31,7 @@
 }
 .hp-page-hero__lead {
   margin: var(--wp--preset--spacing--5) 0 0;
-  max-width: 60ch;
+  max-width: var(--wp--custom--measure--narrow);
   font-family: var(--wp--preset--font-family--body);
   font-size: var(--wp--preset--font-size--lg);
   line-height: var(--wp--custom--leading--relaxed);
@@ -58,7 +58,7 @@
 
 /* The Three Rings map header (centered). */
 .hp-aie__ringsmap-head {
-  max-width: 46ch;
+  max-width: var(--wp--custom--measure--narrow);
   margin: 0 auto var(--wp--preset--spacing--7);
   text-align: center;
 }
@@ -271,7 +271,7 @@
 }
 .hp-masthead__lead {
   margin: var(--wp--preset--spacing--5) auto 0;
-  max-width: 52ch;
+  max-width: var(--wp--custom--measure--narrow);
   font-family: var(--wp--preset--font-family--body);
   font-size: var(--wp--preset--font-size--lg);
   line-height: var(--wp--custom--leading--relaxed);
@@ -407,7 +407,7 @@
 .hp-reader-hero__standfirst {
   color: var(--wp--preset--color--green-200);
   margin: var(--wp--preset--spacing--5) auto 0;
-  max-width: 46ch;
+  max-width: var(--wp--custom--measure--narrow);
   font-size: var(--wp--preset--font-size--lg);
   line-height: var(--wp--custom--leading--relaxed);
 }

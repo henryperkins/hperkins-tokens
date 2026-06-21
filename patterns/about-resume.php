@@ -315,7 +315,7 @@
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-exp__dates"} -->
-<p class="hp-exp__dates">2009 &ndash; 2012</p>
+<p class="hp-exp__dates">Before 2012</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 

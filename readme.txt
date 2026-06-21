@@ -244,6 +244,19 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
 
+= 0.3.13 =
+* Width system: consolidated the centered prose widths onto the two Imladris
+  measure tokens. Leads, standfirsts, and forms now resolve from
+  --wp--custom--measure--narrow (46ch) and descriptive copy from
+  --measure--prose (68ch), replacing eight drifting ch/rem literals; the shared
+  .hp-lead is capped at the narrow measure. Removed the per-template inner
+  contentSize overrides on the home masthead (64ch), the Three Rings intro
+  (56ch), and the ai-enablement ringsmap-head (46ch) / maturity (44rem) groups,
+  so their headings ride the 44rem reading spine. theme.json unchanged
+  (design-system 1:1 preserved).
+* Content: added a footer Resume PDF link, relabeled an About experience date,
+  and un-linked a superseded reference in the AI-enablement footnote.
+
 = 0.3.12 =
 * Site Editor contract: hide inherited Assembler style variations from the
   hperkins-tokens global-styles variations endpoint so the editor cannot switch
