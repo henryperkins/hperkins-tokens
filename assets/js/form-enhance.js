@@ -13,6 +13,7 @@
 	var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 	var MAILTO   = 'htperkins@gmail.com';
 	var CONTACT_EMAIL_ERROR = 'Enter a valid email so I can reply.';
+	var SUBSCRIBE_EMAIL_ERROR = 'Enter a valid email to join the dispatch.';
 
 	function fieldWrap( input ) {
 		return input.closest( '.hp-input' ) || input.parentElement;
@@ -156,23 +157,24 @@
 		subForm.addEventListener( 'invalid', function ( e ) {
 			if ( e.target && e.target.matches( 'input[type="email"]' ) ) {
 				e.preventDefault();
-				e.target.setAttribute( 'aria-invalid', 'true' );
-				e.target.focus();
+				setError( e.target, SUBSCRIBE_EMAIL_ERROR );
 			}
 		}, true );
 
 		subForm.addEventListener( 'input', function ( e ) {
 			if ( e.target && e.target.matches( 'input[type="email"]' ) ) {
-				e.target.removeAttribute( 'aria-invalid' );
+				clearError( e.target );
 			}
 		} );
 
 		subForm.addEventListener( 'submit', function ( e ) {
 			var email = subForm.querySelector( 'input[type="email"]' );
+			if ( email ) {
+				clearError( email );
+			}
 			if ( email && ! EMAIL_RE.test( email.value.trim() ) ) {
 				e.preventDefault();
-				email.setAttribute( 'aria-invalid', 'true' );
-				email.focus();
+				setError( email, SUBSCRIBE_EMAIL_ERROR );
 				return;
 			}
 			e.preventDefault();

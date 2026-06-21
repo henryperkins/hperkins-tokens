@@ -241,6 +241,21 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
 
+= 0.3.11 =
+* Accessibility + portability follow-ups from the theme review:
+  - Subscribe form (form-enhance.js): an invalid email now shows the same
+    worded, announced error as the contact form (setError/clearError +
+    role="alert" + aria-describedby) instead of silently blocking submit. New
+    style.css rules render that helper full-width and legible (amber) on the
+    dark twilight panel, with a matching error border.
+  - imladris-input pattern: the error-state field gains aria-invalid="true" and
+    an aria-describedby link to its helper text, and the email field's helper is
+    linked too, so assistive tech announces the error instead of a normal field.
+  - about-resume pattern: the avatar image and the two PDF resume links now use
+    root-relative /wp-content/uploads/... paths instead of the absolute
+    production hostname, so they resolve on local / staging / migration hosts
+    (the external hperkins.com interactive resume link is unchanged).
+
 = 0.3.10 =
 * Work page type regression: style.css referenced var(--wp--custom--type--h1)
   and --h4, but WordPress kebab-cases the slug at the letter/digit boundary, so

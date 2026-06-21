@@ -41,14 +41,14 @@
 <!-- /wp:button -->
 
 <!-- wp:button {"className":"is-style-secondary"} -->
-<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="https://hperkins.blog/wp-content/uploads/2026/06/henry-perkins-ats-resume.pdf">View r&eacute;sum&eacute;</a></div>
+<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/wp-content/uploads/2026/06/henry-perkins-ats-resume.pdf">View r&eacute;sum&eacute;</a></div>
 <!-- /wp:button --></div>
 <!-- /wp:buttons --></div>
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"hp-about-hero__portrait","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-about-hero__portrait"><!-- wp:image {"sizeSlug":"full","linkDestination":"none","className":"hp-about-avatar is-style-rounded"} -->
-<figure class="wp-block-image size-full hp-about-avatar is-style-rounded"><img src="https://hperkins.blog/wp-content/uploads/2026/06/henry-perkins.png" alt="Henry Perkins"/></figure>
+<figure class="wp-block-image size-full hp-about-avatar is-style-rounded"><img src="/wp-content/uploads/2026/06/henry-perkins.png" alt="Henry Perkins"/></figure>
 <!-- /wp:image --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group --></div>
@@ -332,7 +332,7 @@
 <!-- /wp:group -->
 
 <!-- wp:paragraph {"className":"hp-work__footer"} -->
-<p class="hp-work__footer">Full chronology, including earlier roles, is in the <a href="https://hperkins.blog/wp-content/uploads/2026/06/henry-perkins-ats-resume.pdf">PDF r&eacute;sum&eacute;</a> &middot; interactive version at <a href="https://hperkins.com/resume">hperkins.com/resume</a>.</p>
+<p class="hp-work__footer">Full chronology, including earlier roles, is in the <a href="/wp-content/uploads/2026/06/henry-perkins-ats-resume.pdf">PDF r&eacute;sum&eacute;</a> &middot; interactive version at <a href="https://hperkins.com/resume">hperkins.com/resume</a>.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
