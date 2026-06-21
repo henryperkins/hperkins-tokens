@@ -4,7 +4,7 @@ Theme URI: https://hperkins.blog
 Description: Imladris design system child theme for hperkins.blog — a Rivendell-inspired, parchment-and-evergreen serif editorial system with a mallorn-gold accent and a status-verified evidence layer (done/review/pending by rule-colour and a redundant word). Tokens in theme.json are the source of truth; the render is a consequence.
 Author: Henry Perkins
 Template: assembler
-Version: 0.3.7
+Version: 0.3.10
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -817,9 +817,25 @@ button,
 	 elsewhere — instead of competing with itself. */
 .hp-site-header {
 	position: relative;
-	z-index: 10;
-	border-bottom: 1px solid var(--hp-neutral-100);
-	background: color-mix(in srgb, var(--hp-neutral-0) 94%, var(--hp-neutral-50));
+	z-index: 30;
+	border-bottom: 1px solid var(--wp--custom--border--hair);
+	background: color-mix(in srgb, var(--wp--preset--color--parchment-100) 88%, transparent);
+	-webkit-backdrop-filter: saturate(140%) blur(10px);
+	backdrop-filter: saturate(140%) blur(10px);
+}
+
+/* The sticky lives on the header template-part wrapper, not on .hp-site-header:
+	 the wrapper's parent (.wp-site-blocks) is the full-height scroll container, while
+	 the bar is only one row tall and so has no room to stick on its own. The footer
+	 part renders as <footer>, so this scopes to the masthead alone. */
+header.wp-block-template-part {
+	position: sticky;
+	top: 0;
+	z-index: 30;
+}
+
+body.home header.wp-block-template-part {
+	position: static;
 }
 
 .hp-site-header__inner {
@@ -850,13 +866,16 @@ button,
 
 .hp-site-brand .wp-block-site-title {
 	margin: 0;
-	font-weight: var(--hp-weight-strong);
-	line-height: 1.1;
-	letter-spacing: 0;
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--lg);
+	font-weight: var(--wp--custom--weight--regular);
+	line-height: 1;
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
 }
 
 .hp-site-brand .wp-block-site-title a {
-	color: var(--hp-neutral-900);
+	color: var(--wp--preset--color--ink-900);
 	text-decoration: none;
 }
 
@@ -874,7 +893,28 @@ button,
 }
 
 .hp-site-header .wp-block-navigation a {
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--wp--custom--text--body);
 	text-decoration: none;
+	padding-bottom: 3px;
+	border-bottom: 1.5px solid transparent;
+	transition:
+		color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+		border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+
+.hp-site-header .wp-block-navigation a:hover {
+	color: var(--wp--custom--text--strong);
+	border-bottom-color: color-mix(in srgb, var(--wp--preset--color--gold-500) 55%, transparent);
+}
+
+.hp-site-header .wp-block-navigation .current-menu-item > a,
+.hp-site-header .wp-block-navigation a[aria-current] {
+	color: var(--wp--custom--text--strong);
+	border-bottom-color: var(--wp--preset--color--gold-500);
 }
 
 .hp-site-header
@@ -907,6 +947,9 @@ button,
 	 the full Wapuu is about to appear right below it. The grid's vertical lines
 	 share the viewport origin with the hero's, so the seam is invisible. */
 body.home .hp-site-header {
+	position: static;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
 	border-bottom: 0;
 	background:
 		linear-gradient(
@@ -1087,20 +1130,31 @@ body.home .hp-site-brand__wapuu {
 
 @media (max-width: 781px) {
 	.hp-site-header__inner {
-		flex-wrap: wrap !important;
-		row-gap: var(--wp--preset--spacing--3);
+		flex-wrap: nowrap;
+		gap: var(--wp--preset--spacing--3);
+	}
+
+	.hp-site-brand {
+		margin-right: auto;
+		min-width: 0;
 	}
 
 	.hp-site-brand__wapuu {
-		width: 2rem;
+		display: none;
 	}
 
 	.hp-site-nav {
-		width: 100%;
+		width: auto;
+		order: 3;
 	}
 
 	.hp-site-header .wp-block-navigation {
-		width: 100%;
+		width: auto;
+	}
+
+	.hp-site-brand .wp-block-site-title {
+		font-size: var(--wp--preset--font-size--sm);
+		letter-spacing: var(--wp--custom--tracking--wide);
 	}
 
 	.hp-site-header
@@ -1108,8 +1162,8 @@ body.home .hp-site-brand__wapuu {
 			.disable-default-overlay
 		) {
 		top: calc(
-			var(--hp-touch-min) + var(--wp--preset--spacing--9) +
-				var(--wp--preset--spacing--5)
+			var(--hp-touch-min) + var(--wp--preset--spacing--2) +
+				var(--wp--preset--spacing--3)
 		);
 		right: var(--wp--preset--spacing--3);
 		bottom: auto;
@@ -1117,8 +1171,8 @@ body.home .hp-site-brand__wapuu {
 		box-sizing: border-box;
 		width: auto;
 		max-height: calc(
-			100svh - var(--hp-touch-min) - var(--wp--preset--spacing--9) -
-				var(--wp--preset--spacing--5) - var(--wp--preset--spacing--3)
+			100svh - var(--hp-touch-min) - var(--wp--preset--spacing--2) -
+				var(--wp--preset--spacing--3) - var(--wp--preset--spacing--3)
 		);
 		padding: var(--wp--preset--spacing--3);
 		overflow: auto;
@@ -1328,9 +1382,15 @@ body.home .hp-site-brand__wapuu {
 	color: var(--wp--preset--color--parchment-100);
 	border-top: 1px solid var(--hp-gold);
 }
-.hp-footer__backdrop {
+.hp-footer > .hp-footer__backdrop {
 	position: absolute;
 	inset: 0;
+	/* The footer plate is alignfull; the backdrop is an absolute child of a
+	   constrained layout, which otherwise caps it to content-size and leaves the
+	   gutters a flat, lighter shade. Span the full plate so image + gradient reach
+	   edge to edge. */
+	max-width: none;
+	margin: 0;
 	pointer-events: none;
 	background: var(--hp-footer-backdrop-url) center / cover no-repeat;
 	opacity: 0.22;
@@ -1349,7 +1409,7 @@ body.home .hp-site-brand__wapuu {
 	position: relative;
 }
 .hp-footer__top {
-	align-items: center;
+	align-items: flex-start;
 }
 .hp-footer__identity {
 	display: flex;
@@ -1367,11 +1427,15 @@ body.home .hp-site-brand__wapuu {
 	font-family: var(--hp-font-display);
 	font-size: var(--wp--preset--font-size--2-xl);
 	font-weight: var(--wp--custom--weight--semibold);
-	letter-spacing: 0;
+	letter-spacing: -0.01em;
 	color: var(--wp--preset--color--parchment-50);
 }
 .hp-footer__meta {
-	margin: var(--wp--preset--spacing--3) 0 0;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.6em;
+	margin: var(--wp--preset--spacing--4) 0 0;
 	font-family: var(--hp-font-label);
 	font-size: var(--wp--preset--font-size--xs);
 	letter-spacing: var(--wp--custom--tracking--wide);
@@ -1379,7 +1443,14 @@ body.home .hp-site-brand__wapuu {
 	color: var(--wp--preset--color--parchment-300);
 }
 .hp-footer__meta span {
-	color: var(--wp--preset--color--gold-400);
+	flex: 0 0 auto;
+	width: 4px;
+	height: 4px;
+	border-radius: 50%;
+	background: var(--wp--preset--color--gold-500);
+	opacity: 0.7;
+	font-size: 0;
+	color: transparent;
 }
 .hp-footer__social {
 	display: flex;
@@ -1414,7 +1485,7 @@ body.home .hp-site-brand__wapuu {
 	height: 16px;
 	fill: none;
 	stroke: currentColor;
-	stroke-width: 1.8;
+	stroke-width: 2;
 	stroke-linecap: round;
 	stroke-linejoin: round;
 }
@@ -1437,7 +1508,7 @@ body.home .hp-site-brand__wapuu {
 	color: var(--wp--preset--color--gold-400);
 }
 .hp-footer__colophon {
-	margin: var(--wp--preset--spacing--6) 0 0;
+	margin: var(--wp--preset--spacing--7) 0 0;
 	padding-top: var(--wp--preset--spacing--5);
 	border-top: 1px solid
 		color-mix(in srgb, var(--wp--preset--color--parchment-50) 14%, transparent);
@@ -1994,20 +2065,28 @@ samp {
 	color: var(--wp--custom--text--faint);
 }
 
-.hp-input__control input {
+.hp-input__control input:not([type="submit"]):not([type="checkbox"]):not(
+		[type="radio"]
+	):not([type="range"]) {
 	flex: 1;
+	width: auto;
 	min-width: 0;
+	min-height: 0;
 	padding: 10px 0;
 	border: 0;
+	border-radius: 0;
 	outline: 0;
 	background: transparent;
+	box-shadow: none;
 	color: var(--wp--custom--text--strong);
 	font: var(--wp--custom--type--ui);
+	appearance: none;
 }
 
 .hp-input__control:focus-within {
-	border-color: var(--wp--custom--accent--default);
-	box-shadow: 0 0 0 3px color-mix(in srgb, var(--hp-gold) 35%, transparent);
+	border-color: var(--wp--preset--color--gold-700);
+	outline: 0;
+	box-shadow: var(--wp--custom--shadow--inset);
 }
 
 .hp-input.has-error .hp-input__control {
@@ -2074,6 +2153,7 @@ samp {
 
 .hp-subscribe__form button {
 	padding: 0.72em 1.5em;
+	min-height: 44px;
 	border: 0;
 	border-radius: var(--hp-radius-card);
 	background: var(--wp--custom--accent--default);
@@ -2115,9 +2195,17 @@ samp {
 	--hp-ring-tint: var(--wp--preset--color--river-400);
 	--hp-ring-base: var(--wp--preset--color--twilight-900);
 	--hp-ring-scrim: #141c24;
+	/* "Way less opaque": the Rivendell-era backdrop is faded back to a faint
+	   texture over the dark card base, not a full-bleed photo. Tune this one
+	   value to taste (lower = fainter). */
+	--hp-ring-image-opacity: 0.22;
+	position: relative;
 	display: flex;
 	flex-direction: column;
+	justify-content: flex-end;
+	min-height: 340px;
 	min-width: 0;
+	padding: var(--wp--preset--spacing--6) var(--wp--preset--spacing--5);
 	border-radius: var(--wp--custom--radius--lg);
 	overflow: hidden;
 	background: var(--wp--custom--surface--inverse);
@@ -2137,24 +2225,11 @@ samp {
 	--hp-ring-scrim: #16261d;
 }
 
-.hp-ring-card__plate {
-	position: relative;
-	min-height: 300px;
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	padding: var(--wp--preset--spacing--5);
-	background: radial-gradient(
-		130% 130% at 70% -10%,
-		color-mix(in srgb, var(--hp-ring-tint) 44%, var(--hp-ring-base)),
-		var(--hp-ring-base)
-	);
-	overflow: hidden;
-}
-
+/* Full-bleed Rivendell-era backdrop, faded to a texture behind the content. */
 .hp-ring-card__figure {
 	position: absolute;
 	inset: 0;
+	z-index: 0;
 	margin: 0;
 }
 
@@ -2162,56 +2237,43 @@ samp {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
-	object-position: center 18%;
+	object-position: center;
+	opacity: var(--hp-ring-image-opacity);
 }
 
 .hp-ring-card__veil {
 	position: absolute;
 	inset: 0;
-	/* Reset WP flow-layout's block-gap margin so the scrim covers the whole
-	   plate (inset:0) — otherwise the top ~24px of the artwork shows unveiled. */
+	z-index: 0;
+	/* Reset WP flow-layout's block-gap margin so the veil covers the whole card. */
 	margin: 0;
-	/* Tonal vignette: dark under the header (top) and the virtues (lower band),
-	   letting the mascot read through the middle. Darkens earlier/stronger than
-	   the source so the virtues stay legible over the bright WordPress orb. */
+	/* Element-tinted wash for elemental character, plus a foot-heavy darkening
+	   so the overlaid text holds contrast where it sits at the card's foot. */
 	background: linear-gradient(
 		180deg,
-		color-mix(in srgb, var(--hp-ring-scrim) 86%, transparent) 0%,
-		color-mix(in srgb, var(--hp-ring-scrim) 48%, transparent) 16%,
-		color-mix(in srgb, var(--hp-ring-scrim) 18%, transparent) 42%,
-		color-mix(in srgb, var(--hp-ring-scrim) 58%, transparent) 64%,
-		color-mix(in srgb, var(--hp-ring-scrim) 90%, transparent) 84%,
-		color-mix(in srgb, var(--hp-ring-scrim) 97%, transparent) 100%
+		color-mix(in srgb, var(--hp-ring-base) 26%, transparent) 0%,
+		color-mix(in srgb, var(--hp-ring-scrim) 8%, transparent) 34%,
+		color-mix(in srgb, var(--hp-ring-scrim) 52%, transparent) 74%,
+		color-mix(in srgb, var(--hp-ring-scrim) 72%, transparent) 100%
 	);
 }
 
-.hp-ring-card__header,
+/* Ring identity, pinned to the top corner above the backdrop. */
+.hp-ring-card__head {
+	position: absolute;
+	top: var(--wp--preset--spacing--5);
+	left: var(--wp--preset--spacing--5);
+	right: var(--wp--preset--spacing--5);
+	z-index: 1;
+	margin: 0;
+}
+
+.hp-ring-card__action,
 .hp-ring-card__virtues,
-.hp-ring-card__body {
+.hp-ring-card__description,
+.hp-ring-card__cta {
 	position: relative;
-}
-
-.hp-ring-card__header {
-	gap: var(--wp--preset--spacing--3);
-	margin: 0;
-}
-
-.hp-ring-card__badge {
-	width: 46px;
-	height: 46px;
-	flex: 0 0 46px;
-	margin: 0;
-	border: 1px solid
-		color-mix(in srgb, var(--wp--preset--color--parchment-50) 18%, transparent);
-	border-radius: 50%;
-	overflow: hidden;
-	box-shadow: var(--wp--custom--shadow--sm), var(--wp--custom--shadow--gilt);
-}
-
-.hp-ring-card__badge img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
+	z-index: 1;
 }
 
 .hp-ring-card__ring,
@@ -2231,8 +2293,8 @@ samp {
 		color-mix(in srgb, var(--hp-ring-scrim) 82%, transparent);
 }
 
-.hp-ring-card__element,
-.hp-ring-card__virtues {
+.hp-ring-card__element {
+	margin-top: 2px;
 	font-family: var(--hp-font-label);
 	font-size: var(--wp--preset--font-size--2-xs);
 	letter-spacing: var(--wp--custom--tracking--caps);
@@ -2240,22 +2302,6 @@ samp {
 	color: var(--hp-ring-tint);
 	text-shadow: 0 1px 8px
 		color-mix(in srgb, var(--hp-ring-scrim) 86%, transparent);
-}
-
-.hp-ring-card__virtues {
-	color: var(--wp--preset--color--parchment-100);
-	/* Tighter twin-halo so the caps hold up where they cross the bright orb. */
-	text-shadow:
-		0 1px 2px color-mix(in srgb, var(--hp-ring-scrim) 95%, transparent),
-		0 2px 10px color-mix(in srgb, var(--hp-ring-scrim) 88%, transparent);
-}
-
-.hp-ring-card__virtues span {
-	color: var(--hp-ring-tint);
-}
-
-.hp-ring-card__body {
-	padding: var(--wp--preset--spacing--6) var(--wp--preset--spacing--5);
 }
 
 .hp-ring-card__action {
@@ -2267,12 +2313,72 @@ samp {
 	letter-spacing: 0.01em;
 	line-height: 1;
 	text-transform: uppercase;
+	text-shadow: 0 2px 10px
+		color-mix(in srgb, var(--hp-ring-scrim) 70%, transparent);
+}
+
+.hp-ring-card__virtues {
+	margin-top: var(--wp--preset--spacing--2);
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+	color: var(--wp--preset--color--parchment-100);
+	/* Twin-halo so the caps hold up over any lighter patch of the backdrop. */
+	text-shadow:
+		0 1px 2px color-mix(in srgb, var(--hp-ring-scrim) 95%, transparent),
+		0 2px 10px color-mix(in srgb, var(--hp-ring-scrim) 88%, transparent);
+}
+
+.hp-ring-card__virtues span {
+	color: var(--hp-ring-tint);
 }
 
 .hp-ring-card__description {
 	margin-top: var(--wp--preset--spacing--3);
-	color: var(--wp--preset--color--green-200);
+	color: var(--wp--preset--color--parchment-100);
 	line-height: var(--wp--custom--leading--relaxed);
+	text-shadow: 0 1px 8px
+		color-mix(in srgb, var(--hp-ring-scrim) 80%, transparent);
+}
+
+@media (max-width: 600px) {
+	.hp-ring-card {
+		justify-content: flex-start;
+		min-height: auto;
+		padding: var(--wp--preset--spacing--5);
+	}
+
+	.hp-ring-card__head {
+		position: relative;
+		top: auto;
+		right: auto;
+		left: auto;
+		margin-bottom: var(--wp--preset--spacing--6);
+	}
+
+	.hp-ring-card__action {
+		font-size: var(--wp--preset--font-size--2-xl);
+		line-height: var(--wp--custom--leading--tight);
+	}
+
+	.hp-ring-card__description {
+		font-size: var(--wp--preset--font-size--sm);
+	}
+
+	.hp-ring-card__cta {
+		padding-top: var(--wp--preset--spacing--3);
+	}
+
+	.hp-ring-card__cta a {
+		min-height: var(--hp-touch-min);
+		align-items: center;
+	}
+
+	.hp-ring-card__cta.is-in-review {
+		flex-wrap: wrap;
+		align-items: flex-start;
+	}
 }
 
 /* === Imladris page templates === */
@@ -3049,6 +3155,8 @@ samp {
 	font-size: var(--wp--preset--font-size--xs);
 	letter-spacing: var(--wp--custom--tracking--caps);
 	text-transform: uppercase;
+	text-shadow: 0 1px 6px
+		color-mix(in srgb, var(--hp-ring-scrim) 85%, transparent);
 }
 
 .hp-ring-card__cta a {
@@ -3240,6 +3348,277 @@ samp {
 }
 @media (max-width: 781px) {
 	.hp-site-header .hp-site-actions {
+		display: flex;
+		order: 2;
+	}
+
+	.hp-site-actions .wp-block-search {
 		display: none;
 	}
+
+	.hp-site-actions .hp-site-subscribe .wp-block-button__link {
+		padding: 0.4rem 0.85rem;
+	}
+}
+
+/* In-overlay search: the Navigation block (menu 237) carries a search field that surfaces in the mobile nav overlay; on desktop the actions cluster owns search, so the in-nav copy is hidden. */
+@media (min-width: 782px) {
+	.hp-site-nav .hp-nav-search {
+		display: none;
+	}
+}
+
+@media (max-width: 781px) {
+	.hp-site-header .is-menu-open .hp-nav-search {
+		width: 100%;
+		max-width: none;
+		margin: 0 0 var(--wp--preset--spacing--3);
+	}
+
+	.hp-site-header .is-menu-open .hp-nav-search .wp-block-search__inside-wrapper {
+		border: 1px solid var(--hp-neutral-100);
+		border-radius: var(--hp-radius-frame);
+		background: color-mix(in srgb, var(--hp-neutral-0) 96%, transparent);
+	}
+
+	.hp-site-header .is-menu-open .hp-nav-search .wp-block-search__input {
+		border: 0;
+		background: transparent;
+		min-height: var(--hp-touch-min);
+		padding: 0 var(--wp--preset--spacing--3);
+		font-family: var(--hp-font-body);
+		font-size: var(--wp--preset--font-size--sm);
+		color: var(--wp--custom--text--body);
+	}
+
+	.hp-site-header .is-menu-open .hp-nav-search .wp-block-search__button {
+		min-width: var(--hp-touch-min);
+		min-height: var(--hp-touch-min);
+		margin: 0;
+		background: transparent;
+		border: 0;
+		color: var(--wp--custom--text--strong);
+	}
+}
+
+
+/* =====================================================================
+   WORK INDEX TEMPLATE — composition layer (NEW)
+   Scoped under .hp-work-template so the shared hp-page-hero / hp-work /
+   hp-artifact-row / hp-chip primitives keep their current behaviour on
+   every other surface (Contact, AI-Enablement, About, case studies).
+   Brings /work/ to the Imladris "Work — Index" comp: a wide editorial
+   measure, a full page-hero, a horizontal ProofBar, and the work entries
+   as dimensional cards (status pill + meta head, type-h4 title, and an
+   artifact register with a tinted header band). All values resolve to
+   existing theme.json tokens — no raw hex.
+   ===================================================================== */
+.hp-work-template {
+	background: var(--wp--custom--surface--page);
+	color: var(--wp--custom--text--body);
+}
+
+/* --- Page hero: eyebrow / display h1 / lead, with a hairline terminus --- */
+.hp-work-template .hp-page-hero {
+	padding-bottom: var(--wp--preset--spacing--7);
+	border-bottom: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-work-template .hp-page-hero__eyebrow {
+	margin: 0;
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+	color: var(--wp--custom--text--accent);
+}
+
+.hp-work-template .hp-page-hero > h1,
+.hp-work-template .hp-page-hero > .wp-block-heading {
+	margin: var(--wp--preset--spacing--4) 0 0;
+	font: var(--wp--custom--type--h-1, 500 4rem/1.08 'Cormorant Garamond', Georgia, serif);
+	letter-spacing: var(--wp--custom--tracking--tight);
+	color: var(--wp--custom--text--strong);
+	text-wrap: balance;
+}
+
+.hp-work-template .hp-page-hero__lead {
+	max-width: 60ch;
+	margin: var(--wp--preset--spacing--5) 0 0;
+	font: var(--wp--custom--type--lead);
+	line-height: var(--wp--custom--leading--relaxed);
+	color: var(--wp--custom--text--strong);
+}
+
+/* ProofBar summary: horizontal row of status chips under the lead. */
+.hp-work-template .hp-workindex__summary {
+	margin-top: var(--wp--preset--spacing--6);
+}
+
+.hp-work-template .hp-proof-bar {
+	margin-block: 0;
+	gap: var(--wp--preset--spacing--3);
+	align-items: center;
+}
+
+/* --- The ledger: separate dimensional cards, not one register box --- */
+.hp-work-template .hp-work {
+	margin-top: var(--wp--preset--spacing--8);
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--4);
+	border: 0;
+	border-radius: 0;
+	overflow: visible;
+}
+
+.hp-work-template .hp-work__entry {
+	margin: 0;
+	padding: var(--wp--preset--spacing--5);
+	background: var(--wp--custom--surface--card);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-left-width: 3px;
+	border-radius: var(--wp--custom--radius--md);
+	box-shadow: var(--wp--custom--shadow--sm);
+}
+
+.hp-work-template .hp-work__entry.is-status-merged { border-left-color: var(--wp--custom--status--done); }
+.hp-work-template .hp-work__entry.is-status-review { border-left-color: var(--wp--custom--status--review); }
+.hp-work-template .hp-work__entry.is-status-pending { border-left-color: var(--wp--custom--status--pending); }
+
+/* Head row: status pill on the left, mono meta on the right. */
+.hp-work-template .hp-work__head {
+	align-items: baseline;
+	gap: var(--wp--preset--spacing--4);
+}
+
+.hp-work-template .hp-work__label {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5em;
+	margin: 0;
+	padding: 2px 10px;
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--pill);
+	background: var(--wp--custom--surface--sunken);
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--wp--custom--text--muted);
+}
+
+.hp-work-template .hp-work__label::before {
+	content: "";
+	flex: 0 0 auto;
+	width: 5px;
+	height: 5px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+.hp-work-template .hp-work__entry.is-status-merged .hp-work__label {
+	background: var(--wp--custom--surface--done);
+	border-color: color-mix(in srgb, var(--wp--custom--status--done) 32%, transparent);
+	color: var(--wp--custom--on--done);
+}
+.hp-work-template .hp-work__entry.is-status-review .hp-work__label {
+	background: var(--wp--custom--surface--review);
+	border-color: color-mix(in srgb, var(--wp--custom--status--review) 32%, transparent);
+	color: var(--wp--custom--on--review);
+}
+.hp-work-template .hp-work__entry.is-status-pending .hp-work__label {
+	background: var(--wp--custom--surface--pending);
+	border-color: color-mix(in srgb, var(--wp--custom--status--pending) 32%, transparent);
+	color: var(--wp--custom--on--pending);
+}
+
+.hp-work-template .hp-work__entry.is-status-merged .hp-work__label::before { background: var(--wp--custom--status--done); }
+.hp-work-template .hp-work__entry.is-status-review .hp-work__label::before { background: var(--wp--custom--status--review); }
+.hp-work-template .hp-work__entry.is-status-pending .hp-work__label::before { background: var(--wp--custom--status--pending); }
+
+.hp-work-template .hp-work__meta {
+	margin: 0;
+	font-family: var(--hp-font-mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	color: var(--wp--custom--text--faint);
+	text-align: right;
+}
+
+/* Title (display serif) + relaxed description. */
+.hp-work-template .hp-work__title {
+	margin: var(--wp--preset--spacing--3) 0 0;
+	font: var(--wp--custom--type--h-4, 600 1.75rem/1.22 'Cormorant Garamond', Georgia, serif);
+	letter-spacing: -0.005em;
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-work-template .hp-work__title a {
+	color: inherit;
+	border-bottom: 0;
+	text-decoration: none;
+}
+
+.hp-work-template .hp-work__title a:hover {
+	color: var(--wp--custom--text--link);
+	text-decoration: underline;
+	text-decoration-color: color-mix(in srgb, var(--wp--custom--rule--gold) 60%, transparent);
+	text-underline-offset: 3px;
+}
+
+.hp-work-template .hp-work__desc {
+	max-width: 60ch;
+	margin: var(--wp--preset--spacing--3) 0 0;
+	font-size: var(--wp--preset--font-size--md);
+	line-height: var(--wp--custom--leading--relaxed);
+	color: var(--wp--custom--text--muted);
+}
+
+/* --- Artifact register: bordered card with a tinted header band --- */
+.hp-work-template .hp-artifact-row {
+	margin-top: var(--wp--preset--spacing--5);
+	padding-top: 0;
+	background: var(--wp--custom--surface--raised);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--md);
+	overflow: hidden;
+}
+
+.hp-work-template .hp-artifact-row__legend {
+	margin: 0;
+	padding: 8px var(--wp--preset--spacing--4);
+	background: var(--wp--custom--surface--sunken);
+	border-bottom: 1px solid var(--wp--custom--border--hair);
+	font-family: var(--hp-font-label);
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+	font-size: var(--wp--preset--font-size--2-xs);
+	color: var(--wp--custom--text--faint);
+}
+
+.hp-work-template .hp-artifacts.wp-block-columns {
+	border: 0;
+	border-radius: 0;
+}
+
+.hp-work-template .hp-artifacts .hp-artifact {
+	padding: var(--wp--preset--spacing--4);
+}
+
+.hp-work-template .hp-artifact__verifies {
+	color: var(--wp--custom--text--faint);
+}
+
+.hp-work-template .hp-artifact__link {
+	font-size: var(--wp--preset--font-size--sm);
+}
+
+/* Colophon — a quiet mono terminus under the ledger. */
+.hp-work-template .hp-workindex__colophon {
+	margin: var(--wp--preset--spacing--9) 0 0;
+	padding-top: var(--wp--preset--spacing--5);
+	border-top: 1px solid var(--wp--custom--border--hair);
+	font-family: var(--hp-font-mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	color: var(--wp--custom--text--faint);
 }

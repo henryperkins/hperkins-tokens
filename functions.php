@@ -21,11 +21,17 @@ add_action( 'wp_enqueue_scripts', function () {
 	$parent       = get_template_directory_uri() . '/style.css';
 	$parent_theme = wp_get_theme( get_template() );
 	wp_enqueue_style( 'assembler-parent', $parent, array(), $parent_theme->get( 'Version' ) );
+
+	// Bust the child sheet on file mtime, matching every other hand-authored
+	// asset below. The `Version:` header is still the theme's declared version
+	// (and the readme changelog source-of-truth), but it is no longer the cache
+	// key — so editing style.css ships under a fresh key without a manual bump.
+	$style_css_file = get_stylesheet_directory() . '/style.css';
 	wp_enqueue_style(
 		'hperkins-tokens',
 		get_stylesheet_uri(),
 		array( 'assembler-parent' ),
-		wp_get_theme()->get( 'Version' )
+		file_exists( $style_css_file ) ? filemtime( $style_css_file ) : wp_get_theme()->get( 'Version' )
 	);
 
 	// Page-layout CSS for the designs pulled from the Imladris Design System
@@ -80,8 +86,8 @@ add_action( 'wp_enqueue_scripts', function () {
 
 	// Progressive enhancement for the contact + subscribe forms: inline email
 	// validation and a confirmation-state swap (the Imladris Design System's
-	// Contact/Subscribe interaction). Both forms keep a working mailto: action
-	// as the no-JS fallback.
+	// Contact/Subscribe interaction). With JS off, the visible direct-email
+	// links are the no-JS fallback while the form action remains a `mailto:` URL.
 	$form_enhance_rel  = '/assets/js/form-enhance.js';
 	$form_enhance_file = get_stylesheet_directory() . $form_enhance_rel;
 	if ( file_exists( $form_enhance_file ) ) {

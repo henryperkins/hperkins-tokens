@@ -20,9 +20,9 @@
 <!-- /wp:paragraph --></section>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"hp-contact-grid","style":{"spacing":{"margin":{"top":"var:preset|spacing|8"}}},"layout":{"type":"default"}} -->
-<div class="wp-block-group hp-contact-grid" style="margin-top:var(--wp--preset--spacing--8)"><!-- wp:html -->
-<form class="hp-contact-form" action="mailto:henry@hperkins.blog" method="post" enctype="text/plain">
+<!-- wp:group {"className":"hp-contact-grid","align":"wide","style":{"spacing":{"margin":{"top":"var:preset|spacing|8"}}},"layout":{"type":"default"}} -->
+<div class="wp-block-group alignwide hp-contact-grid" style="margin-top:var(--wp--preset--spacing--8)"><!-- wp:html -->
+<form class="hp-contact-form" action="mailto:htperkins@gmail.com" method="post" enctype="text/plain">
 	<div class="hp-contact-form__row">
 		<label class="hp-input">
 			<span class="hp-input__label">Name</span>
@@ -39,12 +39,12 @@
 	</label>
 	<label class="hp-input">
 		<span class="hp-input__label">Message</span>
-		<textarea name="message" rows="6" placeholder="What are you trying to verify, govern, or ship?"></textarea>
-		<span class="hp-contact-form__hint">No attachments needed &mdash; a link to the repo, PR, or page is more useful than a deck.</span>
+		<textarea name="message" rows="6" placeholder="What are you trying to verify, govern, or ship?" aria-describedby="hp-contact-message-hint"></textarea>
 	</label>
+	<span id="hp-contact-message-hint" class="hp-contact-form__hint">No attachments needed &mdash; a link to the repo, PR, or page is more useful than a deck.</span>
 	<div class="hp-contact-form__actions">
 		<button type="submit">Send message</button>
-		<span class="hp-contact-form__hint">Or email directly &mdash; whichever you prefer.</span>
+		<span class="hp-contact-form__hint">Or email <a href="mailto:htperkins@gmail.com">htperkins@gmail.com</a> directly &mdash; whichever you prefer.</span>
 	</div>
 </form>
 <!-- /wp:html -->
@@ -54,23 +54,10 @@
 	<div>
 		<p class="hp-label-caps" style="margin:0 0 var(--wp--preset--spacing--4)">Direct channels</p>
 		<div class="hp-channels">
-			<a href="mailto:henry@hperkins.blog"><span class="hp-channels__label">Email</span><span class="hp-channels__value">henry@hperkins.blog</span></a>
-			<a href="https://github.com/henryperkins" rel="me noopener"><span class="hp-channels__label">GitHub</span><span class="hp-channels__value">github.com/henryperkins</span></a>
-			<a href="https://www.linkedin.com/in/henryperkins" rel="me noopener"><span class="hp-channels__label">LinkedIn</span><span class="hp-channels__value">in/henryperkins</span></a>
+			<a href="https://github.com/henryperkins" rel="me noopener" aria-label="GitHub profile"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3c3.5-.4 7-1.7 7-7.8 0-1.7-.6-3.2-1.6-4.4.2-.4.7-2-.2-4.3 0 0-1.3-.4-4.5 1.7A15.5 15.5 0 0 0 12 1.8c-1.3 0-2.6.2-3.8.5C5.1.2 3.8.6 3.8.6c-.9 2.3-.3 3.9-.2 4.3A6.2 6.2 0 0 0 2 9.2c0 6.1 3.5 7.4 7 7.8-.5.4-.9 1.2-1 2.3-1 .5-3.6 1.2-5.2-1.5 0 0-.9-1.7-2.8-1.8 0 0-1.8 0-.1 1.1 0 0 1.2.6 2.1 2.9 0 0 1.1 3.5 6 2.4V22"/></svg></a>
+			<a href="https://www.linkedin.com/in/henryperkins" rel="me noopener" aria-label="LinkedIn profile"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2zM4 5.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/></svg></a>
+			<a href="https://profiles.wordpress.org/htperkins/" rel="me noopener" aria-label="WordPress.org profile"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M5.4 7h2.1l1.5 6.1L11.1 7h1.8l2.1 6.1L16.5 7h2.1l-2.7 10h-1.8L12 10.9 9.9 17H8.1z"/></svg></a>
 		</div>
-	</div>
-	<aside class="hp-callout is-tone-note" role="note">
-		<div class="hp-callout__icon" aria-hidden="true">
-			<svg viewBox="0 0 24 24" focusable="false"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
-		</div>
-		<div class="hp-callout__body">
-			<p class="hp-callout__title">What to include</p>
-			<p>A line on the problem, a link to the artifact in question, and the outcome you need. I read everything; I answer fastest when there is something concrete to look at.</p>
-		</div>
-	</aside>
-	<div class="hp-officehours">
-		<p class="hp-label-caps hp-officehours__label">Office hours</p>
-		<p>Based in the Central US timezone. Replies within two working days; governance and security reports are triaged first.</p>
 	</div>
 </div>
 <!-- /wp:html --></div>

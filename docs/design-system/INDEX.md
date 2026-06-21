@@ -42,8 +42,11 @@ component CSS to refresh either — the theme's `style.css` is a superset.
 | `ui_kits/blog` (ReaderView) | `templates/single.html` | Single post reader |
 | page-layout CSS | `assets/imladris-pages.css` | Enqueued (`hperkins-pages`) + editor style, via `functions.php` |
 
-All five templates were render-verified locally (host-shim mu-plugin + `wp server` + Playwright):
-tokens resolve, `imladris-pages.css` loads, zero console errors.
+Core DS-mapped templates (including the `work-index` wrapper route via
+`page-work.html`) were render-verified locally (host-shim mu-plugin + `wp server` + Playwright):
+`front-page`, `home`, `single`, `page-about`, `page-ai-enablement`, `page-contact`,
+`page-work`, and `page-case-study`; tokens resolve, `imladris-pages.css` loads, and
+there were zero console errors.
 
 > **Note on the blog templates:** the site currently has **no posts** and no Posts page assigned, so
 > `home.html` / `single.html` are built and verified but not yet exercised in production. They activate
@@ -102,3 +105,72 @@ block pattern (or template part / card markup) in the theme:
 To bring the full component/guideline archive local, re-run **`/design-pull`** against the URL above
 and ask to vendor components + guidelines, or fetch specific files. The token + CSS layers round-trip
 losslessly; the React component layer is reference-only for this block-theme target.
+
+## 2026-06-21 — SiteHeader fidelity pass (`site/SiteHeader` → `parts/header.html`)
+
+Re-skinned the masthead to the DS `SiteHeader` and locked the home/work split. Verified by local
+render (host-shim + `wp server` + Playwright) at 1440 / 375 / 320, home (page 36) and work (page 13).
+
+- **Sticky frosted bar** on inner/work pages: parchment-100 @ 88% + `backdrop-filter: saturate(140%)
+  blur(10px)` + `border-hair`. The sticky lives on **`header.wp-block-template-part`** (the part
+  wrapper), *not* `.hp-site-header` — the wrapper's parent (`.wp-site-blocks`) is the page-height
+  scroller, whereas the bar is one row tall and has no room to stick. Putting `position:sticky` back on
+  `.hp-site-header` silently breaks the stick.
+- **Lockup** site-title → Marcellus tracked-caps, `lg`, `ink-900`. **Nav** → uppercase Marcellus
+  `xs`/`0.08em` with a gold-500 underline on the current item (`.current-menu-item > a` / `[aria-current]`).
+  **Subscribe** → DS **primary** (filled evergreen; `is-style-secondary` dropped).
+- **Home** (`body.home`, page 36) dissolves the bar: `position:static`, no blur, shares the hero grid,
+  small Wapuu mark hidden — the hero carries the brand (matches the DS Home comp).
+- **Mobile (<782px)**: one nowrap row `[wordmark] … [Subscribe] [☰]`; mark dropped and search folded out
+  of the bar (desktop-only) to keep 320px overflow-free with ≥44px targets; the nav overlay opens flush
+  under the 61px bar; close-on-tap (Interactivity Router) re-verified.
+
+> "Search in the menu" initially landed as *search hidden on mobile* (desktop-only); it was then wired
+> **into** the open overlay — see the next section.
+
+## 2026-06-21 — SiteFooter pass + search-in-overlay
+
+- **SiteFooter** (`site/SiteFooter` → `parts/footer.html`): the footer was already a faithful twilight
+  port; this pass closed the small gaps — the identity mark is now the **Imladris 8-point brand star**
+  (stroked + center dot, matching the header lockup) instead of a generic 5-point star; discipline
+  separators are **gold-500 circle dots** (were "·" glyphs); the name carries `-0.01em`; and the contact
+  email is corrected to `htperkins@gmail.com`. Then made **1:1 with the rendered DS reference**
+  (via `render_preview` of the SiteFooter card): identity is now a column with the **meta nested under the
+  name**, social pills are **top-aligned** (`align-items:flex-start`), the icons are the DS **Lucide outline**
+  set (github/linkedin/mail, stroke 2), top padding is `space-8`, and the secondary nav row (Design system ·
+  Design tokens · Resume) was **removed** (no DS equivalent — its `.hp-footer__nav` CSS is left in place so it
+  can be restored). Kept the theme's colophon voice ("Trust is structural…") over the DS placeholder.
+  Verified twilight register (`#1E2730` + gold-500 hairline + valley backdrop @ 0.22) and no overflow at 1040/320.
+  - **Full-bleed backdrop fix:** `.hp-footer` is `alignfull` but the `.hp-footer__backdrop` is an absolute child
+    of a *constrained* layout, so WP capped it to content-size (72rem) — leaving the gutters a flat, lighter
+    shade than the textured center at viewports wider than 72rem. Fixed with `.hp-footer > .hp-footer__backdrop
+    { max-width: none; margin: 0; }` (higher specificity than the layout rule) so image + gradient span the
+    full plate. Confirmed `backdropWidth == footerWidth` at 1440.
+- **Search in the mobile overlay**: a `core/search` block (`className: hp-nav-search`, button-inside icon)
+  was added to the **Navigation menu (post 237)** so it surfaces at the top of the open nav overlay. CSS
+  hides it on desktop (`@media (min-width:782px) .hp-site-nav .hp-nav-search{display:none}` — the actions
+  cluster owns desktop search) and styles it as a field inside `.is-menu-open`. Re-verified: 320/375 no
+  overflow (closed + open), close-on-tap (Interactivity Router) still navigates + closes, search posts `s`.
+  > **Caveat:** the search lives in the **menu (DB content)**, not the theme files, so it does NOT travel
+  > with the theme. To enable elsewhere, add a Search block to the nav menu (Site Editor → Navigation, or
+  > `wp post update <nav-id>`) with `className: hp-nav-search`. Kept the `ref:237` architecture rather than
+  > inlining the nav (which would travel but lose central menu management).
+
+## 2026-06-21 — header cache-bust (ship the fidelity pass): `Version` 0.3.8 → 0.3.9
+
+The SiteHeader/SiteFooter passes above iterated `style.css` repeatedly while the theme `Version`
+stayed at `0.3.8`. Since the child stylesheet is cache-busted by that header
+(`wp_enqueue_style('hperkins-tokens', …, wp_get_theme()->get('Version'))` in `functions.php`),
+`style.css?ver=0.3.8` became a **moving target** — multiple distinct CSS payloads under one cache
+key. Clients (and CDN/browser caches) that had cached an earlier `0.3.8` kept rendering the
+pre-fix masthead: at ≤781px the brand mark stayed visible, the action cluster was hidden, and the
+nav wrapped to a **second row** (`flex-wrap: wrap !important` → header ~105px), so the mobile header
+no longer matched desktop. The desktop in-nav search field (`.hp-nav-search`) likewise still showed.
+
+The **rules were already correct** — no CSS change was needed. Bumped `Version` to `0.3.9` (mirrored
+in `readme.txt`) so the finalized header CSS ships under a fresh key. Verified end-to-end against the
+live site after the bump (real deployed CSS, `?ver=0.3.9`, no injection): single nowrap 61px bar
+`[wordmark] … [Subscribe] [☰]`, mark + in-bar search dropped, 44px hamburger, **no overflow at
+1440 / 375 / 320**; desktop restores `[mark][wordmark] [inline nav] [search] [Subscribe]` with the
+in-nav search field correctly hidden. Lesson: **bump `Version` on every `style.css` edit, not once per
+work session** — the cache key is content-addressed by that string alone.

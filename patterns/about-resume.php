@@ -37,7 +37,7 @@
 
 <!-- wp:buttons {"className":"hp-about-hero__cta","layout":{"type":"flex","flexWrap":"wrap"}} -->
 <div class="wp-block-buttons hp-about-hero__cta"><!-- wp:button -->
-<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="mailto:henry@lakefrontdigital.io">Get in touch</a></div>
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="mailto:htperkins@gmail.com">Get in touch</a></div>
 <!-- /wp:button -->
 
 <!-- wp:button {"className":"is-style-secondary"} -->

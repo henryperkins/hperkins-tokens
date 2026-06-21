@@ -20,11 +20,14 @@ radius are fixed named tokens — fixed per component, never by state — so wit
 a component state changes only the rule color, the surface tint, and a
 filled-vs-hollow dot — never the shape of the thing.
 
-This is a child theme. It overrides the header and footer template parts, ships
-front-page.html, page-about.html, and page-case-study.html as additive block
-templates, and provides its own token vocabulary, component CSS, and patterns.
-Unspecified page/post templates are inherited from the Assembler parent. The
-Assembler parent theme must be installed for this theme to activate.
+This is a child theme. It overrides the header and footer template parts; ships
+front-page.html, home.html, single.html, page-about.html,
+page-ai-enablement.html, page-contact.html, page-work.html, and
+page-case-study.html as additive block templates (each detailed under Template
+overrides below); and provides its own token vocabulary, component CSS, and
+patterns. Unspecified page/post templates are inherited from the Assembler
+parent. The Assembler parent theme must be installed for this theme to
+activate.
 
 = Token vocabulary =
 
@@ -144,7 +147,7 @@ unchanged.
 
 = Template overrides =
 
-The child theme owns seven block templates (page-case-study is also registered as
+The child theme owns eight block templates (page-case-study is also registered as
 a selectable "Case study" template in theme.json; the others map by the WordPress
 template hierarchy):
 
@@ -161,6 +164,8 @@ template hierarchy):
   "ai-enablement" pattern in the 44/72rem reading column.
 * page-contact.html — the contact page; renders the "contact" pattern in a 72rem
   column.
+* page-work.html — the work index page; wraps the "work-index" pattern in a
+  44/72rem composition with ledger cards and proof sections.
 * page-case-study.html — supplies the case-study header, title, and constrained
   content column only. Evidence boards, proof bars, artifact rows, and links must
   live in the page content so every published case study carries real, editable
@@ -235,6 +240,39 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.10 =
+* Work page type regression: style.css referenced var(--wp--custom--type--h1)
+  and --h4, but WordPress kebab-cases the slug at the letter/digit boundary, so
+  the generated custom properties are --type--h-1 / --h-4. The no-fallback var()
+  collapsed the `font` shorthand on the /work/ hero <h1> and every work-entry
+  title, dropping them to UA fonts. Pointed both rules at the correct --h-1 / --h-4
+  names and added literal Cormorant Garamond fallbacks so future kebab drift
+  degrades instead of disappearing. Version bumped so the fix ships under a fresh
+  cache key.
+* Contact-form accessibility (form-enhance.js): inline validation errors now wire
+  aria-describedby from the input to the error helper and announce via role="alert"
+  (cleared on input); on submit-success and "Compose another", focus moves to the
+  confirmation panel / first field instead of being dropped to <body>.
+
+= 0.3.9 =
+* Mobile header cache-bust: the SiteHeader fidelity passes iterated style.css
+  repeatedly while the Version header stayed at 0.3.8, so style.css?ver=0.3.8
+  became a moving target — clients that had cached an earlier 0.3.8 kept the
+  pre-fix masthead (mark visible, action cluster hidden, nav wrapped to a second
+  row) and so the mobile header no longer matched desktop. Bumped the Version so
+  the finalized header CSS ships under a fresh cache key; the rules themselves
+  were already correct (verified overflow-free with 44px targets at 1440/375/320,
+  and the in-nav search field correctly hidden on desktop).
+
+= 0.3.8 =
+* Ring cards: restored a phone-width flow for the full-bleed Expose / Govern /
+  Attest cards so the ring label no longer overlaps the action heading, body
+  copy scales down to the mobile text token, and linked CTA rows keep a 44px
+  touch target.
+* Contact and subscribe: restored the no-JS mailto fallbacks, kept the JS
+  confirmation flow, and standardized the public contact address on
+  htperkins@gmail.com.
 
 = 0.3.7 =
 * Mobile header: the desktop search + Subscribe action cluster now reliably hides

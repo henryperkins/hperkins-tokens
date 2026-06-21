@@ -1,9 +1,9 @@
-> **✅ COMPLETED / HISTORICAL — do not action.** The Imladris migration shipped:
-> it merged to **`main`** in the theme repo, the theme is now at **v0.3.7**, and
-> `templates/` exists (front-page, home, single, page-about, page-ai-enablement,
-> page-contact, page-case-study). The "resume" instructions below — branch
-> `imladris`, v0.3.0, "Theme has NO templates/ dir today" — are kept only as a
-> record of the original migration plan and no longer describe the live theme.
+> **✅ COMPLETED / ARCHIVED — historical reference only, do not action.** This handoff
+> documents the migration checkpoint as of **`v0.3.7`**. The shipped theme has
+> since advanced to **v0.3.8** and now includes `page-work` (and other post-checkpoint
+> form/header/footer/doc updates); the “resume” instructions below — branch `imladris`,
+> v0.3.0, “Theme has NO templates/dir today” — are kept as historical plan context
+> and are not current operational instructions.
 
 # HAND-OFF — Imladris migration of hperkins.blog (resume prompt)
 
@@ -69,7 +69,7 @@ The 9 existing patterns render via `.hp-*` classes (already re-skinned) — NO s
   dark gradient; identity = gold star emblem + "Henry Perkins" (Cormorant 2xl); disciplines
   "Support Enablement · WordPress Delivery · AI Workflows" (Marcellus xs caps, parchment-300, gold-dot
   separators); social pills GitHub(github.com/henryperkins)/LinkedIn(linkedin.com/in/henryperkins)/
-  Email(mailto:henry@lakefrontdigital.io) with lucide SVG icons; PRESERVE Henry's existing internal links
+  Email(mailto:htperkins@gmail.com) with lucide SVG icons; PRESERVE Henry's existing internal links
   (/design-system/, /design-tokens/, /about/ Resume) as a secondary mono nav line; static colophon
   (drop dynamic {year}).
   - Backdrop URL: static template parts can't run PHP → inject `--hp-footer-backdrop-url` in

@@ -631,7 +631,13 @@
       }
     },
     "spacing": {
-      "blockGap": "var(--wp--preset--spacing--5)"
+      "blockGap": "var(--wp--preset--spacing--5)",
+      "padding": {
+        "top": "0",
+        "bottom": "0",
+        "left": "var(--wp--preset--spacing--6)",
+        "right": "var(--wp--preset--spacing--6)"
+      }
     }
   }
 }

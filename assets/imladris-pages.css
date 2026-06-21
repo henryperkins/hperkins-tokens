@@ -15,6 +15,12 @@
   border-bottom: 1px solid var(--wp--custom--border--hair);
   padding-bottom: var(--wp--preset--spacing--7);
 }
+.hp-page-hero h1 {
+  /* Fluid hero headline: caps at the 4xl token (4rem) and shrinks to fit
+     narrow viewports. A single fixed 4rem word ("conversation") otherwise
+     overflows ~320px; text-wrap:balance only rebalances lines, never shrinks. */
+  font-size: clamp(2.25rem, 5vw + 1rem, 4rem);
+}
 .hp-page-hero__eyebrow {
   margin: 0;
   font-family: var(--wp--preset--font-family--label);
@@ -151,10 +157,11 @@
   transition: border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
               box-shadow var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
 }
-.hp-contact-form textarea:focus {
+.hp-contact-form textarea:not(.block-editor-plain-text):focus {
   outline: none;
-  border-color: var(--wp--preset--color--gold-500);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wp--preset--color--gold-500) 70%, transparent);
+  border-color: var(--wp--preset--color--gold-700);
+  box-shadow: var(--wp--custom--shadow--inset);
+  transition: none;
 }
 .hp-contact-form__hint {
   font-family: var(--wp--preset--font-family--body);
@@ -174,54 +181,41 @@
   gap: var(--wp--preset--spacing--6);
 }
 
-/* Direct channels — artifact-style cells. */
+/* Direct channels — compact profile icon row. */
 .hp-channels {
   display: flex;
-  flex-direction: column;
-  border: 1px solid var(--wp--custom--border--hair);
-  border-radius: var(--wp--custom--radius--lg);
-  overflow: hidden;
-  background: var(--wp--custom--surface--card);
+  flex-wrap: wrap;
+  gap: var(--wp--preset--spacing--3);
 }
 .hp-channels a {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--wp--preset--spacing--4);
-  padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
-  border-bottom: 1px solid var(--wp--custom--border--hair);
-  text-decoration: none;
-}
-.hp-channels a:last-child { border-bottom: 0; }
-.hp-channels a:hover .hp-channels__value { text-decoration: underline; text-underline-offset: 2px; }
-.hp-channels__label {
-  flex: none;
-  font-family: var(--wp--preset--font-family--mono);
-  font-size: var(--wp--preset--font-size--2-xs);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--wp--custom--text--faint);
-}
-.hp-channels__value {
-  font-family: var(--wp--preset--font-family--body);
-  font-size: var(--wp--preset--font-size--base);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--wp--custom--border--hair);
+  border-radius: var(--wp--custom--radius--md);
+  background: var(--wp--custom--surface--card);
   color: var(--wp--custom--artifact-link);
-  text-align: right;
+  text-decoration: none;
+  transition: background var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+              border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+              color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
 }
-
-/* Office-hours note. */
-.hp-officehours {
-  padding: var(--wp--preset--spacing--5);
-  border: 1px dashed var(--wp--custom--border--strong);
-  border-radius: var(--wp--custom--radius--lg);
+.hp-channels a:hover {
+  background: var(--wp--custom--brand--subtle);
+  border-color: var(--wp--custom--border--brand);
+  color: var(--wp--custom--text--link);
 }
-.hp-officehours__label { margin: 0 0 var(--wp--preset--spacing--3); }
-.hp-officehours p {
-  margin: 0;
-  font-family: var(--wp--preset--font-family--body);
-  font-size: var(--wp--preset--font-size--base);
-  color: var(--wp--custom--text--muted);
-  line-height: var(--wp--custom--leading--relaxed);
+.hp-channels svg {
+  width: 19px;
+  height: 19px;
+  fill: currentColor;
+}
+.hp-channels svg circle {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
 }
 
 /* ===========================================================================
@@ -440,4 +434,14 @@
   font-weight: 500;
   font-size: var(--wp--preset--font-size--2-xl);
   margin: 0 0 var(--wp--preset--spacing--5);
+}
+
+/* Heading wrap safety net. The 32px root gutter narrows the mobile reading
+   column to ~256px, which is below the width of a single long word (e.g.
+   "Scriptorium") at the fixed 4rem h1 size used on default-template pages —
+   so such headings spilled a few px past the viewport at 320px. break-word
+   only acts when a word genuinely cannot fit its line; it has no effect at
+   desktop widths or on the already-fluid hero/masthead titles. */
+:where(h1, h2, h3, h4, .wp-block-heading) {
+  overflow-wrap: break-word;
 }

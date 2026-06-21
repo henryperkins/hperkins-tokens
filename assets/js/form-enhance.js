@@ -1,17 +1,18 @@
 /**
  * Imladris — progressive enhancement for the contact + subscribe forms.
  *
- * No-JS fallback: both forms submit to their `mailto:` action, so the control
- * still works with scripting off. With JS we add inline email validation and
- * swap to a confirmation state (the interaction the Imladris Design System's
- * Contact/Subscribe components show), then hand off to the visitor's mail
- * client — the confirmation only ever states what actually happened.
+ * No-JS fallback: both forms submit to their `mailto:` action. With JS we add
+ * inline email validation and swap to a confirmation state (the interaction the
+ * Imladris Design System's Contact/Subscribe components show), then hand off to
+ * the visitor's mail client — the confirmation only ever states what actually
+ * happened.
  */
 ( function () {
 	'use strict';
 
 	var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	var MAILTO   = 'henry@hperkins.blog';
+	var MAILTO   = 'htperkins@gmail.com';
+	var CONTACT_EMAIL_ERROR = 'Enter a valid email so I can reply.';
 
 	function fieldWrap( input ) {
 		return input.closest( '.hp-input' ) || input.parentElement;
@@ -28,7 +29,12 @@
 				helper.setAttribute( 'data-hp-error', '1' );
 				wrap.appendChild( helper );
 			}
+			if ( ! helper.id ) {
+				helper.id = 'hp-error-' + ( input.id || input.name || 'field' );
+			}
+			helper.setAttribute( 'role', 'alert' );
 			helper.textContent = message;
+			input.setAttribute( 'aria-describedby', helper.id );
 		}
 		input.setAttribute( 'aria-invalid', 'true' );
 		input.focus();
@@ -44,6 +50,7 @@
 			}
 		}
 		input.removeAttribute( 'aria-invalid' );
+		input.removeAttribute( 'aria-describedby' );
 	}
 
 	function confirmPanel( title, body, inverse ) {
@@ -79,6 +86,19 @@
 	// ---- Contact form -------------------------------------------------------
 	var contact = document.querySelector( '.hp-contact-form' );
 	if ( contact ) {
+		contact.addEventListener( 'invalid', function ( e ) {
+			if ( e.target && e.target.matches( 'input[type="email"]' ) ) {
+				e.preventDefault();
+				setError( e.target, CONTACT_EMAIL_ERROR );
+			}
+		}, true );
+
+		contact.addEventListener( 'input', function ( e ) {
+			if ( e.target && e.target.matches( 'input[type="email"]' ) ) {
+				clearError( e.target );
+			}
+		} );
+
 		contact.addEventListener( 'submit', function ( e ) {
 			var email = contact.querySelector( 'input[type="email"]' );
 			if ( email ) {
@@ -86,7 +106,7 @@
 			}
 			if ( email && ! EMAIL_RE.test( email.value.trim() ) ) {
 				e.preventDefault();
-				setError( email, 'Enter a valid email so I can reply.' );
+				setError( email, CONTACT_EMAIL_ERROR );
 				return;
 			}
 			e.preventDefault();
@@ -118,15 +138,35 @@
 				if ( em ) {
 					clearError( em );
 				}
+				var first = contact.querySelector( 'input, textarea, select' );
+				if ( first ) {
+					first.focus();
+				}
 			} );
 			panel.appendChild( again );
 			contact.replaceWith( panel );
+			panel.setAttribute( 'tabindex', '-1' );
+			panel.focus();
 		} );
 	}
 
 	// ---- Subscribe ----------------------------------------------------------
 	var subForm = document.querySelector( '.hp-subscribe__form' );
 	if ( subForm ) {
+		subForm.addEventListener( 'invalid', function ( e ) {
+			if ( e.target && e.target.matches( 'input[type="email"]' ) ) {
+				e.preventDefault();
+				e.target.setAttribute( 'aria-invalid', 'true' );
+				e.target.focus();
+			}
+		}, true );
+
+		subForm.addEventListener( 'input', function ( e ) {
+			if ( e.target && e.target.matches( 'input[type="email"]' ) ) {
+				e.target.removeAttribute( 'aria-invalid' );
+			}
+		} );
+
 		subForm.addEventListener( 'submit', function ( e ) {
 			var email = subForm.querySelector( 'input[type="email"]' );
 			if ( email && ! EMAIL_RE.test( email.value.trim() ) ) {
@@ -148,6 +188,8 @@
 				true
 			);
 			subForm.replaceWith( panel );
+			panel.setAttribute( 'tabindex', '-1' );
+			panel.focus();
 		} );
 	}
 } )();
