@@ -57,11 +57,11 @@
 <!-- wp:group {"className":"hp-signal-strip hp-about-impact","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-signal-strip hp-about-impact"><!-- wp:group {"className":"hp-signal","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-signal"><!-- wp:paragraph {"className":"hp-signal__value"} -->
-<p class="hp-signal__value">Since 2007</p>
+<p class="hp-signal__value">WordPress since 2012</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-signal__label"} -->
-<p class="hp-signal__label">Customer-facing technical, support, community, and operations work</p>
+<p class="hp-signal__label">Customer-facing WordPress delivery &mdash; implementation, support, and enablement</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 

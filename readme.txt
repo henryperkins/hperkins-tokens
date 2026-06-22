@@ -244,6 +244,14 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
 
+= 0.3.22 =
+* Portfolio review remediation: pointed the Work index `PR #501` artifact link at
+  the specific pull request (`WordPress/ai/pull/501`) instead of the generic pulls
+  list; normalized the About signal strip to `WordPress since 2012` to match the
+  footer (clearing the `Since 2007` year inconsistency); and added an explicit,
+  operational bias statement to the AI Enablement ethics stance (consequential
+  output stays review-first, no claimed automated bias detection).
+
 = 0.3.21 =
 * Mobile performance: added WebP variants for homepage/footer artwork, lazy
   loaded the below-fold ring-card images, gave the hero mascot intrinsic

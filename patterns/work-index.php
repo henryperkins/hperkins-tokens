@@ -184,7 +184,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="https://github.com/WordPress/ai/pulls" rel="noopener">PR #501</a></p>
+<p class="hp-artifact__link"><a href="https://github.com/WordPress/ai/pull/501" rel="noopener">PR #501</a></p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:column -->
 

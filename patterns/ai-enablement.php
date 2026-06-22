@@ -221,6 +221,10 @@
 
 <!-- wp:paragraph -->
 <p>The same discipline appears in what I ship: suggestions stay review-first, applied changes leave an audit row, and a stale claim gets corrected rather than defended.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Bias belongs to that same accounting, not a separate disclaimer. Model output carries the slant of its training and its prompt, so anything that touches a person or a truth claim stays review-first &mdash; a suggestion is not a judgment until a human has checked it against the source, the audience, and who is harmed if it is wrong. I do not claim automated bias detection: Flavor Agent never certifies an output as neutral on my behalf. Where no reliable structural check exists, the honest move is to narrow scope, not to perform a neutrality the system cannot guarantee.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
