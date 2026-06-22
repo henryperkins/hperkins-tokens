@@ -144,7 +144,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph -->
-<p>Open C2PA proposals cover <a href="https://github.com/WordPress/ai/pull/459">detecting existing Content Credentials on upload</a> and signing new provenance claims to <a href="https://github.com/WordPress/ai/pull/294">post text</a> and <a href="https://github.com/WordPress/ai/pull/302">images</a>. <a href="https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html">Durable credentials</a> use additional bindings such as fingerprints or watermarks to help recover a remotely stored manifest when embedded metadata is stripped. This direction aligns with <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689">Article 50 of the EU AI Act</a>, scheduled to apply from 2 August 2026, which requires providers of certain generative systems to mark outputs in machine-readable form. C2PA is one possible implementation path, not the legal requirement itself.</p>
+<p>Open C2PA proposals cover <a href="https://github.com/WordPress/ai/pull/459">detecting existing Content Credentials on upload</a> and signing new provenance claims to <a href="https://github.com/WordPress/ai/pull/294">post text</a> and <a href="https://github.com/WordPress/ai/pull/302">images</a>. <a href="https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html">Durable credentials</a> use additional bindings such as fingerprints or watermarks to help recover a remotely stored manifest when embedded metadata is stripped. This direction aligns with <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689">Article 50 of the EU AI Act</a>, scheduled to apply from 2 August 2026, which requires providers of certain generative systems to mark outputs in machine-readable form, making artificially generated or manipulated content detectable. C2PA is one possible implementation path, not the legal requirement itself.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
@@ -158,7 +158,7 @@
 
 <!-- wp:group {"className":"hp-aie__lede","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-aie__lede"><!-- wp:paragraph -->
-<p>The same logic extends beyond software: a claim becomes more credible when it survives an instrument the claimant does not control. <a href="https://philosophers.group/disrupting-the-disruptors/">Blake Bertuccelli-Booth&rsquo;s</a> comparison of workforce programs with incubators made the contrast concrete &mdash; administrative wage records and long-running randomized trials on one side, self-reported metrics distorted by survivorship bias on the other.</p>
+<p>The same logic extends beyond software: a claim becomes more credible when it survives an instrument the claimant does not control. AI Leaders sharpened that principle through impact measurement. <a href="https://philosophers.group/disrupting-the-disruptors/">Blake Bertuccelli-Booth&rsquo;s</a> comparison of workforce programs with incubators made the contrast concrete &mdash; administrative wage records and long-running randomized trials on one side, self-reported metrics distorted by survivorship bias on the other.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
@@ -170,11 +170,19 @@
 
 <!-- wp:group {"className":"hp-aie__lede","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-aie__lede"><!-- wp:paragraph -->
-<p>Read through that lens, the three rings form an accountability architecture. Each gives someone other than the author an instrument to read: a schema others can inspect, a log others can audit, a signature a stranger can verify. My ethics position follows the same principle: trust is not a disclaimer appended after the model answers; it is built into the workflow.</p>
+<p>Read through that lens, the three rings form an accountability architecture. Each gives someone other than the author an instrument to read: a schema others can inspect, a log others can audit, a signature a stranger can verify. My ethics position follows the same principle: trust is not a disclaimer appended after the model answers; it is built into the workflow. I reached the same conclusion in cohort conversations about domains as distant from WordPress as battery governance in rural Mongolia &mdash; different systems, but the same need for inspectable decisions and accountable change.</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph -->
 <p>I hold my own work to that standard. I do not ask readers to trust my account of a contribution; I point to current review status, merged changes, and changelog lines, checking GitHub rather than my notes. My portfolio&rsquo;s proof bar renders state, never intent.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>For targets that move faster than memory can settle, I use digests and search for discovery, primary documentation and changelogs for release facts, GitHub for live implementation state, and living roadmaps to hold what no single source captures &mdash; the WordPress AI one runs a repository census on refresh because even an official board misses pull requests. I ground the agents I rely on with Cloudflare AI Search so their answers stay anchored to retrieved sources, then verify the load-bearing claims myself.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The same discipline appears in what I ship: suggestions stay review-first, applied changes leave an audit row, and a stale claim gets corrected rather than defended.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 

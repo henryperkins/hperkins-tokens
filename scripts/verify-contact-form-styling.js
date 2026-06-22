@@ -14,6 +14,9 @@ const path = require( 'node:path' );
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
 const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
 const CONTACT_EMAIL = 'htperkins@gmail.com';
+const SUBSCRIBE_ACTION = new URL( '/wp-admin/admin-post.php', ORIGIN ).href;
+const SUBSCRIBE_RECEIVED = 'Request received. I will review the address and add it to the fortnightly dispatch shortly.';
+const SUBSCRIBE_EMAIL_ERROR = 'Enter a valid email to join the dispatch.';
 const VIEWPORT = { width: 390, height: 1400, deviceScaleFactor: 1, mobile: false };
 
 function wait( ms ) {
@@ -156,32 +159,34 @@ async function inspectContactPage( cdp ) {
 		const nameControl = nameInput.closest('.hp-input__control');
 		const emailInput = form.querySelector('input[name="email"]');
 		const emailControl = emailInput.closest('.hp-input__control');
-		const textarea = form.querySelector('textarea[name="message"]');
-		const result = {
-			tokens: {
-				strong: colorToken('--wp--custom--text--strong'),
-				faint: colorToken('--wp--custom--text--faint'),
-				focus: colorToken('--wp--preset--color--gold-700'),
-				danger: colorToken('--wp--custom--feedback--danger'),
-			},
-			fallbacks: {
-				contactAction: form.getAttribute('action') || '',
-				contactMethod: form.getAttribute('method') || '',
-				contactEnctype: form.getAttribute('enctype') || '',
-				subscribeAction: subscribeForm ? subscribeForm.getAttribute('action') || '' : '',
-				subscribeMethod: subscribeForm ? subscribeForm.getAttribute('method') || '' : '',
-				subscribeEnctype: subscribeForm ? subscribeForm.getAttribute('enctype') || '' : '',
-			},
-			normalInput: styles(nameInput),
-			normalControl: styles(nameControl),
-		};
-		nameInput.focus();
-		result.focusedInput = styles(nameInput);
-		result.focusedControl = styles(nameControl);
-		textarea.focus();
-		result.focusedTextarea = styles(textarea);
-		emailInput.value = 'not-an-email';
-		form.querySelector('button[type="submit"]').click();
+			const textarea = form.querySelector('textarea[name="message"]');
+			const result = {
+				tokens: {
+					strong: colorToken('--wp--custom--text--strong'),
+					faint: colorToken('--wp--custom--text--faint'),
+					focus: colorToken('--wp--preset--color--gold-700'),
+					danger: colorToken('--wp--custom--feedback--danger'),
+				},
+				fallbacks: {
+					contactAction: form.getAttribute('action') || '',
+					contactMethod: form.getAttribute('method') || '',
+					contactEnctype: form.getAttribute('enctype') || '',
+					subscribeAction: subscribeForm ? subscribeForm.getAttribute('action') || '' : '',
+					subscribeMethod: subscribeForm ? subscribeForm.getAttribute('method') || '' : '',
+					subscribeEnctype: subscribeForm ? subscribeForm.getAttribute('enctype') || '' : '',
+					subscribeRequestAction: subscribeForm ? ( subscribeForm.querySelector('[name="action"]')?.value || '' ) : '',
+					subscribeNonce: subscribeForm ? ( subscribeForm.querySelector('[name="hperkins_tokens_subscribe_nonce"]')?.value || '' ) : '',
+				},
+				normalInput: styles(nameInput),
+				normalControl: styles(nameControl),
+			};
+			nameInput.focus();
+			result.focusedInput = styles(nameInput);
+			result.focusedControl = styles(nameControl);
+			textarea.focus();
+			result.focusedTextarea = styles(textarea);
+			emailInput.value = 'not-an-email';
+			form.querySelector('button[type="submit"]').click();
 			result.invalidInput = styles(emailInput);
 			result.invalidControl = styles(emailControl);
 			result.invalidActiveName = document.activeElement && document.activeElement.name;
@@ -211,7 +216,64 @@ async function inspectContactPage( cdp ) {
 				hasOfficeHours: !! document.querySelector('.hp-contact-aside .hp-officehours'),
 			};
 			return result;
-		})()`;
+			})()`;
+
+	const evaluated = await cdp.send( 'Runtime.evaluate', {
+		expression,
+		awaitPromise: true,
+		returnByValue: true,
+	}, sessionId );
+
+	await cdp.send( 'Target.closeTarget', { targetId: target.targetId } );
+	return evaluated.result.value;
+}
+
+async function inspectSubscribeStatusPage( cdp, status ) {
+	const target = await cdp.send( 'Target.createTarget', { url: 'about:blank' } );
+	const attached = await cdp.send( 'Target.attachToTarget', {
+		targetId: target.targetId,
+		flatten: true,
+	} );
+	const sessionId = attached.sessionId;
+
+	await cdp.send( 'Page.enable', {}, sessionId );
+	await cdp.send( 'Runtime.enable', {}, sessionId );
+	await cdp.send( 'Emulation.setDeviceMetricsOverride', VIEWPORT, sessionId );
+
+	const url = new URL( '/contact/', ORIGIN );
+	url.searchParams.set( 'hperkins_subscribe', status );
+	const loaded = cdp.once( 'Page.loadEventFired', sessionId );
+	await cdp.send( 'Page.navigate', { url: url.href }, sessionId );
+	await loaded;
+	await cdp.send( 'Runtime.evaluate', { expression: 'document.fonts && document.fonts.ready', awaitPromise: true }, sessionId );
+	await wait( 250 );
+
+	const expression = `(() => {
+		const form = document.querySelector('.hp-subscribe__form');
+		const input = form && form.querySelector('#hp-subscribe-email');
+		const statusNode = () => form && form.querySelector('.hp-subscribe__status');
+		const errorNode = () => form && form.querySelector('.hp-input__helper[data-hp-error]');
+		const snap = () => ({
+			statusText: statusNode() ? statusNode().textContent.trim() : '',
+			statusClass: statusNode() ? statusNode().className : '',
+			statusRole: statusNode() ? statusNode().getAttribute('role') || '' : '',
+			statusAriaLive: statusNode() ? statusNode().getAttribute('aria-live') || '' : '',
+			errorText: errorNode() ? errorNode().textContent.trim() : '',
+			errorClass: errorNode() ? errorNode().className : '',
+			hasErrorClass: form ? form.classList.contains('has-error') : false,
+			ariaInvalid: input ? input.getAttribute('aria-invalid') || '' : '',
+			describedBy: input ? input.getAttribute('aria-describedby') || '' : '',
+			legacyHelperCount: form ? form.querySelectorAll('.hp-input__helper:not([data-hp-error])').length : 0,
+		});
+		const before = snap();
+		input.value = 'not-an-email';
+		const canceled = ! form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+		const afterInvalid = snap();
+		input.value = 'valid@example.com';
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+		const afterInput = snap();
+		return { canceled, before, afterInvalid, afterInput };
+	})()`;
 
 	const evaluated = await cdp.send( 'Runtime.evaluate', {
 		expression,
@@ -231,7 +293,6 @@ function failUnless( condition, failures, message ) {
 
 function validate( result ) {
 	const failures = [];
-	const subscribeSubject = encodeURIComponent( 'Subscribe to the dispatch' );
 	failUnless(
 		result.fallbacks.contactAction === `mailto:${ CONTACT_EMAIL }`,
 		failures,
@@ -248,19 +309,29 @@ function validate( result ) {
 		`contact form fallback enctype is "${ result.fallbacks.contactEnctype || '(missing)' }", expected text/plain.`
 	);
 	failUnless(
-		result.fallbacks.subscribeAction === `mailto:${ CONTACT_EMAIL }?subject=${ subscribeSubject }`,
+		result.fallbacks.subscribeAction === SUBSCRIBE_ACTION,
 		failures,
-		`subscribe form fallback action is "${ result.fallbacks.subscribeAction || '(missing)' }", expected mailto:${ CONTACT_EMAIL }?subject=${ subscribeSubject }.`
+		`subscribe form action is "${ result.fallbacks.subscribeAction || '(missing)' }", expected ${ SUBSCRIBE_ACTION }.`
 	);
 	failUnless(
 		result.fallbacks.subscribeMethod.toLowerCase() === 'post',
 		failures,
-		`subscribe form fallback method is "${ result.fallbacks.subscribeMethod || '(missing)' }", expected post.`
+		`subscribe form method is "${ result.fallbacks.subscribeMethod || '(missing)' }", expected post.`
 	);
 	failUnless(
-		result.fallbacks.subscribeEnctype.toLowerCase() === 'text/plain',
+		'' === result.fallbacks.subscribeEnctype,
 		failures,
-		`subscribe form fallback enctype is "${ result.fallbacks.subscribeEnctype || '(missing)' }", expected text/plain.`
+		`subscribe form enctype is "${ result.fallbacks.subscribeEnctype || '(missing)' }", expected no explicit enctype.`
+	);
+	failUnless(
+		result.fallbacks.subscribeRequestAction === 'hperkins_tokens_subscribe',
+		failures,
+		`subscribe request action is "${ result.fallbacks.subscribeRequestAction || '(missing)' }", expected hperkins_tokens_subscribe.`
+	);
+	failUnless(
+		result.fallbacks.subscribeNonce.length > 0,
+		failures,
+		'subscribe form is missing the public nonce field.'
 	);
 	failUnless(
 		result.normalInput.borderTopWidth === '0px' && result.normalInput.borderStyle === 'none',
@@ -370,6 +441,46 @@ function validate( result ) {
 		failures,
 		'contact aside still renders the redundant "Office hours" block.'
 	);
+	failUnless(
+		result.subscribeStatus.before.statusText === SUBSCRIBE_RECEIVED &&
+			! result.subscribeStatus.before.statusText.toLowerCase().includes( 'already' ),
+		failures,
+			`success subscribe status exposes "${ result.subscribeStatus.before.statusText }" instead of the generic received message.`
+	);
+	failUnless(
+		result.subscribeStatus.before.statusClass === 'hp-subscribe__status' &&
+			result.subscribeStatus.before.statusRole === 'status' &&
+			result.subscribeStatus.before.statusAriaLive === '',
+		failures,
+			`success subscribe status has class="${ result.subscribeStatus.before.statusClass }", role="${ result.subscribeStatus.before.statusRole }", aria-live="${ result.subscribeStatus.before.statusAriaLive }"; expected hp-subscribe__status + role=status with no explicit aria-live.`
+	);
+	failUnless(
+		result.subscribeStatus.canceled &&
+			result.subscribeStatus.afterInvalid.statusText === SUBSCRIBE_RECEIVED &&
+			result.subscribeStatus.afterInvalid.errorText === SUBSCRIBE_EMAIL_ERROR &&
+			result.subscribeStatus.afterInvalid.hasErrorClass &&
+			result.subscribeStatus.afterInvalid.ariaInvalid === 'true' &&
+			result.subscribeStatus.afterInvalid.describedBy,
+		failures,
+		`subscribe invalid submit did not keep the server status separate from the JS error (${ JSON.stringify( result.subscribeStatus.afterInvalid ) }).`
+	);
+	failUnless(
+		result.subscribeStatus.afterInput.statusText === SUBSCRIBE_RECEIVED &&
+			result.subscribeStatus.afterInput.errorText === '' &&
+			! result.subscribeStatus.afterInput.hasErrorClass &&
+			result.subscribeStatus.afterInput.ariaInvalid === '' &&
+			result.subscribeStatus.afterInput.describedBy === '',
+		failures,
+		`subscribe input did not clear only the JS error while preserving the server status (${ JSON.stringify( result.subscribeStatus.afterInput ) }).`
+	);
+	failUnless(
+		result.subscribeInvalidStatus.before.statusText === SUBSCRIBE_EMAIL_ERROR &&
+			result.subscribeInvalidStatus.before.statusClass === 'hp-subscribe__status' &&
+			result.subscribeInvalidStatus.before.statusRole === 'alert' &&
+			result.subscribeInvalidStatus.before.statusAriaLive === '',
+		failures,
+		`invalid subscribe status has ${ JSON.stringify( result.subscribeInvalidStatus.before ) }, expected hp-subscribe__status + role=alert with no explicit aria-live.`
+	);
 	return failures;
 }
 
@@ -388,6 +499,8 @@ async function main() {
 		const wsUrl = await waitForDevToolsUrl( chrome );
 		const cdp = await createCdpClient( wsUrl );
 		const result = await inspectContactPage( cdp );
+			result.subscribeStatus = await inspectSubscribeStatusPage( cdp, 'success' );
+		result.subscribeInvalidStatus = await inspectSubscribeStatusPage( cdp, 'invalid-email' );
 		cdp.close();
 
 		const failures = validate( result );

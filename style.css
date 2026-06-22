@@ -4,7 +4,7 @@ Theme URI: https://hperkins.blog
 Description: Imladris design system child theme for hperkins.blog — a Rivendell-inspired, parchment-and-evergreen serif editorial system with a mallorn-gold accent and a status-verified evidence layer (done/review/pending by rule-colour and a redundant word). Tokens in theme.json are the source of truth; the render is a consequence.
 Author: Henry Perkins
 Template: assembler
-Version: 0.3.13
+Version: 0.3.20
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -294,14 +294,14 @@ button,
 
 .hp-work__desc {
 	margin: 0;
-	font-size: var(--wp--preset--font-size--xs);
+	font-size: var(--wp--preset--font-size--sm);
 	line-height: 1.55;
 	color: var(--hp-neutral-600);
 }
 
 .hp-work__footer {
 	margin-top: var(--wp--preset--spacing--4);
-	font-size: var(--wp--preset--font-size--xs);
+	font-size: var(--wp--preset--font-size--sm);
 	color: var(--hp-neutral-600);
 }
 
@@ -517,7 +517,6 @@ button,
 .hp-evidence-board__kicker,
 .hp-evidence-row__label,
 .hp-signal__label,
-.hp-operational-story__kicker,
 .hp-skill-group__legend {
 	margin: 0;
 	font-family: var(--wp--preset--font-family--mono);
@@ -663,14 +662,137 @@ button,
 	display: block;
 }
 
-.hp-proof-product.wp-block-columns {
-	gap: var(--wp--preset--spacing--6);
-	align-items: flex-start;
-	margin-block: var(--wp--preset--spacing--6);
+/* === Product Hero (DS evidence/ProductHero) ===
+	 "Proof + Product." A compact evidence board paired with framed product media,
+	 so client visuals prove the work without becoming the page palette — the
+	 case-study opening for visual work (plugin UI, frontend surfaces, sites).
+	 Faithful to the design-system component; the media slot reuses the framed
+	 .hp-shot--browser / .hp-shot--phone chrome. */
+.hp-product-hero.wp-block-columns {
+	gap: var(--wp--preset--spacing--7);
+	align-items: center;
+	margin-block: var(--wp--preset--spacing--7);
+	padding: var(--wp--preset--spacing--6);
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-frame);
+	background: var(--wp--custom--surface--card);
+	box-shadow: var(--hp-shadow-panel);
 }
 
-.hp-proof-product .wp-block-column {
+.hp-product-hero .wp-block-column {
 	min-width: 0;
+}
+
+.hp-product-hero__board {
+	display: grid;
+	align-content: center;
+}
+
+.hp-product-hero__eyebrow {
+	margin: 0;
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+	color: var(--wp--custom--text--accent);
+}
+
+.hp-product-hero__title {
+	margin: var(--wp--preset--spacing--2) 0 0;
+	font: var(--wp--custom--type--h-4);
+	color: var(--hp-neutral-900);
+}
+
+.hp-product-hero__intro {
+	margin: var(--wp--preset--spacing--3) 0 0;
+	font: var(--wp--custom--type--ui);
+	line-height: var(--wp--custom--leading--relaxed);
+	color: var(--hp-neutral-600);
+}
+
+.hp-product-hero__rows {
+	margin: var(--wp--preset--spacing--5) 0 0;
+}
+
+.hp-product-hero__row {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	column-gap: var(--wp--preset--spacing--3);
+	margin: 0;
+	padding: var(--wp--preset--spacing--3) 0;
+	border-top: 1px solid var(--hp-neutral-100);
+}
+
+.hp-product-hero__rows > .hp-product-hero__row:first-of-type {
+	border-top: 0;
+}
+
+.hp-product-hero__kind {
+	display: flex;
+	align-items: center;
+	gap: 0.45em;
+	min-width: 64px;
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	line-height: 1.4;
+	color: var(--hp-neutral-600);
+}
+
+.hp-product-hero__kind::before {
+	content: "";
+	width: 7px;
+	height: 7px;
+	flex: none;
+	border-radius: 50%;
+	background: currentColor;
+	box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 16%, transparent);
+}
+
+.hp-product-hero__row.is-kind-live .hp-product-hero__kind {
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-product-hero__row.is-kind-source .hp-product-hero__kind {
+	color: var(--wp--preset--color--river-500);
+}
+
+.hp-product-hero__row-title {
+	margin: 0;
+	font-family: var(--hp-font-display);
+	font-weight: var(--hp-weight-title);
+	font-size: var(--wp--preset--font-size--base);
+	line-height: 1.3;
+	color: var(--hp-neutral-900);
+}
+
+.hp-product-hero__row-title a {
+	color: var(--hp-neutral-900);
+	text-decoration: none;
+	border-bottom: 1px solid color-mix(in srgb, var(--hp-action) 70%, transparent);
+}
+
+.hp-product-hero__row-title a:hover {
+	border-bottom-color: var(--hp-action);
+}
+
+.hp-product-hero__row-body {
+	min-width: 0;
+}
+
+.hp-product-hero__row-meta {
+	margin: 2px 0 0;
+	font-size: var(--wp--preset--font-size--xs);
+	line-height: 1.5;
+	color: var(--hp-neutral-600);
+}
+
+/* The framed shot drops its standalone block margin so it sits flush in the
+	 hero grid. */
+.hp-product-hero__media .hp-shot {
+	margin-block: 0;
 }
 
 .hp-shot-stack {
@@ -695,99 +817,202 @@ button,
 	color: var(--hp-neutral-600);
 }
 
+/* === Operational Story (DS evidence/OperationalStory) ===
+	 The featured narrative where several pages reconcile to one operating
+	 surface: a single bordered card in three bands — a header, a feature-state /
+	 operational-checks panel, and a numbered path index whose unifying node is
+	 gilt-emphasised. Faithful to the design-system component; supersedes the
+	 earlier two-column mini-diagram treatment. */
 .hp-operational-story {
 	margin-block: var(--wp--preset--spacing--9);
-	padding: var(--wp--preset--spacing--5);
 	border: 1px solid var(--hp-neutral-100);
-	border-radius: var(--hp-radius-card);
-	background:
-		linear-gradient(
-			90deg,
-			color-mix(
-					in srgb,
-					var(--hp-action) var(--hp-grid-action-tint),
-					transparent
-				)
-				1px,
-			transparent 1px
-		),
-		linear-gradient(
-			color-mix(
-					in srgb,
-					var(--hp-status-merged) var(--hp-grid-status-tint),
-					transparent
-				)
-				1px,
-			transparent 1px
-		),
-		var(--hp-neutral-50);
-	background-size: var(--hp-grid-pitch) var(--hp-grid-pitch);
+	border-radius: var(--hp-radius-frame);
+	background: var(--wp--custom--surface--card);
+	box-shadow: var(--hp-shadow-panel);
+	overflow: hidden;
 }
 
-.hp-operational-story__grid.wp-block-columns {
-	gap: var(--wp--preset--spacing--5);
+.hp-operational-story__header {
 	margin: 0;
-	align-items: stretch;
+	padding: var(--wp--preset--spacing--5) var(--wp--preset--spacing--6)
+		var(--wp--preset--spacing--4);
+	background: var(--wp--custom--surface--cool);
+	border-bottom: 1px solid var(--hp-neutral-100);
 }
 
-.hp-operational-story__panel {
+.hp-operational-story__eyebrow {
 	margin: 0;
-	padding: var(--wp--preset--spacing--4);
-	border: 1px solid var(--hp-neutral-100);
-	border-radius: var(--hp-radius-panel);
-	background: color-mix(in srgb, var(--hp-neutral-0) 92%, var(--hp-neutral-50));
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+	color: var(--wp--custom--text--accent);
 }
 
 .hp-operational-story__title {
 	margin: var(--hp-gap-sm) 0 0;
-	font-size: var(--wp--preset--font-size--xl);
-	font-weight: var(--hp-weight-title);
-	line-height: 1.2;
+	font: var(--wp--custom--type--h-4);
 	color: var(--hp-neutral-900);
 }
 
-.hp-operational-story__text {
-	margin: var(--wp--preset--spacing--3) 0 0;
-	font-size: var(--wp--preset--font-size--xs);
-	line-height: 1.55;
+.hp-operational-story__intro {
+	margin: var(--wp--preset--spacing--2) 0 0;
+	max-width: 64ch;
+	font: var(--wp--custom--type--ui);
+	line-height: var(--wp--custom--leading--relaxed);
 	color: var(--hp-neutral-600);
 }
 
-.hp-mini-diagram {
+.hp-operational-story__panel {
+	margin: 0;
+	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--6)
+		var(--wp--preset--spacing--5);
+}
+
+.hp-operational-story__panel-head {
+	gap: var(--wp--preset--spacing--4);
+	padding-bottom: var(--wp--preset--spacing--3);
+	border-bottom: 1px solid var(--hp-neutral-100);
+}
+
+.hp-operational-story__panel-label {
+	margin: 0;
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+	color: var(--wp--custom--text--faint);
+}
+
+.hp-operational-story__check {
 	display: grid;
-	grid-template-columns: repeat(5, 1fr);
-	gap: 0.35rem;
-	align-items: end;
-	min-height: 8rem;
-	margin-top: var(--wp--preset--spacing--4);
-	padding-top: var(--wp--preset--spacing--4);
+	grid-template-columns: 8rem 1fr;
+	column-gap: var(--wp--preset--spacing--5);
+	align-items: baseline;
+	margin: 0;
+	padding: var(--wp--preset--spacing--4) 0;
 	border-top: 1px solid var(--hp-neutral-100);
 }
 
-.hp-mini-diagram span {
-	display: block;
-	min-height: 2rem;
-	border-radius: var(--hp-radius-chip) var(--hp-radius-chip) 0 0;
-	background: var(--hp-action);
-	opacity: 0.76;
+.hp-operational-story__panel
+	> .hp-operational-story__check:first-of-type {
+	border-top: 0;
 }
 
-.hp-mini-diagram span:nth-child(1) {
-	height: 40%;
+.hp-operational-story__kind-label {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	line-height: 1.4;
+	color: var(--hp-neutral-600);
 }
-.hp-mini-diagram span:nth-child(2) {
-	height: 72%;
-	background: var(--hp-status-merged);
+
+.hp-operational-story__kind-label::before {
+	content: "";
+	width: 7px;
+	height: 7px;
+	flex: none;
+	border-radius: 50%;
+	background: currentColor;
+	box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 16%, transparent);
 }
-.hp-mini-diagram span:nth-child(3) {
-	height: 56%;
+
+/* kind marker colour mirrors the EvidenceBoard kind map (governance evergreen,
+	 demo river) — colour plus the always-present kind word. */
+.hp-operational-story__check.is-kind-governance .hp-operational-story__kind-label {
+	color: var(--wp--preset--color--green-700);
 }
-.hp-mini-diagram span:nth-child(4) {
-	height: 88%;
-	background: var(--hp-status-review);
+
+.hp-operational-story__check.is-kind-demo .hp-operational-story__kind-label {
+	color: var(--wp--preset--color--river-500);
 }
-.hp-mini-diagram span:nth-child(5) {
-	height: 64%;
+
+.hp-operational-story__check-body {
+	min-width: 0;
+}
+
+.hp-operational-story__check-title {
+	margin: 0;
+	font-family: var(--hp-font-display);
+	font-weight: var(--hp-weight-title);
+	font-size: var(--wp--preset--font-size--lg);
+	line-height: 1.25;
+	color: var(--hp-neutral-900);
+}
+
+.hp-operational-story__check-meta {
+	margin: var(--hp-gap-xs) 0 0;
+	max-width: 58ch;
+	font: var(--wp--custom--type--ui);
+	line-height: var(--wp--custom--leading--relaxed);
+	color: var(--hp-neutral-600);
+}
+
+.hp-operational-story__path {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--2);
+	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--6);
+	background: var(--wp--custom--surface--sunken);
+	border-top: 1px solid var(--hp-neutral-100);
+}
+
+.hp-operational-story__node {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.6em;
+	flex: none;
+}
+
+.hp-operational-story__connector {
+	flex: 1 0 16px;
+	min-width: 16px;
+	height: 1px;
+	background: var(--hp-neutral-100);
+}
+
+.hp-operational-story__marker {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	flex: none;
+	border: 1px solid var(--hp-neutral-100);
+	border-radius: var(--hp-radius-register);
+	background: var(--wp--custom--surface--card);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	font-weight: var(--wp--custom--weight--medium);
+	color: var(--hp-neutral-600);
+}
+
+.hp-operational-story__node-label {
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+	color: var(--wp--custom--text--faint);
+	white-space: nowrap;
+}
+
+.hp-operational-story__node.is-emphasis .hp-operational-story__marker {
+	background: var(--wp--custom--accent--subtle);
+	border-color: color-mix(
+		in srgb,
+		var(--wp--preset--color--gold-500) 55%,
+		transparent
+	);
+	color: var(--wp--custom--accent--press);
+	box-shadow: var(--hp-shadow-mark);
+}
+
+.hp-operational-story__node.is-emphasis .hp-operational-story__node-label {
+	color: var(--wp--custom--text--accent);
 }
 
 @media (max-width: 781px) {
@@ -804,8 +1029,32 @@ button,
 		border-top: 0;
 	}
 
-	.hp-operational-story {
-		padding: var(--wp--preset--spacing--4);
+	.hp-operational-story__check {
+		grid-template-columns: 1fr;
+		row-gap: var(--wp--preset--spacing--2);
+	}
+
+	.hp-operational-story__panel-head.is-nowrap {
+		flex-wrap: wrap;
+		justify-content: flex-start;
+	}
+
+	.hp-operational-story__node-label {
+		white-space: normal;
+	}
+
+	/* Stack the numbered path vertically on narrow viewports: each node becomes a
+		 full-width row so a long label wraps instead of forcing card overflow, and
+		 the decorative connector rules drop out when there is no longer a row to
+		 span. */
+	.hp-operational-story__path {
+		flex-direction: column;
+		align-items: stretch;
+		gap: var(--wp--preset--spacing--3);
+	}
+
+	.hp-operational-story__connector {
+		display: none;
 	}
 }
 
@@ -1517,6 +1766,15 @@ body.home .hp-site-brand__wapuu {
 	font-size: var(--wp--preset--font-size--2-xs);
 	color: var(--wp--preset--color--parchment-300);
 }
+.hp-footer__colophon a {
+	color: var(--wp--preset--color--parchment-100);
+	text-decoration: none;
+	border-bottom: 1px solid color-mix(in srgb, var(--hp-gold) 45%, transparent);
+}
+.hp-footer__colophon a:hover {
+	color: var(--wp--preset--color--gold-400);
+	border-bottom-color: var(--hp-gold);
+}
 
 /* === design-tokens reference page === */
 .hp-token-swatches {
@@ -2084,6 +2342,13 @@ samp {
 	appearance: none;
 }
 
+/* Themed placeholder: the AA-compliant faint token, not the browser default
+   grey. opacity:1 so Firefox doesn't fade it below the token's contrast. */
+.hp-input__control input::placeholder {
+	color: var(--wp--custom--text--faint);
+	opacity: 1;
+}
+
 .hp-input__control:focus-within {
 	border-color: var(--wp--preset--color--gold-700);
 	outline: 0;
@@ -2169,7 +2434,7 @@ samp {
 	background: var(--wp--custom--accent--hover);
 }
 
-.hp-subscribe__form .hp-input__helper {
+.hp-subscribe__form :is(.hp-input__helper, .hp-subscribe__status) {
 	flex-basis: 100%;
 	margin: 0;
 	color: var(--wp--preset--color--amber);

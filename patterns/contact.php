@@ -20,8 +20,8 @@
 <!-- /wp:paragraph --></section>
 <!-- /wp:group -->
 
-<!-- wp:group {"className":"hp-contact-grid","align":"wide","style":{"spacing":{"margin":{"top":"var:preset|spacing|8"}}},"layout":{"type":"default"}} -->
-<div class="wp-block-group alignwide hp-contact-grid" style="margin-top:var(--wp--preset--spacing--8)"><!-- wp:html -->
+<!-- wp:group {"className":"hp-contact-panel","style":{"spacing":{"margin":{"top":"var:preset|spacing|8"}}},"layout":{"type":"default"}} -->
+<div class="wp-block-group hp-contact-panel" style="margin-top:var(--wp--preset--spacing--8)"><!-- wp:html -->
 <form class="hp-contact-form" action="mailto:htperkins@gmail.com" method="post" enctype="text/plain">
 	<div class="hp-contact-form__row">
 		<label class="hp-input">

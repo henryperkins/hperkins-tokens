@@ -75,7 +75,7 @@ block pattern (or template part / card markup) in the theme:
 | `evidence/ArtifactRow` | `patterns/artifact-row.php` (`.hp-artifact-row`) |
 | `evidence/WorkEntry` | `patterns/work-entry.php` (`.hp-work__entry`) |
 | `evidence/EvidenceBoard` | `patterns/evidence-first.php` (`.hp-evidence-board`) |
-| `evidence/ProductHero` | `patterns/proof-product.php` (`.hp-proof-product`) |
+| `evidence/ProductHero` | `patterns/proof-product.php` (`.hp-product-hero`) |
 | `evidence/OperationalStory` | `patterns/operational-story.php` |
 | `site/SiteHeader` | `parts/header.html` (`.hp-site-header`) |
 | `site/SiteFooter` | `parts/footer.html` (`.hp-footer`) |
@@ -174,3 +174,56 @@ live site after the bump (real deployed CSS, `?ver=0.3.9`, no injection): single
 1440 / 375 / 320**; desktop restores `[mark][wordmark] [inline nav] [search] [Subscribe]` with the
 in-nav search field correctly hidden. Lesson: **bump `Version` on every `style.css` edit, not once per
 work session** — the cache key is content-addressed by that string alone.
+
+## 2026-06-21 — OperationalStory fidelity pass (`evidence/OperationalStory` → `patterns/operational-story.php`)
+
+Rebuilt the theme pattern + CSS to match the design-system component 1:1, fixing a structural drift
+surfaced while implementing the Flavor Agent demo/governance pages **from the real components** (the
+explicit ask: *use the components modeled in the design system*).
+
+- **Was (drifted):** a two-column `hp-operational-story__grid` — a text panel with a fabricated
+  `hp-mini-diagram` (five empty CSS bars that exist in no component) beside a compact evidence board —
+  followed by a detached `hp-signal-strip`. None of that is in the real `OperationalStory.jsx`.
+- **Now (faithful):** a single bordered card (`--surface-card` · `--radius-lg` · `--shadow-sm`) in the
+  component's three bands — a **header** (Marcellus eyebrow · Cormorant `type--h-4` title · `type--ui`
+  intro on `--surface-cool`), a **feature-state / operational-checks panel** (each check an `8rem 1fr`
+  grid: a dot + mono kind word, kind-coloured per the EvidenceBoard map — governance evergreen, demo
+  river — over a Cormorant title + `type--ui` meta), and a **numbered path index** on `--surface-sunken`
+  (`01 — 02 — FA` markers joined by connector rules, the unifying `FA` node gilt-emphasised via
+  `--accent--subtle` / `--accent--press` / `--shadow--gilt`). The old detached signal strip's content
+  folds into the path index, exactly as the component models it.
+- All values resolve to existing theme tokens (no raw hex, no parallel values); `theme.json` unchanged.
+- The **demo page** (post 11) references the pattern via `wp:pattern`, so it now renders the real
+  component with **no content edit**; the **governance page** (post 12) was already composed from real
+  components (ProofBar chips, framed `hp-shot--browser` media, `hp-lead`, `hp-spoke-nav`). Verified on
+  the live site: faithful classes present, `hp-mini-diagram` / `__grid` gone, new CSS deployed.
+- **Still-drifted, out of scope here:** `proof-product.php` (`ProductHero`) diverges from the real
+  component (the DS pairs a board with a framed media slot + an artifacts strip; the theme uses a
+  compact evidence board + shot-stack). Not used by these two pages — flagged for a later pass.
+- `OperationalStory`'s real source (`.jsx` / `.prompt.md` / card HTML) is staged under
+  `../../.design-pull/imladris-design-system/components/evidence/` as the fidelity reference; the other
+  components read this pass (`ProductHero`, `EvidenceBoard`, `ProofBar`, `ArtifactRow`, `Callout`,
+  `PullQuote`) are re-pullable via `/design-pull`.
+
+## 2026-06-22 — ProductHero fidelity + first deployment (`evidence/ProductHero` → `patterns/proof-product.php`)
+
+Brought the theme's ProductHero to fidelity and deployed it where the register demands it.
+
+- **New faithful component (`.hp-product-hero`):** rebuilt `patterns/proof-product.php` + added CSS — a
+  compact evidence board (Marcellus eyebrow · Cormorant `type--h-4` title · intro · `live`/`source` rows:
+  dot + mono kind | Cormorant title + meta, kind-coloured evergreen/river) paired with framed product
+  media (reusing the `.hp-shot--browser` / `--phone` chrome). Matches `ProductHero.jsx`; all theme
+  tokens, `theme.json` unchanged.
+- **Deployed on the DJ Lee & Voices of Judah case study (#17):** the standalone opening desktop browser
+  shot is now the ProductHero media, paired with a live (booking-first homepage → thevoicesofjudah.com)
+  / source (one Cloudflare Worker → dj-judas-v2) board. The phone shot stays inline in Build; the prose,
+  `ArtifactRow` terminus, and reserved quote are untouched (content snapshot at
+  `/tmp/voj-17-backup.html`). This is ProductHero's first real-case-study deployment — it had only been
+  specimen'd. Verified live: 1440 (board+media 42/58) and 320 (columns stack, no overflow).
+- **Register note:** ProductHero is for screenshot-led *visual* work; `EvidenceBoard` is for
+  proof-by-records. The Flavor Agent hub (#120) correctly uses EvidenceBoard (governance proof =
+  contracts, not a hero shot), not ProductHero — that's the design split, not a gap.
+- **Specimen synced:** the `/design-system` specimen (#79) now references the filesystem
+  `hperkins-tokens/proof-product` and `hperkins-tokens/operational-story` patterns instead of
+  carrying stale inline copies. `scripts/verify-design-system-specimen.js` guards against the old
+  `.hp-proof-product`, `hp-operational-story__grid`, and `hp-mini-diagram` markup returning.

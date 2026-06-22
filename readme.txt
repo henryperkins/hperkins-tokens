@@ -244,6 +244,87 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
 
+= 0.3.20 =
+* Subscribe privacy hygiene: registered WordPress personal data export and erase
+  callbacks for the bounded hperkins_tokens_subscribe_requests option, and removed
+  the unreachable already-requested display status now that duplicate requests
+  intentionally resolve to the generic success message.
+* Cleanup: removed the legacy .hp-proof-product CSS selector after the
+  /design-system specimen moved to the live Product Hero pattern, and gitignored
+  local source/draft docs that are not runtime theme assets.
+
+= 0.3.19 =
+* Homepage Work summary: bumped the entry description + footer from XS (13px) to
+  SM (15px) so the teaser reads comfortably. Base .hp-work rules only; the /work/
+  index template (descriptions at MD/19px) is unaffected.
+* /how-this-was-built/: build-report body paragraphs now fill the full content
+  column (dropped the 66ch cap) to align with the Palette/Typography grid, which
+  also gains hairline rules above and below. Scoped .hp-buildreport CSS in
+  assets/imladris-pages.css.
+
+= 0.3.18 =
+* New /how-this-was-built/ page: a public "build report" telling the making-of
+  hperkins.blog end to end — the premise, the WordPress.com -> DigitalOcean
+  droplet platform move (forced by Flavor Agent's plugin needs), the two design
+  systems (tokens-kit -> Imladris), the theme.json source of truth, the content
+  system, the verify-first build loop, the git-evidenced build, and the
+  discipline. Authored from the Imladris design project (docs/imladris.html) as a
+  parchment "dossier", ported to the theme idiom: every hardcoded hex re-pointed
+  to theme tokens, self-hosted fonts (no Google Fonts), no React/bundle. Ships as
+  patterns/how-this-was-built.php + templates/page-how-this-was-built.html (shadow
+  template, binds by slug) with scoped .hp-buildreport layout CSS in
+  assets/imladris-pages.css. theme.json unchanged.
+* Footer: added a "How this site was built" link on the colophon line (AA
+  gold-underline treatment) pointing at the new page.
+
+= 0.3.17 =
+* Contact polish: collapsed the message form to a single readable column on the
+  hero's content measure (the former two-up grid left a tall empty rail beside
+  the form on desktop); the direct-channels icons now sit in a hairline-ruled
+  row beneath the form instead of a sparse sidebar. The newsletter block now uses
+  box-sizing:border-box on /contact/ so its padded width lands on the form's
+  44rem spine instead of bleeding ~40px wider on each side (scoped; the same
+  block on home/single is unchanged).
+* Accessibility: darkened the text--faint token (#6E7A6E -> #656E64) so caption,
+  helper, and hint text clears WCAG AA (4.5:1) on parchment everywhere it is
+  used; gave the contact inputs and message textarea a themed AA placeholder
+  (the faint token, opacity:1) in place of the browser-default grey.
+* Contact form detail: matched the message textarea's text inset to the
+  .hp-input control (spacing-3) so it lines up with the fields above it.
+
+= 0.3.16 =
+* Subscribe endpoint hardening: added a public nonce, per-IP transient
+  throttling, bounded non-autoloaded request storage, optimistic option updates,
+  and generic received messaging for duplicate requests. Server status copy now
+  uses .hp-subscribe__status so JS validation helpers can clear independently.
+* Product Hero / Operational Story cleanup: corrected the generated type token
+  to --wp--custom--type--h-4, gave .hp-product-hero__board an owned layout rule,
+  removed the unused Operational Story signal-kind selector, and let the panel
+  header wrap on narrow screens.
+* Design-system specimen guard: migrated the DB-backed /design-system specimen
+  to the live Product Hero and Operational Story filesystem patterns and added a
+  verifier that fails if legacy inline specimen markup returns.
+
+= 0.3.15 =
+* Product Hero: rebuilt patterns/proof-product.php and added .hp-product-hero CSS
+  to match the design-system ProductHero component (a compact evidence board —
+  live/source rows — paired with framed product media). Deployed it on the
+  DJ Lee & Voices of Judah case study, where the desktop homepage shot now opens
+  as proof + product instead of a bare captioned image; the phone shot stays
+  inline. At 0.3.15 the older .hp-proof-product treatment was retained for the
+  /design-system specimen; it is migrated in 0.3.16. theme.json unchanged.
+
+= 0.3.14 =
+* Operational Story: rebuilt patterns/operational-story.php and its CSS to match
+  the design-system OperationalStory component 1:1 — a single bordered card in
+  three bands (header · feature-state/operational-checks panel · numbered path
+  index with a gilt-emphasised unifying node). Replaces the earlier drifted
+  two-column treatment (a fabricated hp-mini-diagram and a detached signal
+  strip that exist in no component). The Flavor Agent demo page references the
+  pattern, so it now renders the real component with no content edit; the
+  governance page was already composed from real components. theme.json
+  unchanged (design-system 1:1 preserved).
+
 = 0.3.13 =
 * Width system: consolidated the centered prose widths onto the two Imladris
   measure tokens. Leads, standfirsts, and forms now resolve from

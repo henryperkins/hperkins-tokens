@@ -1,11 +1,10 @@
 /**
  * Imladris — progressive enhancement for the contact + subscribe forms.
  *
- * No-JS fallback: both forms submit to their `mailto:` action. With JS we add
- * inline email validation and swap to a confirmation state (the interaction the
- * Imladris Design System's Contact/Subscribe components show), then hand off to
- * the visitor's mail client — the confirmation only ever states what actually
- * happened.
+ * No-JS fallback: the contact form still submits to `mailto:` while the
+ * newsletter form posts to WordPress over HTTPS. JS adds inline email
+ * validation to both forms; the contact form still swaps to a confirmation
+ * state before handing off to the visitor's mail client.
  */
 ( function () {
 	'use strict';
@@ -23,7 +22,7 @@
 		var wrap = fieldWrap( input );
 		if ( wrap ) {
 			wrap.classList.add( 'has-error' );
-			var helper = wrap.querySelector( '.hp-input__helper' );
+			var helper = wrap.querySelector( '.hp-input__helper[data-hp-error]' );
 			if ( ! helper ) {
 				helper = document.createElement( 'span' );
 				helper.className = 'hp-input__helper';
@@ -175,23 +174,10 @@
 			if ( email && ! EMAIL_RE.test( email.value.trim() ) ) {
 				e.preventDefault();
 				setError( email, SUBSCRIBE_EMAIL_ERROR );
-				return;
 			}
-			e.preventDefault();
-			var addr = email ? email.value.trim() : '';
-			go(
-				'mailto:' + MAILTO +
-				'?subject=' + encodeURIComponent( 'Subscribe to the dispatch' ) +
-				'&body=' + encodeURIComponent( 'Please add ' + addr + ' to the fortnightly dispatch.' )
-			);
-			var panel = confirmPanel(
-				'Almost there — confirm in your mail app.',
-				'I just opened a short note to send. Reply to confirm and you are on the list for the fortnightly dispatch.',
-				true
-			);
-			subForm.replaceWith( panel );
-			panel.setAttribute( 'tabindex', '-1' );
-			panel.focus();
+			if ( email ) {
+				email.value = email.value.trim();
+			}
 		} );
 	}
 } )();

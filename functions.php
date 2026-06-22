@@ -11,6 +11,22 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+if ( ! defined( 'HPERKINS_TOKENS_SUBSCRIBE_MAX_REQUESTS' ) ) {
+	define( 'HPERKINS_TOKENS_SUBSCRIBE_MAX_REQUESTS', 200 );
+}
+
+if ( ! defined( 'HPERKINS_TOKENS_SUBSCRIBE_RATE_LIMIT' ) ) {
+	define( 'HPERKINS_TOKENS_SUBSCRIBE_RATE_LIMIT', 5 );
+}
+
+if ( ! defined( 'HPERKINS_TOKENS_SUBSCRIBE_RATE_WINDOW' ) ) {
+	define( 'HPERKINS_TOKENS_SUBSCRIBE_RATE_WINDOW', 10 * MINUTE_IN_SECONDS );
+}
+
+if ( ! defined( 'HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION' ) ) {
+	define( 'HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION', 'hperkins_tokens_subscribe_requests' );
+}
+
 add_action( 'wp_enqueue_scripts', function () {
 	// The parent's assembler_styles() registers 'assembler-style' from
 	// get_stylesheet_directory_uri(), which under a child theme resolves to
@@ -85,9 +101,9 @@ add_action( 'wp_enqueue_scripts', function () {
 	}
 
 	// Progressive enhancement for the contact + subscribe forms: inline email
-	// validation and a confirmation-state swap (the Imladris Design System's
-	// Contact/Subscribe interaction). With JS off, the visible direct-email
-	// links are the no-JS fallback while the form action remains a `mailto:` URL.
+	// validation. The contact form keeps the mail-client handoff/confirmation
+	// state; the subscribe form now posts to WordPress over HTTPS so the browser
+	// never needs to submit the address through a `mailto:` action.
 	$form_enhance_rel  = '/assets/js/form-enhance.js';
 	$form_enhance_file = get_stylesheet_directory() . $form_enhance_rel;
 	if ( file_exists( $form_enhance_file ) ) {
@@ -156,6 +172,294 @@ add_action( 'init', function () {
 		)
 	);
 }, 9 );
+
+/**
+ * Store newsletter subscription requests even when mail delivery is unavailable.
+ *
+ * @param string $email   Subscriber email address.
+ * @param string $referer Source page URL.
+ * @return string stored|duplicate|save-error
+ */
+function hperkins_tokens_store_subscribe_request( $email, $referer ) {
+	global $wpdb;
+
+	$option_name = HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION;
+	$source      = $referer ? esc_url_raw( $referer ) : home_url( '/' );
+	$max_entries = max( 1, (int) apply_filters( 'hperkins_tokens_subscribe_max_requests', HPERKINS_TOKENS_SUBSCRIBE_MAX_REQUESTS ) );
+
+	$normalized_email = strtolower( $email );
+
+	for ( $attempt = 0; $attempt < 3; $attempt++ ) {
+		if ( false === get_option( $option_name, false ) ) {
+			add_option( $option_name, array(), '', false );
+		}
+
+		$requests = get_option( $option_name, array() );
+		if ( ! is_array( $requests ) ) {
+			$requests = array();
+		}
+
+		foreach ( $requests as $request ) {
+			if ( ! empty( $request['email'] ) && strtolower( (string) $request['email'] ) === $normalized_email ) {
+				return 'duplicate';
+			}
+		}
+
+		$next_requests   = $requests;
+		$next_requests[] = array(
+			'email'        => $normalized_email,
+			'source'       => $source,
+			'submitted_at' => current_time( 'mysql', true ),
+		);
+
+		if ( count( $next_requests ) > $max_entries ) {
+			$next_requests = array_slice( $next_requests, -$max_entries );
+		}
+
+		$updated = $wpdb->query(
+			$wpdb->prepare(
+				"UPDATE {$wpdb->options} SET option_value = %s WHERE option_name = %s AND option_value = %s",
+				maybe_serialize( $next_requests ),
+				$option_name,
+				maybe_serialize( $requests )
+			)
+		);
+
+		if ( false === $updated ) {
+			return 'save-error';
+		}
+
+		if ( $updated > 0 ) {
+			wp_cache_delete( $option_name, 'options' );
+			return 'stored';
+		}
+
+		wp_cache_delete( $option_name, 'options' );
+	}
+
+	return 'save-error';
+}
+
+/**
+ * Return a privacy-preserving transient key for the current submitter.
+ *
+ * @return string
+ */
+function hperkins_tokens_get_subscribe_rate_key() {
+	$remote_addr = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
+	if ( '' === $remote_addr || false === filter_var( $remote_addr, FILTER_VALIDATE_IP ) ) {
+		$remote_addr = 'unknown';
+	}
+
+	return 'hperkins_tokens_subscribe_rate_' . md5( $remote_addr . '|' . wp_salt( 'nonce' ) );
+}
+
+/**
+ * Rate-limit public subscribe attempts before validation/storage work.
+ *
+ * @return bool Whether the current request is allowed to continue.
+ */
+function hperkins_tokens_check_subscribe_rate_limit() {
+	$limit = max( 1, (int) apply_filters( 'hperkins_tokens_subscribe_rate_limit', HPERKINS_TOKENS_SUBSCRIBE_RATE_LIMIT ) );
+	$ttl   = max( MINUTE_IN_SECONDS, (int) apply_filters( 'hperkins_tokens_subscribe_rate_window', HPERKINS_TOKENS_SUBSCRIBE_RATE_WINDOW ) );
+	$key   = hperkins_tokens_get_subscribe_rate_key();
+	$count = (int) get_transient( $key );
+
+	if ( $count >= $limit ) {
+		return false;
+	}
+
+	set_transient( $key, $count + 1, $ttl );
+	return true;
+}
+
+/**
+ * Handle secure newsletter subscription requests from the frontend.
+ */
+function hperkins_tokens_handle_subscribe_request() {
+	$email   = isset( $_POST['email'] ) ? sanitize_email( wp_unslash( $_POST['email'] ) ) : '';
+	$nonce   = isset( $_POST['hperkins_tokens_subscribe_nonce'] ) ? sanitize_text_field( wp_unslash( $_POST['hperkins_tokens_subscribe_nonce'] ) ) : '';
+	$referer = wp_get_referer();
+	$status  = 'success';
+
+	if ( ! wp_verify_nonce( $nonce, 'hperkins_tokens_subscribe' ) ) {
+		$status = 'invalid-request';
+	} elseif ( ! hperkins_tokens_check_subscribe_rate_limit() ) {
+		$status = 'rate-limited';
+	} elseif ( ! is_email( $email ) ) {
+		$status = 'invalid-email';
+	} else {
+		$store_status = hperkins_tokens_store_subscribe_request( $email, $referer );
+		if ( 'duplicate' === $store_status ) {
+			$status = 'success';
+		} else {
+			$message = sprintf(
+				"Please add %s to the fortnightly dispatch.\n\nSubmitted from: %s",
+				$email,
+				$referer ? $referer : home_url( '/' )
+			);
+
+			$mail_sent = wp_mail(
+				'htperkins@gmail.com',
+				'Fortnightly dispatch subscription',
+				$message,
+				array( 'Reply-To: ' . $email )
+			);
+
+			if ( 'stored' !== $store_status && ! $mail_sent ) {
+				$status = 'save-error';
+			}
+		}
+	}
+
+	$redirect_to = $referer ? $referer : home_url( '/contact/' );
+	$redirect_to = remove_query_arg( 'hperkins_subscribe', $redirect_to );
+	$redirect_to = add_query_arg( 'hperkins_subscribe', $status, $redirect_to );
+
+	wp_safe_redirect( $redirect_to . '#subscribe', 303, 'hperkins-tokens' );
+	exit;
+}
+add_action( 'admin_post_hperkins_tokens_subscribe', 'hperkins_tokens_handle_subscribe_request' );
+add_action( 'admin_post_nopriv_hperkins_tokens_subscribe', 'hperkins_tokens_handle_subscribe_request' );
+
+/**
+ * Register stored subscribe requests with WordPress personal data exports.
+ *
+ * @param array $exporters Existing privacy exporters.
+ * @return array
+ */
+function hperkins_tokens_register_subscribe_privacy_exporter( $exporters ) {
+	$exporters['hperkins-tokens-subscribe-requests'] = array(
+		'exporter_friendly_name' => __( 'Fortnightly dispatch subscription requests', 'hperkins-tokens' ),
+		'callback'               => 'hperkins_tokens_export_subscribe_request_personal_data',
+	);
+
+	return $exporters;
+}
+add_filter( 'wp_privacy_personal_data_exporters', 'hperkins_tokens_register_subscribe_privacy_exporter' );
+
+/**
+ * Export a stored subscribe request for a matching email address.
+ *
+ * @param string $email_address Email address being exported.
+ * @param int    $page          Export page number.
+ * @return array
+ */
+function hperkins_tokens_export_subscribe_request_personal_data( $email_address, $page = 1 ) {
+	$normalized_email = strtolower( sanitize_email( $email_address ) );
+	$export_items     = array();
+
+	if ( 1 !== (int) $page || ! is_email( $normalized_email ) ) {
+		return array(
+			'data' => $export_items,
+			'done' => true,
+		);
+	}
+
+	$requests = get_option( HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION, array() );
+	if ( ! is_array( $requests ) ) {
+		$requests = array();
+	}
+
+	foreach ( $requests as $index => $request ) {
+		$request_email = isset( $request['email'] ) ? strtolower( (string) $request['email'] ) : '';
+		if ( $request_email !== $normalized_email ) {
+			continue;
+		}
+
+		$source       = isset( $request['source'] ) ? (string) $request['source'] : '';
+		$submitted_at = isset( $request['submitted_at'] ) ? (string) $request['submitted_at'] : '';
+
+		$export_items[] = array(
+			'group_id'    => 'hperkins-tokens-subscribe',
+			'group_label' => __( 'Fortnightly dispatch subscription requests', 'hperkins-tokens' ),
+			'item_id'     => 'hperkins-tokens-subscribe-' . md5( $request_email . '|' . $index . '|' . $submitted_at ),
+			'data'        => array(
+				array(
+					'name'  => __( 'Email address', 'hperkins-tokens' ),
+					'value' => $request_email,
+				),
+				array(
+					'name'  => __( 'Source URL', 'hperkins-tokens' ),
+					'value' => $source,
+				),
+				array(
+					'name'  => __( 'Submitted at', 'hperkins-tokens' ),
+					'value' => $submitted_at,
+				),
+			),
+		);
+	}
+
+	return array(
+		'data' => $export_items,
+		'done' => true,
+	);
+}
+
+/**
+ * Register stored subscribe requests with WordPress personal data erasure.
+ *
+ * @param array $erasers Existing privacy erasers.
+ * @return array
+ */
+function hperkins_tokens_register_subscribe_privacy_eraser( $erasers ) {
+	$erasers['hperkins-tokens-subscribe-requests'] = array(
+		'eraser_friendly_name' => __( 'Fortnightly dispatch subscription requests', 'hperkins-tokens' ),
+		'callback'             => 'hperkins_tokens_erase_subscribe_request_personal_data',
+	);
+
+	return $erasers;
+}
+add_filter( 'wp_privacy_personal_data_erasers', 'hperkins_tokens_register_subscribe_privacy_eraser' );
+
+/**
+ * Remove stored subscribe requests for a matching email address.
+ *
+ * @param string $email_address Email address being erased.
+ * @param int    $page          Erasure page number.
+ * @return array
+ */
+function hperkins_tokens_erase_subscribe_request_personal_data( $email_address, $page = 1 ) {
+	$normalized_email = strtolower( sanitize_email( $email_address ) );
+	$items_removed    = false;
+
+	if ( 1 !== (int) $page || ! is_email( $normalized_email ) ) {
+		return array(
+			'items_removed'  => false,
+			'items_retained' => false,
+			'messages'       => array(),
+			'done'           => true,
+		);
+	}
+
+	$requests = get_option( HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION, array() );
+	if ( ! is_array( $requests ) ) {
+		$requests = array();
+	}
+
+	$next_requests = array();
+	foreach ( $requests as $request ) {
+		$request_email = isset( $request['email'] ) ? strtolower( (string) $request['email'] ) : '';
+		if ( $request_email === $normalized_email ) {
+			$items_removed = true;
+			continue;
+		}
+
+		$next_requests[] = $request;
+	}
+
+	if ( $items_removed ) {
+		update_option( HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION, array_values( $next_requests ), false );
+	}
+
+	return array(
+		'items_removed'  => $items_removed,
+		'items_retained' => false,
+		'messages'       => array(),
+		'done'           => true,
+	);
+}
 
 /**
  * Hide inherited Assembler style variations from this child theme's Site Editor

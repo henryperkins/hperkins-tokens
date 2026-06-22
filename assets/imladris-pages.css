@@ -119,17 +119,12 @@
 /* ===========================================================================
    Contact
    ========================================================================= */
-.hp-contact-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-  gap: var(--wp--preset--spacing--9);
-  align-items: start;
-}
-@media (max-width: 781px) {
-  .hp-contact-grid {
-    grid-template-columns: 1fr;
-    gap: var(--wp--preset--spacing--7);
-  }
+/* Single readable column on the hero's content measure: the message form,
+   then a hairline-ruled "Direct channels" row beneath it. (Was a 2-up grid
+   whose aside held only the icon row, leaving a tall empty rail on desktop.) */
+.hp-contact-panel {
+  display: flex;
+  flex-direction: column;
 }
 
 .hp-contact-form { display: flex; flex-direction: column; gap: var(--wp--preset--spacing--5); }
@@ -150,7 +145,9 @@
   background: var(--wp--custom--surface--card);
   border: 1.5px solid var(--wp--custom--border--strong);
   border-radius: var(--wp--custom--radius--md);
-  padding: 12px 14px;
+  /* Match the .hp-input control inset (spacing-3) so the message text starts
+     on the same left edge as the Name/Email/Subject fields above it. */
+  padding: 11px var(--wp--preset--spacing--3);
   resize: vertical;
   min-height: 140px;
   box-shadow: var(--wp--custom--shadow--inset);
@@ -162,6 +159,10 @@
   border-color: var(--wp--preset--color--gold-700);
   box-shadow: var(--wp--custom--shadow--inset);
   transition: none;
+}
+.hp-contact-form textarea::placeholder {
+  color: var(--wp--custom--text--faint);
+  opacity: 1;
 }
 .hp-contact-form__hint {
   font-family: var(--wp--preset--font-family--body);
@@ -175,10 +176,12 @@
   flex-wrap: wrap;
 }
 
+/* Direct channels: a labelled icon row beneath the form, set off by a hairline
+   rule so it reads as a deliberate footer to the message panel. */
 .hp-contact-aside {
-  display: flex;
-  flex-direction: column;
-  gap: var(--wp--preset--spacing--6);
+  margin-top: var(--wp--preset--spacing--7);
+  padding-top: var(--wp--preset--spacing--6);
+  border-top: 1px solid var(--wp--custom--border--hair);
 }
 
 /* Direct channels — compact profile icon row. */
@@ -216,6 +219,16 @@
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
+}
+
+/* Align the shared newsletter block to the form's content measure on /contact/.
+   .hp-subscribe is content-box with spacing-7 padding, so the 44rem max-width it
+   inherits from the constrained main applies to its content and the padding adds
+   ~80px on top — rendering it wider than the form and off the hero spine.
+   border-box folds that padding inside the inherited 44rem, no magic number.
+   Scoped to /contact/; home.html and single.html keep their own composition. */
+.hp-contact-template .hp-subscribe {
+  box-sizing: border-box;
 }
 
 /* ===========================================================================
@@ -444,4 +457,252 @@
    desktop widths or on the already-fluid hero/masthead titles. */
 :where(h1, h2, h3, h4, .wp-block-heading) {
   overflow-wrap: break-word;
+}
+
+/* =========================================================================
+   Build report — "How hperkins.blog was built"  (/how-this-was-built/)
+   Ported from the Imladris design-system doc (docs/imladris.html): the parchment
+   "dossier" sheet, with every hardcoded hex re-pointed to theme tokens and the
+   Google-Fonts faces swapped for the self-hosted families. Every selector is scoped
+   to .hp-buildreport so the bare-element rules cannot leak into the rest of the site.
+   The sheet centres itself on the page's existing root gutter (no extra main padding).
+   ========================================================================= */
+.hp-buildreport {
+  max-width: 820px;
+  margin: 0 auto;
+  background: var(--wp--custom--surface--card);
+  color: var(--wp--custom--text--default);
+  font-family: var(--wp--preset--font-family--body);
+  font-size: 1.0625rem;
+  line-height: 1.62;
+  padding: clamp(2.75rem, 6vw, 4.5rem) clamp(1.5rem, 6vw, 4.875rem) 4rem;
+  box-shadow: 0 1px 2px rgba(22, 29, 36, .06), 0 18px 50px rgba(22, 29, 36, .12);
+}
+
+/* masthead */
+.hp-buildreport__eyebrow {
+  font-family: var(--wp--preset--font-family--label);
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  font-size: .75rem;
+  color: var(--wp--preset--color--gold-700);
+  margin: 0 0 1.125rem;
+}
+.hp-buildreport h1 {
+  font-family: var(--wp--preset--font-family--display);
+  font-weight: 600;
+  font-size: clamp(2rem, 5vw, 2.875rem);
+  line-height: 1.06;
+  letter-spacing: -.01em;
+  color: var(--wp--custom--text--strong);
+  margin: 0 0 .875rem;
+  text-wrap: balance;
+}
+.hp-buildreport__standfirst {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: var(--wp--custom--text--muted);
+  margin: 0 0 1.625rem;
+  max-width: 60ch;
+}
+.hp-buildreport__rule {
+  height: 0;
+  border: 0;
+  border-top: 1.5px solid var(--wp--preset--color--gold-500);
+  width: 64px;
+  margin: 0 0 1.875rem;
+}
+.hp-buildreport__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .625rem 2.125rem;
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: .75rem;
+  letter-spacing: .02em;
+  color: var(--wp--custom--text--faint);
+  padding-bottom: 2.125rem;
+  margin-bottom: 2.375rem;
+  border-bottom: 1px solid var(--wp--custom--border--hair);
+}
+.hp-buildreport__meta b { color: var(--wp--preset--color--green-700); font-weight: 500; }
+
+/* artifact strip — clickable proof surfaced in the masthead so a stranger can check the work from the first screen */
+.hp-buildreport__artifacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin: 0 0 1.625rem;
+}
+.hp-buildreport a.hp-buildreport__artifact {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  padding: .625rem .8125rem;
+  border: 1px solid var(--wp--custom--border--hair);
+  border-radius: 7px;
+  text-decoration: none;
+  transition: background var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+              border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+.hp-buildreport a.hp-buildreport__artifact:hover {
+  background: var(--wp--custom--surface--sunken);
+  border-color: var(--wp--preset--color--gold-500);
+}
+.hp-buildreport__artifact-label {
+  font-family: var(--wp--preset--font-family--label);
+  text-transform: uppercase;
+  letter-spacing: .13em;
+  font-size: .625rem;
+  color: var(--wp--preset--color--gold-700);
+}
+.hp-buildreport__artifact-val {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: .8125rem;
+  color: var(--wp--preset--color--green-700);
+  word-break: break-word;
+}
+
+/* sections & type */
+.hp-buildreport section { margin: 0 0 2.375rem; }
+.hp-buildreport h2 {
+  font-family: var(--wp--preset--font-family--label);
+  text-transform: uppercase;
+  letter-spacing: .16em;
+  font-size: .8125rem;
+  color: var(--wp--preset--color--green-700);
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: baseline;
+  gap: .75rem;
+}
+.hp-buildreport__n {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: .6875rem;
+  color: var(--wp--preset--color--gold-700);
+  letter-spacing: .04em;
+}
+.hp-buildreport h3 {
+  font-family: var(--wp--preset--font-family--display);
+  font-weight: 600;
+  font-size: 1.4375rem;
+  color: var(--wp--custom--text--strong);
+  margin: 0 0 .375rem;
+  letter-spacing: -.005em;
+}
+.hp-buildreport p { margin: 0 0 .875rem; text-wrap: pretty; }
+.hp-buildreport p:last-child { margin-bottom: 0; }
+.hp-buildreport strong { color: var(--wp--custom--text--strong); font-weight: 600; }
+.hp-buildreport em { color: var(--wp--preset--color--gold-700); font-style: italic; }
+.hp-buildreport code {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: .86em;
+  background: var(--wp--custom--surface--sunken);
+  padding: .05em .32em;
+  border-radius: 5px;
+}
+.hp-buildreport a {
+  color: var(--wp--preset--color--green-700);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--wp--preset--color--gold-500) 45%, transparent);
+}
+.hp-buildreport a:hover { border-bottom-color: var(--wp--preset--color--gold-500); }
+
+/* lede */
+.hp-buildreport__lede {
+  background: var(--wp--custom--surface--sunken);
+  border-left: 2px solid var(--wp--preset--color--gold-500);
+  padding: 1.25rem 1.625rem;
+  margin: 0 0 2.375rem;
+}
+.hp-buildreport__lede p { color: var(--wp--custom--text--default); font-style: italic; font-size: 1.125rem; margin: 0; max-width: 62ch; }
+
+/* process steps */
+.hp-buildreport__steps { display: flex; flex-direction: column; gap: 1.375rem; margin-top: .375rem; }
+.hp-buildreport__step { display: grid; grid-template-columns: 38px 1fr; gap: 1.125rem; }
+.hp-buildreport__step-marker {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: .75rem;
+  color: var(--wp--preset--color--gold-700);
+  padding-top: 5px;
+  border-top: 1.5px solid var(--wp--preset--color--gold-500);
+}
+.hp-buildreport__step p { color: var(--wp--custom--text--muted); margin: 0; }
+
+/* specimen grid */
+.hp-buildreport__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.625rem 2.5rem; margin: 1.75rem 0; padding: 1.75rem 0; border-top: 1px solid var(--wp--custom--border--hair); border-bottom: 1px solid var(--wp--custom--border--hair); }
+.hp-buildreport__spec h3 { font-size: 1.25rem; margin-bottom: .5rem; }
+.hp-buildreport__spec-note { font-size: .9375rem; color: var(--wp--custom--text--muted); margin-bottom: 0; }
+.hp-buildreport__swatches { display: flex; gap: .5rem; margin: .75rem 0 .25rem; }
+.hp-buildreport__sw { flex: 1; height: 42px; border-radius: 5px; border: 1px solid var(--wp--custom--border--hair); }
+.hp-buildreport__key {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: .71875rem;
+  line-height: 1.9;
+  color: var(--wp--custom--text--faint);
+  list-style: none;
+  padding: 0;
+  margin: .625rem 0 0;
+}
+.hp-buildreport__key li { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px dotted var(--wp--custom--border--hair); padding: 2px 0; }
+.hp-buildreport__key b { color: var(--wp--preset--color--green-700); font-weight: 500; }
+.hp-buildreport__type-row { border-top: 1px solid var(--wp--custom--border--hair); padding: .6875rem 0; display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.hp-buildreport__type-row:first-of-type { border-top: 0; }
+.hp-buildreport__type-row .lbl { font-family: var(--wp--preset--font-family--mono); font-size: .6875rem; color: var(--wp--custom--text--faint); white-space: nowrap; }
+
+/* stats bar */
+.hp-buildreport__stats { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--wp--custom--border--hair); border-radius: 8px; overflow: hidden; margin-top: .25rem; }
+.hp-buildreport__stat { padding: 1.125rem 1.25rem; border-right: 1px solid var(--wp--custom--border--hair); }
+.hp-buildreport__stat:last-child { border-right: 0; }
+.hp-buildreport__stat .num { font-family: var(--wp--preset--font-family--display); font-weight: 600; font-size: 2.125rem; color: var(--wp--preset--color--green-700); line-height: 1; }
+.hp-buildreport__stat .cap { font-family: var(--wp--preset--font-family--label); text-transform: uppercase; letter-spacing: .13em; font-size: .65625rem; color: var(--wp--custom--text--faint); margin-top: .5rem; }
+
+/* (diamond-bullet list removed in 0.3.18 — the Three Rings now read as prose) */
+
+/* footer */
+.hp-buildreport__footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--wp--custom--border--hair);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: .6875rem;
+  color: var(--wp--custom--text--faint);
+  letter-spacing: .02em;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.hp-buildreport__epigraph { font-family: var(--wp--preset--font-family--display); font-style: italic; font-size: 1rem; color: var(--wp--preset--color--gold-700); }
+.hp-buildreport__colophon { margin-top: 2.375rem; font-size: .9375rem; color: var(--wp--custom--text--muted); }
+
+/* responsive */
+@media (max-width: 680px) {
+  .hp-buildreport { padding-top: 2.25rem; padding-left: 1.375rem; padding-right: 1.375rem; }
+
+  /* ease the intro density — tighten the masthead stack so the proof strip earns its place without pushing §01 further down (was ~1041px at 320; the lede + standfirst carried most of the weight) */
+  .hp-buildreport__eyebrow { margin-bottom: .875rem; }
+  .hp-buildreport__standfirst { font-size: 1.0625rem; line-height: 1.45; margin-bottom: 1.125rem; }
+  .hp-buildreport__rule { margin-bottom: 1.375rem; }
+  .hp-buildreport__artifacts { gap: .5rem; margin-bottom: 1.125rem; }
+  .hp-buildreport a.hp-buildreport__artifact { padding: .5rem .75rem; }
+  .hp-buildreport__meta { gap: .5rem 1.5rem; padding-bottom: 1.25rem; margin-bottom: 1.5rem; }
+  .hp-buildreport__lede { padding: 1rem 1.125rem; margin-bottom: 1.75rem; }
+  .hp-buildreport__lede p { font-size: 1.0625rem; line-height: 1.5; }
+
+  /* section headings: stack the number over the title and ease tracking so they stop wrapping 2–3 lines */
+  .hp-buildreport h2 { flex-direction: column; align-items: flex-start; gap: .3125rem; letter-spacing: .12em; }
+
+  /* specimen grid → single column; stats → 2×2 (was 4 full-width rows, ~383px tall) with a plus-shaped divider */
+  .hp-buildreport__grid { grid-template-columns: 1fr; }
+  .hp-buildreport__stats { grid-template-columns: 1fr 1fr; }
+  .hp-buildreport__stat { padding: 1rem .9375rem; border-right: 1px solid var(--wp--custom--border--hair); border-bottom: 1px solid var(--wp--custom--border--hair); }
+  .hp-buildreport__stat:nth-child(2n) { border-right: 0; }
+  .hp-buildreport__stat:nth-child(n+3) { border-bottom: 0; }
+}
+
+/* small phones — let the typography specimen labels drop under their samples instead of a compressed table row */
+@media (max-width: 400px) {
+  .hp-buildreport__type-row { flex-direction: column; align-items: flex-start; gap: .1875rem; }
+  .hp-buildreport__type-row .lbl { white-space: normal; }
 }
