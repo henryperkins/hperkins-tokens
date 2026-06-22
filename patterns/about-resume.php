@@ -148,7 +148,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-capability__text"} -->
-<p class="hp-capability__text">I built Prompt Forge because I needed a place to design, iterate, and organize prompts at scale. Then I shipped it so other people could too.</p>
+<p class="hp-capability__text">I built Prompt Forge because I needed a place to design, iterate, and organize prompts at scale. It ships in public and is continually evolving so I can improve it without waiting for a single launch milestone.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:column -->
 
@@ -222,7 +222,7 @@
 <!-- /wp:list -->
 
 <!-- wp:paragraph {"className":"hp-exp__artifacts"} -->
-<p class="hp-exp__artifacts">Artifacts: <a href="/work/flavor-agent/">Flavor Agent</a> &middot; <a href="/work/ai-provider-for-codex/">Scriptorium AI Provider for Codex</a> &middot; <a href="/work/upstream-core-ai-stack/">Core AI stack</a></p>
+<p class="hp-exp__artifacts">Artifacts: <a href="/work/flavor-agent/">Flavor Agent</a> (governed agentic loop, server-side audit trail) &middot; <a href="/work/ai-provider-for-codex/">AI Provider for Codex</a> (architecture and iteration under constraint) &middot; <a href="/work/upstream-core-ai-stack/">Core AI stack</a> (merged contribution, named in the AI Plugin 1.0.0 changelog)</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
@@ -590,7 +590,7 @@
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-project__impact"} -->
-<p class="hp-project__impact">Built a TypeScript-based AI workflow platform with a public repo, production deployment, and features for prompt building, storage, and community sharing.</p>
+<p class="hp-project__impact">A TypeScript AI-workflow platform — prompt building, storage, and sharing — developed in the open. Public repo, in active iteration; I&rsquo;m shipping it incrementally rather than holding it back until it is polished.</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:group {"className":"hp-project__stack","layout":{"type":"flex","flexWrap":"wrap"}} -->

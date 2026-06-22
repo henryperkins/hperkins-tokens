@@ -227,3 +227,41 @@ Brought the theme's ProductHero to fidelity and deployed it where the register d
   `hperkins-tokens/proof-product` and `hperkins-tokens/operational-story` patterns instead of
   carrying stale inline copies. `scripts/verify-design-system-specimen.js` guards against the old
   `.hp-proof-product`, `hp-operational-story__grid`, and `hp-mini-diagram` markup returning.
+
+## 2026-06-22 — Work case-study template → live page #10 (`ai-provider-for-codex`)
+
+Implemented the design project's `templates/work/Work.dc.html` ("Work — Case study") as the live
+**Scriptorium AI Provider for Codex** case study (page #10, child of Work #13). The design supplied the
+*structure*; the content is the plugin's real, already-vetted facts and artifacts — no placeholder
+`v1.2.0 / PR #214 / #` stubs survive.
+
+- **DB content only** — page #10's `post_content` was recast; **no theme files changed** (no `style.css`,
+  no `theme.json`, no `Version` bump). Every component reused an existing, already-styled class, so the
+  page is composed entirely from the theme's evidence patterns. A backup of the prior content is kept at
+  `/tmp/codex-rebuild/page-10-content.backup.*.html`.
+- **DS component → block markup used:** hero (kicker `hp-template-hero__kicker` + mono meta line +
+  `ProofBar`/`hp-proof-bar`) → The brief → `Callout`/`hp-callout is-tone-note` ("Operating principle") →
+  **The work** as a `WorkEntry`/`hp-work__entry` ledger (3× `is-status-merged` "Shipped" with
+  `hp-artifact-row` termini, 1× `is-status-pending` reserved slot) → kept Product-surface screenshots →
+  Outcome / Efficiency → closing `ArtifactRow` + reserved `hp-quote is-reserved`.
+- **Deliberate divergences from the template (recorded, not drift):**
+  - **Screenshots kept instead of `EvidenceBoard`.** The template's `showEvidence` board is the records
+    substitute *for cases with no visuals*; this case has 4 real admin screenshots (the boundary made
+    visible), so the ledger artifacts + closing ArtifactRow carry the records and the screenshots stay —
+    the component's documented intent, not an omission.
+  - **Tags + CTA buttons dropped** to match the existing case studies (DJ Lee #17) and avoid dead
+    `/topics/` links that have no archive.
+  - **Ledger is done/done/done/pending, not done/done/review/pending.** There is no real third-party
+    review in flight; the honest open item is the **WordPress.org directory submission** — readiness
+    checklist `[pass]`, but the submission itself not yet made — so it takes the reserved `pending` slot
+    (artifact-less, footer "Prepared · readiness checks pass · not yet submitted"). The "gap named, not
+    hidden" principle is preserved truthfully.
+- **Real artifacts, all link-checked (HTTP 200):** repo, releases `v0.1.1` / `v0.1.5`, the `/releases`
+  changelog, and `IDEATION-ARTIFACT.md`. Ledger facts are grounded in the plugin `readme.txt` changelog
+  (five releases May 22 → Jun 13; `codex-image` capability gate and approval-survives-rename both in 0.1.5).
+- **Verified live** (`https://hperkins.blog/work/ai-provider-for-codex/`): HTTP 200, all headings in
+  order, every evidence class present, 0 invalid-block / recovery markers, all 4 screenshots 200, and
+  **no horizontal overflow at 390px**. Desktop (1440) + mobile (390) render-checked via Playwright.
+- The design `templates/work/Work.dc.html` was **read during this pull** (its `support.js` ~54 KB and
+  `ds-base.js` runtime are reference-only React, not vendored). Consistent with the prior pull, the raw
+  `.dc.html` was not mirrored byte-for-byte; re-pullable from the project URL above.

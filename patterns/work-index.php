@@ -102,7 +102,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-work__meta"} -->
-<p class="hp-work__meta">Released 2026-06 &middot; v0.1.5</p>
+<p class="hp-work__meta">Released 2026-06 &middot; v2.0</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
@@ -111,7 +111,7 @@
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-work__desc"} -->
-<p class="hp-work__desc">A localhost-sidecar Codex provider for the WP AI Client; zero Codex or ChatGPT credentials enter WordPress, and the loopback boundary is covered by regression tests.</p>
+<p class="hp-work__desc">A localhost-sidecar Codex provider for the WP AI Client; text and capability-gated image generation run without Codex or ChatGPT secrets entering WordPress, and Request Log coverage keeps activity auditable.</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:group {"className":"hp-artifact-row","layout":{"type":"default"}} -->
@@ -126,7 +126,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="https://github.com/henryperkins/ai-provider-for-codex/releases" rel="noopener">v0.1.5</a></p>
+<p class="hp-artifact__link"><a href="https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v2.0" rel="noopener">v2.0</a></p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:column -->
 

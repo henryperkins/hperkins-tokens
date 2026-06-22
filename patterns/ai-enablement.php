@@ -29,7 +29,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"fontSize":"xs","fontFamily":"mono","textColor":"ink-400"} -->
-<p class="has-ink-400-color has-text-color has-mono-font-family has-xs-font-size">Updated 19 June 2026</p>
+<p class="has-ink-400-color has-text-color has-mono-font-family has-xs-font-size">Updated 22 June 2026</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></header>
 <!-- /wp:group -->
@@ -42,6 +42,44 @@
 <!-- wp:paragraph -->
 <p>WordPress&rsquo;s AI features look scattered until you see the trust model underneath: exposure, governance, and attestation. Exposure makes WordPress usable by agents; governance makes that use accountable to the owner; attestation makes provenance claims verifiable beyond the site. Read together, these projects suggest one emerging trust model in three widening rings &mdash; capability, site, and artifact &mdash; my synthesis of a direction visible across the public roadmap, not a name the project has adopted.</p>
 <!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-artifact-row","layout":{"type":"constrained"}} -->
+<div class="wp-block-group hp-artifact-row"><!-- wp:paragraph {"className":"hp-artifact-row__legend"} -->
+<p class="hp-artifact-row__legend">Portfolio artifact</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:columns {"className":"hp-artifacts"} -->
+<div class="wp-block-columns hp-artifacts"><!-- wp:column {"className":"hp-artifact"} -->
+<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
+<p class="hp-artifact__verifies">presentation</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-artifact__link"} -->
+<p class="hp-artifact__link"><a href="/wp-content/uploads/2026/06/ExposeGovernAttest.pptx">Download deck (.pptx)</a></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:column -->
+
+<!-- wp:column {"className":"hp-artifact"} -->
+<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
+<p class="hp-artifact__verifies">format</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-artifact__link"} -->
+<p class="hp-artifact__link">10-slide lightning talk</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:column -->
+
+<!-- wp:column {"className":"hp-artifact"} -->
+<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
+<p class="hp-artifact__verifies">companion</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-artifact__link"} -->
+<p class="hp-artifact__link">essay version below</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:column --></div>
+<!-- /wp:columns --></div>
 <!-- /wp:group -->
 
 <!-- wp:group {"align":"wide","className":"hp-aie__ringsmap","style":{"spacing":{"margin":{"top":"var:preset|spacing|7"}}},"layout":{"type":"constrained"}} -->

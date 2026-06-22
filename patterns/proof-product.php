@@ -77,7 +77,7 @@ $hperkins_shot_url  = esc_url( file_exists( $hperkins_shot_file ) ? $hperkins_sh
 	<!-- wp:column {"verticalAlignment":"center","width":"58%","className":"hp-product-hero__media"} -->
 	<div class="wp-block-column is-vertically-aligned-center hp-product-hero__media" style="flex-basis:58%">
 		<!-- wp:image {"sizeSlug":"large","linkDestination":"none","className":"hp-shot hp-shot--browser"} -->
-		<figure class="wp-block-image size-large hp-shot hp-shot--browser"><img src="<?php echo $hperkins_shot_url; ?>" alt="Flavor Agent attributed AI request log in the WordPress admin — each AI action tied to a user and reviewable." /></figure>
+		<figure class="wp-block-image size-large hp-shot hp-shot--browser"><img src="<?php echo $hperkins_shot_url; ?>" alt="Flavor Agent AI Activity Log in the WordPress admin showing recorded actions, governance learning metrics, and selected governance evidence." /></figure>
 		<!-- /wp:image -->
 	</div>
 	<!-- /wp:column -->

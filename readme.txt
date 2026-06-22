@@ -244,6 +244,12 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
 
+= 0.3.21 =
+* Mobile performance: added WebP variants for homepage/footer artwork, lazy
+  loaded the below-fold ring-card images, gave the hero mascot intrinsic
+  dimensions, skipped the page-layout CSS on the front page, and set theme font
+  faces to `fontDisplay: swap`.
+
 = 0.3.20 =
 * Subscribe privacy hygiene: registered WordPress personal data export and erase
   callbacks for the bounded hperkins_tokens_subscribe_requests option, and removed

@@ -312,6 +312,7 @@
               "fontWeight": "400 700",
               "fontStyle": "normal",
               "fontStretch": "normal",
+              "fontDisplay": "swap",
               "src": [
                 "file:./assets/fonts/cormorant-garamond.woff2"
               ]
@@ -321,6 +322,7 @@
               "fontWeight": "400 500",
               "fontStyle": "italic",
               "fontStretch": "normal",
+              "fontDisplay": "swap",
               "src": [
                 "file:./assets/fonts/cormorant-garamond-italic.woff2"
               ]
@@ -336,6 +338,7 @@
               "fontFamily": "Marcellus",
               "fontWeight": "400",
               "fontStyle": "normal",
+              "fontDisplay": "swap",
               "src": [
                 "file:./assets/fonts/marcellus.woff2"
               ]
@@ -351,6 +354,7 @@
               "fontFamily": "EB Garamond",
               "fontWeight": "400 600",
               "fontStyle": "normal",
+              "fontDisplay": "swap",
               "src": [
                 "file:./assets/fonts/eb-garamond.woff2"
               ]
@@ -359,6 +363,7 @@
               "fontFamily": "EB Garamond",
               "fontWeight": "400",
               "fontStyle": "italic",
+              "fontDisplay": "swap",
               "src": [
                 "file:./assets/fonts/eb-garamond-italic.woff2"
               ]
@@ -374,6 +379,7 @@
               "fontFamily": "JetBrains Mono",
               "fontWeight": "400 500",
               "fontStyle": "normal",
+              "fontDisplay": "swap",
               "src": [
                 "file:./assets/fonts/jetbrains-mono.woff2"
               ]

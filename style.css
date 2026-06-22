@@ -4,7 +4,7 @@ Theme URI: https://hperkins.blog
 Description: Imladris design system child theme for hperkins.blog — a Rivendell-inspired, parchment-and-evergreen serif editorial system with a mallorn-gold accent and a status-verified evidence layer (done/review/pending by rule-colour and a redundant word). Tokens in theme.json are the source of truth; the render is a consequence.
 Author: Henry Perkins
 Template: assembler
-Version: 0.3.20
+Version: 0.3.21
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -1328,6 +1328,10 @@ body.home .hp-site-brand__wapuu {
 	filter: drop-shadow(var(--wp--custom--shadow--md));
 }
 
+.hp-wapuu-hero__figure picture {
+	display: block;
+}
+
 /* Faint elven-star halo behind the signature mascot (Imladris Home). */
 .hp-wapuu-hero__star {
 	position: absolute;
@@ -1361,6 +1365,12 @@ body.home .hp-site-brand__wapuu {
 	height: 2.5rem;
 	object-fit: contain;
 	display: block;
+}
+
+.hp-wapuu-hero__emblem-picture {
+	flex: none;
+	display: block;
+	line-height: 0;
 }
 
 .hp-wapuu-hero__lockup .hp-wapuu-hero__eyebrow {
@@ -1988,6 +1998,7 @@ samp {
 	background: var(--wp--custom--surface--sunken);
 	padding: 0.1em 0.35em;
 	border-radius: var(--hp-radius-chip);
+	overflow-wrap: anywhere;
 }
 
 /* === Buttons — the Imladris control vocabulary ===
@@ -2515,6 +2526,12 @@ samp {
 	object-fit: cover;
 	object-position: center;
 	opacity: var(--hp-ring-image-opacity);
+}
+
+.hp-ring-card__figure picture {
+	display: block;
+	width: 100%;
+	height: 100%;
 }
 
 .hp-ring-card__veil {

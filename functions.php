@@ -27,6 +27,26 @@ if ( ! defined( 'HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION' ) ) {
 	define( 'HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION', 'hperkins_tokens_subscribe_requests' );
 }
 
+if ( ! function_exists( 'hperkins_tokens_asset_url' ) ) {
+	/**
+	 * Return a cache-busted child-theme asset URL when the file exists.
+	 *
+	 * @param string $relative_path Path relative to the child theme root.
+	 * @return string Asset URL.
+	 */
+	function hperkins_tokens_asset_url( $relative_path ) {
+		$relative_path = '/' . ltrim( $relative_path, '/' );
+		$file          = get_stylesheet_directory() . $relative_path;
+		$url           = get_stylesheet_directory_uri() . $relative_path;
+
+		if ( file_exists( $file ) ) {
+			$url = add_query_arg( 'v', filemtime( $file ), $url );
+		}
+
+		return $url;
+	}
+}
+
 add_action( 'wp_enqueue_scripts', function () {
 	// The parent's assembler_styles() registers 'assembler-style' from
 	// get_stylesheet_directory_uri(), which under a child theme resolves to
@@ -55,7 +75,7 @@ add_action( 'wp_enqueue_scripts', function () {
 	// hand-authored sheet stays untouched; depends on it so the cascade is right.
 	$pages_css_rel  = '/assets/imladris-pages.css';
 	$pages_css_file = get_stylesheet_directory() . $pages_css_rel;
-	if ( file_exists( $pages_css_file ) ) {
+	if ( ! is_front_page() && file_exists( $pages_css_file ) ) {
 		wp_enqueue_style(
 			'hperkins-pages',
 			get_stylesheet_directory_uri() . $pages_css_rel,
@@ -70,18 +90,26 @@ add_action( 'wp_enqueue_scripts', function () {
 		$wapuu_mark_url = add_query_arg( 'v', filemtime( $wapuu_mark_file ), $wapuu_mark_url );
 	}
 
-	$footer_backdrop_file = get_stylesheet_directory() . '/assets/img/imagery/valley-twilight.png';
-	$footer_backdrop_url  = get_stylesheet_directory_uri() . '/assets/img/imagery/valley-twilight.png';
-	if ( file_exists( $footer_backdrop_file ) ) {
-		$footer_backdrop_url = add_query_arg( 'v', filemtime( $footer_backdrop_file ), $footer_backdrop_url );
+	$footer_backdrop_png_file  = get_stylesheet_directory() . '/assets/img/imagery/valley-twilight.png';
+	$footer_backdrop_webp_file = get_stylesheet_directory() . '/assets/img/imagery/valley-twilight.webp';
+	$footer_backdrop_png_url   = hperkins_tokens_asset_url( 'assets/img/imagery/valley-twilight.png' );
+	$footer_backdrop_image     = 'url(' . wp_json_encode( esc_url( $footer_backdrop_png_url ), JSON_UNESCAPED_SLASHES ) . ')';
+
+	if ( file_exists( $footer_backdrop_png_file ) && file_exists( $footer_backdrop_webp_file ) ) {
+		$footer_backdrop_webp_url = hperkins_tokens_asset_url( 'assets/img/imagery/valley-twilight.webp' );
+		$footer_backdrop_image    = sprintf(
+			'image-set(url(%1$s) type("image/webp"), url(%2$s) type("image/png"))',
+			wp_json_encode( esc_url( $footer_backdrop_webp_url ), JSON_UNESCAPED_SLASHES ),
+			wp_json_encode( esc_url( $footer_backdrop_png_url ), JSON_UNESCAPED_SLASHES )
+		);
 	}
 
 	wp_add_inline_style(
 		'hperkins-tokens',
 		sprintf(
-			':root{--hp-wapuu-mark-url:url(%1$s);--hp-footer-backdrop-url:url(%2$s);}',
+			':root{--hp-wapuu-mark-url:url(%1$s);--hp-footer-backdrop-url:%2$s;}',
 			wp_json_encode( esc_url( $wapuu_mark_url ), JSON_UNESCAPED_SLASHES ),
-			wp_json_encode( esc_url( $footer_backdrop_url ), JSON_UNESCAPED_SLASHES )
+			$footer_backdrop_image
 		)
 	);
 
@@ -172,6 +200,19 @@ add_action( 'init', function () {
 		)
 	);
 }, 9 );
+
+/**
+ * Send the agent-owned seed page to the public demo page.
+ */
+function hperkins_tokens_redirect_flavor_agent_demo_seed() {
+	if ( is_admin() || ! is_page( 'flavor-agent-demo' ) ) {
+		return;
+	}
+
+	wp_safe_redirect( home_url( '/work/flavor-agent/demo/' ), 301, 'hperkins-tokens' );
+	exit;
+}
+add_action( 'template_redirect', 'hperkins_tokens_redirect_flavor_agent_demo_seed' );
 
 /**
  * Store newsletter subscription requests even when mail delivery is unavailable.
