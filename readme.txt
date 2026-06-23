@@ -244,6 +244,16 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
 
+= 0.3.26 =
+* /ai-enablement/ essay — line edits for density and rhythm (no meaning or
+  links changed). The intro splits the trust-model sentence and turns the
+  exposure/governance/attestation triple into a "Three moves recur" list, then
+  recasts the three-rings synthesis as two sentences ("That synthesis is
+  mine"). In Attest, the Durable-credentials line breaks into two sentences. In
+  the closing, the "targets that move faster" passage is rebuilt around "match
+  the source to the job" with the living-roadmaps clause split off. Prose only,
+  in patterns/ai-enablement.php; no theme.json or style.css change.
+
 = 0.3.25 =
 * /how-this-was-built/ reframed as a builder's field guide. The page keeps the
   real build of the site as the worked example but now teaches the method: each

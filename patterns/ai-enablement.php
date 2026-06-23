@@ -40,7 +40,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph -->
-<p>WordPress&rsquo;s AI features look scattered until you see the trust model underneath: exposure, governance, and attestation. Exposure makes WordPress usable by agents; governance makes that use accountable to the owner; attestation makes provenance claims verifiable beyond the site. Read together, these projects suggest one emerging trust model in three widening rings &mdash; capability, site, and artifact &mdash; my synthesis of a direction visible across the public roadmap, not a name the project has adopted.</p>
+<p>WordPress&rsquo;s AI features look scattered until you see the trust model underneath. Three moves recur: exposure makes WordPress usable by agents, governance makes that use accountable to the owner, and attestation makes provenance claims verifiable beyond the site. Read together, these projects suggest one trust model in three widening rings: capability, site, and artifact. That synthesis is mine &mdash; a direction visible across the public roadmap, not a name the project has adopted.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
@@ -182,7 +182,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph -->
-<p>Open C2PA proposals cover <a href="https://github.com/WordPress/ai/pull/459">detecting existing Content Credentials on upload</a> and signing new provenance claims to <a href="https://github.com/WordPress/ai/pull/294">post text</a> and <a href="https://github.com/WordPress/ai/pull/302">images</a>. <a href="https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html">Durable credentials</a> use additional bindings such as fingerprints or watermarks to help recover a remotely stored manifest when embedded metadata is stripped. This direction aligns with <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689">Article 50 of the EU AI Act</a>, scheduled to apply from 2 August 2026, which requires providers of certain generative systems to mark outputs in machine-readable form, making artificially generated or manipulated content detectable. C2PA is one possible implementation path, not the legal requirement itself.</p>
+<p>Open C2PA proposals cover <a href="https://github.com/WordPress/ai/pull/459">detecting existing Content Credentials on upload</a> and signing new provenance claims to <a href="https://github.com/WordPress/ai/pull/294">post text</a> and <a href="https://github.com/WordPress/ai/pull/302">images</a>. <a href="https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html">Durable credentials</a> add bindings such as fingerprints or watermarks. When embedded metadata is stripped, these help recover a manifest stored remotely. This direction aligns with <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689">Article 50 of the EU AI Act</a>, scheduled to apply from 2 August 2026, which requires providers of certain generative systems to mark outputs in machine-readable form, making artificially generated or manipulated content detectable. C2PA is one possible implementation path, not the legal requirement itself.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
@@ -216,7 +216,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph -->
-<p>For targets that move faster than memory can settle, I use digests and search for discovery, primary documentation and changelogs for release facts, GitHub for live implementation state, and living roadmaps to hold what no single source captures &mdash; the WordPress AI one runs a repository census on refresh because even an official board misses pull requests. I ground the agents I rely on with Cloudflare AI Search so their answers stay anchored to retrieved sources, then verify the load-bearing claims myself.</p>
+<p>Some targets move faster than memory can settle, so I match the source to the job: digests and search for discovery, primary docs and changelogs for release facts, GitHub for live implementation state. Living roadmaps hold what no single source captures &mdash; the WordPress AI one runs a repository census on refresh, because even an official board misses pull requests. I ground the agents I rely on with Cloudflare AI Search so their answers stay anchored to retrieved sources, then verify the load-bearing claims myself.</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph -->
