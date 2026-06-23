@@ -4,7 +4,7 @@ Theme URI: https://hperkins.blog
 Description: Imladris design system child theme for hperkins.blog — a Rivendell-inspired, parchment-and-evergreen serif editorial system with a mallorn-gold accent and a status-verified evidence layer (done/review/pending by rule-colour and a redundant word). Tokens in theme.json are the source of truth; the render is a consequence.
 Author: Henry Perkins
 Template: assembler
-Version: 0.3.22
+Version: 0.3.25
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -1084,10 +1084,6 @@ header.wp-block-template-part {
 	z-index: 30;
 }
 
-body.home header.wp-block-template-part {
-	position: static;
-}
-
 .hp-site-header__inner {
 	gap: var(--wp--preset--spacing--4);
 }
@@ -1097,21 +1093,21 @@ body.home header.wp-block-template-part {
 	align-items: center;
 }
 
-/* Compact brand mark: a crisp, pre-cropped transparent head of the signature
-	 Wapuu sat on a clean disc. No zoom-crop of the busy full figure and no baked
-	 white box — the source art's white field is gone, so the disc edge stays
-	 clean and the linework reads at avatar scale. */
-.hp-site-brand__wapuu {
-	display: block;
-	width: 2.125rem;
-	aspect-ratio: 1;
+/* Brand emblem: the Council 8-pointed star in brand evergreen. Replaces the
+	 round Wapuu mark; the full Wapuu now lives only in the hero, so the mascot
+	 appears exactly once per page. */
+.hp-site-brand__emblem {
+	display: inline-flex;
 	flex: 0 0 auto;
-	border-radius: var(--hp-radius-pill);
-	background:
-		var(--hp-wapuu-mark-url, url("assets/wapuu/wapuu-mark.png")) 50% 36% / 116%
-			auto no-repeat,
-		var(--hp-neutral-0);
-	box-shadow: var(--hp-shadow-mark);
+	width: 1.625rem;
+	height: 1.625rem;
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-site-brand__emblem svg {
+	display: block;
+	width: 100%;
+	height: 100%;
 }
 
 .hp-site-brand .wp-block-site-title {
@@ -1135,6 +1131,23 @@ body.home header.wp-block-template-part {
 
 .hp-site-nav {
 	min-width: 0;
+}
+
+/* Desktop: optically center the nav by giving the flanking brand and actions
+	 equal flex, so the menu sits in the middle of the bar (Council masthead). */
+@media (min-width: 782px) {
+	.hp-site-header__inner > .hp-site-brand,
+	.hp-site-header__inner > .hp-site-actions {
+		flex: 1 1 0;
+	}
+
+	.hp-site-header__inner > .hp-site-actions {
+		justify-content: flex-end;
+	}
+
+	.hp-site-header__inner > .hp-site-nav {
+		flex: 0 1 auto;
+	}
 }
 
 .hp-site-header .wp-block-navigation {
@@ -1172,7 +1185,9 @@ body.home header.wp-block-template-part {
 	.wp-block-navigation__responsive-container.is-menu-open:not(
 		.disable-default-overlay
 	) {
-	background-color: color-mix(in srgb, var(--hp-neutral-0) 94%, transparent);
+	/* Council drawer is a solid parchment sheet — the old translucent card let
+	   the hero bleed through once the frosted blur was dropped. */
+	background-color: var(--wp--preset--color--parchment-50);
 }
 
 .hp-site-header
@@ -1191,72 +1206,55 @@ body.home header.wp-block-template-part {
 	justify-content: center;
 }
 
-/* --- Home: promote the bar into the hero band ---
-	 Drop the bar's own surface and divider and lay down the SAME grid as the
-	 hero so the two read as one continuous header; retire the small mark since
-	 the full Wapuu is about to appear right below it. The grid's vertical lines
-	 share the viewport origin with the hero's, so the seam is invisible. */
-body.home .hp-site-header {
-	position: static;
-	-webkit-backdrop-filter: none;
-	backdrop-filter: none;
-	border-bottom: 0;
-	background:
-		linear-gradient(
-			90deg,
-			color-mix(
-					in srgb,
-					var(--hp-action) var(--hp-grid-action-tint),
-					transparent
-				)
-				1px,
-			transparent 1px
-		),
-		linear-gradient(
-			color-mix(
-					in srgb,
-					var(--hp-status-merged) var(--hp-grid-status-tint),
-					transparent
-				)
-				1px,
-			transparent 1px
-		),
-		var(--hp-neutral-0);
-	background-size: var(--hp-grid-pitch) var(--hp-grid-pitch);
-}
-
-body.home .hp-site-brand__wapuu {
-	display: none;
-}
-
 .hp-wapuu-hero-wrap {
-	/* Airy, near-full-height hero with generous symmetric rhythm, matching the
-	   Imladris Home composition (which centres the copy/art in a tall band). */
+	/* Council hero: a parchment-washed concept-art texture. The bitmap is a
+	   softened atmosphere layer so the 1672px source never has to read as a sharp
+	   full-bleed photograph on high-density screens. */
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
 	margin-block: 0 var(--wp--preset--spacing--9);
 	padding-block: var(--wp--preset--spacing--9);
 	border-bottom: 1px solid var(--hp-neutral-100);
+	background: var(--wp--custom--surface--page);
+}
+
+.hp-wapuu-hero-wrap::before,
+.hp-wapuu-hero-wrap::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+}
+
+.hp-wapuu-hero-wrap::before {
+	inset: -0.75rem;
+	background: var(--hp-council-hero-backdrop-url, url("assets/img/imagery/elvenbook.png"))
+		center 46% / cover no-repeat;
+	filter: blur(2.5px) saturate(0.92);
+	opacity: 0.58;
+	transform: scale(1.02);
+}
+
+.hp-wapuu-hero-wrap::after {
 	background:
 		linear-gradient(
 			90deg,
-			color-mix(
-					in srgb,
-					var(--hp-action) var(--hp-grid-action-tint),
-					transparent
-				)
-				1px,
-			transparent 1px
+			color-mix(in srgb, var(--wp--custom--surface--page) 96%, transparent) 0%,
+			color-mix(in srgb, var(--wp--custom--surface--page) 80%, transparent) 42%,
+			color-mix(in srgb, var(--wp--custom--surface--page) 38%, transparent) 100%
 		),
 		linear-gradient(
-			color-mix(
-					in srgb,
-					var(--hp-status-merged) var(--hp-grid-status-tint),
-					transparent
-				)
-				1px,
-			transparent 1px
-		),
-		var(--hp-neutral-0);
-	background-size: var(--hp-grid-pitch) var(--hp-grid-pitch);
+			180deg,
+			color-mix(in srgb, var(--wp--preset--color--parchment-50) 62%, transparent),
+			color-mix(in srgb, var(--wp--preset--color--parchment-100) 50%, transparent)
+		);
+}
+
+.hp-wapuu-hero-wrap > * {
+	position: relative;
+	z-index: 1;
 }
 
 .hp-wapuu-hero.wp-block-columns {
@@ -1274,22 +1272,22 @@ body.home .hp-site-brand__wapuu {
 }
 
 .hp-wapuu-hero__eyebrow {
-	margin: 0 0 var(--wp--preset--spacing--3);
-	font-family: var(--wp--preset--font-family--mono);
+	margin: 0 0 var(--wp--preset--spacing--4);
+	font-family: var(--wp--preset--font-family--label);
 	font-size: var(--wp--preset--font-size--2-xs);
 	line-height: 1.4;
-	letter-spacing: var(--hp-tracking-label);
+	letter-spacing: 0.2em;
 	text-transform: uppercase;
-	color: var(--hp-neutral-600);
+	color: var(--wp--preset--color--gold-700);
 }
 
 .hp-wapuu-hero__title {
-	max-width: 15ch;
+	max-width: 16ch;
 	margin: 0;
-	/* Hero scale, matching Imladris --type-hero capped to the Home clamp. */
-	font-size: clamp(2.75rem, 6vw, 5rem);
-	font-weight: var(--hp-weight-strong);
-	line-height: 1.08;
+	/* Council hero headline: restrained display scale, medium weight. */
+	font-size: clamp(2.6rem, 4.2vw, 3.9rem);
+	font-weight: var(--wp--custom--weight--medium);
+	line-height: 1.04;
 	/* letter-spacing comes from the Cormorant rule below (tracking-tight). */
 	color: var(--hp-neutral-900);
 }
@@ -1351,32 +1349,6 @@ body.home .hp-site-brand__wapuu {
 	height: 100%;
 }
 
-/* Brand lockup: emblem + lapidary label, mirroring the Imladris IMLA*DRIS lockup. */
-.hp-wapuu-hero__lockup {
-	display: flex;
-	align-items: center;
-	gap: var(--wp--preset--spacing--3);
-	margin: 0 0 var(--wp--preset--spacing--5);
-}
-
-.hp-wapuu-hero__emblem {
-	flex: none;
-	width: 2.5rem;
-	height: 2.5rem;
-	object-fit: contain;
-	display: block;
-}
-
-.hp-wapuu-hero__emblem-picture {
-	flex: none;
-	display: block;
-	line-height: 0;
-}
-
-.hp-wapuu-hero__lockup .hp-wapuu-hero__eyebrow {
-	margin: 0;
-}
-
 /* Hero CTAs: a filled primary + outlined secondary, sized up for the fold. */
 .hp-wapuu-hero__cta {
 	margin-top: var(--wp--preset--spacing--6);
@@ -1399,10 +1371,6 @@ body.home .hp-site-brand__wapuu {
 		min-width: 0;
 	}
 
-	.hp-site-brand__wapuu {
-		display: none;
-	}
-
 	.hp-site-nav {
 		width: auto;
 		order: 3;
@@ -1421,48 +1389,43 @@ body.home .hp-site-brand__wapuu {
 		.wp-block-navigation__responsive-container.is-menu-open:not(
 			.disable-default-overlay
 		) {
-		top: calc(
-			var(--hp-touch-min) + var(--wp--preset--spacing--2) +
-				var(--wp--preset--spacing--3)
-		);
-		right: var(--wp--preset--spacing--3);
+		/* Council drawer: a full-width parchment sheet glued to the bar's
+		   underside. Absolute (not core's fixed) + top:100% against the sticky,
+		   relative .hp-site-header auto-aligns it to the real bar height — so it
+		   sits flush whether or not the admin bar is present. */
+		position: absolute;
+		top: 100%;
+		right: 0;
 		bottom: auto;
-		left: var(--wp--preset--spacing--3);
+		left: 0;
 		box-sizing: border-box;
-		width: auto;
+		width: 100%;
 		max-height: calc(
 			100svh - var(--hp-touch-min) - var(--wp--preset--spacing--2) -
-				var(--wp--preset--spacing--3) - var(--wp--preset--spacing--3)
+				var(--wp--preset--spacing--2)
 		);
-		padding: var(--wp--preset--spacing--3);
-		overflow: auto;
-		border: 1px solid var(--hp-neutral-100);
-		border-radius: var(--hp-radius-frame);
-		background-image:
-			linear-gradient(
-				180deg,
-				color-mix(in srgb, var(--hp-neutral-0) 96%, transparent),
-				color-mix(in srgb, var(--hp-neutral-50) 92%, transparent)
-			),
-			linear-gradient(
-				90deg,
-				color-mix(in srgb, var(--hp-action) 4%, transparent) 1px,
-				transparent 1px
-			),
-			linear-gradient(
-				color-mix(in srgb, var(--hp-status-merged) 3%, transparent) 1px,
-				transparent 1px
-			);
-		background-size:
-			auto,
-			var(--hp-grid-pitch) var(--hp-grid-pitch),
-			var(--hp-grid-pitch) var(--hp-grid-pitch);
+		padding: 0 0 var(--wp--preset--spacing--5);
+		overflow-x: hidden;
+		overflow-y: auto;
+		border: 0;
+		border-bottom: 1px solid var(--wp--custom--border--hair);
+		border-radius: 0;
+		background: var(--wp--preset--color--parchment-50);
 		box-shadow:
-			0 1px 2px color-mix(in srgb, var(--hp-neutral-900) 8%, transparent),
-			0 18px 46px -22px
-				color-mix(in srgb, var(--hp-neutral-900) 38%, transparent),
-			0 0 0 100vmax color-mix(in srgb, var(--hp-neutral-900) 9%, transparent);
-		backdrop-filter: blur(2px);
+			0 18px 40px -20px
+				color-mix(
+					in srgb,
+					var(--wp--preset--color--twilight-900) 55%,
+					transparent
+				),
+			0 0 0 100vmax
+				color-mix(
+					in srgb,
+					var(--wp--preset--color--twilight-900) 26%,
+					transparent
+				);
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
 	}
 
 	.hp-site-header
@@ -1506,11 +1469,14 @@ body.home .hp-site-brand__wapuu {
 		box-sizing: border-box;
 		width: 100%;
 		min-height: var(--hp-touch-min);
-		padding: 0 var(--wp--preset--spacing--3);
-		border-bottom: 1px solid
-			color-mix(in srgb, var(--hp-neutral-100) 72%, transparent);
-		font-weight: var(--hp-weight-strong);
-		line-height: 1.35;
+		padding: var(--wp--preset--spacing--3) var(--wp--preset--spacing--4);
+		font-family: var(--wp--preset--font-family--label);
+		font-size: var(--wp--preset--font-size--base);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--wp--custom--text--body);
+		border-bottom: 1px solid var(--wp--custom--border--hair);
+		line-height: 1.3;
 	}
 
 	.hp-site-header
@@ -1519,8 +1485,10 @@ body.home .hp-site-brand__wapuu {
 		)
 		.wp-block-navigation__submenu-container {
 		margin: 0;
-		padding: 0 0 0 var(--wp--preset--spacing--3);
-		border-left: 1px solid var(--hp-neutral-100);
+		padding: 0;
+		background: var(--wp--preset--color--parchment-100);
+		border: 0;
+		border-bottom: 1px solid var(--wp--custom--border--hair);
 	}
 
 	.hp-site-header
@@ -1529,8 +1497,20 @@ body.home .hp-site-brand__wapuu {
 		)
 		.wp-block-navigation__submenu-container
 		.wp-block-navigation-item__content {
-		color: var(--hp-neutral-600);
-		font-weight: var(--hp-weight-title);
+		font-family: var(--wp--preset--font-family--body);
+		font-size: var(--wp--preset--font-size--base);
+		letter-spacing: normal;
+		text-transform: none;
+		font-weight: var(--wp--custom--weight--regular);
+		color: var(--wp--custom--text--muted);
+		padding-left: calc(
+			var(--wp--preset--spacing--4) + var(--wp--preset--spacing--3)
+		);
+		border-bottom-color: color-mix(
+			in srgb,
+			var(--wp--custom--border--hair) 70%,
+			transparent
+		);
 	}
 
 	.hp-site-header
@@ -1540,61 +1520,236 @@ body.home .hp-site-brand__wapuu {
 		right: var(--wp--preset--spacing--3);
 	}
 
+	/* The drawer positions against .hp-site-header (sticky, relative), not the
+	   44px nav block — neutralise the nav block's own positioning so top:100%
+	   glues the sheet to the bar regardless of bar height / admin bar. */
+	.hp-site-header .hp-site-nav .wp-block-navigation {
+		position: static;
+	}
+
+	/* Submenu parents become accordion rows: the label stays a tappable link,
+	   the chevron toggle (re-shown in the @supports block below) flips its own
+	   section. The child list wraps to its own full-width row beneath. */
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open
+		.wp-block-navigation-submenu {
+		/* label | chevron on one row, the sub-list spanning full-width beneath —
+		   grid is predictable here where flex-wrap mis-grew and centred. */
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: center;
+	}
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open
+		.wp-block-navigation-submenu
+		> .wp-block-navigation-item__content {
+		grid-column: 1;
+		width: auto;
+		min-width: 0;
+		margin: 0;
+	}
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open
+		.wp-block-navigation-submenu
+		> .wp-block-navigation__submenu-container {
+		grid-column: 1 / -1;
+		width: auto;
+	}
+
+	/* Nested (2nd-level) sub-list — Work ▸ Flavor Agent Hub ▸ … — deeper indent
+	   with a left rule, tinted a step darker than its parent list. */
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open
+		.wp-block-navigation__submenu-container
+		.wp-block-navigation__submenu-container {
+		margin-left: calc(
+			var(--wp--preset--spacing--4) + var(--wp--preset--spacing--3)
+		);
+		border-left: 2px solid var(--wp--custom--border--hair);
+		background: color-mix(
+			in srgb,
+			var(--wp--preset--color--parchment-100) 92%,
+			var(--wp--custom--text--strong) 8%
+		);
+	}
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open
+		.wp-block-navigation__submenu-container
+		.wp-block-navigation__submenu-container
+		.wp-block-navigation-item__content {
+		padding-left: var(--wp--preset--spacing--3);
+	}
+
+	/* Subscribe CTA at the foot of the drawer — a hp-nav-subscribe link added to
+	   menu 237, rendered as the full-width evergreen pill (Council). */
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open
+		.hp-nav-subscribe
+		.wp-block-navigation-item__content {
+		justify-content: center;
+		width: auto;
+		margin: var(--wp--preset--spacing--4) var(--wp--preset--spacing--4) 0;
+		padding: var(--wp--preset--spacing--3);
+		font-size: var(--wp--preset--font-size--xs);
+		letter-spacing: 0.12em;
+		color: var(--wp--preset--color--parchment-50);
+		background: var(--wp--preset--color--green-700);
+		border: 0;
+		border-radius: var(--wp--custom--radius--md);
+		text-align: center;
+	}
+	.hp-site-header
+		.wp-block-navigation__responsive-container.is-menu-open
+		.hp-nav-subscribe
+		.wp-block-navigation-item__content:hover {
+		color: var(--wp--preset--color--parchment-50);
+		background: var(--wp--preset--color--green-800);
+	}
+
+	/* Real accordions need :has(). Where it's supported, re-show the chevron and
+	   collapse each submenu until its own toggle reports aria-expanded="true".
+	   Where it isn't, this whole block is skipped, so core's always-expanded
+	   list (chevron hidden) stays — children remain reachable either way. */
+	@supports selector(:has(*)) {
+		.hp-site-header
+			.wp-block-navigation__responsive-container.is-menu-open
+			.wp-block-navigation__submenu-icon.wp-block-navigation-submenu__toggle {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			flex: 0 0 auto;
+			width: var(--hp-touch-min);
+			min-height: var(--hp-touch-min);
+			margin: 0;
+			padding: 0;
+			background: transparent;
+			border: 0;
+			color: var(--wp--custom--text--faint);
+			cursor: pointer;
+		}
+		.hp-site-header
+			.wp-block-navigation__responsive-container.is-menu-open
+			.wp-block-navigation__submenu-icon
+			svg {
+			transition: transform var(--wp--custom--dur--fast)
+				var(--wp--custom--ease--calm);
+		}
+		.hp-site-header
+			.wp-block-navigation__responsive-container.is-menu-open
+			.wp-block-navigation__submenu-icon[aria-expanded="true"]
+			svg {
+			transform: rotate(180deg);
+		}
+		.hp-site-header
+			.wp-block-navigation__responsive-container.is-menu-open
+			.wp-block-navigation-submenu
+			> .wp-block-navigation__submenu-container {
+			display: none;
+		}
+		.hp-site-header
+			.wp-block-navigation__responsive-container.is-menu-open
+			.wp-block-navigation-submenu:has(
+				> .wp-block-navigation__submenu-icon[aria-expanded="true"]
+			)
+			> .wp-block-navigation__submenu-container {
+			display: flex;
+		}
+	}
+
 	.hp-wapuu-hero-wrap {
 		padding-block: var(--wp--preset--spacing--5);
 	}
 
+	.hp-wapuu-hero-wrap::before {
+		background-position: 50% 0;
+		background-size: auto 100%;
+		opacity: 0.42;
+	}
+
+	/* Council mobile hero: re-composed, not a shrunk desktop. Wapuu rides ON TOP
+	   in a small medallion over a contained halo, then centered copy, compact
+	   wrapping chips, and full-width stacked CTAs. */
 	.hp-wapuu-hero.wp-block-columns {
-		display: grid !important;
+		display: flex !important;
+		flex-direction: column;
+		align-items: center;
 		gap: var(--wp--preset--spacing--5);
-		grid-template-columns: minmax(0, 1fr);
+		text-align: center;
 	}
 
 	.hp-wapuu-hero .wp-block-column {
-		flex-basis: 100% !important;
+		flex-basis: auto !important;
 		width: 100%;
 	}
 
-	.hp-wapuu-hero__copy,
-	.hp-wapuu-hero__text {
+	.hp-wapuu-hero__copy {
 		max-width: 100%;
+	}
+
+	.hp-wapuu-hero__title {
+		margin-inline: auto;
+		font-size: clamp(2.1rem, 9vw, 2.7rem);
+	}
+
+	.hp-wapuu-hero__text {
+		max-width: 38ch;
+		margin-inline: auto;
 		overflow-wrap: anywhere;
 	}
 
 	.hp-wapuu-hero__signals {
-		display: grid !important;
-		grid-template-columns: minmax(0, 1fr);
+		display: flex !important;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: var(--hp-gap-sm);
 		width: 100%;
 	}
 
 	.hp-wapuu-hero__signals .hp-chip {
-		box-sizing: border-box;
+		width: auto;
+	}
+
+	.hp-wapuu-hero__cta {
+		flex-direction: column;
+		align-items: stretch;
+		width: 100%;
+		max-width: 19rem;
+		margin-inline: auto;
+	}
+
+	.hp-wapuu-hero__cta .wp-block-button,
+	.hp-wapuu-hero__cta .wp-block-button__link {
 		width: 100%;
 	}
 
-	/* The full Wapuu becomes a centered accent BELOW the copy, capped small so it
-	   never dominates the fold or bleeds past the column the way the old
-	   white-boxed image did. */
+	.hp-wapuu-hero__cta .wp-block-button__link {
+		text-align: center;
+	}
+
+	/* Wapuu rides ABOVE the copy on mobile. */
 	.hp-wapuu-hero__art {
+		order: -1;
 		justify-content: center;
 	}
 
-	/* The halo is a desktop flourish; on the stacked mobile layout it would
-	   overflow the capped mascot, so drop it. */
+	/* Contained halo behind the small medallion (sized to the figure, not the
+	   full-width column, so it never overflows into the copy). */
 	.hp-wapuu-hero__star {
-		display: none;
+		display: block;
+		width: 15rem;
+		height: 15rem;
 	}
 
 	.hp-wapuu-hero__figure {
-		width: auto;
-		max-width: 100%;
+		width: 13rem;
+		max-width: 62vw;
 		margin-inline: auto;
 	}
 
 	.hp-wapuu-hero__figure img {
-		width: auto;
+		width: 100%;
 		max-width: 100%;
-		max-height: 12rem;
+		height: auto;
 	}
 }
 
@@ -3211,12 +3366,16 @@ samp {
 	color: var(--wp--custom--text--muted);
 }
 
-/* ---- TAG PILLS (hero role tags + skills) ---------------------------- */
-/* Both rows render the design Tag pill (.hp-tag, gold #). Match the
-	 snapshot's tight space-2 gap. */
+/* ---- TAGS (hero role tags + skills) --------------------------------- */
+/* Keep the hashtag vocabulary, but remove the pill radius on the About page
+	 so these read closer to the square proof-bar/status anatomy. */
 .hp-about-template .hp-role-tags,
 .hp-about-template .hp-tag-row {
 	gap: var(--wp--preset--spacing--2);
+}
+
+.hp-about-template :is(.hp-role-tags, .hp-tag-row) .hp-tag {
+	border-radius: 0;
 }
 
 /* ---- INTRO BLOCKQUOTE: raised parchment card ------------------------ */
@@ -3635,62 +3794,120 @@ samp {
 	color: var(--wp--custom--text--accent, var(--wp--preset--color--gold-700));
 	background: color-mix(in srgb, var(--wp--preset--color--gold-500) 12%, transparent);
 }
+/* Council search: the inline field slides open on click (core button-only) and
+   carries a gold underline while open/active; collapsed, only the icon shows. */
+.hp-site-actions .hp-site-search .wp-block-search__input {
+	/* Override Assembler's broad input:not([type=…]) border (specificity ~0,4,1)
+	   so the open field reads as a clean gold underline, not a boxed control. */
+	border: 0 !important;
+	border-bottom: 1.5px solid transparent !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	padding: 6px 8px 6px 4px;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: var(--wp--preset--font-size--sm);
+	color: var(--wp--custom--text--strong);
+	transition: border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+
+.hp-site-actions .hp-site-search .wp-block-search__input:focus {
+	outline: none;
+	border-bottom-color: var(--wp--preset--color--gold-500) !important;
+}
+
+/* Subscribe: evergreen pill with lapidary caps (Council). */
 .hp-site-actions .hp-site-subscribe .wp-block-button__link {
-	padding: 0.45rem 1rem;
+	padding: 0.6rem 1.1rem;
+	font-family: var(--wp--preset--font-family--label);
 	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--parchment-50);
+	background: var(--wp--preset--color--green-700);
+	border-radius: var(--wp--custom--radius--md);
+	white-space: nowrap;
+	transition: background var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+
+.hp-site-actions .hp-site-subscribe .wp-block-button__link:hover {
+	background: var(--wp--preset--color--green-800);
 }
 @media (max-width: 781px) {
 	.hp-site-header .hp-site-actions {
 		display: flex;
 		order: 2;
+		gap: 2px;
 	}
 
-	.hp-site-actions .wp-block-search {
+	/* Council mobile bar = lockup + search + menu. The search icon stays in the
+	   bar (its own affordance, decoupled from the menu); the Subscribe pill moves
+	   to the foot of the drawer (added to menu 237 as hp-nav-subscribe). */
+	.hp-site-actions .hp-site-search {
+		display: flex;
+	}
+
+	.hp-site-actions .hp-site-subscribe {
 		display: none;
 	}
 
-	.hp-site-actions .hp-site-subscribe .wp-block-button__link {
-		padding: 0.4rem 0.85rem;
+	/* Tapping the icon drops the field as a full-width row pinned under the bar
+	   — its own home, not crammed into the menu. The button stays in the bar;
+	   the input is positioned against .hp-site-header (the sticky, relative bar),
+	   so the row glues to the bar's underside like the drawer. */
+	.hp-site-header .hp-site-search,
+	.hp-site-header .hp-site-search .wp-block-search__inside-wrapper {
+		position: static;
+		overflow: visible;
 	}
-}
 
-/* In-overlay search: the Navigation block (menu 237) carries a search field that surfaces in the mobile nav overlay; on desktop the actions cluster owns search, so the in-nav copy is hidden. */
-@media (min-width: 782px) {
-	.hp-site-nav .hp-nav-search {
-		display: none;
+	.hp-site-header .hp-site-search .wp-block-search__button {
+		position: relative;
+		z-index: 1;
 	}
-}
 
-@media (max-width: 781px) {
-	.hp-site-header .is-menu-open .hp-nav-search {
-		width: 100%;
+	.hp-site-header .hp-site-search .wp-block-search__input {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		z-index: 0;
+		box-sizing: border-box;
+		width: auto !important;
 		max-width: none;
-		margin: 0 0 var(--wp--preset--spacing--3);
-	}
-
-	.hp-site-header .is-menu-open .hp-nav-search .wp-block-search__inside-wrapper {
-		border: 1px solid var(--hp-neutral-100);
-		border-radius: var(--hp-radius-frame);
-		background: color-mix(in srgb, var(--hp-neutral-0) 96%, transparent);
-	}
-
-	.hp-site-header .is-menu-open .hp-nav-search .wp-block-search__input {
-		border: 0;
-		background: transparent;
-		min-height: var(--hp-touch-min);
-		padding: 0 var(--wp--preset--spacing--3);
-		font-family: var(--hp-font-body);
-		font-size: var(--wp--preset--font-size--sm);
-		color: var(--wp--custom--text--body);
-	}
-
-	.hp-site-header .is-menu-open .hp-nav-search .wp-block-search__button {
-		min-width: var(--hp-touch-min);
-		min-height: var(--hp-touch-min);
 		margin: 0;
-		background: transparent;
-		border: 0;
+		padding: var(--wp--preset--spacing--3) var(--wp--preset--spacing--4) !important;
+		border: 0 !important;
+		border-bottom: 1px solid var(--wp--custom--border--hair) !important;
+		border-radius: 0 !important;
+		background: color-mix(
+			in srgb,
+			var(--wp--preset--color--parchment-50) 95%,
+			transparent
+		) !important;
+		-webkit-backdrop-filter: saturate(140%) blur(10px);
+		backdrop-filter: saturate(140%) blur(10px);
+		font-family: var(--wp--preset--font-family--body);
+		font-size: var(--wp--preset--font-size--base);
 		color: var(--wp--custom--text--strong);
+		opacity: 1;
+		transition: opacity var(--wp--custom--dur--fast)
+			var(--wp--custom--ease--calm);
+	}
+
+	/* Collapsed: no empty row under the bar. */
+	.hp-site-header
+		.hp-site-search.wp-block-search__searchfield-hidden
+		.wp-block-search__input {
+		opacity: 0;
+		pointer-events: none;
+	}
+}
+
+/* Subscribe sits in the bar on desktop (the actions pill) and at the drawer
+   foot on mobile (the hp-nav-subscribe link in menu 237) — never both. */
+@media (min-width: 782px) {
+	.hp-site-nav .hp-nav-subscribe {
+		display: none;
 	}
 }
 

@@ -659,6 +659,59 @@
 
 /* (diamond-bullet list removed in 0.3.18 — the Three Rings now read as prose) */
 
+/* per-section takeaway — the transferable lesson, addressed to the reader (the "field guide" layer) */
+.hp-buildreport__takeaway {
+  margin: 1.5rem 0 0;
+  padding: 1rem 1.25rem 1.0625rem;
+  background: var(--wp--custom--surface--sunken);
+  border: 1px solid var(--wp--custom--border--hair);
+  border-left: 3px solid var(--wp--preset--color--green-700);
+  border-radius: 7px;
+}
+.hp-buildreport__takeaway-label {
+  display: block;
+  font-family: var(--wp--preset--font-family--label);
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  font-size: .625rem;
+  color: var(--wp--preset--color--gold-700);
+  margin: 0 0 .375rem;
+}
+.hp-buildreport__takeaway p { margin: 0; color: var(--wp--custom--text--default); font-size: 1rem; }
+
+/* "do it yourself" steps intro (the .hp-buildreport__steps grid itself is defined above) */
+.hp-buildreport__steps-intro {
+  margin: 0;
+  font-family: var(--wp--preset--font-family--label);
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: .6875rem;
+  color: var(--wp--custom--text--muted);
+}
+
+/* closing checklist — the guide distilled to a list you can hold a build against */
+.hp-buildreport__checklist { list-style: none; margin: .75rem 0 0; padding: 0; }
+.hp-buildreport__checklist li {
+  position: relative;
+  padding: .6875rem 0 .6875rem 1.875rem;
+  border-top: 1px solid var(--wp--custom--border--hair);
+  color: var(--wp--custom--text--default);
+}
+.hp-buildreport__checklist li:first-child { border-top: 0; }
+.hp-buildreport__checklist li::before {
+  content: "";
+  position: absolute;
+  left: .125rem;
+  top: 1.0625rem;
+  width: 11px;
+  height: 6px;
+  border-left: 2px solid var(--wp--preset--color--green-700);
+  border-bottom: 2px solid var(--wp--preset--color--green-700);
+  transform: rotate(-45deg);
+}
+.hp-buildreport__checklist b { color: var(--wp--custom--text--strong); font-weight: 600; }
+.hp-buildreport__checklist em { font-style: italic; color: var(--wp--preset--color--gold-700); }
+
 /* footer */
 .hp-buildreport__footer {
   margin-top: 3rem;

@@ -244,6 +244,48 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
 
+= 0.3.25 =
+* /how-this-was-built/ reframed as a builder's field guide. The page keeps the
+  real build of the site as the worked example but now teaches the method: each
+  section gains a "For your build" takeaway, the theme/token and build-loop
+  sections gain numbered "do it yourself" steps, and a closing checklist distills
+  a design system that won't drift. Tools used are linked inline to their official
+  first-party documentation (WordPress block-theme / theme.json / patterns /
+  templates / child-theme handbooks and the theme.json reference, WP-CLI wp
+  server, WordPress Studio, Playwright, DigitalOcean Droplets, the Assembler
+  parent, and Claude Design's get-started and design-system articles). New scoped
+  components in assets/imladris-pages.css (.hp-buildreport__takeaway,
+  __takeaway-label, __steps-intro, __checklist; the __steps grid was already
+  defined). No theme.json change.
+
+= 0.3.24 =
+* Council masthead — mobile navigation + search UX (completes the 0.3.23 desktop
+  pass). Search is decoupled from the menu: the bar's search icon now opens a
+  full-width row that drops below the bar (its own home) instead of living inside
+  the nav overlay. The mobile overlay is restyled into the Council drawer — a
+  full-width parchment sheet glued to the bar's underside (twilight scrim, soft
+  shadow) with real accordions: the submenu chevrons are re-shown and each section
+  stays collapsed until tapped (rotating chevron; nested Work / Flavor Agent Hub
+  indents), gated on :has() so browsers without it keep core's always-expanded
+  list. Subscribe moves to the drawer foot as a full-width evergreen CTA, so the
+  mobile bar reads lockup + search + menu. Search and the drawer are mutually
+  exclusive (assets/js/header-search.js, via core's own controls). Navigation menu
+  237: dropped the in-overlay search block, added a hp-nav-subscribe link. All
+  against tokens that already resolve to theme.json (no theme.json change).
+
+= 0.3.23 =
+* Header + hero redesign (Imladris "Council Masthead" direction, pulled from the
+  Header & navigation redesign design project). The masthead is now a frosted,
+  sticky bar on every page with a star-emblem + Site Title lockup, an optically
+  centered nav, a click-to-expand inline search (gold underline; Escape and
+  outside-click collapse via assets/js/header-search.js), and an evergreen
+  Subscribe pill. Dropped the old home-only "merge the bar into the hero grid"
+  treatment. The homepage hero is re-tuned to the Council two-column layout and
+  re-composed on mobile so the Wapuu rides on top over a contained halo, with
+  centered copy, compact wrapping status chips, and full-width stacked CTAs. Real
+  content and the editable core Navigation/Search blocks are preserved; the design
+  reuses tokens that already resolve 1:1 to theme.json (no theme.json change).
+
 = 0.3.22 =
 * Portfolio review remediation: pointed the Work index `PR #501` artifact link at
   the specific pull request (`WordPress/ai/pull/501`) instead of the generic pulls

@@ -94,6 +94,8 @@ add_action( 'wp_enqueue_scripts', function () {
 	$footer_backdrop_webp_file = get_stylesheet_directory() . '/assets/img/imagery/valley-twilight.webp';
 	$footer_backdrop_png_url   = hperkins_tokens_asset_url( 'assets/img/imagery/valley-twilight.png' );
 	$footer_backdrop_image     = 'url(' . wp_json_encode( esc_url( $footer_backdrop_png_url ), JSON_UNESCAPED_SLASHES ) . ')';
+	$hero_backdrop_png_url     = hperkins_tokens_asset_url( 'assets/img/imagery/elvenbook.png' );
+	$hero_backdrop_image       = 'url(' . wp_json_encode( esc_url( $hero_backdrop_png_url ), JSON_UNESCAPED_SLASHES ) . ')';
 
 	if ( file_exists( $footer_backdrop_png_file ) && file_exists( $footer_backdrop_webp_file ) ) {
 		$footer_backdrop_webp_url = hperkins_tokens_asset_url( 'assets/img/imagery/valley-twilight.webp' );
@@ -107,9 +109,10 @@ add_action( 'wp_enqueue_scripts', function () {
 	wp_add_inline_style(
 		'hperkins-tokens',
 		sprintf(
-			':root{--hp-wapuu-mark-url:url(%1$s);--hp-footer-backdrop-url:%2$s;}',
+			':root{--hp-wapuu-mark-url:url(%1$s);--hp-footer-backdrop-url:%2$s;--hp-council-hero-backdrop-url:%3$s;}',
 			wp_json_encode( esc_url( $wapuu_mark_url ), JSON_UNESCAPED_SLASHES ),
-			$footer_backdrop_image
+			$footer_backdrop_image,
+			$hero_backdrop_image
 		)
 	);
 
@@ -140,6 +143,24 @@ add_action( 'wp_enqueue_scripts', function () {
 			get_stylesheet_directory_uri() . $form_enhance_rel,
 			array(),
 			filemtime( $form_enhance_file ),
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
+		);
+	}
+
+	// Progressive enhancement for the Council masthead search: collapse the inline
+	// expanding field on Escape or an outside click. The core/search "button only"
+	// toggle (open/close on click) is the no-JS fallback this only refines.
+	$header_search_rel  = '/assets/js/header-search.js';
+	$header_search_file = get_stylesheet_directory() . $header_search_rel;
+	if ( file_exists( $header_search_file ) ) {
+		wp_enqueue_script(
+			'hperkins-header-search',
+			get_stylesheet_directory_uri() . $header_search_rel,
+			array(),
+			filemtime( $header_search_file ),
 			array(
 				'in_footer' => true,
 				'strategy'  => 'defer',

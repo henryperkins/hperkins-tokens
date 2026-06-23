@@ -525,22 +525,6 @@
 <!-- wp:group {"className":"hp-edu-list","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-edu-list"><!-- wp:group {"className":"hp-edu-card","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-edu-card"><!-- wp:paragraph {"className":"hp-edu-card__degree"} -->
-<p class="hp-edu-card__degree">B.S., Organizational Leadership</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:group {"className":"hp-edu-card__meta","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between"}} -->
-<div class="wp-block-group hp-edu-card__meta"><!-- wp:paragraph {"className":"hp-edu-card__school"} -->
-<p class="hp-edu-card__school">Arizona State University</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-edu-card__period"} -->
-<p class="hp-edu-card__period">Expected May 2026</p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:group --></div>
-<!-- /wp:group -->
-
-<!-- wp:group {"className":"hp-edu-card","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-edu-card"><!-- wp:paragraph {"className":"hp-edu-card__degree"} -->
 <p class="hp-edu-card__degree">A.S., Business Administration &amp; Management</p>
 <!-- /wp:paragraph -->
 
@@ -586,28 +570,32 @@
 <!-- wp:columns {"align":"wide","className":"hp-project-grid"} -->
 <div class="wp-block-columns alignwide hp-project-grid"><!-- wp:column {"className":"hp-project"} -->
 <div class="wp-block-column hp-project"><!-- wp:heading {"level":3,"className":"hp-project__name"} -->
-<h3 class="wp-block-heading hp-project__name"><a href="https://github.com/henryperkins/ai-prompt-pro">Prompt Forge</a></h3>
+<h3 class="wp-block-heading hp-project__name"><a href="https://tarot.lakefrontdev.com/">Tableu</a></h3>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-project__impact"} -->
-<p class="hp-project__impact">A TypeScript AI-workflow platform — prompt building, storage, and sharing — developed in the open. Public repo, in active iteration; I&rsquo;m shipping it incrementally rather than holding it back until it is polished.</p>
+<p class="hp-project__impact">An AI-powered tarot reading app — multiple spread types with reading narratives synthesized by an LLM. React front end, Cloudflare Workers (D1/KV/R2) back end. Deployed and live, shipped in the open.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-artifact__link"} -->
+<p class="hp-artifact__link"><a href="https://github.com/henryperkins/tarot">Code on GitHub →</a></p>
 <!-- /wp:paragraph -->
 
 <!-- wp:group {"className":"hp-project__stack","layout":{"type":"flex","flexWrap":"wrap"}} -->
 <div class="wp-block-group hp-project__stack"><!-- wp:paragraph {"className":"hp-project__tech"} -->
-<p class="hp-project__tech">TypeScript</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-project__tech"} -->
 <p class="hp-project__tech">React</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-project__tech"} -->
-<p class="hp-project__tech">Neon</p>
+<p class="hp-project__tech">Cloudflare Workers</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-project__tech"} -->
-<p class="hp-project__tech">AI</p>
+<p class="hp-project__tech">D1</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">LLM</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:column -->
@@ -642,11 +630,11 @@
 
 <!-- wp:column {"className":"hp-project"} -->
 <div class="wp-block-column hp-project"><!-- wp:heading {"level":3,"className":"hp-project__name"} -->
-<h3 class="wp-block-heading hp-project__name"><a href="https://github.com/henryperkins/wp-hperkins-com">WordPress Portfolio</a></h3>
+<h3 class="wp-block-heading hp-project__name"><a href="https://github.com/henryperkins/ai-provider-for-codex">AI Provider for Codex</a></h3>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-project__impact"} -->
-<p class="hp-project__impact">Maintained a custom WordPress portfolio theme (henrys-digital-canvas) in a public repo with smoke-check automation for the WordPress stack.</p>
+<p class="hp-project__impact">A WordPress AI Client provider plugin that adds Codex text and image models to WordPress core through a local sidecar runtime — per-user device-code login with ChatGPT-managed auth, and a read-only Connectors status screen.</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:group {"className":"hp-project__stack","layout":{"type":"flex","flexWrap":"wrap"}} -->
@@ -659,7 +647,11 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-project__tech"} -->
-<p class="hp-project__tech">Theme Development</p>
+<p class="hp-project__tech">AI Client</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-project__tech"} -->
+<p class="hp-project__tech">Codex</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:column --></div>

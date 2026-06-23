@@ -39,3 +39,7 @@ coverage/
 /docs/howhperkins.md
 /docs/howhperkinswasbuilt.html
 /docs/imladris.html
+
+# Playwright MCP / browser automation session artifacts (local dev only)
+.playwright-mcp/
+docs/blogdocs/**

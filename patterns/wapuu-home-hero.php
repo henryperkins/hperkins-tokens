@@ -9,27 +9,16 @@
 // composition (same framed Wapuu-Dalf medallion the design uses).
 $hperkins_wapuu_png_url  = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu-color.png' ) );
 $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu-color.webp' ) );
-
-$hperkins_emblem_png_url  = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu-emblem-green.png' ) );
-$hperkins_emblem_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu-emblem-green.webp' ) );
 ?>
 <!-- wp:group {"align":"full","className":"hp-wapuu-hero-wrap","layout":{"type":"constrained"}} -->
 <div class="wp-block-group alignfull hp-wapuu-hero-wrap">
 	<!-- wp:columns {"align":"wide","className":"hp-wapuu-hero","verticalAlignment":"center"} -->
 	<div class="wp-block-columns alignwide are-vertically-aligned-center hp-wapuu-hero">
-		<!-- wp:column {"verticalAlignment":"center","width":"58%","className":"hp-wapuu-hero__copy"} -->
-		<div class="wp-block-column is-vertically-aligned-center hp-wapuu-hero__copy" style="flex-basis:58%">
-			<!-- wp:group {"className":"hp-wapuu-hero__lockup","layout":{"type":"flex","flexWrap":"nowrap"}} -->
-			<div class="wp-block-group hp-wapuu-hero__lockup">
-				<!-- wp:html -->
-				<picture class="hp-wapuu-hero__emblem-picture"><source srcset="<?php echo $hperkins_emblem_webp_url; ?>" type="image/webp" /><img class="hp-wapuu-hero__emblem" src="<?php echo $hperkins_emblem_png_url; ?>" alt="" aria-hidden="true" width="40" height="40" loading="eager" decoding="async" fetchpriority="high" /></picture>
-				<!-- /wp:html -->
-
-				<!-- wp:paragraph {"className":"hp-wapuu-hero__eyebrow"} -->
-				<p class="hp-wapuu-hero__eyebrow">Portfolio system</p>
-				<!-- /wp:paragraph -->
-			</div>
-			<!-- /wp:group -->
+		<!-- wp:column {"verticalAlignment":"center","width":"55%","className":"hp-wapuu-hero__copy"} -->
+		<div class="wp-block-column is-vertically-aligned-center hp-wapuu-hero__copy" style="flex-basis:55%">
+			<!-- wp:paragraph {"className":"hp-wapuu-hero__eyebrow"} -->
+			<p class="hp-wapuu-hero__eyebrow">Portfolio system</p>
+			<!-- /wp:paragraph -->
 
 			<!-- wp:heading {"level":1,"className":"hp-wapuu-hero__title"} -->
 			<h1 class="wp-block-heading hp-wapuu-hero__title">Trust must be structural.</h1>
@@ -73,8 +62,8 @@ $hperkins_emblem_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapu
 		</div>
 		<!-- /wp:column -->
 
-		<!-- wp:column {"verticalAlignment":"center","width":"42%","className":"hp-wapuu-hero__art"} -->
-		<div class="wp-block-column is-vertically-aligned-center hp-wapuu-hero__art" style="flex-basis:42%">
+		<!-- wp:column {"verticalAlignment":"center","width":"45%","className":"hp-wapuu-hero__art"} -->
+		<div class="wp-block-column is-vertically-aligned-center hp-wapuu-hero__art" style="flex-basis:45%">
 			<!-- wp:html -->
 			<span class="hp-wapuu-hero__star" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none"><g stroke="currentColor" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 L63.8 16.7 L83.2 16.8 L83.3 36.2 L97 50 L83.3 63.8 L83.2 83.2 L63.8 83.3 L50 97 L36.2 83.3 L16.8 83.2 L16.7 63.8 L3 50 L16.7 36.2 L16.8 16.8 L36.2 16.7 Z"></path><path d="M50 21 L57.5 42.5 L79 50 L57.5 57.5 L50 79 L42.5 57.5 L21 50 L42.5 42.5 Z" opacity="0.6"></path><circle cx="50" cy="50" r="4.5" fill="currentColor" stroke="none"></circle></g></svg></span>
 			<!-- /wp:html -->
