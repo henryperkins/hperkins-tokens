@@ -52,6 +52,8 @@ The main risk is overconfident AI mutating a publishing system. Flavor Agent mit
 
 AI tools for WordPress often start as chat interfaces: ask for help, get generic advice, then manually copy changes back into the editor. Flavor Agent explores a more product-native path. It treats WordPress itself as the workflow surface and asks: **How can AI help edit a live site without becoming an unchecked autonomous actor?**
 
+AI Leadership 2 — Agentic AI Fundamentals — crystallized that shift. Framed as an agentic system, Flavor Agent was no longer only a creative assistant inside WordPress. The central design problem became governance: where the loop closes, who authorizes live mutations, what gets recorded, and when learning is allowed to feed back into action. That is where the project pivoted. The recommendations remained, but as the visible demo surface of a deeper product: a governance layer for AI-mediated change.
+
 The repo's answer is a governance layer. Recommendations are the visible demo, but the deeper product is a contract for safe AI-mediated change: bounded schemas, review gates, activity attribution, freshness signatures, site-key attestation, and drift-safe undo.
 
 ### Objective

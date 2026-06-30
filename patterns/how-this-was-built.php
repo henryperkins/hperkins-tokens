@@ -35,7 +35,7 @@
   </div>
 
   <section>
-    <h2><span class="hp-buildreport__n">01</span> The premise &mdash; prove, don&rsquo;t describe</h2>
+    <h2><span class="hp-buildreport__n" aria-hidden="true">01</span> The premise &mdash; prove, don&rsquo;t describe</h2>
     <p>The structure was reverse-engineered from one job description &mdash; the WordPress VIP Solutions Engineer role &mdash; into five hiring criteria: build and demo a proof-of-concept, fluency in enterprise governance language, awareness of enterprise constraints, the motion of a sales cycle, and written communication treated as a first-class work sample. Every section of the site carries one of them.</p>
     <p>The information architecture mirrors a sales call. A landing strip answers the buyer&rsquo;s three questions; then <strong>Demo</strong>, <strong>AI&nbsp;Governance</strong>, <strong>Work</strong>, and <strong>About/Resume</strong> run the presentation, the discovery conversation, the references, and the close &mdash; four items, nothing competing for a twelve-second scan.</p>
     <div class="hp-buildreport__takeaway">
@@ -45,7 +45,7 @@
   </section>
 
   <section>
-    <h2><span class="hp-buildreport__n">02</span> The platform, chosen then outgrown</h2>
+    <h2><span class="hp-buildreport__n" aria-hidden="true">02</span> The platform, chosen then outgrown</h2>
     <p>The hosting choice was an audit, not a default. WordPress.com Business sat at the intersection of near-zero maintenance, a real code-to-production path, and infrastructure that makes the same governance-first argument as the work it showcases &mdash; and the trade-off was stated plainly rather than hidden: Business is not VIP.</p>
     <p>Then the centerpiece forced a move. <strong>Flavor Agent</strong> &mdash; the governed-AI plugin the whole site exists to demonstrate &mdash; could not run under WordPress.com&rsquo;s plugin constraints. So the install was exported, imported onto a self-hosted <a href="https://docs.digitalocean.com/products/droplets/">DigitalOcean droplet</a>, and development continued there. The work set the requirements for the infrastructure, not the other way around.</p>
     <div class="hp-buildreport__takeaway">
@@ -55,7 +55,7 @@
   </section>
 
   <section>
-    <h2><span class="hp-buildreport__n">03</span> Two design systems</h2>
+    <h2><span class="hp-buildreport__n" aria-hidden="true">03</span> Two design systems</h2>
     <p>The design language was built twice, both in <a href="https://support.claude.com/en/articles/14604416-get-started-with-claude-design">Claude Design</a>. The first &mdash; <code>@hperkins/tokens-kit</code>, an &lsquo;evidence ledger&rsquo; &mdash; was a React kit of fourteen components over a deliberately quiet neutral palette, where the only saturated colour was the three status hues. Its idiom was <em>compose components, don&rsquo;t author classes</em>: status shipped as a prop, never faked with markup, so a &lsquo;merged&rsquo; row was the same green and the same word everywhere it appeared.</p>
     <p>That system was then re-skinned into the current one &mdash; <strong>Imladris</strong> &mdash; a Rivendell-inspired parchment, evergreen, and mallorn-gold serif editorial system of nineteen components and six page templates. The shift traded a neutral proof-ledger for a literary register that frames <em>why</em> the work matters, while keeping the evidence layer intact underneath.</p>
     <div class="hp-buildreport__grid">
@@ -93,7 +93,7 @@
   </section>
 
   <section>
-    <h2><span class="hp-buildreport__n">04</span> The theme &mdash; a design system in theme.json</h2>
+    <h2><span class="hp-buildreport__n" aria-hidden="true">04</span> The theme &mdash; a design system in theme.json</h2>
     <p>The site runs on a custom <a href="https://developer.wordpress.org/themes/advanced-topics/child-themes/">block child theme</a> &mdash; <strong>HPerkins Tokens</strong> &mdash; on Automattic&rsquo;s <a href="https://wordpress.com/theme/assembler">Assembler</a> parent. Its premise is that the design system lives in <a href="https://developer.wordpress.org/themes/global-settings-and-styles/"><code>theme.json</code></a> as a small, named token vocabulary, and every component is a consequence of those tokens rather than a parallel set of hardcoded values.</p>
     <p>The colour contract is locked at the schema level: the stock swatches and every custom colour, gradient, and duotone picker are <a href="https://developer.wordpress.org/block-editor/reference-guides/theme-json-reference/">turned off</a>, so to change a colour you edit <code>theme.json</code>, not a block. The four families are self-hosted, not pulled from a CDN. And the token layer round-trips 1:1 with the Imladris project kept in <a href="https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design">Claude Design</a>, diffed on every pull &mdash; so a token &lsquo;refresh&rsquo; changes nothing, because nothing is left to drift.</p>
     <div class="hp-buildreport__steps">
@@ -126,7 +126,7 @@
   </section>
 
   <section>
-    <h2><span class="hp-buildreport__n">05</span> The content system &mdash; one template, proved three ways</h2>
+    <h2><span class="hp-buildreport__n" aria-hidden="true">05</span> The content system &mdash; one template, proved three ways</h2>
     <p>Every Work entry follows one locked shape &mdash; Problem, Build, Outcome as a causal list, artifact buttons, and a close &mdash; and the published entries each end on the same line, <em>trust is structural</em>, proving it a different way: architecturally, iteratively, methodologically. Visual and non-visual work get different treatments by design, each a <a href="https://developer.wordpress.org/themes/patterns/">block pattern</a> bound to a <a href="https://developer.wordpress.org/themes/templates/">block template</a> &mdash; Evidence First for proof that lives in changelogs and review records; Proof&nbsp;+&nbsp;Product where a screenshot materially proves what shipped; Operational Story reserved for the Flavor Agent pair.</p>
     <p>The written work sample is the long-form essay <a href="/ai-enablement/">&lsquo;Expose, Govern, Attest&rsquo;</a>, which reads WordPress&rsquo;s AI stack as three nested rings of trust: Vilya, the Ring of Air, <em>exposes</em> a capability an agent can inspect; Narya, the Ring of Fire, <em>governs</em> use the owner can audit; and Nenya, the Ring of Water, <em>attests</em> provenance a stranger can verify.</p>
     <p>The essay states the honest part out loud: the rings sit at different maturities &mdash; governance has shipped primitives, exposure is shipped at its foundation with the agent-facing layer still in proposals, and attestation is still in-review pull requests. That is where WordPress core is, not where I wish it already were.</p>
@@ -137,7 +137,7 @@
   </section>
 
   <section>
-    <h2><span class="hp-buildreport__n">06</span> The build loop &mdash; verify before you ship</h2>
+    <h2><span class="hp-buildreport__n" aria-hidden="true">06</span> The build loop &mdash; verify before you ship</h2>
     <p>The inner loop runs locally first &mdash; in <a href="https://developer.wordpress.com/studio/">WordPress Studio</a>, not on the live site &mdash; with render-verification before anything ships: a host-shim mu-plugin, <a href="https://developer.wordpress.org/cli/commands/server/"><code>wp&nbsp;server</code></a>, and <a href="https://playwright.dev/">Playwright</a> confirm that the tokens resolve, the page CSS loads, and the console is clean. The design system stays in sync through a scripted design-pull from the Claude Design project, which diffs the token CSS against <code>theme.json</code> and reports any drift. Verification is the gate, not an afterthought &mdash; the same standard the work itself is built to meet.</p>
     <div class="hp-buildreport__steps">
       <p class="hp-buildreport__steps-intro">Make verification the gate, not the afterthought</p>
@@ -165,8 +165,8 @@
   </section>
 
   <section>
-    <h2><span class="hp-buildreport__n">07</span> What the git log shows</h2>
-    <p>The current system&rsquo;s build is in the record. The theme repo carries the Imladris migration end to end &mdash; the re-skin from the first system to the parchment one &mdash; as thirty commits across two days, each a reviewable step, with the live site reflecting each as caches cleared. <a href="https://github.com/henryperkins/hperkins-tokens">The source is public</a>, so the claims here resolve to it.</p>
+    <h2><span class="hp-buildreport__n" aria-hidden="true">07</span> What the git log shows</h2>
+    <p>The current system&rsquo;s build is in the record. The re-skin from the first system to the parchment one landed fast &mdash; its opening two days were thirty reviewable commits, the live site reflecting each as caches cleared &mdash; and the work has continued in the open since. <a href="https://github.com/henryperkins/hperkins-tokens">The source is public</a>, so the running total is whatever the log shows the day you read this; the figures below mark that opening push.</p>
     <div class="hp-buildreport__stats">
       <div class="hp-buildreport__stat">
         <div class="num">30</div>
@@ -192,7 +192,7 @@
   </section>
 
   <section>
-    <h2><span class="hp-buildreport__n">08</span> The discipline &mdash; the medium is the argument</h2>
+    <h2><span class="hp-buildreport__n" aria-hidden="true">08</span> The discipline &mdash; the medium is the argument</h2>
     <p>One rule runs under every other choice: a claim is only as good as the instrument that can check it, and the instrument should be one the author does not control &mdash; a changelog line, a maintainer&rsquo;s merge, a signed manifest, a deploy that either succeeded or didn&rsquo;t. That is why the site shipped in sequence rather than all at once, and why a stale claim gets corrected rather than defended.</p>
     <p>Because status lives in components and colour lives in tokens, a project added next month inherits the same rules: it shows its state three ways and links its artifacts, and an unfulfilled proof shows up as a visible gap rather than a quiet omission. The site does not claim the work is verifiable &mdash; it is built so that an unverifiable claim has nowhere to hide.</p>
     <div class="hp-buildreport__takeaway">
@@ -202,7 +202,7 @@
   </section>
 
   <section>
-    <h2><span class="hp-buildreport__n">09</span> The checklist &mdash; a system that won&rsquo;t drift</h2>
+    <h2><span class="hp-buildreport__n" aria-hidden="true">09</span> The checklist &mdash; a system that won&rsquo;t drift</h2>
     <p>The method above, distilled to something you can hold a build against &mdash; for a design system that stays coherent and a site that stays its own evidence.</p>
     <ul class="hp-buildreport__checklist">
       <li><b>One token layer.</b> Palette, type, spacing, and semantics live in <code>theme.json</code>; nothing hardcodes a value it could alias.</li>

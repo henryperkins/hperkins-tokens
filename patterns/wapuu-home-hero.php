@@ -17,7 +17,7 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 		<!-- wp:column {"verticalAlignment":"center","width":"55%","className":"hp-wapuu-hero__copy"} -->
 		<div class="wp-block-column is-vertically-aligned-center hp-wapuu-hero__copy" style="flex-basis:55%">
 			<!-- wp:paragraph {"className":"hp-wapuu-hero__eyebrow"} -->
-			<p class="hp-wapuu-hero__eyebrow">Portfolio system</p>
+			<p class="hp-wapuu-hero__eyebrow"><a href="https://aileaderswp.blog/">AI Leaders — First Cohort Finalist</a></p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:heading {"level":1,"className":"hp-wapuu-hero__title"} -->
@@ -26,6 +26,10 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 
 			<!-- wp:paragraph {"className":"hp-wapuu-hero__text"} -->
 			<p class="hp-wapuu-hero__text">I build WordPress AI tooling where the governance is part of the architecture, not a promise in the readme. Scope, build, deploy, explain — and every claim has an artifact behind it.</p>
+			<!-- /wp:paragraph -->
+
+			<!-- wp:paragraph {"className":"hp-wapuu-hero__text"} -->
+			<p class="hp-wapuu-hero__text">I build <a href="/about/">WordPress and AI systems</a> where governance, approval, and proof stay visible.</p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:group {"className":"hp-proof-bar hp-wapuu-hero__signals","layout":{"type":"flex","flexWrap":"wrap"}} -->

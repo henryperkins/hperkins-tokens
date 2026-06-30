@@ -116,6 +116,44 @@
   line-height: var(--wp--custom--leading--relaxed);
 }
 
+/* --- Page-scoped polish: mobile rhythm + the thesis turn ------------- */
+
+/* The hero dek and section heads are fixed display sizes (2-xl / 3-xl) that
+   overpower the essay on phones. Clamp them on narrow viewports while keeping
+   the token as the desktop cap — the same move the hero H1 already makes.
+   Scoped to this page; the sitewide heading scale is untouched. */
+.hp-page-hero__dek {
+  font-size: clamp(1.5rem, 4.3vw + 0.65rem, var(--wp--preset--font-size--2-xl));
+}
+.hp-aie-template h2.wp-block-heading {
+  font-size: clamp(1.875rem, 4.7vw + 0.95rem, var(--wp--preset--font-size--3-xl));
+}
+
+/* Maturity proof bar: a centered row on desktop so it reads as a deliberate
+   coda to the centered rings module above, not a left-justified admin list.
+   Only the bar's arrangement changes; the chip anatomy is untouched. Stacks
+   on phones. */
+.hp-aie__maturity .hp-proof-bar {
+  justify-content: center;
+  align-items: center;
+}
+@media (max-width: 600px) {
+  .hp-aie__maturity .hp-proof-bar { flex-direction: column; }
+}
+
+/* The hinge quote is the essay's thesis turn, not a testimonial, so it earns
+   presence — given here through space and a hairline frame, never by breaking
+   the body-scale quote ceiling in style.css. Centered, ruled top and bottom;
+   the cite keeps its mono treatment and centers with the line. */
+.hp-aie__thesis.wp-block-quote {
+  margin-block: var(--wp--preset--spacing--8);
+  padding: var(--wp--preset--spacing--6) 0;
+  border-left: 0;
+  border-top: 1px solid var(--wp--custom--border--hair);
+  border-bottom: 1px solid var(--wp--custom--border--hair);
+  text-align: center;
+}
+
 /* ===========================================================================
    Contact
    ========================================================================= */
@@ -758,4 +796,47 @@
 @media (max-width: 400px) {
   .hp-buildreport__type-row { flex-direction: column; align-items: flex-start; gap: .1875rem; }
   .hp-buildreport__type-row .lbl { white-space: normal; }
+}
+
+/* --- Embedded session artifact (governed-AI demo) ------------------- */
+/* The Claude Code governance artifact is a self-contained dark, interactive
+   document (view toggle, present mode, evidence lightbox). It is isolated in an
+   iframe so its own CSS/JS never collides with the parchment theme; this block
+   only frames the iframe and its caption. Asset: assets/artifacts/flavor-agent-governance/. */
+.hp-artifact-embed {
+  margin-block: var(--wp--preset--spacing--7) var(--wp--preset--spacing--5);
+}
+.hp-artifact-embed__frame {
+  position: relative;
+  width: 100%;
+  height: min(82vh, 920px);
+  min-height: 540px;
+  border: 1px solid var(--wp--custom--border--soft);
+  border-radius: var(--wp--custom--radius--lg, 14px);
+  background: #0d0d0c;
+  box-shadow: var(--wp--custom--shadow--raised, 0 18px 48px rgba(40, 30, 18, 0.16));
+  overflow: hidden;
+}
+.hp-artifact-embed__frame iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.hp-artifact-embed__caption {
+  margin-top: 0.875rem;
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--xs);
+  line-height: 1.5;
+  color: var(--wp--custom--text--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem 1.25rem;
+  justify-content: space-between;
+}
+.hp-artifact-embed__caption a { color: var(--wp--custom--text--link, var(--wp--preset--color--river-700)); }
+.hp-artifact-embed__caption .hp-artifact-embed__hint { color: var(--wp--custom--text--faint); }
+
+@media (max-width: 680px) {
+  .hp-artifact-embed__frame { height: min(78vh, 720px); min-height: 460px; border-radius: 10px; }
 }

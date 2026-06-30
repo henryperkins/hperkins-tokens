@@ -1,0 +1,84 @@
+{
+  "artifact": "Claude Code — Governed AI + Human Approval + Attestation Demo",
+  "version": 2,
+  "generated": "2026-06-23",
+  "sourceTranscript": {
+    "file": "claude-code-ai-governance-transcript.txt",
+    "lines": 361,
+    "bytes": 40191,
+    "sha256": "7b1e028e133b717680a847aaa3fe5ccc3d5afc7256b39709f371fc73b910126d",
+    "note": "Formatted evidence inserts are additive. Raw view and companion transcript preserve the original source bytes."
+  },
+  "evidence": [
+    {
+      "id": "hitl-01",
+      "index": 1,
+      "file": "evidence/01-pending-activity-queue.jpeg",
+      "sourceFile": "screen1.jpeg",
+      "transcriptAnchorLine": 224,
+      "phase": "Step 5 · Pending request",
+      "title": "The request enters a human-only approval queue",
+      "dimensions": {
+        "width": 2048,
+        "height": 948
+      },
+      "sha256": "c30fa35f72d8af0a14099894b109eff29f4b5e2ed8d656655aa6bdc96736edc8"
+    },
+    {
+      "id": "hitl-02",
+      "index": 2,
+      "file": "evidence/02-pending-review-record.jpeg",
+      "sourceFile": "screen2.jpeg",
+      "transcriptAnchorLine": 229,
+      "phase": "Step 5 · Human review",
+      "title": "The reviewer sees the bounded operation, provenance, and decision controls",
+      "dimensions": {
+        "width": 860,
+        "height": 2048
+      },
+      "sha256": "bd21de5889540c47e4633ea4ab396c0c9f2b7e8529b393c86f39b1ea3ea41d78"
+    },
+    {
+      "id": "hitl-03",
+      "index": 3,
+      "file": "evidence/03-freshness-signatures-and-diagnostics.jpeg",
+      "sourceFile": "screen3.jpeg",
+      "transcriptAnchorLine": 229,
+      "phase": "Step 5 · Freshness evidence",
+      "title": "Freshness signatures bind the human decision to the reviewed state",
+      "dimensions": {
+        "width": 1226,
+        "height": 527
+      },
+      "sha256": "9b53f2e93d66171d8988066497ffe829c29d491cb653771b2b4aa06c87a41f24"
+    },
+    {
+      "id": "hitl-04",
+      "index": 4,
+      "file": "evidence/04-applied-record-and-verification.jpeg",
+      "sourceFile": "screen5.jpeg",
+      "transcriptAnchorLine": 250,
+      "phase": "Step 6 · Applied record",
+      "title": "After approval, the record shows execution, reversibility, and verification routes",
+      "dimensions": {
+        "width": 775,
+        "height": 2048
+      },
+      "sha256": "21f2d50c41fac5f615f75fef2494f9719ab88bf804d8b8ebc296785c185fcb45"
+    },
+    {
+      "id": "hitl-05",
+      "index": 5,
+      "file": "evidence/05-attestation-record.jpeg",
+      "sourceFile": "screen4.jpeg",
+      "transcriptAnchorLine": 250,
+      "phase": "Step 6 · Attestation",
+      "title": "The attestation visibly links the governed change to its subject and signing key",
+      "dimensions": {
+        "width": 1227,
+        "height": 926
+      },
+      "sha256": "9b92cab712d13729d1e7ed034e5ec9dce3ac52d87d002d2d4f375d57987e36d7"
+    }
+  ]
+}

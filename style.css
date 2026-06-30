@@ -4,7 +4,7 @@ Theme URI: https://hperkins.blog
 Description: Imladris design system child theme for hperkins.blog — a Rivendell-inspired, parchment-and-evergreen serif editorial system with a mallorn-gold accent and a status-verified evidence layer (done/review/pending by rule-colour and a redundant word). Tokens in theme.json are the source of truth; the render is a consequence.
 Author: Henry Perkins
 Template: assembler
-Version: 0.3.26
+Version: 0.3.31
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -232,6 +232,16 @@ button,
 .hp-artifact__link em {
 	font-style: italic;
 	color: var(--hp-neutral-600);
+}
+
+/* The deck download is the one real action in this register; give it a primary
+	 reading — a solid action-colored underline and a download glyph — so the row
+	 lands as a payoff, not inert metadata. The register itself stays restrained. */
+.hp-artifact__link.is-download a {
+	border-bottom-color: var(--hp-action);
+}
+.hp-artifact__link.is-download a::after {
+	content: " \2193";
 }
 /* === work ledger === */
 /* The Work list shares the artifact-row anatomy: one bordered register,
@@ -1279,6 +1289,19 @@ header.wp-block-template-part {
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--gold-700);
+}
+
+/* Linked eyebrow (AI Leaders finalist showcase) keeps the lapidary-caps register:
+   inherit the eyebrow colour, signal the link with a hairline rule, not link-blue. */
+.hp-wapuu-hero__eyebrow a {
+	color: inherit;
+	text-decoration: none;
+	border-bottom: 1px solid color-mix(in srgb, currentColor 32%, transparent);
+}
+
+.hp-wapuu-hero__eyebrow a:hover,
+.hp-wapuu-hero__eyebrow a:focus-visible {
+	border-bottom-color: currentColor;
 }
 
 .hp-wapuu-hero__title {
@@ -2459,6 +2482,17 @@ samp {
 	color: var(--wp--preset--color--rust);
 }
 
+/* On phones the icon + body sit in one dense row; stack them and tighten the
+	 inset so the callout reads as a quick aside, not a block heavier than the
+	 prose around it. Tone, rule, and radius are unchanged. */
+@media (max-width: 600px) {
+	.hp-callout {
+		flex-direction: column;
+		gap: var(--wp--preset--spacing--3);
+		padding: var(--wp--preset--spacing--4);
+	}
+}
+
 .hp-input-stack {
 	display: grid;
 	gap: var(--wp--preset--spacing--4);
@@ -2889,6 +2923,77 @@ samp {
 	margin-top: var(--wp--preset--spacing--6);
 }
 
+.hp-front-template__cta {
+	box-sizing: border-box;
+	padding: clamp(1.5rem, 1.15rem + 1.2vw, 2.25rem) 0 0;
+	border-top: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-front-template__cta > * {
+	margin-block-start: 0;
+}
+
+.hp-front-template__cta-kicker {
+	margin: 0;
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+	color: var(--wp--custom--text--accent);
+}
+
+.hp-front-template__cta-title {
+	max-width: 16ch;
+	margin: var(--wp--preset--spacing--3) 0 0;
+	font-family: var(--hp-font-display);
+	font-size: clamp(1.9rem, 1.25rem + 2vw, 3rem);
+	font-weight: var(--wp--custom--weight--medium);
+	letter-spacing: var(--wp--custom--tracking--tight);
+	line-height: var(--wp--custom--leading--snug);
+	color: var(--wp--custom--text--strong);
+	text-wrap: balance;
+}
+
+.hp-front-template__cta-lead {
+	max-width: var(--wp--custom--measure--narrow);
+	margin: var(--wp--preset--spacing--4) 0 0;
+	font-size: var(--wp--preset--font-size--lg);
+	line-height: var(--wp--custom--leading--relaxed);
+	color: var(--wp--custom--text--muted);
+}
+
+.hp-front-template__cta-actions {
+	margin-top: var(--wp--preset--spacing--4);
+	align-items: center;
+}
+
+.hp-front-template__cta-actions .wp-block-button {
+	margin: 0;
+}
+
+@media (min-width: 56rem) {
+	.hp-front-template > .wp-block-post-content > .hp-front-template__rings {
+		--hp-front-wide: min(
+			var(--wp--style--global--wide-size, 72rem),
+			100vw - 2 * var(--wp--style--root--padding-left, 1rem)
+		);
+		width: var(--hp-front-wide);
+		max-width: none;
+		margin-inline: calc(50% - var(--hp-front-wide) / 2) !important;
+		box-sizing: border-box;
+	}
+}
+
+@media (max-width: 600px) {
+	.hp-front-template__cta {
+		padding-top: var(--wp--preset--spacing--6);
+	}
+
+	.hp-front-template__cta-actions {
+		justify-content: flex-start;
+	}
+}
+
 .hp-about-template__content {
 	padding-block: var(--wp--preset--spacing--7);
 }
@@ -3034,6 +3139,10 @@ samp {
 	 auto-fit grid. Only add the top breathing room beneath the hero band. */
 .hp-about-template .hp-about-impact {
 	margin-top: var(--wp--preset--spacing--7);
+}
+
+.hp-about-template .hp-about-core-ai {
+	margin-top: var(--wp--preset--spacing--8);
 }
 
 /* ---- CAPABILITIES (3-up cards) -------------------------------------- */
@@ -3573,6 +3682,7 @@ samp {
 	.hp-about-template
 		:is(
 			.hp-about-hero,
+			.hp-about-core-ai,
 			.hp-about-capabilities,
 			.hp-about-experience,
 			.hp-about-skills-edu,

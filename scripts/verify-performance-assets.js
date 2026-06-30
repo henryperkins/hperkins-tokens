@@ -5,6 +5,8 @@
 const { existsSync, readFileSync, statSync } = require( 'node:fs' );
 const { join } = require( 'node:path' );
 
+const { SNAPSHOT_DIR } = require( './lib/page-content-contract' );
+
 const themeRoot = join( __dirname, '..' );
 
 function assert( condition, message ) {
@@ -52,7 +54,7 @@ for ( const family of fontFamilies ) {
 
 const heroPattern = readFileSync( join( themeRoot, 'patterns/wapuu-home-hero.php' ), 'utf8' );
 assert(
-	heroPattern.includes( 'wapuu-color.webp' ) && heroPattern.includes( 'wapuu-emblem-green.webp' ),
+	heroPattern.includes( 'wapuu-color.webp' ),
 	'Wapuu hero pattern must offer WebP sources for hero artwork.'
 );
 assert(
@@ -62,6 +64,16 @@ assert(
 assert(
 	heroPattern.includes( 'loading="lazy"' ) && heroPattern.includes( 'decoding="async"' ),
 	'Wapuu hero image needs explicit lazy async decoding attributes.'
+);
+
+const frontPageSnapshot = readFileSync( join( SNAPSHOT_DIR, 'front-page.html' ), 'utf8' );
+assert(
+	! frontPageSnapshot.includes( 'hp-wapuu-hero__figure' ) && ! frontPageSnapshot.includes( 'hp-ring-card__figure' ),
+	'Front-page snapshot should keep the Wapuu hero and Three Rings asset sections theme-rendered.'
+);
+assert(
+	! /https:\/\/hperkins\.blog\/wp-content\/themes\/hperkins-tokens\/assets\//.test( frontPageSnapshot ),
+	'Front-page snapshot should not pin production theme asset URLs.'
 );
 
 const ringPattern = readFileSync( join( themeRoot, 'patterns/imladris-ring-card.php' ), 'utf8' );

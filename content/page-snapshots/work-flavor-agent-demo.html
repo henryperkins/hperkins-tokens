@@ -1,0 +1,93 @@
+<!-- wp:heading {"level":1} -->
+<h1 class="wp-block-heading">Flavor Agent — demo</h1>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-spoke-nav","fontSize":"xs","fontFamily":"mono"} -->
+<p class="hp-spoke-nav has-xs-font-size has-mono-font-family">Part of the <a href="/work/flavor-agent/">Flavor Agent</a> case study · see also the <a href="/work/flavor-agent/ai-governance/">governance model</a>.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-lead"} -->
+<p class="hp-lead">A real Claude Code session driving the governed-AI loop end-to-end against a live WordPress site: a bounded style recommendation, a review-gated apply that mutates nothing until an administrator approves it in wp-admin, and a verifiable attestation. The full transcript and the five human-admin evidence screenshots are embedded below.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p><em>The demo principle is simple: AI can request style work and inspect its trail, but approval remains a WordPress admin decision.</em></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<figure class="hp-artifact-embed alignwide">
+<div class="hp-artifact-embed__frame">
+<iframe src="/wp-content/themes/hperkins-tokens/assets/artifacts/flavor-agent-governance/claude-code-ai-governance-session.html?v=1782637743" title="Claude Code — Governed AI, Human Approval, and Attestation session" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox" allow="fullscreen"></iframe>
+</div>
+<figcaption class="hp-artifact-embed__caption">
+<span><strong>Claude Code · Governed AI + Human Approval + Attestation.</strong> Toggle Formatted/Raw, present full-screen, or click any screenshot to inspect at full size.</span>
+<span class="hp-artifact-embed__hint"><a href="/wp-content/themes/hperkins-tokens/assets/artifacts/flavor-agent-governance/claude-code-ai-governance-session.html?v=1782637743" target="_blank" rel="noopener">Open the artifact in a new tab ↗</a></span>
+</figcaption>
+</figure>
+<!-- /wp:html -->
+
+<!-- wp:separator {"className":"is-style-wide"} -->
+<hr class="wp-block-separator has-alpha-channel-opacity is-style-wide"/>
+<!-- /wp:separator -->
+
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">What the session shows</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>The same governance model an outside agent sees, end-to-end against a live site.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:list {"ordered":true} -->
+<ol class="wp-block-list"><!-- wp:list-item -->
+<li><strong>Discover.</strong> <code>discover-abilities</code> on the universal default server returns only the read/preview surface (16 public abilities); the seven <code>recommend-*</code> and four apply/activity tools live on the dedicated <code>flavor-agent</code> MCP server. Neither server exposes an approve/decision tool — approval stays admin-only in wp-admin.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Read.</strong> <code>execute-ability</code> on a read-only ability (e.g. <code>get-active-theme</code>, or a <code>preview-recommend-*</code> signature preflight) runs without invoking the AI Connector.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Propose.</strong> <code>recommend-style</code> returns a bounded, preset-backed operation plus review/apply freshness signatures, and records a diagnostic activity row.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Request.</strong> <code>request-style-apply</code> with the operation, the live <code>currentConfig</code>, and those signatures creates a pending row and mutates nothing; stale input is rejected as drift.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Approve.</strong> An administrator approves the pending row in <code>Settings &gt; AI Activity</code>; a second freshness check runs against the live entity before the change applies.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Attest &amp; verify.</strong> <code>get-activity</code> returns the row's <code>attestation.verifyUrl</code>; with a signing key configured, anyone can fetch the envelope, JWKS, and live subject-state and verify the Ed25519/in-toto statement independently — no credentials.</li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><strong>Reverse.</strong> <code>undo-activity</code> restores the before-state when the live document still matches the recorded after-state, and emits a chained revert attestation.</li>
+<!-- /wp:list-item --></ol>
+<!-- /wp:list -->
+
+<!-- wp:paragraph {"fontSize":"xs"} -->
+<p class="has-xs-font-size"><strong>Presenter note:</strong> attestation is key-gated — without a base64 Ed25519 secret it records no attestation rather than a fake one. The external MCP client authenticates with a WordPress Application Password over HTTPS. The centerpiece evidence is not a successful apply; it is the boundary: external agents can request a governed style apply, read activity, and request undo, but no approval ability is exposed.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"style":{"spacing":{"margin":{"top":"var:preset|spacing|8"}}},"layout":{"type":"constrained","contentSize":"44rem"}} -->
+<div class="wp-block-group" style="margin-top:var(--wp--preset--spacing--8)"><!-- wp:paragraph {"className":"hp-page-hero__eyebrow"} -->
+<p class="hp-page-hero__eyebrow">Work with me</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>If you're building WordPress AI that has to stay inspectable under review, tell me what has to hold up.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons {"layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-buttons"><!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/contact/">Discuss a governed AI build</a></div>
+<!-- /wp:button -->
+
+<!-- wp:button {"className":"is-style-secondary"} -->
+<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="https://github.com/henryperkins/flavor-agent">View the code</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons --></div>
+<!-- /wp:group -->

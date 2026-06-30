@@ -16,11 +16,13 @@ connective tissue**:
   and the chronology line still links to `https://hperkins.com/resume`.
 - The homepage does not yet expose the visible role/internal-link path called for in the
   SEO brief, and it lacks the closing contact CTA.
-- The work/case-study surfaces still rely mostly on nav/chrome links. In-body contextual
-  links and closing conversion CTAs are still sparse or absent.
-- One supporting route in the brief, `/how-this-was-built/`, is **theme-owned** rather
-  than DB-owned, so its internal-link update has to land in the pattern file, not in the
-  page body.
+- The work/case-study surfaces, including the `/work/` hub, still rely mostly on
+  nav/chrome links. In-body contextual links and closing conversion CTAs are still sparse
+  or absent.
+- The earlier brief also named `/how-this-was-built/`, but the public reference pages it
+  would absorb (`/design-system/` and `/design-tokens/`) are still `noindex`. `/design-system/`
+  now reads as current reference material, but `/design-tokens/` still describes the
+  pre-Imladris token contract rather than the current live theme vocabulary.
 
 ## Goal
 
@@ -29,7 +31,7 @@ Ship the remaining **site-owned** SEO work without changing the source-of-truth 
 - strengthen internal linking with descriptive anchors,
 - add consistent closing CTAs to the work pages,
 - fix the About link bugs,
-- add the missing bridge links from the essay/supporting pages,
+- add the missing bridge links from the essay and the currently in-scope supporting pages,
 - leave Henry-only external-account tasks untouched.
 
 ## Explicitly out of scope
@@ -43,6 +45,8 @@ This pass does **not** touch:
 - image-format generation (`avif` / `webp`) and server delivery changes
 - visible breadcrumb design
 - ATS PDF or other upload artifacts
+- the `/how-this-was-built/` -> `/design-system/` / `/design-tokens/` absorption step until
+  those reference pages are refreshed and their indexing posture is intentionally revisited
 - the already-shipped SEO mu-plugin/meta contract
 
 ## Ownership model (confirmed)
@@ -63,11 +67,13 @@ These routes render `wp:post-content` and should be edited through the stored po
 - `17` `/work/dj-lee-voices-of-judah/`
 - `238` `/2026/06/govern-for-the-return/`
 
-### Theme-owned route
+### Theme-owned route referenced by the brief (deferred here)
 
 - `/how-this-was-built/` is rendered from
   `templates/page-how-this-was-built.html` ->
-  `patterns/how-this-was-built.php`, so its link update belongs in the pattern.
+  `patterns/how-this-was-built.php`, but this pass defers that route because the intended
+  public targets are still `noindex` reference pages, and `/design-tokens/` still needs a
+  content refresh before it should inherit more internal-link weight.
 
 ### Reference-only patterns (not live owners)
 
@@ -103,6 +109,16 @@ ATS PDF.
 The closing CTA is implemented as repeated Gutenberg block markup inside the relevant page
 bodies. Reuse the theme's existing button styling and spacing primitives; do not add a new
 template or change the case-study template hierarchy for this.
+
+### 5. Defer `/how-this-was-built/` until its public targets are current
+
+Do **not** add new internal-link weight from the build report into `/design-system/` or
+`/design-tokens/` in this pass. Both pages are still `noindex` reference material. The live
+`/design-tokens/` copy still describes the pre-Imladris token contract rather than the
+current `theme.json` vocabulary, while `/design-system/` is current enough in voice but is
+still a reference/specimen surface rather than an intentional crawl target. Refresh those
+public references first, then decide whether they should remain `noindex` before routing new
+internal links to them.
 
 ## Route-by-route change set
 
@@ -240,20 +256,20 @@ Changes:
 
 Do not reframe the essay or rewrite its defect/history posture.
 
-### J. How this was built (`/how-this-was-built/`) - theme pattern
+### J. Work (`13`, `/work/`) - DB body
 
-Add the link-absorption step for the noindexed reference pages in the actual live owner:
-`patterns/how-this-was-built.php`.
+Add the missing closing CTA to the work hub so the route the other case studies converge on
+does not end without a contact path.
 
 Changes:
 
-- In the section discussing `theme.json` and the design-system round-trip, add internal links
-  to:
-  - `/design-system/`
-  - `/design-tokens/`
-- Use the phrase **`the token layer`** as the visible anchor lead-in for those references.
+- Add a closing CTA section below the work-entry list and above the colophon:
+  - eyebrow or kicker: `Work with me`
+  - body copy:
+    `If you need a WordPress AI build that can be inspected, governed, and shipped without hand-waving, tell me what has to hold up.`
+  - primary button: **`Discuss a governed AI build`** -> `/contact/`
 
-Do **not** move this page to DB ownership or rewrite the template.
+Do **not** rewrite the work-entry grid or replace the existing artifact rows.
 
 ## Shared CTA block shape
 
@@ -281,35 +297,39 @@ This stays in content so each page body remains independently editable.
 - Prefer inserting or replacing the minimum block markup needed for the new links/CTAs.
 - Preserve existing screenshots, artifact rows, and proof bars.
 - Where a route is DB-owned but not snapshot-tracked today (the case-study pages and the
-  essay post), export a temporary pre-edit backup before updating it. Do **not** widen this
-  pass into new snapshot tooling.
+  essay post), export a temporary pre-edit backup before updating it. Use one-off WP-CLI
+  exports for those backups; do **not** make this pass depend on additional helper scripts.
 
 ## Files and surfaces touched
 
 ### WordPress stored content
 
-- posts/pages `36`, `6`, `120`, `12`, `11`, `25`, `10`, `17`, `175`, `238`
+- posts/pages `36`, `6`, `13`, `120`, `12`, `11`, `25`, `10`, `17`, `175`, `238`
 
 ### Theme files
 
-- `patterns/how-this-was-built.php`
 - `content/page-snapshots/front-page.html`
 - `content/page-snapshots/about.html`
+- `content/page-snapshots/work.html`
 - `content/page-snapshots/ai-enablement.html`
-
-`/work/` is DB-owned too, but this spec does not call for a substantive body rewrite there,
-so `content/page-snapshots/work.html` is intentionally unchanged in this pass.
 
 ## Verification
 
 After implementation:
 
 1. Backup the DB-owned bodies before editing the unsnapshotted routes.
-2. Re-export the tracked snapshots with `node scripts/export-page-snapshots.js`.
-3. Run `node scripts/verify-content-ownership.js`.
-4. Spot-check the live routes with `curl`/HTML grep for the new anchors and CTA targets:
+2. Refresh the four tracked snapshot files directly from WordPress (`36`, `6`, `13`, `175`)
+   with `wp post get ... --field=post_content`, then inspect the snapshot diffs to confirm
+   they only contain the intended link/CTA edits.
+3. Run `git diff --check`.
+4. Run `node /home/dev/hperkinsblog/scripts/verify-hperkins-tokens.js` to re-check the live
+   theme surfaces that this pass touches through DB content.
+5. Run `node scripts/verify-ring-cards-mobile.js` to confirm the new homepage and
+   `/ai-enablement/` link-layer edits did not introduce narrow-viewport overflow.
+6. Spot-check the live routes with `curl`/HTML grep for the new anchors and CTA targets:
    - `/`
    - `/about/`
+   - `/work/`
    - `/work/flavor-agent/`
    - `/work/flavor-agent/ai-governance/`
    - `/work/flavor-agent/demo/`
@@ -318,8 +338,7 @@ After implementation:
    - `/work/dj-lee-voices-of-judah/`
    - `/ai-enablement/`
    - `/2026/06/govern-for-the-return/`
-   - `/how-this-was-built/`
-5. Confirm `/about/` no longer emits `mailto:htperkins@gmail.com` or
+7. Confirm `/about/` no longer emits `mailto:htperkins@gmail.com` or
    `https://hperkins.com/resume`.
 
 ## Why this design
@@ -327,4 +346,5 @@ After implementation:
 This is the smallest change set that actually finishes the local portion of the SEO brief.
 It improves crawl paths and conversion paths where the live site is currently thin, but it
 does so **without** reopening the theme/page ownership model, without dragging in server
-operations, and without blocking on any Henry-only external account decisions.
+operations, without routing new internal-link weight into stale `noindex` references, and
+without blocking on any Henry-only external account decisions.

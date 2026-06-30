@@ -35,23 +35,33 @@ component CSS to refresh either — the theme's `style.css` is a superset.
 
 | Design (project) | Theme artifact(s) | Wiring |
 |---|---|---|
+| `templates/front-page` | `content/page-snapshots/front-page.html`, `templates/front-page.html`, `patterns/wapuu-home-hero.php` | Published **Home** page (slug `home`, ID 36) in hybrid mode: theme-owned Wapuu hero + Three Rings shell, DB-owned middle body |
+| `templates/about` | `content/page-snapshots/about.html`, `templates/page-about.html` | Published **About + Resume** page (slug `about`, ID 6) in DB-owned page-body mode |
 | `templates/contact` | `patterns/contact.php`, `templates/page-contact.html` | Published **Contact** page (slug `contact`, ID 233) |
-| `templates/ai-enablement` | `patterns/ai-enablement.php`, `templates/page-ai-enablement.html` | **Shadow template** over live page 175 (content untouched in DB) |
-| `templates/work-index` | `patterns/work-index.php` | DS extras (hero ProofBar summary + colophon) appended to live **Work** page 13 |
+| `templates/ai-enablement` | `content/page-snapshots/ai-enablement.html`, `templates/page-ai-enablement.html` | Published **AI Enablement** page (slug `ai-enablement`, ID 175) in DB-owned page-body mode; `patterns/ai-enablement.php` remains a reusable seed/reference copy |
+| `templates/work-index` | `content/page-snapshots/work.html`, `templates/page-work.html` | Published **Work** page (slug `work`, ID 13) in DB-owned page-body mode; `patterns/work-index.php` remains a reusable seed/reference copy |
 | `ui_kits/blog` (HomeView) | `templates/home.html` | Blog posts index (`is_home`) |
 | `ui_kits/blog` (ReaderView) | `templates/single.html` | Single post reader |
 | page-layout CSS | `assets/imladris-pages.css` | Enqueued (`hperkins-pages`) + editor style, via `functions.php` |
 
-Core DS-mapped templates (including the `work-index` wrapper route via
-`page-work.html`) were render-verified locally (host-shim mu-plugin + `wp server` + Playwright):
-`front-page`, `home`, `single`, `page-about`, `page-ai-enablement`, `page-contact`,
-`page-work`, and `page-case-study`; tokens resolve, `imladris-pages.css` loads, and
-there were zero console errors.
+The DB-owned page bodies for `page-about`, `page-ai-enablement`, and `page-work`,
+plus the tracked middle section for `front-page`, are versioned in
+`content/page-snapshots/*.html` and refreshed from the live site with
+`node scripts/export-page-snapshots.js`; `node scripts/verify-content-ownership.js`
+guards against template/DB drift. The Flavor Agent demo child page
+(`/work/flavor-agent/demo/`, page `11`) also keeps its embed + explainer in DB
+content and is versioned at `content/page-snapshots/work-flavor-agent-demo.html`,
+even though it inherits the generic page shell rather than a DS-mapped wrapper.
+Core DS-mapped templates (including the
+`page-work.html` wrapper route) were render-verified locally (host-shim mu-plugin +
+`wp server` + Playwright): `front-page`, `home`, `single`, `page-about`,
+`page-ai-enablement`, `page-contact`, `page-work`, and `page-case-study`; tokens
+resolve, `imladris-pages.css` loads, and there were zero console errors.
 
-> **Note on the blog templates:** the site currently has **no posts** and no Posts page assigned, so
-> `home.html` / `single.html` are built and verified but not yet exercised in production. They activate
-> when posts exist and a Posts page is set (Settings → Reading). At `/` with `show_on_front=posts`,
-> `front-page.html` (the rings page) intentionally outranks `home.html` in the template hierarchy.
+> **Note on the blog templates:** the site currently has a published Posts page
+> (`/essays/`, page `236`) and published posts, so `home.html` / `single.html`
+> are exercised in production. With `show_on_front=page`, `front-page.html`
+> owns `/` while `home.html` serves the Posts page.
 
 ## DS component → theme pattern map
 

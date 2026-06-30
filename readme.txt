@@ -151,21 +151,26 @@ The child theme owns nine block templates (page-case-study is also registered as
 a selectable "Case study" template in theme.json; the others map by the WordPress
 template hierarchy):
 
-* front-page.html — the portfolio landing: renders the stored Home page content,
-  then appends the Three Rings (Vilya / Narya / Nenya) framework section.
+* front-page.html — the portfolio landing shell; renders the theme-owned Wapuu
+  hero, then the stored Home page body via `wp:post-content`, then the
+  theme-owned Three Rings framework. The current live middle section is
+  versioned at `content/page-snapshots/front-page.html`.
 * home.html — the journal index: masthead, category filter, a featured essay,
   then a grid of recent essay postcards.
 * single.html — the essay reader: a twilight cover hero (title, standfirst, meta)
   over constrained prose, post tags, the subscribe block, and a "Continue
   reading" related-posts grid.
 * page-about.html — wraps the stored About page content in the narrow/wide About
-  composition shell.
-* page-ai-enablement.html — the AI-enablement essay page; renders the
-  "ai-enablement" pattern in the 44/72rem reading column.
+  composition shell. The current live content is versioned at
+  `content/page-snapshots/about.html`.
+* page-ai-enablement.html — the AI-enablement essay shell; renders the stored
+  page body in the 44/72rem reading column. The current live content is
+  versioned at `content/page-snapshots/ai-enablement.html`.
 * page-contact.html — the contact page; renders the "contact" pattern in a 72rem
   column.
-* page-work.html — the work index page; wraps the "work-index" pattern in a
-  44/72rem composition with ledger cards and proof sections.
+* page-work.html — the work index shell; renders the stored page body in the
+  44/72rem composition. The current live content is versioned at
+  `content/page-snapshots/work.html`.
 * page-plato-artifacts.html — the Plato Artifacts archive page; preserves the
   stored page content while applying the same 44/72rem work-template shell used
   by the ledger pages.
@@ -175,6 +180,24 @@ template hierarchy):
   proof rather than starter placeholders.
 
 Unspecified page/post templates are inherited from the Assembler parent.
+
+The public About, Work, and AI Enablement routes are DB-owned page bodies. The
+public front page is hybrid: `front-page.html` keeps the Wapuu hero and Three
+Rings framework theme-owned, while the middle Home section remains DB-owned and
+tracked at `content/page-snapshots/front-page.html`. The published Flavor Agent
+demo route (`/work/flavor-agent/demo/`) likewise keeps its iframe embed and
+explanatory copy in the database; because it inherits the generic page shell,
+its tracked source lives at `content/page-snapshots/work-flavor-agent-demo.html`
+rather than a theme-owned wrapper template. Keep the tracked source copies in
+sync at `content/page-snapshots/front-page.html`,
+`content/page-snapshots/about.html`, `content/page-snapshots/work.html`,
+`content/page-snapshots/ai-enablement.html`, and
+`content/page-snapshots/work-flavor-agent-demo.html`. After an intentional
+page-body edit, refresh the files with `node scripts/export-page-snapshots.js`
+and verify with `node scripts/verify-content-ownership.js`. The older
+filesystem patterns (`about-resume`, `work-index`, and `ai-enablement`) remain
+reusable seeds/reference copies rather than the live route owners for those
+pages, while `wapuu-home-hero` remains the live front-page hero.
 
 = Portfolio art direction =
 
@@ -243,6 +266,72 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.31 =
+* AI Leaders credential surfaced as verifiable proof across three surfaces. The
+  homepage hero eyebrow is now a link — "AI Leaders — First Cohort Finalist" to
+  the program showcase (aileaderswp.blog, which lists the portfolio) — with a new
+  hairline-rule eyebrow-link style so it keeps the lapidary caps instead of going
+  link-blue (patterns/wapuu-home-hero.php, style.css). /about/ (DB page 6) gains
+  an "AI Leaders, first cohort" section — method, not badge — tied to the evidence
+  board above it. /ai-enablement/ (DB page 175) links its existing "AI Leaders"
+  mention to the showcase for consistency. DB page bodies +
+  content/page-snapshots/{about,ai-enablement}.html; style.css version bump for
+  the eyebrow-link rule.
+
+= 0.3.30 =
+* /work/flavor-agent/demo/ embedded artifact — security hardening. Redacted a
+  demo admin password that had been published in the Claude Code session
+  artifact (both Formatted and Raw views) and the companion transcript; the
+  WP-CLI line now reads --user_pass='[redacted]'. Hardened the artifact iframe
+  sandbox: dropped allow-same-origin so the same-origin document can no longer
+  script the parent page (the frame is now an opaque origin — verified that
+  parent.document is unreachable), and added allow="fullscreen" so present
+  mode still works. Bumped the page-11 iframe cache-buster to the redacted
+  asset's mtime. Artifact assets (assets/artifacts/flavor-agent-governance/),
+  DB page 11 post_content, and the page-snapshots/work-flavor-agent-demo.html
+  mirror; no theme.json or style.css/CSS change beyond the version bump.
+
+= 0.3.29 =
+* /work/flavor-agent/demo/ embedded artifact — the three oversized ASCII
+  box-drawing tables in the Claude Code session (one up to 252 chars wide) were
+  breaking the terminal's reading sequence and forcing horizontal scroll. The
+  formatted view now renders them as semantic, wrapping HTML tables
+  (.hp-term-table) that fit the column, keep the terminal palette, and collapse
+  to stacked label/value rows on phones; the long prose column wraps instead of
+  scrolling. The Raw view and companion transcript still carry the original
+  box-drawing ASCII byte-for-byte, and the decorative footer rule now clips
+  rather than scrolling. Artifact asset only
+  (assets/artifacts/flavor-agent-governance/), plus the iframe cache-buster on
+  page 11; no theme.json or style.css/CSS change beyond the version bump.
+
+= 0.3.28 =
+* /ai-enablement/ responsive + rhythm polish (no copy or links changed). Mobile
+  type scale: the hero dek and section H2s now clamp down on narrow viewports
+  (capped at the 2-xl / 3-xl tokens, page-scoped to .hp-aie-template) so they
+  stop overpowering the essay on phones, mirroring the hero H1 that already
+  clamps. The governance callout stacks its icon/body and tightens its inset
+  below 600px. The maturity proof bar is centered as a row on desktop (a coda
+  to the centered rings) and stacks on phones; chip anatomy unchanged. The deck
+  download in the Portfolio-artifact register is marked as the primary action
+  (solid action-colored underline + a download glyph). The thesis pull-quote
+  ("Real impact is whatever survives an external instrument") gets a centered,
+  hairline-framed treatment for presence through space — without breaking the
+  body-scale quote ceiling. Pattern markup + pages CSS + style.css version; no
+  theme.json change.
+
+= 0.3.27 =
+* /work/flavor-agent/demo/ now leads with the embedded Claude Code governed-AI
+  session artifact ("Governed AI + Human Approval + Attestation"). The
+  self-contained interactive document (Formatted/Raw toggle, present mode, and
+  the five human-admin evidence screenshots) ships as a static theme asset under
+  assets/artifacts/flavor-agent-governance/ and is loaded in an isolated,
+  sandboxed iframe so its dark CSS/JS never collides with the parchment theme.
+  Adds the .hp-artifact-embed frame/caption styling to assets/imladris-pages.css;
+  the demo page's existing in-editor/MCP walkthrough is trimmed to a "What the
+  session shows" summary beneath the embed, with the DB-owned source tracked at
+  `content/page-snapshots/work-flavor-agent-demo.html`. Page-content snapshot +
+  asset + pages CSS; no theme.json change.
 
 = 0.3.26 =
 * /ai-enablement/ essay — line edits for density and rhythm (no meaning or
