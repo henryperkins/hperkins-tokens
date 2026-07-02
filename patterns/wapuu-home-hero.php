@@ -73,7 +73,7 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 			<!-- /wp:html -->
 
 			<!-- wp:html -->
-			<figure class="wp-block-image size-full hp-wapuu-hero__figure"><picture><source srcset="<?php echo $hperkins_wapuu_webp_url; ?>" type="image/webp" /><img src="<?php echo $hperkins_wapuu_png_url; ?>" alt="Wapuu dressed as a grey-robed wizard with a pointed hat, long beard, and wooden staff, holding a WordPress logo orb." width="962" height="1024" loading="lazy" decoding="async" /></picture></figure>
+			<figure class="wp-block-image size-full hp-wapuu-hero__figure"><picture><source srcset="<?php echo $hperkins_wapuu_webp_url; ?>" type="image/webp" /><img src="<?php echo $hperkins_wapuu_png_url; ?>" alt="Wapuu dressed as a grey-robed wizard with a pointed hat, long beard, and wooden staff, holding a WordPress logo orb." width="962" height="1024" fetchpriority="high" decoding="async" /></picture></figure>
 			<!-- /wp:html -->
 		</div>
 		<!-- /wp:column -->

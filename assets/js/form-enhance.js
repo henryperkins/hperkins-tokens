@@ -5,6 +5,13 @@
  * newsletter form posts to WordPress over HTTPS. JS adds inline email
  * validation to both forms; the contact form still swaps to a confirmation
  * state before handing off to the visitor's mail client.
+ *
+ * Every listener is delegated at the document level. This site runs the
+ * full-page Interactivity Router: client navigations swap the entire <body>
+ * without re-running scripts, so handlers bound to the form elements found at
+ * initial load die on the first client-side navigation. Delegation keys off
+ * the event target instead, covering whichever form is in the DOM right now.
+ * `invalid` does not bubble, so that listener rides the capture phase.
  */
 ( function () {
 	'use strict';
@@ -83,101 +90,111 @@
 		window.location.href = href;
 	}
 
-	// ---- Contact form -------------------------------------------------------
-	var contact = document.querySelector( '.hp-contact-form' );
-	if ( contact ) {
-		contact.addEventListener( 'invalid', function ( e ) {
-			if ( e.target && e.target.matches( 'input[type="email"]' ) ) {
-				e.preventDefault();
-				setError( e.target, CONTACT_EMAIL_ERROR );
-			}
-		}, true );
+	function emailFieldContext( input ) {
+		if ( ! input || ! input.matches || ! input.matches( 'input[type="email"]' ) || ! input.closest ) {
+			return null;
+		}
+		if ( input.closest( '.hp-contact-form' ) ) {
+			return 'contact';
+		}
+		if ( input.closest( '.hp-subscribe__form' ) ) {
+			return 'subscribe';
+		}
+		return null;
+	}
 
-		contact.addEventListener( 'input', function ( e ) {
-			if ( e.target && e.target.matches( 'input[type="email"]' ) ) {
-				clearError( e.target );
-			}
-		} );
+	// ---- Inline validation (both forms) --------------------------------------
+	// `invalid` fires on the input and does not bubble; capture still sees it.
+	document.addEventListener( 'invalid', function ( e ) {
+		var context = emailFieldContext( e.target );
+		if ( ! context ) {
+			return;
+		}
+		e.preventDefault();
+		setError( e.target, context === 'contact' ? CONTACT_EMAIL_ERROR : SUBSCRIBE_EMAIL_ERROR );
+	}, true );
 
-		contact.addEventListener( 'submit', function ( e ) {
-			var email = contact.querySelector( 'input[type="email"]' );
-			if ( email ) {
-				clearError( email );
-			}
-			if ( email && ! EMAIL_RE.test( email.value.trim() ) ) {
-				e.preventDefault();
-				setError( email, CONTACT_EMAIL_ERROR );
-				return;
-			}
+	document.addEventListener( 'input', function ( e ) {
+		if ( emailFieldContext( e.target ) ) {
+			clearError( e.target );
+		}
+	} );
+
+	// ---- Contact form ---------------------------------------------------------
+	function handleContactSubmit( e, contact ) {
+		var email = contact.querySelector( 'input[type="email"]' );
+		if ( email ) {
+			clearError( email );
+		}
+		if ( email && ! EMAIL_RE.test( email.value.trim() ) ) {
 			e.preventDefault();
+			setError( email, CONTACT_EMAIL_ERROR );
+			return;
+		}
+		e.preventDefault();
 
-			var get = function ( n ) {
-				var el = contact.querySelector( '[name="' + n + '"]' );
-				return el ? el.value.trim() : '';
-			};
-			var subject = get( 'subject' ) || 'Hello from hperkins.blog';
-			var body    = get( 'message' );
-			if ( get( 'name' ) ) {
-				body += '\n\n— ' + get( 'name' );
+		var get = function ( n ) {
+			var el = contact.querySelector( '[name="' + n + '"]' );
+			return el ? el.value.trim() : '';
+		};
+		var subject = get( 'subject' ) || 'Hello from hperkins.blog';
+		var body    = get( 'message' );
+		if ( get( 'name' ) ) {
+			body += '\n\n— ' + get( 'name' );
+		}
+		go( 'mailto:' + MAILTO + '?subject=' + encodeURIComponent( subject ) + '&body=' + encodeURIComponent( body ) );
+
+		var panel = confirmPanel(
+			'Your message is ready in your mail app.',
+			'If nothing opened, email ' + MAILTO + ' directly — whichever you prefer.',
+			false
+		);
+		var again = document.createElement( 'button' );
+		again.type = 'button';
+		again.className = 'hp-form-confirm__again';
+		again.textContent = 'Compose another';
+		again.addEventListener( 'click', function () {
+			panel.replaceWith( contact );
+			contact.reset();
+			var em = contact.querySelector( 'input[type="email"]' );
+			if ( em ) {
+				clearError( em );
 			}
-			go( 'mailto:' + MAILTO + '?subject=' + encodeURIComponent( subject ) + '&body=' + encodeURIComponent( body ) );
-
-			var panel = confirmPanel(
-				'Your message is ready in your mail app.',
-				'If nothing opened, email ' + MAILTO + ' directly — whichever you prefer.',
-				false
-			);
-			var again = document.createElement( 'button' );
-			again.type = 'button';
-			again.className = 'hp-form-confirm__again';
-			again.textContent = 'Compose another';
-			again.addEventListener( 'click', function () {
-				panel.replaceWith( contact );
-				contact.reset();
-				var em = contact.querySelector( 'input[type="email"]' );
-				if ( em ) {
-					clearError( em );
-				}
-				var first = contact.querySelector( 'input, textarea, select' );
-				if ( first ) {
-					first.focus();
-				}
-			} );
-			panel.appendChild( again );
-			contact.replaceWith( panel );
-			panel.setAttribute( 'tabindex', '-1' );
-			panel.focus();
+			var first = contact.querySelector( 'input, textarea, select' );
+			if ( first ) {
+				first.focus();
+			}
 		} );
+		panel.appendChild( again );
+		contact.replaceWith( panel );
+		panel.setAttribute( 'tabindex', '-1' );
+		panel.focus();
 	}
 
-	// ---- Subscribe ----------------------------------------------------------
-	var subForm = document.querySelector( '.hp-subscribe__form' );
-	if ( subForm ) {
-		subForm.addEventListener( 'invalid', function ( e ) {
-			if ( e.target && e.target.matches( 'input[type="email"]' ) ) {
-				e.preventDefault();
-				setError( e.target, SUBSCRIBE_EMAIL_ERROR );
-			}
-		}, true );
-
-		subForm.addEventListener( 'input', function ( e ) {
-			if ( e.target && e.target.matches( 'input[type="email"]' ) ) {
-				clearError( e.target );
-			}
-		} );
-
-		subForm.addEventListener( 'submit', function ( e ) {
-			var email = subForm.querySelector( 'input[type="email"]' );
-			if ( email ) {
-				clearError( email );
-			}
-			if ( email && ! EMAIL_RE.test( email.value.trim() ) ) {
-				e.preventDefault();
-				setError( email, SUBSCRIBE_EMAIL_ERROR );
-			}
-			if ( email ) {
-				email.value = email.value.trim();
-			}
-		} );
+	// ---- Subscribe ------------------------------------------------------------
+	function handleSubscribeSubmit( e, form ) {
+		var email = form.querySelector( 'input[type="email"]' );
+		if ( email ) {
+			clearError( email );
+		}
+		if ( email && ! EMAIL_RE.test( email.value.trim() ) ) {
+			e.preventDefault();
+			setError( email, SUBSCRIBE_EMAIL_ERROR );
+		}
+		if ( email ) {
+			email.value = email.value.trim();
+		}
 	}
+
+	document.addEventListener( 'submit', function ( e ) {
+		var form = e.target;
+		if ( ! form || ! form.matches ) {
+			return;
+		}
+		if ( form.matches( '.hp-contact-form' ) ) {
+			handleContactSubmit( e, form );
+		} else if ( form.matches( '.hp-subscribe__form' ) ) {
+			handleSubscribeSubmit( e, form );
+		}
+	} );
 } )();

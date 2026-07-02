@@ -270,6 +270,26 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
 
+= 0.3.33 =
+* form-enhance.js rebuilt on document-level delegation: the contact form's
+  mailto handoff + confirmation panel and both forms' inline email validation
+  now survive Interactivity Router client navigations. The router swaps the
+  whole body without re-running scripts, so the old element-bound listeners
+  died on the first client-side navigation (reproduced on /contact/ after a
+  client swap, fixed, re-verified).
+* Homepage hero Wapuu loads eagerly with fetchpriority="high" — it is the LCP
+  candidate on desktop and mobile, and loading="lazy" was delaying it. The
+  below-the-fold ring-card backdrops stay lazy.
+* functions.php no longer computes/injects --hp-wapuu-mark-url: nothing has
+  consumed it since the star SVG emblem replaced the header's wapuu mark.
+* imladris-pages.css: repointed four phantom var(--wp--custom--text--default)
+  references to the real text--body token (rendered color unchanged), and the
+  artifact-embed frame keeps its warm halo as a documented one-off literal
+  instead of referencing the nonexistent shadow--raised token.
+* style.css: fixed two var(--dur-fast, 140ms) typos to
+  var(--wp--custom--dur--fast) so the project-card hover transition reads the
+  real duration token (same 140ms).
+
 = 0.3.32 =
 * Posts index (/essays/) redesigned to the evolved "Posts Page" design (claude.ai/design
   project 65d2dbc2 "WordPress portfolio posts template", which imports the Imladris DS

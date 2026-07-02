@@ -4,7 +4,7 @@ Theme URI: https://hperkins.blog
 Description: Imladris design system child theme for hperkins.blog — a Rivendell-inspired, parchment-and-evergreen serif editorial system with a mallorn-gold accent and a status-verified evidence layer (done/review/pending by rule-colour and a redundant word). Tokens in theme.json are the source of truth; the render is a consequence.
 Author: Henry Perkins
 Template: assembler
-Version: 0.3.32
+Version: 0.3.33
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -3546,8 +3546,8 @@ samp {
 	 we keep the accessible title link and signal the card on hover). */
 .hp-about-template .hp-project {
 	transition:
-		border-color var(--dur-fast, 140ms) var(--wp--custom--ease--calm),
-		box-shadow var(--dur-fast, 140ms) var(--wp--custom--ease--calm);
+		border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+		box-shadow var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
 }
 .hp-about-template .hp-project:hover {
 	border-color: color-mix(

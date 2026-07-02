@@ -84,12 +84,6 @@ add_action( 'wp_enqueue_scripts', function () {
 		);
 	}
 
-	$wapuu_mark_file = get_stylesheet_directory() . '/assets/wapuu/wapuu-mark.png';
-	$wapuu_mark_url  = get_stylesheet_directory_uri() . '/assets/wapuu/wapuu-mark.png';
-	if ( file_exists( $wapuu_mark_file ) ) {
-		$wapuu_mark_url = add_query_arg( 'v', filemtime( $wapuu_mark_file ), $wapuu_mark_url );
-	}
-
 	$footer_backdrop_png_file  = get_stylesheet_directory() . '/assets/img/imagery/valley-twilight.png';
 	$footer_backdrop_webp_file = get_stylesheet_directory() . '/assets/img/imagery/valley-twilight.webp';
 	$footer_backdrop_png_url   = hperkins_tokens_asset_url( 'assets/img/imagery/valley-twilight.png' );
@@ -109,8 +103,7 @@ add_action( 'wp_enqueue_scripts', function () {
 	wp_add_inline_style(
 		'hperkins-tokens',
 		sprintf(
-			':root{--hp-wapuu-mark-url:url(%1$s);--hp-footer-backdrop-url:%2$s;--hp-council-hero-backdrop-url:%3$s;}',
-			wp_json_encode( esc_url( $wapuu_mark_url ), JSON_UNESCAPED_SLASHES ),
+			':root{--hp-footer-backdrop-url:%1$s;--hp-council-hero-backdrop-url:%2$s;}',
 			$footer_backdrop_image,
 			$hero_backdrop_image
 		)
