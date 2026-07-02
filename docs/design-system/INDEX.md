@@ -275,3 +275,38 @@ Implemented the design project's `templates/work/Work.dc.html` ("Work — Case s
 - The design `templates/work/Work.dc.html` was **read during this pull** (its `support.js` ~54 KB and
   `ds-base.js` runtime are reference-only React, not vendored). Consistent with the prior pull, the raw
   `.dc.html` was not mirrored byte-for-byte; re-pullable from the project URL above.
+
+## 2026-06-30 — Posts index → evolved "Posts Page" design (`Posts Page.dc.html` → `templates/home.html`)
+
+Re-pulled the dedicated posts-page design project and brought the **/essays/** index (posts page #236,
+`templates/home.html`) up to its evolved spec. This is a **separate** claude.ai/design project from the
+core DS — it *imports* the Imladris DS `SiteHeader` / `Subscribe` / `SiteFooter` via `<x-import>`, which
+already map to `parts/header.html`, `patterns/imladris-subscribe.php`, `parts/footer.html`.
+
+- **Source:** project `65d2dbc2-c133-4003-9db9-57fa9d2058dd` "WordPress portfolio posts template",
+  file `Posts Page.dc.html` (https://claude.ai/design/p/65d2dbc2-c133-4003-9db9-57fa9d2058dd).
+  Classification: authored-in-browser (PROJECT_TYPE_PROJECT). DS tokens 1:1 with `theme.json` — no
+  mapping needed. Provenance/manifest: `../../.design-pull/wordpress-portfolio-posts-template/`.
+- **No `theme.json` change; no `style.css` component change.** Markup → `templates/home.html`;
+  page-layout CSS → `assets/imladris-pages.css`. `Version` 0.3.31 → 0.3.32.
+- **What changed vs. the v1 home index:**
+  - **Asymmetric featured composition** — one photo lead beside two stacked plate secondaries, as a
+    single `core/query` (perPage 3, offset 0) laid out by CSS grid (`minmax(0,1.5fr) minmax(0,1fr)`).
+    Driven by **`:has()`** so it degrades by post count: 1 post → a single full-width lead; 2 → lead +
+    one secondary; 3+ → the full composition. Remaining posts flow to the grid below (perPage 6, offset 3).
+  - **Plate-cover fallback art** — the eight-point gold compass-star over the twilight gradient, on
+    `.hp-postcard__media::after`, masked diagonally. A real featured image (z-index 2) sits above it and
+    hides it; image-less posts show the plate. (The mock's `rivendell-third-age.webp` lead photo is *not*
+    vendored — WP uses each post's real featured image.)
+  - **"More from the journal" hairline divider** before the grid, **auto-hidden** when the grid has no
+    posts (`.hp-journal-more:has(+ .hp-journal-grid … li)`).
+  - **Topic filter** restyled from pills to the design's **underline bar** — still real `core/categories`
+    (functional archives), not the mock's static topic list (per decision).
+  - **Pagination** restyled (numbered tiles + Newer / Older pills).
+  - **Three Rings of governance** section **dropped** from the index to match the design (per decision);
+    `front-page.html` still carries Three Rings, so the brand element is not lost.
+- **Content reality at pull time:** only **1 published post** (the design assumes ~28). The page is built
+  to fill in as essays publish; today it renders the lone post as a full-width lead with the rest of the
+  composition gracefully absent.
+- The raw `.dc.html` (uses Claude Design's `x-dc` / `sc-if` / `support.js` runtime) is **spec only**, not
+  vendored byte-for-byte; re-pullable from the project URL above.

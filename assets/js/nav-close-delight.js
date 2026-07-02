@@ -1,21 +1,25 @@
 /**
  * hperkins-tokens — close the mobile overlay nav with a crisp collapse when a
- * link is tapped.
+ * link is tapped, tied to the ACTUAL navigation commit (not a wall-clock guess).
  *
  * This site runs Gutenberg's full-page Interactivity Router (client-side
- * navigation): internal link taps are intercepted and the page is swapped in
- * place, and the Navigation block's open state is PRESERVED across that swap —
- * so without this, the overlay stays open over the newly-loaded page.
+ * navigation): internal link taps are intercepted and the whole <body> region
+ * is swapped in place, and the Navigation block's open state is PRESERVED across
+ * that swap — so without this, the overlay stays open over the newly-loaded page.
  *
- * We therefore do NOT navigate and do NOT preventDefault (the router, or a
- * normal full page load when the router is off, owns navigation). We only:
+ * We do NOT navigate and do NOT preventDefault (the router, or a normal full page
+ * load when the router is off, owns navigation). We:
  *   1. play the collapse + tap-echo animation on the still-open overlay, then
- *   2. close the overlay through the block's own close control, so core tears
- *      down its state (is-menu-open / has-modal-open / focus) and the *closed*
- *      state carries across the router swap.
- * The JS realm survives the SPA swap, so the scheduled close attempts below
- * also catch a swap that lands before the animation finishes. Degrades cleanly
- * if the router is off: the link does a normal load and the menu resets anyway.
+ *   2. close the overlay through the block's own close control the moment the
+ *      navigation COMMITS — detected by hooking the History API (pushState /
+ *      replaceState) and popstate, which the router drives on every client swap.
+ *
+ * Anchoring the teardown to the real navigation event removes the race the old
+ * fixed-timeout schedule lost: a swap that landed after the last scheduled
+ * attempt used to re-present an open overlay with nothing left to close it. The
+ * post-collapse close below still runs for taps that fire no navigation event
+ * (same-page links, in-page #hash) and for a router that is off. Degrades
+ * cleanly: with the router off the link does a normal load and the menu resets.
  */
 ( function () {
 	'use strict';
@@ -23,10 +27,6 @@
 	var CONTAINER = '.wp-block-navigation__responsive-container';
 	var LINK = '.wp-block-navigation__responsive-container-content a[href]';
 	var CLOSE = '.wp-block-navigation__responsive-container-close';
-	// Close attempts (ms): the first lands after the collapse; the rest catch a
-	// fast SPA swap that re-presents an open overlay on the new page.
-	var SCHEDULE_MOTION = [ 140, 220, 360, 560 ];
-	var SCHEDULE_REDUCED = [ 0, 120, 260, 460 ];
 	var RESET_MS = 700;
 	var closing = false;
 
@@ -62,6 +62,45 @@
 		}
 	}
 
+	// Settle the overlay around a navigation commit: close now, then again on the
+	// next frame and a tick later, to catch a region swap that re-presents the
+	// open overlay immediately after the URL changes (the router's render vs.
+	// pushState order varies). Cheap and idempotent — ensureClosed no-ops once the
+	// overlay is closed.
+	function settle() {
+		ensureClosed();
+		if ( window.requestAnimationFrame ) {
+			window.requestAnimationFrame( ensureClosed );
+		}
+		window.setTimeout( ensureClosed, 60 );
+	}
+
+	// Hook the History API the Interactivity Router drives on every client
+	// navigation, so the close is anchored to the real commit instead of a timer.
+	// Guarded against double-wrapping; falls back to popstate where history is
+	// read-only.
+	function wrapHistory( method ) {
+		var original = window.history[ method ];
+		if ( typeof original !== 'function' || original.__hpNavClose ) {
+			return;
+		}
+		var wrapped = function () {
+			var result = original.apply( this, arguments );
+			settle();
+			return result;
+		};
+		wrapped.__hpNavClose = true;
+		try {
+			window.history[ method ] = wrapped;
+		} catch ( e ) {
+			/* read-only in some sandboxes — popstate still covers back/forward. */
+		}
+	}
+
+	wrapHistory( 'pushState' );
+	wrapHistory( 'replaceState' );
+	window.addEventListener( 'popstate', settle );
+
 	document.addEventListener( 'click', function ( event ) {
 		if ( closing || event.button !== 0 ) {
 			return;
@@ -81,7 +120,8 @@
 			return; // only act when the mobile overlay is actually open
 		}
 
-		// Commit to closing. We do NOT preventDefault and do NOT navigate.
+		// Commit to closing. We do NOT preventDefault and do NOT navigate — the
+		// history hooks above own the close the instant the router swap commits.
 		closing = true;
 		var reduce = reducedMotion();
 
@@ -90,15 +130,17 @@
 				container.classList.add( 'is-hp-closing' );
 				link.classList.add( 'is-hp-chosen' );
 			}
-			( reduce ? SCHEDULE_REDUCED : SCHEDULE_MOTION ).forEach( function ( ms ) {
-				window.setTimeout( ensureClosed, ms );
-			} );
+			// Post-collapse close: snappy for the common case, and the sole close
+			// path for taps that fire no navigation event (same-page / #hash) or a
+			// router that is off. The history hooks handle every client swap,
+			// however slow, so this no longer has to out-guess the network.
+			window.setTimeout( ensureClosed, reduce ? 0 : 140 );
 		} catch ( e ) {
 			ensureClosed(); // failure-safe: still close the overlay
 		}
 
 		// Backstop: re-arm the handler and guarantee the cosmetic classes are
-		// gone even if every scheduled ensureClosed found the menu still open.
+		// gone even if the close already happened via a history hook.
 		window.setTimeout( function () {
 			closing = false;
 			clearCosmetic();

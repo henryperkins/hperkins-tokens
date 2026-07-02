@@ -39,6 +39,14 @@ const PAGE_CONTRACTS = [
 		templateFile: 'templates/page-ai-enablement.html',
 	},
 	{
+		key: 'plato-artifacts',
+		label: 'Plato Artifacts page',
+		pagePath: 'plato-artifacts',
+		snapshotFile: 'plato-artifacts.html',
+		templateId: 'page-plato-artifacts',
+		templateFile: 'templates/page-plato-artifacts.html',
+	},
+	{
 		key: 'flavor-agent-demo',
 		label: 'Flavor Agent demo page',
 		pagePath: 'work/flavor-agent/demo',

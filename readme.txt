@@ -171,9 +171,10 @@ template hierarchy):
 * page-work.html — the work index shell; renders the stored page body in the
   44/72rem composition. The current live content is versioned at
   `content/page-snapshots/work.html`.
-* page-plato-artifacts.html — the Plato Artifacts archive page; preserves the
-  stored page content while applying the same 44/72rem work-template shell used
-  by the ledger pages.
+* page-plato-artifacts.html — the Plato Artifacts portfolio-source index;
+  preserves the stored page content while applying the same 44/72rem
+  work-template shell used by the ledger pages. The current live content is
+  versioned at `content/page-snapshots/plato-artifacts.html`.
 * page-case-study.html — supplies the case-study header, title, and constrained
   content column only. Evidence boards, proof bars, artifact rows, and links must
   live in the page content so every published case study carries real, editable
@@ -181,17 +182,19 @@ template hierarchy):
 
 Unspecified page/post templates are inherited from the Assembler parent.
 
-The public About, Work, and AI Enablement routes are DB-owned page bodies. The
-public front page is hybrid: `front-page.html` keeps the Wapuu hero and Three
-Rings framework theme-owned, while the middle Home section remains DB-owned and
-tracked at `content/page-snapshots/front-page.html`. The published Flavor Agent
-demo route (`/work/flavor-agent/demo/`) likewise keeps its iframe embed and
-explanatory copy in the database; because it inherits the generic page shell,
-its tracked source lives at `content/page-snapshots/work-flavor-agent-demo.html`
-rather than a theme-owned wrapper template. Keep the tracked source copies in
-sync at `content/page-snapshots/front-page.html`,
+The public About, Work, AI Enablement, and Plato Artifacts routes are DB-owned
+page bodies. The public front page is hybrid: `front-page.html` keeps the Wapuu
+hero and Three Rings framework theme-owned, while the middle Home section
+remains DB-owned and tracked at `content/page-snapshots/front-page.html`. The
+published Flavor Agent demo route (`/work/flavor-agent/demo/`) likewise keeps
+its iframe embed and explanatory copy in the database; because it inherits the
+generic page shell, its tracked source lives at
+`content/page-snapshots/work-flavor-agent-demo.html` rather than a theme-owned
+wrapper template. Keep the tracked source copies in sync at
+`content/page-snapshots/front-page.html`,
 `content/page-snapshots/about.html`, `content/page-snapshots/work.html`,
-`content/page-snapshots/ai-enablement.html`, and
+`content/page-snapshots/ai-enablement.html`,
+`content/page-snapshots/plato-artifacts.html`, and
 `content/page-snapshots/work-flavor-agent-demo.html`. After an intentional
 page-body edit, refresh the files with `node scripts/export-page-snapshots.js`
 and verify with `node scripts/verify-content-ownership.js`. The older
@@ -266,6 +269,18 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.32 =
+* Posts index (/essays/) redesigned to the evolved "Posts Page" design (claude.ai/design
+  project 65d2dbc2 "WordPress portfolio posts template", which imports the Imladris DS
+  SiteHeader/Subscribe/SiteFooter). The featured area becomes an asymmetric composition —
+  a photo lead beside two stacked plate secondaries — driven by CSS :has() so it degrades
+  by post count; adds a "More from the journal" hairline divider (auto-hidden when the grid
+  is empty), a plate-cover fallback (gold compass-star over the twilight gradient) for
+  image-less posts, the topic filter restyled from pills to an underline bar, and styled
+  Newer/Older pagination. The "Three Rings of governance" section is dropped from the index
+  to match the design (front-page.html still carries it). templates/home.html +
+  assets/imladris-pages.css only; no theme.json change.
 
 = 0.3.31 =
 * AI Leaders credential surfaced as verifiable proof across three surfaces. The
