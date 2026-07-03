@@ -83,6 +83,11 @@
           "name": "Ink 300"
         },
         {
+          "slug": "ink-450",
+          "color": "#656E64",
+          "name": "Ink 450"
+        },
+        {
           "slug": "green-900",
           "color": "#1C2E24",
           "name": "Evergreen 900"
@@ -466,7 +471,7 @@
         "disabled": "#94A095",
         "inverse": "#FAF6EC",
         "link": "#2E4A3A",
-        "accent": "#9A7530"
+        "accent": "#7A5C1E"
       },
       "border": {
         "hair": "#DED2B8",
@@ -491,7 +496,7 @@
       },
       "feedback": {
         "success": "#4E7459",
-        "warning": "#B7842F",
+        "warning": "#855F1E",
         "danger": "#9C4A33",
         "info": "#3F6E89"
       },
@@ -502,21 +507,27 @@
       },
       "on": {
         "done": "#24402F",
-        "review": "#9A7530",
+        "review": "#7A5C1E",
         "pending": "#515C52"
+      },
+      "scrim": {
+        "ring": "#141c24",
+        "fire": "#1e1512",
+        "water": "#16261d",
+        "footer": "#141c18"
       },
       "artifactLink": "#3F6E89",
       "type": {
-        "hero": "500 5.5rem/1.08 'Cormorant Garamond', Georgia, serif",
-        "h1": "500 4rem/1.08 'Cormorant Garamond', Georgia, serif",
-        "h2": "500 3rem/1.22 'Cormorant Garamond', Georgia, serif",
-        "h3": "500 2.25rem/1.22 'Cormorant Garamond', Georgia, serif",
-        "h4": "600 1.75rem/1.22 'Cormorant Garamond', Georgia, serif",
-        "lead": "400 1.375rem/1.7 'EB Garamond', Georgia, serif",
-        "body": "400 1.1875rem/1.7 'EB Garamond', Georgia, serif",
-        "ui": "400 1.0625rem/1.5 'EB Garamond', Georgia, serif",
-        "meta": "400 0.8125rem/1.5 'Marcellus', serif",
-        "mono": "400 0.9375rem/1.5 'JetBrains Mono', monospace"
+        "hero": "500 5.5rem/1.08 var(--wp--preset--font-family--display)",
+        "h1": "500 4rem/1.08 var(--wp--preset--font-family--display)",
+        "h2": "500 3rem/1.22 var(--wp--preset--font-family--display)",
+        "h3": "500 2.25rem/1.22 var(--wp--preset--font-family--display)",
+        "h4": "600 1.75rem/1.22 var(--wp--preset--font-family--display)",
+        "lead": "400 1.375rem/1.7 var(--wp--preset--font-family--body)",
+        "body": "400 1.1875rem/1.7 var(--wp--preset--font-family--body)",
+        "ui": "400 1.0625rem/1.5 var(--wp--preset--font-family--body)",
+        "meta": "400 0.8125rem/1.5 var(--wp--preset--font-family--label)",
+        "mono": "400 0.9375rem/1.5 var(--wp--preset--font-family--mono)"
       },
       "weight": {
         "regular": "400",
@@ -552,11 +563,6 @@
         "lg": "12px",
         "xl": "20px",
         "pill": "999px"
-      },
-      "borderWidth": {
-        "thin": "1px",
-        "regular": "1.5px",
-        "thick": "2px"
       },
       "shadow": {
         "xs": "0 1px 2px rgba(27,35,29,0.06)",

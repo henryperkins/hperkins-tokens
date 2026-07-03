@@ -48,8 +48,8 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:heading {"level":3,"className":"hp-work__title"} -->
-<h3 class="wp-block-heading hp-work__title"><a href="/work/flavor-agent/">Flavor Agent</a></h3>
+<!-- wp:heading {"level":2,"className":"hp-work__title"} -->
+<h2 class="wp-block-heading hp-work__title"><a href="/work/flavor-agent/">Flavor Agent</a></h2>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-work__desc"} -->
@@ -106,8 +106,8 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:heading {"level":3,"className":"hp-work__title"} -->
-<h3 class="wp-block-heading hp-work__title"><a href="/work/ai-provider-for-codex/">Scriptorium AI Provider for Codex</a></h3>
+<!-- wp:heading {"level":2,"className":"hp-work__title"} -->
+<h2 class="wp-block-heading hp-work__title"><a href="/work/ai-provider-for-codex/">Scriptorium AI Provider for Codex</a></h2>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-work__desc"} -->
@@ -164,8 +164,8 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:heading {"level":3,"className":"hp-work__title"} -->
-<h3 class="wp-block-heading hp-work__title"><a href="/work/upstream-core-ai-stack/">Upstream: WordPress&rsquo;s core AI stack</a></h3>
+<!-- wp:heading {"level":2,"className":"hp-work__title"} -->
+<h2 class="wp-block-heading hp-work__title"><a href="/work/upstream-core-ai-stack/">Upstream: WordPress&rsquo;s core AI stack</a></h2>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-work__desc"} -->
@@ -222,8 +222,8 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:heading {"level":3,"className":"hp-work__title"} -->
-<h3 class="wp-block-heading hp-work__title"><a href="/work/dj-lee-voices-of-judah/">DJ Lee &amp; Voices of Judah</a></h3>
+<!-- wp:heading {"level":2,"className":"hp-work__title"} -->
+<h2 class="wp-block-heading hp-work__title"><a href="/work/dj-lee-voices-of-judah/">DJ Lee &amp; Voices of Judah</a></h2>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-work__desc"} -->

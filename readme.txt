@@ -3,6 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
+Stable tag: 0.3.34
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -269,6 +270,30 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.34 =
+* Accessibility (WCAG AA): darkened the gold/amber text tokens so accent
+  eyebrows/labels/badges and the "review"/warning status words clear 4.5:1 on
+  parchment (text.accent, feedback.warning, on.review). Restored the gold
+  focus-visible ring on the contact inputs, textarea, and header search (the
+  latter now a 2px gold-700 underline >=3:1), and raised form-field borders to
+  >=3:1 (the subscribe email input was effectively borderless at rest).
+* Performance: the front-page hero backdrop now serves elvenbook.webp (~131KB)
+  via image-set() instead of the 2.5MB PNG, mirroring the footer backdrop, and
+  the Cormorant display face is preloaded on the front page. Pruned ~19MB of
+  unreferenced source imagery from the theme package.
+* single.html: the "Continue reading" related loop no longer lists the current
+  post (excluded server-side via query_loop_block_query_vars on queryId 12), and
+  its section heading is now h2. work-index pattern headings promoted h3 -> h2.
+* Tokens: promoted the four hand-tuned ring/footer scrim colors into theme.json
+  (custom.scrim.*) so no raw hex bypasses the token layer; named the faint text
+  color (ink-450); type.* shorthands now reference the preset font-family vars;
+  dropped the unused borderWidth token group; removed dead var() fallbacks
+  (#fff, --hp-neutral-200, the nonexistent "contrast" preset).
+* Robustness: subscribe recipient is filterable
+  (hperkins_tokens_subscribe_notify_email), email validation runs before the
+  rate-limit budget is spent, form-enhance merges rather than clobbers
+  aria-describedby, and nav-close can no longer latch its guard on a throw.
 
 = 0.3.33 =
 * form-enhance.js rebuilt on document-level delegation: the contact form's

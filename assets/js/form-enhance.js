@@ -41,7 +41,15 @@
 			}
 			helper.setAttribute( 'role', 'alert' );
 			helper.textContent = message;
-			input.setAttribute( 'aria-describedby', helper.id );
+			// Merge, don't clobber: preserve any describedby the field already
+			// carried (e.g. a persistent hint) and just add the error id.
+			var described = ( input.getAttribute( 'aria-describedby' ) || '' )
+				.split( /\s+/ )
+				.filter( Boolean );
+			if ( described.indexOf( helper.id ) === -1 ) {
+				described.push( helper.id );
+			}
+			input.setAttribute( 'aria-describedby', described.join( ' ' ) );
 		}
 		input.setAttribute( 'aria-invalid', 'true' );
 		input.focus();
@@ -53,11 +61,22 @@
 			wrap.classList.remove( 'has-error' );
 			var helper = wrap.querySelector( '.hp-input__helper[data-hp-error]' );
 			if ( helper ) {
+				var helperId = helper.id;
 				helper.remove();
+				// Remove only the error id from aria-describedby; keep any others.
+				var remaining = ( input.getAttribute( 'aria-describedby' ) || '' )
+					.split( /\s+/ )
+					.filter( function ( id ) {
+						return id && id !== helperId;
+					} );
+				if ( remaining.length ) {
+					input.setAttribute( 'aria-describedby', remaining.join( ' ' ) );
+				} else {
+					input.removeAttribute( 'aria-describedby' );
+				}
 			}
 		}
 		input.removeAttribute( 'aria-invalid' );
-		input.removeAttribute( 'aria-describedby' );
 	}
 
 	function confirmPanel( title, body, inverse ) {

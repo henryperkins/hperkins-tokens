@@ -181,7 +181,7 @@
   font-size: var(--wp--preset--font-size--base);
   color: var(--wp--custom--text--strong);
   background: var(--wp--custom--surface--card);
-  border: 1.5px solid var(--wp--custom--border--strong);
+  border: 1.5px solid var(--wp--preset--color--ink-400);
   border-radius: var(--wp--custom--radius--md);
   /* Match the .hp-input control inset (spacing-3) so the message text starts
      on the same left edge as the Name/Email/Subject fields above it. */
@@ -193,7 +193,8 @@
               box-shadow var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
 }
 .hp-contact-form textarea:not(.block-editor-plain-text):focus {
-  outline: none;
+  outline: 2px solid var(--wp--preset--color--gold-700);
+  outline-offset: 2px;
   border-color: var(--wp--preset--color--gold-700);
   box-shadow: var(--wp--custom--shadow--inset);
   transition: none;

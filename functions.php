@@ -91,6 +91,19 @@ add_action( 'wp_enqueue_scripts', function () {
 	$hero_backdrop_png_url     = hperkins_tokens_asset_url( 'assets/img/imagery/elvenbook.png' );
 	$hero_backdrop_image       = 'url(' . wp_json_encode( esc_url( $hero_backdrop_png_url ), JSON_UNESCAPED_SLASHES ) . ')';
 
+	// Serve a webp for the hero backdrop when present (it renders blurred at low
+	// opacity, so an aggressive webp is visually identical to the 2.5MB PNG).
+	// Mirrors the footer-backdrop image-set branch below.
+	$hero_backdrop_webp_file = get_stylesheet_directory() . '/assets/img/imagery/elvenbook.webp';
+	if ( file_exists( $hero_backdrop_webp_file ) ) {
+		$hero_backdrop_webp_url = hperkins_tokens_asset_url( 'assets/img/imagery/elvenbook.webp' );
+		$hero_backdrop_image    = sprintf(
+			'image-set(url(%1$s) type("image/webp"), url(%2$s) type("image/png"))',
+			wp_json_encode( esc_url( $hero_backdrop_webp_url ), JSON_UNESCAPED_SLASHES ),
+			wp_json_encode( esc_url( $hero_backdrop_png_url ), JSON_UNESCAPED_SLASHES )
+		);
+	}
+
 	if ( file_exists( $footer_backdrop_png_file ) && file_exists( $footer_backdrop_webp_file ) ) {
 		$footer_backdrop_webp_url = hperkins_tokens_asset_url( 'assets/img/imagery/valley-twilight.webp' );
 		$footer_backdrop_image    = sprintf(
@@ -165,6 +178,8 @@ add_action( 'wp_enqueue_scripts', function () {
 add_action( 'after_setup_theme', function () {
 	global $editor_styles;
 
+	load_child_theme_textdomain( 'hperkins-tokens', get_stylesheet_directory() . '/languages' );
+
 	// Load BOTH stylesheets in the block editor, parent-then-child, to match the
 	// frontend cascade. Assembler registers the relative "style.css"; in a child
 	// theme, WordPress resolves that against both parent and child directories.
@@ -227,6 +242,61 @@ function hperkins_tokens_redirect_flavor_agent_demo_seed() {
 	exit;
 }
 add_action( 'template_redirect', 'hperkins_tokens_redirect_flavor_agent_demo_seed' );
+
+/**
+ * Preload the above-the-fold display font (Cormorant Garamond) on the front page
+ * so the hero headline paints without a fallback-serif swap. Scoped to the front
+ * page and matched to the theme.json @font-face URL (no cache-bust query) so the
+ * browser dedupes the preload against the actual font fetch.
+ */
+function hperkins_tokens_preload_display_font() {
+	if ( ! is_front_page() ) {
+		return;
+	}
+
+	$font_rel  = '/assets/fonts/cormorant-garamond.woff2';
+	$font_file = get_stylesheet_directory() . $font_rel;
+	if ( ! file_exists( $font_file ) ) {
+		return;
+	}
+
+	printf(
+		'<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
+		esc_url( get_stylesheet_directory_uri() . $font_rel )
+	);
+}
+add_action( 'wp_head', 'hperkins_tokens_preload_display_font', 1 );
+
+/**
+ * Exclude the current post from the "Continue reading" related loop in
+ * single.html. That Query Loop uses inherit:false with an empty exclude list, so
+ * core does not drop the post being viewed; without this a recent essay lists
+ * itself. Keyed on the template's queryId (12) so it only touches that loop.
+ *
+ * @param array    $query The query vars built from the block.
+ * @param WP_Block $block The block instance (its context carries the queryId).
+ * @return array
+ */
+function hperkins_tokens_exclude_current_from_related( $query, $block ) {
+	if ( ! is_singular() ) {
+		return $query;
+	}
+
+	$query_id = isset( $block->context['queryId'] ) ? (int) $block->context['queryId'] : 0;
+	if ( 12 !== $query_id ) {
+		return $query;
+	}
+
+	$current_id = get_queried_object_id();
+	if ( $current_id ) {
+		$excluded              = isset( $query['post__not_in'] ) ? (array) $query['post__not_in'] : array();
+		$excluded[]            = $current_id;
+		$query['post__not_in'] = array_values( array_unique( array_map( 'intval', $excluded ) ) );
+	}
+
+	return $query;
+}
+add_filter( 'query_loop_block_query_vars', 'hperkins_tokens_exclude_current_from_related', 10, 2 );
 
 /**
  * Store newsletter subscription requests even when mail delivery is unavailable.
@@ -339,10 +409,10 @@ function hperkins_tokens_handle_subscribe_request() {
 
 	if ( ! wp_verify_nonce( $nonce, 'hperkins_tokens_subscribe' ) ) {
 		$status = 'invalid-request';
-	} elseif ( ! hperkins_tokens_check_subscribe_rate_limit() ) {
-		$status = 'rate-limited';
 	} elseif ( ! is_email( $email ) ) {
 		$status = 'invalid-email';
+	} elseif ( ! hperkins_tokens_check_subscribe_rate_limit() ) {
+		$status = 'rate-limited';
 	} else {
 		$store_status = hperkins_tokens_store_subscribe_request( $email, $referer );
 		if ( 'duplicate' === $store_status ) {
@@ -354,8 +424,11 @@ function hperkins_tokens_handle_subscribe_request() {
 				$referer ? $referer : home_url( '/' )
 			);
 
+			// Filterable so the recipient is not hardcoded; defaults to the
+			// existing address to preserve delivery behavior.
+			$recipient = apply_filters( 'hperkins_tokens_subscribe_notify_email', 'htperkins@gmail.com' );
 			$mail_sent = wp_mail(
-				'htperkins@gmail.com',
+				$recipient,
 				'Fortnightly dispatch subscription',
 				$message,
 				array( 'Reply-To: ' . $email )

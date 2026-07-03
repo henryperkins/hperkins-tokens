@@ -123,9 +123,12 @@
 		// Commit to closing. We do NOT preventDefault and do NOT navigate — the
 		// history hooks above own the close the instant the router swap commits.
 		closing = true;
-		var reduce = reducedMotion();
+		var reduce;
 
 		try {
+			// Inside the try so a throw here is caught and the RESET_MS backstop
+			// below still runs — otherwise `closing` could latch true forever.
+			reduce = reducedMotion();
 			if ( ! reduce ) {
 				container.classList.add( 'is-hp-closing' );
 				link.classList.add( 'is-hp-chosen' );

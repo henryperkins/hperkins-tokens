@@ -4,7 +4,9 @@ Theme URI: https://hperkins.blog
 Description: Imladris design system child theme for hperkins.blog — a Rivendell-inspired, parchment-and-evergreen serif editorial system with a mallorn-gold accent and a status-verified evidence layer (done/review/pending by rule-colour and a redundant word). Tokens in theme.json are the source of truth; the render is a consequence.
 Author: Henry Perkins
 Template: assembler
-Version: 0.3.33
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Version: 0.3.34
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -1205,7 +1207,7 @@ header.wp-block-template-part {
 	.wp-block-navigation__responsive-container.is-menu-open:not(
 		.disable-default-overlay
 	) {
-	color: var(--wp--preset--color--contrast, var(--wp--custom--text--body));
+	color: var(--wp--custom--text--body);
 }
 
 .hp-site-header .wp-block-navigation__responsive-container-open,
@@ -1360,7 +1362,7 @@ header.wp-block-template-part {
 	transform: translate(-50%, -50%);
 	width: min(118%, 33rem);
 	aspect-ratio: 1;
-	color: var(--wp--preset--color--green-400, #6e9479);
+	color: var(--wp--preset--color--green-400);
 	opacity: 0.16;
 	z-index: 0;
 	pointer-events: none;
@@ -1839,8 +1841,8 @@ header.wp-block-template-part {
 	inset: 0;
 	background: linear-gradient(
 		180deg,
-		rgba(20, 28, 24, 0.72),
-		rgba(20, 28, 24, 0.92)
+		color-mix(in srgb, var(--wp--custom--scrim--footer) 72%, transparent),
+		color-mix(in srgb, var(--wp--custom--scrim--footer) 92%, transparent)
 	);
 }
 .hp-footer__inner {
@@ -2372,7 +2374,7 @@ samp {
 .hp-badge.is-tone-accent {
 	background: var(--wp--custom--accent--subtle);
 	border-color: var(--wp--preset--color--gold-200);
-	color: var(--wp--preset--color--gold-700);
+	color: var(--wp--custom--text--accent);
 }
 .hp-badge.is-tone-success {
 	background: var(--wp--preset--color--green-050);
@@ -2522,7 +2524,7 @@ samp {
 	align-items: center;
 	gap: var(--wp--preset--spacing--2);
 	padding: 0 var(--wp--preset--spacing--3);
-	border: 1.5px solid var(--wp--custom--border--strong);
+	border: 1.5px solid var(--wp--preset--color--ink-400);
 	border-radius: var(--hp-radius-card);
 	background: var(--wp--custom--surface--card);
 	box-shadow: var(--wp--custom--shadow--inset);
@@ -2556,7 +2558,8 @@ samp {
 
 .hp-input__control:focus-within {
 	border-color: var(--wp--preset--color--gold-700);
-	outline: 0;
+	outline: 2px solid var(--wp--preset--color--gold-700);
+	outline-offset: 2px;
 	box-shadow: var(--wp--custom--shadow--inset);
 }
 
@@ -2615,7 +2618,7 @@ samp {
 	flex: 1 1 220px;
 	min-width: 0;
 	padding: 11px 14px;
-	border: 1.5px solid var(--wp--preset--color--twilight-700);
+	border: 1.5px solid var(--wp--preset--color--ink-300);
 	border-radius: var(--hp-radius-card);
 	background: var(--wp--preset--color--twilight-900);
 	color: var(--wp--preset--color--parchment-50);
@@ -2675,7 +2678,7 @@ samp {
 .hp-ring-card {
 	--hp-ring-tint: var(--wp--preset--color--river-400);
 	--hp-ring-base: var(--wp--preset--color--twilight-900);
-	--hp-ring-scrim: #141c24;
+	--hp-ring-scrim: var(--wp--custom--scrim--ring);
 	/* "Way less opaque": the Rivendell-era backdrop is faded back to a faint
 	   texture over the dark card base, not a full-bleed photo. Tune this one
 	   value to taste (lower = fainter). */
@@ -2697,13 +2700,13 @@ samp {
 .hp-ring-card.is-fire {
 	--hp-ring-tint: var(--wp--preset--color--gold-400);
 	--hp-ring-base: var(--wp--preset--color--rust);
-	--hp-ring-scrim: #1e1512;
+	--hp-ring-scrim: var(--wp--custom--scrim--fire);
 }
 
 .hp-ring-card.is-water {
 	--hp-ring-tint: var(--wp--preset--color--green-200);
 	--hp-ring-base: var(--wp--preset--color--green-700);
-	--hp-ring-scrim: #16261d;
+	--hp-ring-scrim: var(--wp--custom--scrim--water);
 }
 
 /* Full-bleed Rivendell-era backdrop, faded to a texture behind the content. */
@@ -3828,10 +3831,10 @@ samp {
 	display: grid;
 	gap: var(--wp--preset--spacing--2);
 	padding: var(--wp--preset--spacing--6);
-	border: 1px solid var(--wp--custom--border--hair, var(--hp-neutral-200));
+	border: 1px solid var(--wp--custom--border--hair);
 	border-left: 3px solid var(--wp--preset--color--gold-500);
 	border-radius: var(--wp--custom--radius--lg, 12px);
-	background: var(--wp--custom--surface--raised, #fff);
+	background: var(--wp--custom--surface--raised);
 }
 .hp-form-confirm__mark {
 	display: inline-flex;
@@ -3927,7 +3930,8 @@ samp {
 
 .hp-site-actions .hp-site-search .wp-block-search__input:focus {
 	outline: none;
-	border-bottom-color: var(--wp--preset--color--gold-500) !important;
+	border-bottom-width: 2px !important;
+	border-bottom-color: var(--wp--preset--color--gold-700) !important;
 }
 
 /* Subscribe: evergreen pill with lapidary caps (Council). */
