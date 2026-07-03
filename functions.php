@@ -189,7 +189,13 @@ add_action( 'after_setup_theme', function () {
 	$editor_styles = array_values( array_diff( (array) $editor_styles, array( 'style.css' ) ) );
 	add_editor_style( get_template_directory_uri() . '/style.css' );
 	add_editor_style( get_stylesheet_directory_uri() . '/style.css' );
-	add_editor_style( get_stylesheet_directory_uri() . '/assets/imladris-pages.css' );
+	// Guard the page-layout sheet the way the frontend enqueue does (lines
+	// 76-85). add_editor_style() registers globally, so — unlike the frontend
+	// — it cannot be suppressed on the front page; the editor deliberately
+	// previews the page CSS on every template.
+	if ( file_exists( get_stylesheet_directory() . '/assets/imladris-pages.css' ) ) {
+		add_editor_style( get_stylesheet_directory_uri() . '/assets/imladris-pages.css' );
+	}
 
 	// The Assembler parent preloads InterVariable.woff2 from the stylesheet
 	// directory, which under this child theme resolves to a path that does not

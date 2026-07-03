@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.34
+Stable tag: 0.3.35
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -90,8 +90,7 @@ component CSS and aliased to --hp-* names in style.css):
   relaxed 1.7 · tracking wide 0.04em / caps 0.18em
 * measure prose 68ch / narrow 46ch · container text 44rem / wide 72rem /
   full 84rem
-* radius xs 2px / sm 4px / md 7px / lg 12px / xl 20px / pill · borderWidth
-  thin 1px / regular 1.5px / thick 2px
+* radius xs 2px / sm 4px / md 7px / lg 12px / xl 20px / pill
 * shadow xs…xl plus inset and gilt · ease calm / out / inOut · dur fast 140ms /
   base 240ms / slow 420ms / veil 700ms
 
@@ -270,6 +269,28 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.35 =
+* Accessibility (WCAG AA / 1.4.11): the current-page and hover navigation
+  underlines now use gold-700 (#9A7530, 3.69:1 on parchment) so the active-item
+  state indicator clears the 3:1 non-text contrast threshold — matching the
+  header search-field focus underline. The current-page underline was a solid
+  gold-500 (#C29A44, 2.29:1); the hover underline was a fainter translucent
+  gold-500 mix, so both improve.
+* theme.json: pinned styles.elements h5/h6 font sizes (lg / md) so the lower
+  headings ride the Imladris type scale instead of falling through to the
+  Assembler parent's font-size slugs, which this child theme's scale no longer
+  defines. Token vocabulary unchanged (design-system 1:1 preserved).
+* Journal index (assets/imladris-pages.css): the "More from the journal" divider
+  and the single-post featured layout now degrade fail-open on engines without
+  :has() (divider stays visible; the lone lead uses one full-width column)
+  instead of fail-closed (missing divider / empty right rail).
+* Robustness & hygiene: dropped the stale --hp-neutral-200 entry from
+  verify-style-token-usage.js's runtime allow-list (it had masked reintroduction
+  of that removed token); guarded the editor enqueue of imladris-pages.css with
+  file_exists to match the frontend path; corrected the radius--lg fallback
+  literal (14px -> 12px) to match the token; and removed the borderWidth token
+  group from the readme vocabulary (it was dropped from theme.json in 0.3.34).
 
 = 0.3.34 =
 * Accessibility (WCAG AA): darkened the gold/amber text tokens so accent

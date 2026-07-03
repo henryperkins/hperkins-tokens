@@ -510,20 +510,19 @@
   line-height: 1.1;
 }
 @media (min-width: 782px) {
+  /* Default to a single full-width lead; opt into the 2-up asymmetric grid only
+     when a second post exists, so browsers without :has() fail open to one
+     column (never an empty right rail) rather than closed. */
   .hp-journal-featured .wp-block-post-template {
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-    grid-auto-rows: 1fr;
-  }
-  /* Collapse to a single full-width lead when there is no second post. */
-  .hp-journal-featured .wp-block-post-template:not(:has(> li:nth-child(2))) {
     grid-template-columns: 1fr;
     grid-auto-rows: auto;
   }
-  .hp-journal-featured .wp-block-post-template:not(:has(> li:nth-child(2))) > li:first-child {
-    grid-row: auto;
+  .hp-journal-featured .wp-block-post-template:has(> li:nth-child(2)) {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+    grid-auto-rows: 1fr;
   }
-  /* Lead — large vertical photo card spanning both rows of the right column. */
-  .hp-journal-featured .wp-block-post-template > li:first-child {
+  /* Lead — large vertical photo card spanning both rows of the right column (2-up only). */
+  .hp-journal-featured .wp-block-post-template:has(> li:nth-child(2)) > li:first-child {
     grid-column: 1;
     grid-row: 1 / span 2;
   }
@@ -552,14 +551,15 @@
   }
 }
 
-/* "More from the journal" divider — hidden unless the grid below has posts. */
+/* "More from the journal" divider — shown unless the grid below is empty. Default
+   visible so browsers without :has() fail open (divider shows) rather than closed. */
 .hp-journal-more {
-  display: none;
+  display: flex;
   align-items: center;
   gap: var(--wp--preset--spacing--5);
   margin-top: var(--wp--preset--spacing--9);
 }
-.hp-journal-more:has(+ .hp-journal-grid .wp-block-post-template > li) { display: flex; }
+.hp-journal-more:not(:has(+ .hp-journal-grid .wp-block-post-template > li)) { display: none; }
 .hp-journal-more::after {
   content: "";
   flex: 1;
@@ -1018,7 +1018,7 @@
   height: min(82vh, 920px);
   min-height: 540px;
   border: 1px solid var(--wp--custom--border--soft);
-  border-radius: var(--wp--custom--radius--lg, 14px);
+  border-radius: var(--wp--custom--radius--lg, 12px);
   background: #0d0d0c;
   /* One-off warm halo for the dark embed frame — no theme.json shadow token
      carries this warm cast, so the value is literal (like the chrome dots). */

@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.34
+Version: 0.3.35
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -1183,13 +1183,13 @@ header.wp-block-template-part {
 
 .hp-site-header .wp-block-navigation a:hover {
 	color: var(--wp--custom--text--strong);
-	border-bottom-color: color-mix(in srgb, var(--wp--preset--color--gold-500) 55%, transparent);
+	border-bottom-color: var(--wp--preset--color--gold-700);
 }
 
 .hp-site-header .wp-block-navigation .current-menu-item > a,
 .hp-site-header .wp-block-navigation a[aria-current] {
 	color: var(--wp--custom--text--strong);
-	border-bottom-color: var(--wp--preset--color--gold-500);
+	border-bottom-color: var(--wp--preset--color--gold-700);
 }
 
 .hp-site-header

@@ -9,7 +9,6 @@ const fs = require( 'node:fs' );
 const WP_PATH = '/home/dev/hperkinsblog';
 const ALLOWED_DYNAMIC = new Set( [
 	'--hp-footer-backdrop-url',
-	'--hp-neutral-200',
 ] );
 
 function assert( condition, message ) {

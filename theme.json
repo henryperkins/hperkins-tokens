@@ -631,6 +631,18 @@
           "lineHeight": "1.22"
         }
       },
+      "h5": {
+        "typography": {
+          "fontSize": "var(--wp--preset--font-size--lg)",
+          "lineHeight": "1.22"
+        }
+      },
+      "h6": {
+        "typography": {
+          "fontSize": "var(--wp--preset--font-size--md)",
+          "lineHeight": "1.22"
+        }
+      },
       "link": {
         "color": {
           "text": "var(--wp--preset--color--green-700)"
