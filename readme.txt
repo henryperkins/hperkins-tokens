@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.36
+Stable tag: 0.3.37
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -269,6 +269,23 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.37 =
+* Router scroll parity: the full-page Interactivity Router swaps pages without
+  managing scroll at all, breaking parity with native loads in both directions
+  — hash links never reached their target (both Subscribe pills →
+  /contact/#subscribe left visitors at the top of the contact page) and plain
+  navigations from a scrolled page opened the next page mid-document. New
+  router-scroll.js hooks pushState (the nav-close-delight.js wrap pattern) and
+  settles the scroll across the commit window: hash → its target (smooth as a
+  reveal; instant under prefers-reduced-motion; a stale anchor falls back to
+  top like a full load), changed path without a hash → top, instantly. Full
+  loads, history traversal, and same-path pushes stay native/untouched.
+* Anchor targets now reserve the sticky masthead's height ([id] {
+  scroll-margin-top: spacing-10 } beside the sticky rule) so fragment scrolls
+  — native loads included, which previously tucked the section top under the
+  frosted bar — land clear of it. scroll-margin only affects scroll-into-view
+  operations, so the blanket [id] coverage has no other rendering effect.
 
 = 0.3.36 =
 * Mobile subscribe restored (companion DB fix): a later Site Editor menu edit

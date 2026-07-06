@@ -173,6 +173,25 @@ add_action( 'wp_enqueue_scripts', function () {
 			)
 		);
 	}
+
+	// The Interactivity Router swaps pages without managing scroll at all —
+	// hash links never reach their target (both Subscribe pills →
+	// /contact/#subscribe) and plain navigations keep the old page's scroll
+	// offset. This restores native full-load scroll parity for client swaps.
+	$router_scroll_rel  = '/assets/js/router-scroll.js';
+	$router_scroll_file = get_stylesheet_directory() . $router_scroll_rel;
+	if ( file_exists( $router_scroll_file ) ) {
+		wp_enqueue_script(
+			'hperkins-router-scroll',
+			get_stylesheet_directory_uri() . $router_scroll_rel,
+			array(),
+			filemtime( $router_scroll_file ),
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
+		);
+	}
 }, 20 );
 
 add_action( 'after_setup_theme', function () {

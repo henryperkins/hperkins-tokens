@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.36
+Version: 0.3.37
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -1094,6 +1094,15 @@ header.wp-block-template-part {
 	position: sticky;
 	top: 0;
 	z-index: 30;
+}
+
+/* Fragment scrolls land under the sticky masthead without this: reserve the
+	 bar's height plus breathing room on every in-page anchor target. It covers
+	 native #hash loads, router-hash-scroll.js (scrollIntoView honors
+	 scroll-margin), and focus reveals; scroll-margin has no other effect, so
+	 blanket [id] coverage is side-effect-free. */
+[id] {
+	scroll-margin-top: var(--wp--preset--spacing--10);
 }
 
 .hp-site-header__inner {
