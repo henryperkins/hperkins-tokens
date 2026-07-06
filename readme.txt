@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.35
+Stable tag: 0.3.36
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -269,6 +269,24 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.36 =
+* Mobile subscribe restored (companion DB fix): a later Site Editor menu edit
+  had deleted the trailing hp-nav-subscribe link from nav menu 237, leaving no
+  subscribe affordance below 782px (the bar pill is hidden there by design;
+  the drawer-foot pill CSS was matching nothing). Re-added the link verbatim
+  from the redesign backup. CLAUDE.md now documents the dependency, the backup
+  path, and a one-line survival check to run after any menu edit.
+* Docs: the CLAUDE.md navigation note still described the pre-Council overlay
+  search (an hp-nav-search block in menu 237); rewritten for the current
+  contract — search is theme-owned in the header bar at every width, and the
+  menu carries the nav links plus the Subscribe foot link only. Also noted the
+  intra-theme.json drift edge: settings.custom repeats palette hexes as
+  literals, so palette changes must update the custom twins in the same edit.
+* Hygiene: removed the no-op load_child_theme_textdomain() call (no languages/
+  directory has ever shipped); moved ink-450 into scale position in the
+  theme.json palette so the picker lists the Ink ramp monotonically. Token
+  values unchanged (design-system 1:1 preserved).
 
 = 0.3.35 =
 * Accessibility (WCAG AA / 1.4.11): the current-page and hover navigation

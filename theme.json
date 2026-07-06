@@ -73,6 +73,11 @@
           "name": "Ink 500"
         },
         {
+          "slug": "ink-450",
+          "color": "#656E64",
+          "name": "Ink 450"
+        },
+        {
           "slug": "ink-400",
           "color": "#6E7A6E",
           "name": "Ink 400"
@@ -81,11 +86,6 @@
           "slug": "ink-300",
           "color": "#94A095",
           "name": "Ink 300"
-        },
-        {
-          "slug": "ink-450",
-          "color": "#656E64",
-          "name": "Ink 450"
         },
         {
           "slug": "green-900",

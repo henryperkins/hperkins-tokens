@@ -178,8 +178,6 @@ add_action( 'wp_enqueue_scripts', function () {
 add_action( 'after_setup_theme', function () {
 	global $editor_styles;
 
-	load_child_theme_textdomain( 'hperkins-tokens', get_stylesheet_directory() . '/languages' );
-
 	// Load BOTH stylesheets in the block editor, parent-then-child, to match the
 	// frontend cascade. Assembler registers the relative "style.css"; in a child
 	// theme, WordPress resolves that against both parent and child directories.
