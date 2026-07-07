@@ -134,7 +134,7 @@ foreach (
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-ring-card__cta is-in-review"} -->
-<p class="hp-ring-card__cta is-in-review"><span class="hp-ring-card__cta-text">Verify the signature</span><span class="hp-ring-card__pill"><span class="hp-ring-card__pill-dot" aria-hidden="true"></span>In review</span></p>
+<p class="hp-ring-card__cta is-in-review"><span>Verify the signature</span><span class="hp-ring-card__pill"><span class="hp-ring-card__pill-dot" aria-hidden="true"></span>In review</span></p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:column --></div>
 <!-- /wp:columns --></div>

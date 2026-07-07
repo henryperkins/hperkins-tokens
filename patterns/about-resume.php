@@ -5,6 +5,14 @@
  * Categories: hperkins
  * Description: The full About / Resume composition — hero with gilt portrait and impact strip, "What I do" capability cards, résumé-card experience, skills + education, and selected projects — matching the Imladris design system. Place inside the page-about template's constrained content area.
  */
+
+// The portrait lives in uploads (not the theme), so hperkins_tokens_asset_url()
+// can't mtime it; bust the ~30-day CDN image cache the same way by hand.
+$hperkins_about_portrait_rel  = '/wp-content/uploads/2026/06/henry-perkins.png';
+$hperkins_about_portrait_file = WP_CONTENT_DIR . '/uploads/2026/06/henry-perkins.png';
+$hperkins_about_portrait_src  = file_exists( $hperkins_about_portrait_file )
+	? add_query_arg( 'v', filemtime( $hperkins_about_portrait_file ), $hperkins_about_portrait_rel )
+	: $hperkins_about_portrait_rel;
 ?>
 <!-- wp:group {"align":"wide","className":"hp-about-hero","layout":{"type":"default"}} -->
 <div class="wp-block-group alignwide hp-about-hero"><!-- wp:group {"className":"hp-about-hero__top","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"center"}} -->
@@ -23,15 +31,15 @@
 
 <!-- wp:group {"className":"hp-role-tags","layout":{"type":"flex","flexWrap":"wrap"}} -->
 <div class="wp-block-group hp-role-tags"><!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>WordPress AI</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>WordPress AI</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Implementation Engineer</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Implementation Engineer</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Developer Enablement</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Developer Enablement</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
@@ -48,7 +56,7 @@
 
 <!-- wp:group {"className":"hp-about-hero__portrait","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-about-hero__portrait"><!-- wp:image {"sizeSlug":"full","linkDestination":"none","className":"hp-about-avatar is-style-rounded"} -->
-<figure class="wp-block-image size-full hp-about-avatar is-style-rounded"><img src="/wp-content/uploads/2026/06/henry-perkins.png" alt="Henry Perkins"/></figure>
+<figure class="wp-block-image size-full hp-about-avatar is-style-rounded"><img src="<?php echo esc_url( $hperkins_about_portrait_src ); ?>" alt="Henry Perkins"/></figure>
 <!-- /wp:image --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group --></div>
@@ -253,7 +261,7 @@
 
 <!-- wp:group {"className":"hp-exp-list","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-exp-list"><!-- wp:group {"className":"hp-exp","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"baseline"}} -->
+<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between"}} -->
 <div class="wp-block-group hp-exp__head"><!-- wp:heading {"level":3,"className":"hp-exp__role"} -->
 <h3 class="wp-block-heading hp-exp__role">Independent Technology Consultant</h3>
 <!-- /wp:heading -->
@@ -287,7 +295,7 @@
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"hp-exp","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"baseline"}} -->
+<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between"}} -->
 <div class="wp-block-group hp-exp__head"><!-- wp:heading {"level":3,"className":"hp-exp__role"} -->
 <h3 class="wp-block-heading hp-exp__role">Shift Supervisor</h3>
 <!-- /wp:heading -->
@@ -313,7 +321,7 @@
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"hp-exp","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"baseline"}} -->
+<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between"}} -->
 <div class="wp-block-group hp-exp__head"><!-- wp:heading {"level":3,"className":"hp-exp__role"} -->
 <h3 class="wp-block-heading hp-exp__role">Happiness Engineer</h3>
 <!-- /wp:heading -->
@@ -339,7 +347,7 @@
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"hp-exp","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"baseline"}} -->
+<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between"}} -->
 <div class="wp-block-group hp-exp__head"><!-- wp:heading {"level":3,"className":"hp-exp__role"} -->
 <h3 class="wp-block-heading hp-exp__role">Developer Community Manager</h3>
 <!-- /wp:heading -->
@@ -369,7 +377,7 @@
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"hp-exp","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between","verticalAlignment":"baseline"}} -->
+<div class="wp-block-group hp-exp"><!-- wp:group {"className":"hp-exp__head","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"space-between"}} -->
 <div class="wp-block-group hp-exp__head"><!-- wp:heading {"level":3,"className":"hp-exp__role"} -->
 <h3 class="wp-block-heading hp-exp__role">Service &amp; Sales</h3>
 <!-- /wp:heading -->
@@ -414,23 +422,23 @@
 
 <!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
 <div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>TypeScript</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>TypeScript</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>JavaScript</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>JavaScript</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>React</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>React</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>PHP</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>PHP</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Python</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Python</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group -->
@@ -442,19 +450,19 @@
 
 <!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
 <div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>OpenAI API integrations</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>OpenAI API integrations</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>AI workflow prototyping</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>AI workflow prototyping</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Prompt design</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Prompt design</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Workflow automation</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Workflow automation</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group -->
@@ -466,23 +474,23 @@
 
 <!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
 <div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>WordPress</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>WordPress</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>WooCommerce</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>WooCommerce</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Cloudflare Workers</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Cloudflare Workers</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Vite</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Vite</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Tailwind CSS</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Tailwind CSS</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group -->
@@ -494,23 +502,23 @@
 
 <!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
 <div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Technical support</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Technical support</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Escalation triage</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Escalation triage</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Documentation</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Documentation</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Customer onboarding</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Customer onboarding</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Developer enablement</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Developer enablement</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group -->
@@ -522,27 +530,27 @@
 
 <!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
 <div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Git</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Git</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>GitHub</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>GitHub</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>REST APIs</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>REST APIs</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Webhook configuration</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Webhook configuration</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Zendesk</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Zendesk</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Jira</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Jira</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group -->
@@ -554,19 +562,19 @@
 
 <!-- wp:group {"className":"hp-tag-row","layout":{"type":"flex","flexWrap":"wrap"}} -->
 <div class="wp-block-group hp-tag-row"><!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Team coaching</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Team coaching</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Cross-functional collaboration</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Cross-functional collaboration</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Process improvement</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Process improvement</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span>#</span>Stakeholder communication</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Stakeholder communication</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group --></div>

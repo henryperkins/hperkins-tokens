@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.37
+Version: 0.3.38
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -1098,7 +1098,7 @@ header.wp-block-template-part {
 
 /* Fragment scrolls land under the sticky masthead without this: reserve the
 	 bar's height plus breathing room on every in-page anchor target. It covers
-	 native #hash loads, router-hash-scroll.js (scrollIntoView honors
+	 native #hash loads, router-scroll.js (scrollIntoView honors
 	 scroll-margin), and focus reveals; scroll-margin has no other effect, so
 	 blanket [id] coverage is side-effect-free. */
 [id] {
@@ -2450,7 +2450,9 @@ samp {
 .hp-callout__icon {
 	flex: 0 0 auto;
 	margin-top: 2px;
-	color: var(--wp--preset--color--gold-700);
+	/* text.accent, not gold-700: the icon/title sit on the gold-100 wash, where
+	   gold-700 reads ~3.5:1 — below AA for this small caps size. */
+	color: var(--wp--custom--text--accent);
 }
 
 .hp-callout__body > * {
@@ -2466,7 +2468,7 @@ samp {
 	font-size: var(--wp--preset--font-size--xs);
 	letter-spacing: var(--wp--custom--tracking--caps);
 	text-transform: uppercase;
-	color: var(--wp--preset--color--gold-700);
+	color: var(--wp--custom--text--accent);
 }
 
 .hp-callout.is-tone-insight {
@@ -2483,7 +2485,9 @@ samp {
 }
 .hp-callout.is-tone-caution .hp-callout__icon,
 .hp-callout.is-tone-caution .hp-callout__title {
-	color: var(--wp--preset--color--amber);
+	/* feedback.warning is the darkened warning TEXT token (amber itself is
+	   ~2.8:1 on the gold-100 wash); the amber rule color above stays. */
+	color: var(--wp--custom--feedback--warning);
 }
 .hp-callout.is-tone-risk {
 	background: color-mix(

@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.37
+Stable tag: 0.3.38
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -23,9 +23,9 @@ filled-vs-hollow dot — never the shape of the thing.
 
 This is a child theme. It overrides the header and footer template parts; ships
 front-page.html, home.html, single.html, page-about.html,
-page-ai-enablement.html, page-contact.html, page-work.html,
-page-plato-artifacts.html, and page-case-study.html as additive block templates
-(each detailed under Template overrides below); and provides its own token
+page-ai-enablement.html, page-contact.html, page-how-this-was-built.html,
+page-work.html, page-plato-artifacts.html, and page-case-study.html as additive
+block templates (each detailed under Template overrides below); and provides its own token
 vocabulary, component CSS, and patterns. Unspecified page/post templates are
 inherited from the Assembler parent. The Assembler parent theme must be
 installed for this theme to activate.
@@ -46,14 +46,15 @@ authors choose only from these named tokens):
   sunken tints, hairlines)
 * Mist — mist-100 #EEF1ED / mist-200 #DCE3DD (cool neutral surface and soft
   border)
-* Ink — ink-900 #1B231D / ink-700 #313B33 / ink-500 #515C52 / ink-400 #6E7A6E /
-  ink-300 #94A095 (text, strong to disabled)
+* Ink — ink-900 #1B231D / ink-700 #313B33 / ink-500 #515C52 / ink-450 #656E64 /
+  ink-400 #6E7A6E / ink-300 #94A095 (text, strong to disabled)
 * Evergreen (brand) — green-900 #1C2E24 … green-050 #EDF3ED; green-700 #2E4A3A is
   the brand and link color, green-050 the merged-chip tint
 * River (links / info) — river-900 #1E3040 … river-100 #DCE9F0; the Bruinen blue
   used for artifact links
 * Gold (accent) — gold-700 #9A7530 … gold-100 #F4EBCF; gold-500 #C29A44 is the
-  accent and the 3px focus ring
+  accent; the 3px focus-visible ring uses the deeper gold-700 so it clears 3:1
+  on parchment and twilight surfaces
 * Twilight (inverse plates) — twilight-900 #161D24 / twilight-800 #1E2730 /
   twilight-700 #283440 (footer and hero plates)
 * Status (semantic; rule-color AND a redundant word, never color alone) —
@@ -94,8 +95,10 @@ component CSS and aliased to --hp-* names in style.css):
 * shadow xs…xl plus inset and gilt · ease calm / out / inOut · dur fast 140ms /
   base 240ms / slow 420ms / veil 700ms
 
-The 1px hairline rules and the mini-diagram bar percentages are the only visual
-values intentionally left literal; everything else resolves from a named token.
+The 1px hairline rules and a few documented one-off literals (the browser-chrome
+traffic-light dots and the dark artifact-embed frame's canvas/halo) are the only
+visual values intentionally left literal; everything else resolves from a named
+token.
 
 = Patterns =
 
@@ -147,7 +150,7 @@ unchanged.
 
 = Template overrides =
 
-The child theme owns nine block templates (page-case-study is also registered as
+The child theme owns ten block templates (page-case-study is also registered as
 a selectable "Case study" template in theme.json; the others map by the WordPress
 template hierarchy):
 
@@ -168,6 +171,10 @@ template hierarchy):
   versioned at `content/page-snapshots/ai-enablement.html`.
 * page-contact.html — the contact page; renders the "contact" pattern in a 72rem
   column.
+* page-how-this-was-built.html — the build report; fully theme-owned (it embeds
+  the how-this-was-built pattern and the DB page carries an empty body, so the
+  pattern file is the source of record — deliberately outside the snapshot
+  contract).
 * page-work.html — the work index shell; renders the stored page body in the
   44/72rem composition. The current live content is versioned at
   `content/page-snapshots/work.html`.
@@ -217,19 +224,18 @@ hp-shot--browser (desktop) or hp-shot hp-shot--phone (mobile) classes when you
 build out the Flavor Agent pages.
 
 The custom HPerkins Wapuu master art lives at assets/wapuu/hperkins-wapuu.png
-(opaque white field). Two transparent, trimmed derivatives are cut from it and
-are what the theme actually renders: wapuu-hero.png (full figure, used by the
-Wapuu homepage hero pattern) and wapuu-mark.png (square head crop, used as the
-compact header brand mark). Regenerate the derivatives from the master rather
-than hand-editing them.
+(opaque white field), with historical derivatives beside it. What the theme
+renders today is assets/img/wapuu-color.png (and its WebP variant) — the full
+figure in the theme-owned Wapuu homepage hero pattern. The header brand is the
+inline eight-pointed star SVG emblem (hp-site-brand__emblem in
+parts/header.html), not a Wapuu mark, so the mascot appears exactly once per
+page: large on the home hero, nowhere else. It should not replace proof boards,
+artifact rows, screenshots, or project-specific evidence.
 
-The header is one system in two tiers. Inner pages get a compact utility bar:
-the wapuu-mark.png head on a clean disc next to the wordmark. The home page
-(body.home) promotes that bar into the hero — the bar drops its own surface and
-divider to share the hero's grid band, and the small mark is hidden so the full
-wapuu-hero.png figure carries the brand. The mascot therefore appears exactly
-once per page: large on home, a quiet chip elsewhere. It should not replace
-proof boards, artifact rows, screenshots, or project-specific evidence.
+The masthead is one sticky, frosted Council bar on every page: star emblem +
+site-title lockup, an optically centered nav, an inline click-to-expand search,
+and the evergreen Subscribe pill (which moves to the mobile drawer foot below
+782px as the hp-nav-subscribe link in menu 237).
 
 Use Evidence First for non-visual proof work such as GitHub contributions,
 provider architecture, upstream fixes, documentation grounding, and review
@@ -269,6 +275,66 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.38 =
+* Comprehensive review remediation across security, accessibility, content,
+  verification, and docs.
+* Security: moved the pre-redaction governance-artifact source zip out of the
+  web docroot; redacted the admin username and internal hostname from the
+  published Claude Code transcript + session artifact and refreshed the
+  evidence-manifest hash (which had already drifted from the 0.3.30 password
+  redaction and no longer matched the shipped transcript).
+* Accessibility: the 32 decorative tag hashes on /about/ are aria-hidden now
+  (DB body + about-resume seed, matching the imladris-tag component);
+  /contact/'s h1→h3 jump fixed by promoting the subscribe title to h2 (order
+  stays correct on home/single); callout icons/titles and the build report's
+  small gold text moved from gold-700 (~3.9:1) to the AA text.accent token,
+  the caution tone to feedback.warning, and the theme.json link hover color to
+  text.accent; the avatar/badge/tag/icon-button reference patterns gained real
+  roles (role="img" avatars, role="group" specimen rows).
+* Journal: single.html's "Continue reading" section now hides when the related
+  loop is empty (fail-open :has(), the hp-journal-more idiom) and its back link
+  points at /essays/ — the actual posts index — instead of /; a found_posts
+  filter keyed to the journal grid (queryId 11, seed offset 3) stops core
+  pagination fabricating a trailing empty page at post counts like 7–9.
+* Patterns: removed the invalid verticalAlignment:"baseline" layout attribute
+  from about-resume (core ignores it; the About CSS owns baseline alignment);
+  the uploads-hosted About portrait is cache-busted (?v= mtime — computed live
+  in the seed, pinned in the DB body); quote-block dropped its literal cite
+  dash (the About-scoped cite::before supplies it, ending the double-dash);
+  subscribe title/input ids are per-render unique via wp_unique_id (the
+  #subscribe anchor is unchanged); the ai-enablement seed + body fixed the
+  "2-xl" fontSize slug (→ 2xl) and anchored the orphan Article-50 footnote
+  marker in the text; how-this-was-built re-indented to tabs with its
+  base-size specimen literal tokenized; ring-card dropped the unstyled
+  cta-text hook.
+* Tokens: the journal plate-frame border literal rgba(194,154,68,.16) is now
+  color-mix() on gold-500; the artifact-embed's dark canvas and warm halo are
+  documented one-off literals.
+* Verification suite — all ten scripts now pass against a healthy theme:
+  verify-performance-assets expects the eager LCP hero (fetchpriority="high",
+  forbids loading="lazy" — it had still demanded the attribute 0.3.33 removed);
+  verify-contact-form-styling expects the 0.3.34 focus ring (gold-700 border
+  plus the 2px gold-700 outline), selects the subscribe email by class, and
+  reports labeled failures when the form is missing; verify-design-system-
+  specimen keeps its DB-content checks and skips rendered-page checks while
+  post 79 is draft; verify-ring-cards-mobile asserts the three-ring section
+  actually renders (no vacuous pass); verify-subscribe-endpoint no longer
+  touches the production DB when HPERKINS_ORIGIN points elsewhere and cleans
+  up its test filters/transient even on assert failure; verify-style-token-
+  usage and verify-journal-polish resolve paths from the script location and
+  honor the origin/path env vars; every CDP send() times out instead of
+  hanging on a dropped response, and journal-polish's static regexes are
+  bounded to their actual rule blocks.
+* Hygiene: deleted ~19MB of unreferenced tracked imagery (image/image22/
+  elfdoor/lothlorien/rivendell-night/wapuu-cirdan PNGs, the root elvenbook.png
+  duplicate, and three unused Wapuu webp portraits — zero references in theme
+  files or the DB); removed the stale docs/CLAUDE.md duplicate; corrected this
+  readme's template inventory (ten templates incl. page-how-this-was-built),
+  the retired wapuu-hero/wapuu-mark + body.home art-direction copy, the
+  focus-ring color note (gold-700), the Ink ramp (ink-450), and the
+  literal-values note (the mini-diagram is long gone); CLAUDE.md and
+  docs/design-system/INDEX.md refreshed to the shipped architecture.
 
 = 0.3.37 =
 * Router scroll parity: the full-page Interactivity Router swaps pages without

@@ -232,7 +232,7 @@
 
 ● Need admin credentials to log in. Let me use WP-CLI to set a known temporary password for the demo.
 
-● Bash(wp --path=/home/dev/hperkinsblog user update hperkins --user_pass='[redacted]' --allow-root 2>/dev/null && echo "Password updated")
+● Bash(wp --path=/home/dev/hperkinsblog user update [admin-user] --user_pass='[redacted]' --allow-root 2>/dev/null && echo "Password updated")
   ⎿  Interrupted · What should Claude do instead?
 
 ❯ I approved the action.                                                                                                                                                                                                                                                                                                                                 
@@ -357,5 +357,5 @@
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ❯ 
 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-  dev@dropitlet:/home/dev/flavor-agent
+  dev@[redacted-host]:/home/dev/flavor-agent
   ⏵⏵ auto mode on (shift+tab to cycle) · ← for agents

@@ -5,9 +5,9 @@
   "sourceTranscript": {
     "file": "claude-code-ai-governance-transcript.txt",
     "lines": 361,
-    "bytes": 40191,
-    "sha256": "7b1e028e133b717680a847aaa3fe5ccc3d5afc7256b39709f371fc73b910126d",
-    "note": "Formatted evidence inserts are additive. Raw view and companion transcript preserve the original source bytes."
+    "bytes": 40199,
+    "sha256": "8c90f4d34f87cb975aa175ef340d54642ae6607d4a64d51d87c04134ca0140be",
+    "note": "Formatted evidence inserts are additive. Raw view and companion transcript preserve the original source bytes. 2026-07-07: admin username and hostname redacted post-publication ([admin-user], [redacted-host]); hash covers the redacted transcript."
   },
   "evidence": [
     {

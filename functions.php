@@ -322,6 +322,46 @@ function hperkins_tokens_exclude_current_from_related( $query, $block ) {
 add_filter( 'query_loop_block_query_vars', 'hperkins_tokens_exclude_current_from_related', 10, 2 );
 
 /**
+ * Tag the journal grid Query Loop (home.html, queryId 11) with its static seed
+ * offset. The grid starts at offset 3 because the featured loop above it shows
+ * the first three posts; core computes max_num_pages from found_posts without
+ * subtracting that offset, which fabricates a trailing empty pagination page at
+ * post counts like 7-9 or 13-15. The var set here is consumed by the
+ * found_posts filter below, for both the grid render and its pagination count.
+ *
+ * @param array    $query The query vars built from the block.
+ * @param WP_Block $block The block instance (its context carries the queryId).
+ * @return array
+ */
+function hperkins_tokens_tag_journal_grid_query( $query, $block ) {
+	$query_id = isset( $block->context['queryId'] ) ? (int) $block->context['queryId'] : 0;
+	if ( 11 === $query_id ) {
+		$query['hperkins_tokens_offset_base'] = 3;
+	}
+
+	return $query;
+}
+add_filter( 'query_loop_block_query_vars', 'hperkins_tokens_tag_journal_grid_query', 10, 2 );
+
+/**
+ * Subtract a tagged query's seed offset from found_posts so max_num_pages
+ * counts only the posts that loop can actually show.
+ *
+ * @param int      $found_posts Total matching rows, ignoring LIMIT/OFFSET.
+ * @param WP_Query $query       The query object.
+ * @return int
+ */
+function hperkins_tokens_offset_found_posts( $found_posts, $query ) {
+	$offset_base = (int) $query->get( 'hperkins_tokens_offset_base' );
+	if ( $offset_base > 0 ) {
+		return max( 0, (int) $found_posts - $offset_base );
+	}
+
+	return $found_posts;
+}
+add_filter( 'found_posts', 'hperkins_tokens_offset_found_posts', 10, 2 );
+
+/**
  * Store newsletter subscription requests even when mail delivery is unavailable.
  *
  * @param string $email   Subscriber email address.

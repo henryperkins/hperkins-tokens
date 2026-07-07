@@ -6,8 +6,7 @@ const path = require( 'node:path' );
 
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
 const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
-const WP_PATH = '/home/dev/hperkinsblog';
-const THEME_PATH = `${ WP_PATH }/wp-content/themes/hperkins-tokens`;
+const THEME_PATH = path.join( __dirname, '..' );
 const VIEWPORTS = [
 	{ width: 390, height: 1100, maxTitlePx: 68, maxTitleHeight: 360 },
 	{ width: 320, height: 1100, maxTitlePx: 64, maxTitleHeight: 420 },
@@ -83,10 +82,26 @@ function createCdpClient( wsUrl ) {
 		}
 	} );
 
-	function send( method, params = {}, sessionId ) {
+	function send( method, params = {}, sessionId, timeout = 15000 ) {
 		const id = nextId++;
 		ws.send( JSON.stringify( { id, method, params, sessionId } ) );
-		return new Promise( ( resolve, reject ) => pending.set( id, { resolve, reject } ) );
+		return new Promise( ( resolve, reject ) => {
+			// A dropped CDP response must fail the run, not hang it forever.
+			const timer = setTimeout( () => {
+				pending.delete( id );
+				reject( new Error( `Timed out waiting for ${ method } response.` ) );
+			}, timeout );
+			pending.set( id, {
+				resolve: ( value ) => {
+					clearTimeout( timer );
+					resolve( value );
+				},
+				reject: ( error ) => {
+					clearTimeout( timer );
+					reject( error );
+				},
+			} );
+		} );
 	}
 
 	function once( method, sessionId, timeout = 10000 ) {
@@ -174,7 +189,6 @@ async function inspectJournalPage( cdp, viewport ) {
 				visibility: filterStyle.visibility,
 				categoryCount: document.querySelectorAll('.hp-topic-filter .wp-block-categories > li').length,
 			} : null,
-			firstCardTop: rect(document.querySelector('.hp-journal-featured')).top,
 		};
 	})()`;
 
@@ -321,14 +335,19 @@ async function verifyStaticContract() {
 		/\.hp-topic-filter:has\(\s*\.wp-block-categories\s*>\s*li:only-child\s*\)/.test( css ),
 		'Journal CSS must hide or collapse the one-category topic-filter state.'
 	);
+	// Bounded, not file-spanning: the clamp must live INSIDE a 600px media
+	// block's own .hp-masthead__title rule ([^@]* keeps the match within the
+	// media block; [^}]* within the rule), so unrelated matches can't satisfy it.
 	assert(
-		/@media\s*\(max-width:\s*600px\)[\s\S]*\.hp-masthead__title[\s\S]*clamp\(/.test( css ),
+		/@media\s*\(max-width:\s*600px\)\s*\{[^@]*\.hp-masthead__title\s*\{[^}]*clamp\(/.test( css ),
 		'Journal CSS must clamp the masthead title at mobile widths.'
 	);
-	assert(
-		/\.hp-journal-grid[\s\S]*nth-child\(3n\+1\)[\s\S]*background-position[\s\S]*\.hp-journal-grid[\s\S]*nth-child\(3n\+2\)[\s\S]*background-position[\s\S]*\.hp-journal-grid[\s\S]*nth-child\(3n\+3\)[\s\S]*background-position/.test( css ),
-		'Journal grid fallback media must vary the plate crop across repeated image-less cards.'
-	);
+	for ( const variant of [ '3n\\+1', '3n\\+2', '3n\\+3' ] ) {
+		assert(
+			new RegExp( `\\.hp-journal-grid[^{}]*nth-child\\(${ variant }\\)[^{}]*\\{[^}]*background-position` ).test( css ),
+			`Journal grid fallback media must set a plate crop for nth-child(${ variant.replace( '\\+', '+' ) }); distinctness is asserted live below.`
+		);
+	}
 }
 
 async function main() {

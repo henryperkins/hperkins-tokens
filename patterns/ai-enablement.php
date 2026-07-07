@@ -15,7 +15,7 @@
 <h1 class="wp-block-heading">Expose, Govern, Attest</h1>
 <!-- /wp:heading -->
 
-<!-- wp:paragraph {"className":"hp-page-hero__dek","style":{"typography":{"fontStyle":"normal","fontWeight":"500"}},"fontSize":"2-xl","fontFamily":"display","textColor":"ink-500"} -->
+<!-- wp:paragraph {"className":"hp-page-hero__dek","style":{"typography":{"fontStyle":"normal","fontWeight":"500"}},"fontSize":"2xl","fontFamily":"display","textColor":"ink-500"} -->
 <p class="hp-page-hero__dek has-ink-500-color has-text-color has-display-font-family has-2-xl-font-size" style="font-style:normal;font-weight:500">Reading WordPress&rsquo;s AI stack as a trust model</p>
 <!-- /wp:paragraph -->
 
@@ -182,7 +182,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph -->
-<p>Open C2PA proposals cover <a href="https://github.com/WordPress/ai/pull/459">detecting existing Content Credentials on upload</a> and signing new provenance claims to <a href="https://github.com/WordPress/ai/pull/294">post text</a> and <a href="https://github.com/WordPress/ai/pull/302">images</a>. <a href="https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html">Durable credentials</a> add bindings such as fingerprints or watermarks. When embedded metadata is stripped, these help recover a manifest stored remotely. This direction aligns with <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689">Article 50 of the EU AI Act</a>, scheduled to apply from 2 August 2026, which requires providers of certain generative systems to mark outputs in machine-readable form, making artificially generated or manipulated content detectable. C2PA is one possible implementation path, not the legal requirement itself.</p>
+<p>Open C2PA proposals cover <a href="https://github.com/WordPress/ai/pull/459">detecting existing Content Credentials on upload</a> and signing new provenance claims to <a href="https://github.com/WordPress/ai/pull/294">post text</a> and <a href="https://github.com/WordPress/ai/pull/302">images</a>. <a href="https://spec.c2pa.org/specifications/specifications/2.4/specs/C2PA_Specification.html">Durable credentials</a> add bindings such as fingerprints or watermarks. When embedded metadata is stripped, these help recover a manifest stored remotely. This direction aligns with <a href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689">Article 50 of the EU AI Act</a>, scheduled to apply from 2 August 2026<sup>1</sup>, which requires providers of certain generative systems to mark outputs in machine-readable form, making artificially generated or manipulated content detectable. C2PA is one possible implementation path, not the legal requirement itself.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 

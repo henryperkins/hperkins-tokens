@@ -5,8 +5,10 @@
  */
 const { execFileSync } = require( 'node:child_process' );
 const fs = require( 'node:fs' );
+const path = require( 'node:path' );
 
-const WP_PATH = '/home/dev/hperkinsblog';
+const WP_PATH = process.env.HPERKINS_WP_PATH || '/home/dev/hperkinsblog';
+const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
 const ALLOWED_DYNAMIC = new Set( [
 	'--hp-footer-backdrop-url',
 ] );
@@ -17,12 +19,13 @@ function assert( condition, message ) {
 	}
 }
 
-const style = fs.readFileSync( 'style.css', 'utf8' );
+// Resolve style.css relative to the theme root so the script works from any CWD.
+const style = fs.readFileSync( path.join( __dirname, '..', 'style.css' ), 'utf8' );
 const generatedVariables = execFileSync(
 	'wp',
 	[
 		`--path=${ WP_PATH }`,
-		'--url=https://hperkins.blog',
+		`--url=${ ORIGIN }`,
 		'eval',
 		'echo wp_get_global_stylesheet( array( "variables" ) );',
 	],

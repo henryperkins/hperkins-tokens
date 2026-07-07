@@ -649,7 +649,7 @@
         },
         ":hover": {
           "color": {
-            "text": "var(--wp--preset--color--gold-700)"
+            "text": "var(--wp--custom--text--accent)"
           }
         }
       }

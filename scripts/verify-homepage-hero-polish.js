@@ -77,10 +77,26 @@ function createCdpClient( wsUrl ) {
 		}
 	} );
 
-	function send( method, params = {}, sessionId ) {
+	function send( method, params = {}, sessionId, timeout = 15000 ) {
 		const id = nextId++;
 		ws.send( JSON.stringify( { id, method, params, sessionId } ) );
-		return new Promise( ( resolve, reject ) => pending.set( id, { resolve, reject } ) );
+		return new Promise( ( resolve, reject ) => {
+			// A dropped CDP response must fail the run, not hang it forever.
+			const timer = setTimeout( () => {
+				pending.delete( id );
+				reject( new Error( `Timed out waiting for ${ method } response.` ) );
+			}, timeout );
+			pending.set( id, {
+				resolve: ( value ) => {
+					clearTimeout( timer );
+					resolve( value );
+				},
+				reject: ( error ) => {
+					clearTimeout( timer );
+					reject( error );
+				},
+			} );
+		} );
 	}
 
 	function once( method, sessionId, timeout = 10000 ) {

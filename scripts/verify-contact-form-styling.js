@@ -83,10 +83,26 @@ function createCdpClient( wsUrl ) {
 		}
 	} );
 
-	function send( method, params = {}, sessionId ) {
+	function send( method, params = {}, sessionId, timeout = 15000 ) {
 		const id = nextId++;
 		ws.send( JSON.stringify( { id, method, params, sessionId } ) );
-		return new Promise( ( resolve, reject ) => pending.set( id, { resolve, reject } ) );
+		return new Promise( ( resolve, reject ) => {
+			// A dropped CDP response must fail the run, not hang it forever.
+			const timer = setTimeout( () => {
+				pending.delete( id );
+				reject( new Error( `Timed out waiting for ${ method } response.` ) );
+			}, timeout );
+			pending.set( id, {
+				resolve: ( value ) => {
+					clearTimeout( timer );
+					resolve( value );
+				},
+				reject: ( error ) => {
+					clearTimeout( timer );
+					reject( error );
+				},
+			} );
+		} );
 	}
 
 	function once( method, sessionId, timeout = 10000 ) {
@@ -154,6 +170,7 @@ async function inspectContactPage( cdp ) {
 			};
 		};
 		const form = document.querySelector('.hp-contact-form');
+		if (!form) { throw new Error('.hp-contact-form not found on /contact/'); }
 		const subscribeForm = document.querySelector('.hp-subscribe__form');
 		const nameInput = form.querySelector('input[name="name"]');
 		const nameControl = nameInput.closest('.hp-input__control');
@@ -223,6 +240,9 @@ async function inspectContactPage( cdp ) {
 		awaitPromise: true,
 		returnByValue: true,
 	}, sessionId );
+	if ( evaluated.exceptionDetails ) {
+		throw new Error( `contact page evaluation failed: ${ evaluated.exceptionDetails.exception?.description || evaluated.exceptionDetails.text }` );
+	}
 
 	await cdp.send( 'Target.closeTarget', { targetId: target.targetId } );
 	return evaluated.result.value;
@@ -250,7 +270,7 @@ async function inspectSubscribeStatusPage( cdp, status ) {
 
 	const expression = `(() => {
 		const form = document.querySelector('.hp-subscribe__form');
-		const input = form && form.querySelector('#hp-subscribe-email');
+		const input = form && form.querySelector('input[type="email"]');
 		const statusNode = () => form && form.querySelector('.hp-subscribe__status');
 		const errorNode = () => form && form.querySelector('.hp-input__helper[data-hp-error]');
 		const snap = () => ({
@@ -353,15 +373,23 @@ function validate( result ) {
 		failures,
 		`focused raw input still draws its own outline (${ result.focusedInput.outlineWidth } ${ result.focusedInput.outlineStyle }).`
 	);
+	// 0.3.34 intentionally added the offset outline ring on focus (a11y): the
+	// contract is gold-700 border PLUS the 2px gold-700 outline, not a lone border.
 	failUnless(
-		result.focusedControl.outlineStyle === 'none' && result.focusedControl.borderColor === result.tokens.focus,
+		result.focusedControl.borderColor === result.tokens.focus &&
+			result.focusedControl.outlineStyle === 'solid' &&
+			result.focusedControl.outlineWidth === '2px' &&
+			result.focusedControl.outlineColor === result.tokens.focus,
 		failures,
-		`hp-input wrapper focus state is border ${ result.focusedControl.borderColor } plus outline ${ result.focusedControl.outlineWidth } ${ result.focusedControl.outlineStyle } ${ result.focusedControl.outlineColor }, expected a single border in ${ result.tokens.focus }.`
+		`hp-input wrapper focus state is border ${ result.focusedControl.borderColor } plus outline ${ result.focusedControl.outlineWidth } ${ result.focusedControl.outlineStyle } ${ result.focusedControl.outlineColor }, expected the gold-700 border plus a 2px solid gold-700 outline ring.`
 	);
 	failUnless(
-		result.focusedTextarea.outlineStyle === 'none' && result.focusedTextarea.borderColor === result.tokens.focus,
+		result.focusedTextarea.borderColor === result.tokens.focus &&
+			result.focusedTextarea.outlineStyle === 'solid' &&
+			result.focusedTextarea.outlineWidth === '2px' &&
+			result.focusedTextarea.outlineColor === result.tokens.focus,
 		failures,
-		`contact textarea focus state is border ${ result.focusedTextarea.borderColor } plus outline ${ result.focusedTextarea.outlineWidth } ${ result.focusedTextarea.outlineStyle } ${ result.focusedTextarea.outlineColor }, expected a single border in ${ result.tokens.focus }.`
+		`contact textarea focus state is border ${ result.focusedTextarea.borderColor } plus outline ${ result.focusedTextarea.outlineWidth } ${ result.focusedTextarea.outlineStyle } ${ result.focusedTextarea.outlineColor }, expected the gold-700 border plus a 2px solid gold-700 outline ring.`
 	);
 	failUnless(
 		result.invalidActiveName === 'email',

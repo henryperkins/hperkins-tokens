@@ -7,7 +7,7 @@
  */
 ?>
 <!-- wp:html -->
-<div class="hp-icon-button-set" aria-label="Icon button variants">
+<div class="hp-icon-button-set" role="group" aria-label="Icon button variants">
 	<button class="hp-icon-button is-style-ghost" type="button" aria-label="Bookmark">
 		<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
 	</button>

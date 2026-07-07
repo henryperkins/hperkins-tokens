@@ -8,12 +8,14 @@
  */
 const { execFileSync } = require( 'node:child_process' );
 const { readFileSync } = require( 'node:fs' );
+const path = require( 'node:path' );
 
 const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
+const DEFAULT_ORIGIN = 'https://hperkins.blog';
 const CONTACT_URL = new URL( '/contact/', ORIGIN );
 const ENDPOINT_URL = new URL( '/wp-admin/admin-post.php', ORIGIN );
-const WP_PATH = '/home/dev/hperkinsblog';
-const THEME_PATH = '/home/dev/hperkinsblog/wp-content/themes/hperkins-tokens';
+const WP_PATH = process.env.HPERKINS_WP_PATH || '/home/dev/hperkinsblog';
+const THEME_PATH = path.join( __dirname, '..' );
 
 function assert( condition, message ) {
 	if ( ! condition ) {
@@ -87,11 +89,16 @@ async function main() {
 		`no-nonce subscribe POST reached business validation/status instead of failing request verification: "${ location }".`
 	);
 
-	const runtimeCheck = execFileSync(
+	// The runtime half mutates (then restores) options in the WP install at
+	// WP_PATH. Only run it when ORIGIN matches that install — pointing
+	// HPERKINS_ORIGIN at a staging origin must not rewrite the production DB.
+	let runtimeCheck = 'runtime checks skipped (HPERKINS_ORIGIN does not match the local WP install; set HPERKINS_WP_PATH to opt in)';
+	if ( ORIGIN === DEFAULT_ORIGIN || process.env.HPERKINS_WP_PATH ) {
+		runtimeCheck = execFileSync(
 		'wp',
 		[
 			`--path=${ WP_PATH }`,
-			'--url=https://hperkins.blog',
+			`--url=${ ORIGIN }`,
 			'eval',
 			`
 			$option_name = 'hperkins_tokens_subscribe_requests';
@@ -159,18 +166,26 @@ async function main() {
 					$assert( 1 === count( $requests_after_erase ), 'subscribe requests privacy eraser did not remove exactly one matching item.' );
 					$assert( 'new@example.com' === $requests_after_erase[0]['email'], 'subscribe requests privacy eraser removed the wrong item.' );
 				} finally {
+					// Cleanup must survive a mid-run assert failure: drop the test
+					// filters and the synthetic rate transient, then restore the option.
+					remove_all_filters( 'hperkins_tokens_subscribe_max_requests' );
+					remove_all_filters( 'hperkins_tokens_subscribe_rate_limit' );
+					remove_all_filters( 'hperkins_tokens_subscribe_rate_window' );
+					$_SERVER['REMOTE_ADDR'] = '203.0.113.44';
+					delete_transient( hperkins_tokens_get_subscribe_rate_key() );
 					if ( $original_exists ) {
 						update_option( $option_name, $original_value );
-				} else {
-					delete_option( $option_name );
+					} else {
+						delete_option( $option_name );
+					}
 				}
-			}
 
 				echo 'checked subscribe storage, rate limit, and privacy hooks';
 			`,
 		],
-		{ encoding: 'utf8' }
-	).trim();
+			{ encoding: 'utf8' }
+		).trim();
+	}
 
 	console.log( `checked subscribe cleanup guardrails, endpoint nonce rejection; ${ runtimeCheck }` );
 }

@@ -81,10 +81,26 @@ function createCdpClient( wsUrl ) {
 		}
 	} );
 
-	function send( method, params = {}, sessionId ) {
+	function send( method, params = {}, sessionId, timeout = 15000 ) {
 		const id = nextId++;
 		ws.send( JSON.stringify( { id, method, params, sessionId } ) );
-		return new Promise( ( resolve, reject ) => pending.set( id, { resolve, reject } ) );
+		return new Promise( ( resolve, reject ) => {
+			// A dropped CDP response must fail the run, not hang it forever.
+			const timer = setTimeout( () => {
+				pending.delete( id );
+				reject( new Error( `Timed out waiting for ${ method } response.` ) );
+			}, timeout );
+			pending.set( id, {
+				resolve: ( value ) => {
+					clearTimeout( timer );
+					resolve( value );
+				},
+				reject: ( error ) => {
+					clearTimeout( timer );
+					reject( error );
+				},
+			} );
+		} );
 	}
 
 	function once( method, sessionId, timeout = 10000 ) {
@@ -186,6 +202,11 @@ async function main() {
 		for ( const page of PAGES ) {
 			const url = new URL( page, ORIGIN ).href;
 			const result = await inspectPage( cdp, url );
+			// Guard against a vacuous pass: both pages must actually render the
+			// three-ring section for the overlap checks to mean anything.
+			if ( result.cardCount < 3 ) {
+				failures.push( `${ url } renders ${ result.cardCount } ring cards, expected the three-ring section.` );
+			}
 			const horizontalOverflow = result.scrollWidth - result.viewport.width;
 			if ( horizontalOverflow > 1 ) {
 				failures.push( `${ url } has ${ horizontalOverflow }px horizontal overflow at ${ result.viewport.width }px.` );

@@ -10,7 +10,7 @@ const { execFileSync } = require( 'node:child_process' );
 
 const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
 const DESIGN_SYSTEM_URL = new URL( '/design-system/', ORIGIN );
-const WP_PATH = '/home/dev/hperkinsblog';
+const WP_PATH = process.env.HPERKINS_WP_PATH || '/home/dev/hperkinsblog';
 
 const LEGACY_MARKERS = [
 	'hp-operational-story__grid',
@@ -64,6 +64,19 @@ async function main() {
 			postContent.includes( marker ),
 			`design-system post content is missing pattern reference "${ marker }".`
 		);
+	}
+
+	// The specimen page is an internal reference and may deliberately sit in
+	// draft. The DB-content checks above always run; the rendered-page checks
+	// only make sense once the page is published.
+	const postStatus = execFileSync(
+		'wp',
+		[ `--path=${ WP_PATH }`, `--url=${ ORIGIN }`, 'post', 'get', '79', '--field=post_status' ],
+		{ encoding: 'utf8' }
+	).trim();
+	if ( 'publish' !== postStatus ) {
+		console.log( `checked design-system specimen post content; post 79 is "${ postStatus }" — rendered-page checks skipped until it is published` );
+		return;
 	}
 
 	const response = await fetch( DESIGN_SYSTEM_URL );

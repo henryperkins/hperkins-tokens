@@ -7,14 +7,14 @@
  */
 ?>
 <!-- wp:html -->
-<div class="hp-avatar-row" aria-label="Avatar examples">
-	<div class="hp-avatar is-ring" aria-label="Henry Perkins">
+<div class="hp-avatar-row" role="group" aria-label="Avatar examples">
+	<div class="hp-avatar is-ring" role="img" aria-label="Henry Perkins">
 		<span class="hp-avatar__initials" aria-hidden="true">HP</span>
 	</div>
-	<div class="hp-avatar" aria-label="WordPress AI">
+	<div class="hp-avatar" role="img" aria-label="WordPress AI">
 		<span class="hp-avatar__initials" aria-hidden="true">AI</span>
 	</div>
-	<div class="hp-avatar is-small" aria-label="Docs">
+	<div class="hp-avatar is-small" role="img" aria-label="Docs">
 		<span class="hp-avatar__initials" aria-hidden="true">DS</span>
 	</div>
 </div>

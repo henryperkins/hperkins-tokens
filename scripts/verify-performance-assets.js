@@ -61,9 +61,15 @@ assert(
 	heroPattern.includes( 'width="962"' ) && heroPattern.includes( 'height="1024"' ),
 	'Wapuu hero image needs intrinsic width and height attributes.'
 );
+// The hero is the LCP element: 0.3.33 deliberately made it eager after
+// loading="lazy" measurably delayed the largest contentful paint.
 assert(
-	heroPattern.includes( 'loading="lazy"' ) && heroPattern.includes( 'decoding="async"' ),
-	'Wapuu hero image needs explicit lazy async decoding attributes.'
+	heroPattern.includes( 'fetchpriority="high"' ) && heroPattern.includes( 'decoding="async"' ),
+	'Wapuu hero image must stay the eager LCP element (fetchpriority="high" + decoding="async").'
+);
+assert(
+	! heroPattern.includes( 'loading="lazy"' ),
+	'Wapuu hero image must not be lazy-loaded — it is the LCP element (see 0.3.33).'
 );
 
 const frontPageSnapshot = readFileSync( join( SNAPSHOT_DIR, 'front-page.html' ), 'utf8' );

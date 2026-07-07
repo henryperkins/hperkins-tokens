@@ -7,7 +7,7 @@
  */
 ?>
 <!-- wp:html -->
-<div class="hp-badge-row" aria-label="Badge variants">
+<div class="hp-badge-row" role="group" aria-label="Badge variants">
 	<span class="hp-badge is-tone-brand">Alignment</span>
 	<span class="hp-badge is-tone-accent">Featured</span>
 	<span class="hp-badge is-tone-success has-dot">Ratified</span>

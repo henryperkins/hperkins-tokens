@@ -16,13 +16,19 @@
 | Bundle global | `window.ImladrisDesignSystem_89e0d2` |
 | Pulled | 2026-06-20 (read-only) |
 
-## The token layer — 1:1, no drift
+## The token layer — 1:1 at the pull (2026-06-20), with recorded deltas
 
 Every Imladris token (`tokens/colors.css`, `typography.css`, `spacing.css`, `effects.css`,
-`fonts.css`, `base.css`) was diffed against the theme's `theme.json` and matches exactly: the full
-palette (parchment / ink / green / river / gold / twilight + leaf·amber·rust·slate), the spacing
-scale, the four font families + type scale, leadings, trackings, type roles, radii, border widths,
-shadows, easings and durations. The only DS token-CSS not represented as `theme.json` presets are
+`fonts.css`, `base.css`) was diffed against the theme's `theme.json` at the pull and matched exactly:
+the full palette (parchment / ink / green / river / gold / twilight + leaf·amber·rust·slate), the
+spacing scale, the four font families + type scale, leadings, trackings, type roles, radii,
+shadows, easings and durations.
+
+> **Theme-side deltas since the pull (deliberate, not drift):** the unused `borderWidth` custom
+> group was dropped (0.3.34); `ink-450` #656E64 was added and the gold/amber **text** tokens
+> darkened for WCAG AA — `text.accent` #7A5C1E, `feedback.warning` #855F1E, `on.review` (0.3.34);
+> the four ring/footer scrims were promoted into `custom.scrim.*` (0.3.34); and the link **hover**
+> color moved onto `text.accent` (0.3.38). Re-diff against the DS project before asserting 1:1 today. The only DS token-CSS not represented as `theme.json` presets are
 alias/util vars (`--gutter-*`, `--focus-*`, the `--surface-*`/`--text-*` semantic aliases), which the
 theme's `style.css` already provides via the `--wp--custom--*` / `--wp--preset--*` cascade. A token
 "refresh" therefore changes nothing. The faithful token mirror is staged at
@@ -118,6 +124,11 @@ losslessly; the React component layer is reference-only for this block-theme tar
 
 ## 2026-06-21 — SiteHeader fidelity pass (`site/SiteHeader` → `parts/header.html`)
 
+> **Superseded by the 0.3.23/0.3.24 "Council Masthead"** (see readme changelog): the bar is now
+> sticky on **every** page (the `body.home` dissolve is gone), the brand lockup is the inline star
+> emblem + site title (no Wapuu mark), and search is the theme-owned `hp-site-search` block in the
+> bar at every width. The sticky-wrapper gotcha below still applies. Kept as fidelity-pass history.
+
 Re-skinned the masthead to the DS `SiteHeader` and locked the home/work split. Verified by local
 render (host-shim + `wp server` + Playwright) at 1440 / 375 / 320, home (page 36) and work (page 13).
 
@@ -165,6 +176,9 @@ render (host-shim + `wp server` + Playwright) at 1440 / 375 / 320, home (page 36
   > with the theme. To enable elsewhere, add a Search block to the nav menu (Site Editor → Navigation, or
   > `wp post update <nav-id>`) with `className: hp-nav-search`. Kept the `ref:237` architecture rather than
   > inlining the nav (which would travel but lose central menu management).
+  > **Superseded 2026-06-24 (0.3.24):** `hp-nav-search` was removed from menu 237; search is theme-owned
+  > in `parts/header.html` (`hp-site-search`) at every width, and menu 237 instead carries the trailing
+  > `hp-nav-subscribe` drawer-foot link. Do **not** re-add a search block to the menu.
 
 ## 2026-06-21 — header cache-bust (ship the fidelity pass): `Version` 0.3.8 → 0.3.9
 
@@ -184,6 +198,10 @@ live site after the bump (real deployed CSS, `?ver=0.3.9`, no injection): single
 1440 / 375 / 320**; desktop restores `[mark][wordmark] [inline nav] [search] [Subscribe]` with the
 in-nav search field correctly hidden. Lesson: **bump `Version` on every `style.css` edit, not once per
 work session** — the cache key is content-addressed by that string alone.
+
+> **Superseded:** `style.css` (and every hand-authored asset) is now cache-busted by `filemtime()`
+> in `functions.php`; the `Version:` header is release/changelog tracking only, so this failure mode
+> can no longer occur. The bump-on-release convention stands.
 
 ## 2026-06-21 — OperationalStory fidelity pass (`evidence/OperationalStory` → `patterns/operational-story.php`)
 
