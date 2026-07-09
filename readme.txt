@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.38
+Stable tag: 0.3.39
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -275,6 +275,17 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.39 =
+* Token lockdown: added typography.customFontSize=false and
+  spacing.customSpacingSize=false to theme.json so the block editor no longer
+  offers custom font-size or custom spacing inputs — authors now choose only
+  from the named type and spacing token scales, matching the already-locked
+  color controls (custom/gradient/duotone plus default palette/gradients/
+  duotone, all false). Editor settings only; no change to any rendered page.
+* Templates: the wp:post-content block in the ai-enablement, work, and
+  plato-artifacts page shells now carries align:full, so alignfull blocks in
+  those page bodies reach the wide/full spine instead of the text column.
 
 = 0.3.38 =
 * Comprehensive review remediation across security, accessibility, content,

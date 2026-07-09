@@ -231,6 +231,7 @@
     },
     "spacing": {
       "defaultSpacingSizes": false,
+      "customSpacingSize": false,
       "units": [
         "px",
         "rem",
@@ -306,6 +307,7 @@
     "typography": {
       "defaultFontSizes": false,
       "fluid": false,
+      "customFontSize": false,
       "fontFamilies": [
         {
           "slug": "display",
