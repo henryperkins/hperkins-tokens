@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.39
+Stable tag: 0.3.40
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -24,7 +24,7 @@ filled-vs-hollow dot — never the shape of the thing.
 This is a child theme. It overrides the header and footer template parts; ships
 front-page.html, home.html, single.html, page-about.html,
 page-ai-enablement.html, page-contact.html, page-how-this-was-built.html,
-page-work.html, page-plato-artifacts.html, and page-case-study.html as additive
+page-work.html, and page-case-study.html as additive
 block templates (each detailed under Template overrides below); and provides its own token
 vocabulary, component CSS, and patterns. Unspecified page/post templates are
 inherited from the Assembler parent. The Assembler parent theme must be
@@ -178,10 +178,6 @@ template hierarchy):
 * page-work.html — the work index shell; renders the stored page body in the
   44/72rem composition. The current live content is versioned at
   `content/page-snapshots/work.html`.
-* page-plato-artifacts.html — the Plato Artifacts portfolio-source index;
-  preserves the stored page content while applying the same 44/72rem
-  work-template shell used by the ledger pages. The current live content is
-  versioned at `content/page-snapshots/plato-artifacts.html`.
 * page-case-study.html — supplies the case-study header, title, and constrained
   content column only. Evidence boards, proof bars, artifact rows, and links must
   live in the page content so every published case study carries real, editable
@@ -189,8 +185,8 @@ template hierarchy):
 
 Unspecified page/post templates are inherited from the Assembler parent.
 
-The public About, Work, AI Enablement, and Plato Artifacts routes are DB-owned
-page bodies. The public front page is hybrid: `front-page.html` keeps the Wapuu
+The public About, Work, and AI Enablement routes are DB-owned page bodies. The
+public front page is hybrid: `front-page.html` keeps the Wapuu
 hero and Three Rings framework theme-owned, while the middle Home section
 remains DB-owned and tracked at `content/page-snapshots/front-page.html`. The
 published Flavor Agent demo route (`/work/flavor-agent/demo/`) likewise keeps
@@ -200,8 +196,7 @@ generic page shell, its tracked source lives at
 wrapper template. Keep the tracked source copies in sync at
 `content/page-snapshots/front-page.html`,
 `content/page-snapshots/about.html`, `content/page-snapshots/work.html`,
-`content/page-snapshots/ai-enablement.html`,
-`content/page-snapshots/plato-artifacts.html`, and
+`content/page-snapshots/ai-enablement.html`, and
 `content/page-snapshots/work-flavor-agent-demo.html`. After an intentional
 page-body edit, refresh the files with `node scripts/export-page-snapshots.js`
 and verify with `node scripts/verify-content-ownership.js`. The older
@@ -275,6 +270,12 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.40 =
+* Removed the discarded Plato Artifacts page and its dedicated block template,
+  versioned page-body snapshot, and active content-ownership contract.
+* Added a retired-page regression check so `plato-artifacts` cannot silently
+  return as a draft or published page without failing theme verification.
 
 = 0.3.39 =
 * Token lockdown: added typography.customFontSize=false and

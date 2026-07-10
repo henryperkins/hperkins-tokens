@@ -39,18 +39,18 @@ const PAGE_CONTRACTS = [
 		templateFile: 'templates/page-ai-enablement.html',
 	},
 	{
-		key: 'plato-artifacts',
-		label: 'Plato Artifacts page',
-		pagePath: 'plato-artifacts',
-		snapshotFile: 'plato-artifacts.html',
-		templateId: 'page-plato-artifacts',
-		templateFile: 'templates/page-plato-artifacts.html',
-	},
-	{
 		key: 'flavor-agent-demo',
 		label: 'Flavor Agent demo page',
 		pagePath: 'work/flavor-agent/demo',
 		snapshotFile: 'work-flavor-agent-demo.html',
+	},
+];
+
+const RETIRED_PAGE_PATHS = [
+	{
+		key: 'plato-artifacts',
+		label: 'Plato Artifacts page',
+		pagePath: 'plato-artifacts',
 	},
 ];
 
@@ -63,5 +63,6 @@ module.exports = {
 	THEME_PATH,
 	SNAPSHOT_DIR,
 	PAGE_CONTRACTS,
+	RETIRED_PAGE_PATHS,
 	normalizeContent,
 };

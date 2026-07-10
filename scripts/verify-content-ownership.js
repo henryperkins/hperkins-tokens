@@ -10,6 +10,7 @@ const {
 	THEME_PATH,
 	SNAPSHOT_DIR,
 	PAGE_CONTRACTS,
+	RETIRED_PAGE_PATHS,
 	normalizeContent,
 } = require( './lib/page-content-contract' );
 
@@ -34,6 +35,12 @@ function getTrackedPageTargetsPhp() {
 		.join( ',\n\t\t\t' );
 }
 
+function getRetiredPageTargetsPhp() {
+	return RETIRED_PAGE_PATHS.map( ( contract ) =>
+		`array( 'key' => ${ escapePhpString( contract.key ) }, 'path' => ${ escapePhpString( contract.pagePath ) } )`
+	).join( ',\n\t\t\t' );
+}
+
 function assert( condition, message ) {
 	if ( ! condition ) {
 		throw new Error( message );
@@ -53,6 +60,7 @@ function readTemplate( relativePath ) {
 
 function getOwnershipState() {
 	const trackedPageTargets = getTrackedPageTargetsPhp();
+	const retiredPageTargets = getRetiredPageTargetsPhp();
 
 	return JSON.parse(
 		runWpEval(`
@@ -61,6 +69,7 @@ function getOwnershipState() {
 				'frontPageId' => (int) get_option( 'page_on_front' ),
 				'frontPage' => null,
 				'pages' => array(),
+				'retiredPages' => array(),
 			);
 
 			$front_page = get_post( $result['frontPageId'] );
@@ -89,6 +98,17 @@ function getOwnershipState() {
 					'contentLength' => $page ? strlen( $page->post_content ) : 0,
 					'templateSource' => $template ? $template->source : null,
 					'templateId' => $template ? $template->id : null,
+				);
+			}
+
+			foreach ( array(
+				${ retiredPageTargets }
+			) as $target ) {
+				$page = get_page_by_path( $target['path'], OBJECT, 'page' );
+				$result['retiredPages'][ $target['key'] ] = array(
+					'path' => $target['path'],
+					'id' => $page ? (int) $page->ID : 0,
+					'status' => $page ? $page->post_status : null,
 				);
 			}
 
@@ -182,6 +202,14 @@ function main() {
 		state.frontPageMode === 'page',
 		`Expected show_on_front=page, got ${ state.frontPageMode || 'none' }.`
 	);
+
+	for ( const contract of RETIRED_PAGE_PATHS ) {
+		const page = state.retiredPages[ contract.key ];
+		assert(
+			page && page.id === 0,
+			`Expected the retired ${ contract.label } at "${ contract.pagePath }" to be absent, found post ${ page?.id || 'unknown' } (${ page?.status || 'unknown status' }).`
+		);
+	}
 
 	for ( const contract of PAGE_CONTRACTS ) {
 		verifyPageOwnership( state, contract );

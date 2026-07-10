@@ -61,4 +61,11 @@ for ( const check of checks ) {
 	}
 }
 
+const readmeCurrentContract = fs.readFileSync( path.join( themeRoot, 'readme.txt' ), 'utf8' )
+	.split( '== Changelog ==' )[ 0 ];
+assert(
+	! /plato[- ]artifacts/i.test( readmeCurrentContract ),
+	'readme.txt still advertises the retired Plato Artifacts page in its current theme contract.'
+);
+
 console.log( 'verified content-ownership docs contract' );
