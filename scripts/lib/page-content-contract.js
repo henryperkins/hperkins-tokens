@@ -39,6 +39,14 @@ const PAGE_CONTRACTS = [
 		templateFile: 'templates/page-ai-enablement.html',
 	},
 	{
+		key: 'job-placement-digest',
+		label: 'Job Placement Digest page',
+		pagePath: 'job-placement-digest',
+		snapshotFile: 'job-placement-digest.html',
+		templateId: 'page-job-placement-digest',
+		templateFile: 'templates/page-job-placement-digest.html',
+	},
+	{
 		key: 'flavor-agent-demo',
 		label: 'Flavor Agent demo page',
 		pagePath: 'work/flavor-agent/demo',

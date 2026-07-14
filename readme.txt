@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.40
+Stable tag: 0.3.41
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -24,8 +24,8 @@ filled-vs-hollow dot — never the shape of the thing.
 This is a child theme. It overrides the header and footer template parts; ships
 front-page.html, home.html, single.html, page-about.html,
 page-ai-enablement.html, page-contact.html, page-how-this-was-built.html,
-page-work.html, and page-case-study.html as additive
-block templates (each detailed under Template overrides below); and provides its own token
+page-job-placement-digest.html, page-work.html, and page-case-study.html as
+additive block templates (each detailed under Template overrides below); and provides its own token
 vocabulary, component CSS, and patterns. Unspecified page/post templates are
 inherited from the Assembler parent. The Assembler parent theme must be
 installed for this theme to activate.
@@ -150,9 +150,9 @@ unchanged.
 
 = Template overrides =
 
-The child theme owns ten block templates (page-case-study is also registered as
-a selectable "Case study" template in theme.json; the others map by the WordPress
-template hierarchy):
+The child theme owns eleven block templates (page-case-study is also registered
+as a selectable "Case study" template in theme.json; the others map by the
+WordPress template hierarchy):
 
 * front-page.html — the portfolio landing shell; renders the theme-owned Wapuu
   hero, then the stored Home page body via `wp:post-content`, then the
@@ -175,6 +175,9 @@ template hierarchy):
   the how-this-was-built pattern and the DB page carries an empty body, so the
   pattern file is the source of record — deliberately outside the snapshot
   contract).
+* page-job-placement-digest.html — the Job Placement Digest shell; renders the
+  stored page body in the 44/72rem reading column. The current live content is
+  versioned at `content/page-snapshots/job-placement-digest.html`.
 * page-work.html — the work index shell; renders the stored page body in the
   44/72rem composition. The current live content is versioned at
   `content/page-snapshots/work.html`.
@@ -185,24 +188,26 @@ template hierarchy):
 
 Unspecified page/post templates are inherited from the Assembler parent.
 
-The public About, Work, and AI Enablement routes are DB-owned page bodies. The
-public front page is hybrid: `front-page.html` keeps the Wapuu
-hero and Three Rings framework theme-owned, while the middle Home section
-remains DB-owned and tracked at `content/page-snapshots/front-page.html`. The
-published Flavor Agent demo route (`/work/flavor-agent/demo/`) likewise keeps
-its iframe embed and explanatory copy in the database; because it inherits the
-generic page shell, its tracked source lives at
-`content/page-snapshots/work-flavor-agent-demo.html` rather than a theme-owned
-wrapper template. Keep the tracked source copies in sync at
+The public About, Work, AI Enablement, and Job Placement Digest routes are
+DB-owned page bodies. The public front page is hybrid: `front-page.html` keeps
+the Wapuu hero and Three Rings framework theme-owned, while the middle Home
+section remains DB-owned and tracked at
+`content/page-snapshots/front-page.html`. The published Flavor Agent demo route
+(`/work/flavor-agent/demo/`) likewise keeps its iframe embed and explanatory
+copy in the database; because it inherits the generic page shell, its tracked
+source lives at `content/page-snapshots/work-flavor-agent-demo.html` rather
+than a theme-owned wrapper template. Keep the tracked source copies in sync at
 `content/page-snapshots/front-page.html`,
 `content/page-snapshots/about.html`, `content/page-snapshots/work.html`,
-`content/page-snapshots/ai-enablement.html`, and
+`content/page-snapshots/ai-enablement.html`,
+`content/page-snapshots/job-placement-digest.html`, and
 `content/page-snapshots/work-flavor-agent-demo.html`. After an intentional
 page-body edit, refresh the files with `node scripts/export-page-snapshots.js`
 and verify with `node scripts/verify-content-ownership.js`. The older
-filesystem patterns (`about-resume`, `work-index`, and `ai-enablement`) remain
-reusable seeds/reference copies rather than the live route owners for those
-pages, while `wapuu-home-hero` remains the live front-page hero.
+filesystem patterns (`about-resume`, `work-index`, `ai-enablement`, and
+`job-placement-digest`) remain reusable seeds/reference copies rather than the
+live route owners for those pages, while `wapuu-home-hero` remains the live
+front-page hero.
 
 = Portfolio art direction =
 
@@ -239,8 +244,10 @@ records.
 Use Proof + Product for visual work such as VOJ, plugin UI, frontend interfaces,
 and client projects where screenshots materially prove what shipped.
 
-Use Operational Story only for the Flavor Agent AI Governance and Demo pages so
-that pair reads as one featured plugin demonstration.
+Use Operational Story for featured multi-page narratives that reconcile to one
+operating surface: the Flavor Agent AI Governance and Demo pages (one plugin
+demonstration) and the Job Placement Digest's support-first path (one career
+register).
 
 == Installation ==
 
@@ -270,6 +277,28 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.41 =
+* Job Placement Digest: implemented the canonical Imladris DS Digest design
+  (claude.ai/design project b844cbab, templates/digest) as the
+  /job-placement-digest/ route — a new page-job-placement-digest.html shell
+  (44/72rem reading column), a job-placement-digest seed pattern, and the
+  versioned page-body snapshot + content-ownership contract entry. The body is
+  composed entirely from existing evidence components: gold-marked eyebrow,
+  ProofBar target/aim/proof chips, insight Callout, an OperationalStory
+  support-first path (12 → 01 → 02, target rung gilt-emphasised), and a
+  "Verify the claims yourself" ArtifactRow closing on real, openable links.
+* Page CSS (imladris-pages.css): digest hero flows into the pitch (no
+  hairline), gold-200 eyebrow mark on radius-xs, mono dateline.
+* Component CSS: artifact links now carry overflow-wrap:anywhere per the
+  canonical DS ArtifactRow spec, so long single-token labels (repo slugs,
+  file paths) break inside their cell instead of overflowing at narrow
+  widths.
+* Docs: recorded the canonical merged "Imladris Design System" project
+  (b844cbab — the settlement of the journal ancestor 89e0d236 and the
+  RetroBoards dialect c3e02753) in docs/design-system/; token settlement
+  verified as a no-op for theme.json (it already carries the superset the
+  settlement standardises on).
 
 = 0.3.40 =
 * Removed the discarded Plato Artifacts page and its dedicated block template,

@@ -19,6 +19,7 @@ const checks = [
 			'content/page-snapshots/about.html',
 			'content/page-snapshots/work.html',
 			'content/page-snapshots/ai-enablement.html',
+			'content/page-snapshots/job-placement-digest.html',
 			'content/page-snapshots/work-flavor-agent-demo.html',
 			'theme-owned Wapuu',
 		],
@@ -30,7 +31,7 @@ const checks = [
 	},
 	{
 		file: 'CLAUDE.md',
-		include: [ 'content/page-snapshots/', 'content/page-snapshots/work-flavor-agent-demo.html', 'theme-owned `wapuu-home-hero` pattern' ],
+		include: [ 'content/page-snapshots/', 'content/page-snapshots/job-placement-digest.html', 'content/page-snapshots/work-flavor-agent-demo.html', 'theme-owned `wapuu-home-hero` pattern' ],
 		exclude: [ /page-ai-enablement\.html is a \*\*shadow template\*\*/i ],
 	},
 	{
@@ -38,6 +39,7 @@ const checks = [
 		include: [
 			'content/page-snapshots/ai-enablement.html',
 			'content/page-snapshots/work.html',
+			'content/page-snapshots/job-placement-digest.html',
 			'content/page-snapshots/work-flavor-agent-demo.html',
 			'hybrid mode: theme-owned Wapuu hero + Three Rings shell',
 		],

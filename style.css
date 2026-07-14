@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.40
+Version: 0.3.41
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -215,6 +215,9 @@ button,
 	text-decoration: none;
 	border-bottom: 1px solid var(--hp-neutral-300);
 	border-bottom-color: color-mix(in srgb, var(--hp-action) 35%, transparent);
+	/* Long single-token labels (repo slugs, file paths) must break inside
+	   their cell rather than overflow it; acts only when a word can't fit. */
+	overflow-wrap: anywhere;
 }
 
 .hp-artifact__link a:hover {

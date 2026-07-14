@@ -293,6 +293,31 @@
   color: var(--wp--custom--text--faint);
 }
 
+/* ===========================================================================
+   Job Placement Digest — /job-placement-digest/
+   The digest reads as one continuous address, so the hero flows straight into
+   the pitch with no hairline; a gold-washed <mark> in the eyebrow carries the
+   ask and a mono dateline pins the digest to its date. Everything below the
+   hero is existing component anatomy (proof bar, callout, operational story,
+   artifact row) and needs no page CSS.
+   ========================================================================= */
+.hp-digest__hero.hp-page-hero {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.hp-digest__hero .hp-page-hero__eyebrow mark {
+  background: var(--wp--preset--color--gold-200);
+  color: inherit;
+  padding: 1px 5px 2px;
+  border-radius: var(--wp--custom--radius--xs);
+}
+.hp-digest__dateline {
+  margin: var(--wp--preset--spacing--4) 0 0;
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--xs);
+  color: var(--wp--custom--text--faint);
+}
+
 /* --- Component tweak: contact submit -------------------------------- */
 /* Primary action styled directly, so the raw form button matches the
    Imladris Button without depending on core button block output. */

@@ -328,3 +328,56 @@ already map to `parts/header.html`, `patterns/imladris-subscribe.php`, `parts/fo
   composition gracefully absent.
 - The raw `.dc.html` (uses Claude Design's `x-dc` / `sc-if` / `support.js` runtime) is **spec only**, not
   vendored byte-for-byte; re-pullable from the project URL above.
+
+## 2026-07-14 — the canonical merged DS project + Job Placement Digest (`templates/digest` → `/job-placement-digest/`)
+
+**New canonical project.** The design system was rebuilt/merged into a new claude.ai/design project —
+**"Imladris Design System"**, UUID **`b844cbab-6656-458c-91f4-81f1762117a5`**
+(<https://claude.ai/design/p/b844cbab-6656-458c-91f4-81f1762117a5>, `PROJECT_TYPE_DESIGN_SYSTEM`, owner
+Henry Perkins). It is the **settlement** of the two earlier Imladris dialects — the journal ancestor
+(`89e0d236…`, the project documented above) and the RetroBoards forum dialect (`c3e02753…`) — both of
+which it vendors under `_ds/` for reference. Its `readme.md` declares this project canonical *because its
+tokens round-trip `theme.json` v0.3.40*, and it mirrors this theme's source under `_source/theme/`.
+**Future `/design-pull`s should target this URL**, not the ancestor's.
+
+- **Token settlement — a theme-side no-op, verified.** The settlement layer (`tokens/compat.css`) is
+  aliases only, for markup ported from the two siblings (the forum's `--gold`/`--surface-2`/shell rails,
+  the ancestor's `--gilt`/`--border-*`/`--focus-ring` halo). Every ruling settles **onto** a value
+  `theme.json` already carries: `--accent` = mallorn gold, the one AA gold ink `#7A5C1E`
+  (`custom.text.accent`), `--ink-400 #6E7A6E`, focus = solid gold-700 outline, and the "superset" tokens
+  the settlement standardises on (`radius.xs` 2px, `ease.out`/`ease.inOut`, `dur.veil` 700ms, the full
+  spacing slots) all pre-exist in `theme.json` — nothing was mirrored because nothing was missing. The
+  one component-level spec adopted into `style.css`: `.hp-artifact__link a` now carries
+  `overflow-wrap:anywhere` (the canonical ArtifactRow spec — long repo slugs break inside their cell).
+- **What else is new in the project** (beyond the ancestor's inventory): a `ui_kits/portfolio/` kit
+  (HomeView / WorkView / JournalView / **DigestView** — full-screen recreations of the live surfaces), a
+  `design_handoff_imladris_design_system/` bundle (all eight page templates as `.dc.html` + a single
+  `components-reference.md`), and two new guideline cards (`motion-focus`, `settlement`) — documentation,
+  no theme change required.
+- **Job Placement Digest implemented** (`templates/digest/Digest.dc.html` + `DigestView.jsx` →
+  `/job-placement-digest/`, page 433). The route existed as a raw h1 + three paragraphs through the
+  generic Assembler shell; the design recasts that same copy into the evidence register. Theme artifacts
+  (v0.3.41): **`templates/page-job-placement-digest.html`** (slug-matched 44/72rem reading shell, same
+  contract as page-about/-work/-ai-enablement), **`patterns/job-placement-digest.php`** (reusable
+  seed/reference copy), **`content/page-snapshots/job-placement-digest.html`** (the versioned DB-body
+  source, wired into `scripts/lib/page-content-contract.js` so the ownership verifier + snapshot export
+  cover it), and a small digest section in `assets/imladris-pages.css` (hero flows into the pitch with no
+  hairline; gold-200 `<mark>` on `radius.xs` in the eyebrow; mono dateline).
+- **Composition** — everything below the hero is existing component anatomy, kind- and status-mapped per
+  the design: ProofBar chips `target:` (review) / `aim:` (pending) / `proof:` (merged, linked to the
+  theme repo); the payroll-problem insight as `hp-callout is-tone-insight`; the support-first path as an
+  **OperationalStory** (single panel label "Why each rung", governance/demo kind rows, path
+  `12 → 01 → 02` with the **target** rung `01` gilt-emphasised — the emphasis node is the middle, not
+  the terminus); an ArtifactRow ("Verify the claims yourself") whose four cells resolve to the real
+  instruments (theme repo, `theme.json` on GitHub, `/how-this-was-built/`, the resume PDF with the
+  `is-download` glyph); primary/secondary buttons to `/contact/` and `/work/`.
+- **Deliberate divergences from the design (recorded, not drift):** the design's `#` placeholder hrefs
+  were replaced with the real artifacts (the register requires openable links); the eyebrow keeps the
+  theme's AA `text.accent` treatment (`.hp-page-hero__eyebrow`) rather than the design's raw `gold-700`;
+  the pitch's follow-up paragraphs map DS `--text-md` (17px) to the theme's `base` size token and the
+  lead to the site's default `md` (19px) — the same values under the theme's names; and the dateline
+  keeps the design's verbatim copy ("13 Jul 2026 · WordPress since 2012 · Chicago" — the handoff marks
+  copy final).
+- **Deploy contract:** the DB body of page 433 must be replaced with the seed/snapshot markup (then
+  `node scripts/export-page-snapshots.js` + `node scripts/verify-content-ownership.js` confirm), and the
+  page must carry no explicit `_wp_page_template` so the slug-matched shell applies.

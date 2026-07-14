@@ -1,0 +1,183 @@
+<?php
+/**
+ * Title: Job Placement Digest page
+ * Slug: hperkins-tokens/job-placement-digest
+ * Categories: hperkins
+ * Description: The /job-placement-digest/ page in the evidence register — a gold-marked eyebrow states the ask, a ProofBar carries target/aim/proof as status chips, the three-paragraph pitch holds the payroll-problem insight as a Callout, the support-first path renders as an OperationalStory, and an ArtifactRow makes every claim openable. Reusable seed/reference copy of the DB-owned /job-placement-digest/ page body.
+ */
+?>
+<!-- wp:group {"tagName":"section","className":"hp-page-hero hp-digest__hero","layout":{"type":"default"}} -->
+<section class="wp-block-group hp-page-hero hp-digest__hero"><!-- wp:paragraph {"className":"hp-page-hero__eyebrow"} -->
+<p class="hp-page-hero__eyebrow">Placement digest · <mark>the ask, stated plainly</mark></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":1} -->
+<h1 class="wp-block-heading">Job Placement Digest</h1>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-digest__dateline"} -->
+<p class="hp-digest__dateline">13 Jul 2026 · WordPress since 2012 · Chicago</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-proof-bar","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"left"}} -->
+<div class="wp-block-group hp-proof-bar"><!-- wp:paragraph {"className":"hp-chip is-status-review","fontSize":"xs","fontFamily":"mono"} -->
+<p class="hp-chip is-status-review has-mono-font-family has-xs-font-size">target: VIP Support Engineer</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-chip is-status-pending","fontSize":"xs","fontFamily":"mono"} -->
+<p class="hp-chip is-status-pending has-mono-font-family has-xs-font-size">aim: Solutions Engineer, WordPress VIP</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-chip is-status-merged","fontSize":"xs","fontFamily":"mono"} -->
+<p class="hp-chip is-status-merged has-mono-font-family has-xs-font-size">proof: <a href="https://github.com/henryperkins/hperkins-tokens">this page’s own theme</a></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></section>
+<!-- /wp:group -->
+
+<!-- wp:paragraph {"style":{"spacing":{"margin":{"top":"var:preset|spacing|7"}}}} -->
+<p style="margin-top:var(--wp--preset--spacing--7)">I’ve built in WordPress since 2012 — PageLines first, then client work through Lakefront Digital in Chicago — and the standard I hold the work to is simple: a claim has to survive inspection by someone who isn’t me. The proof I’d point to is HPerkins Tokens, the theme rendering this page right now. It’s a child theme of Automattic’s Assembler where the entire design vocabulary — color, type, spacing — lives in theme.json as named tokens, and everything downstream is a consequence. The stock pickers are off. An editor can’t type a hex value, and the hand-authored CSS aliases onto the variables WordPress generates — the stylesheet points at the tokens instead of keeping its own copy. Drift isn’t discouraged on this site. It can’t happen. View source — the tokens are right there.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:html -->
+<aside class="hp-callout is-tone-insight" role="note">
+	<div class="hp-callout__icon" aria-hidden="true">
+		<svg viewBox="0 0 24 24" focusable="false"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 2Z"/></svg>
+	</div>
+	<div class="hp-callout__body">
+		<p class="hp-callout__title">Why it matters</p>
+		<p>Drift is never really a cosmetics problem — it’s a payroll problem. Lock the vocabulary at the schema level and the job stops existing. Off-brand becomes a state the site can’t reach.</p>
+	</div>
+</aside>
+<!-- /wp:html -->
+
+<!-- wp:paragraph {"fontSize":"base"} -->
+<p class="has-base-font-size">Any organization big enough to care about brand is paying someone to catch off-brand work before it ships or clean it up after, and every editor either waits on that person or routes around them. “Are we inside the standard” becomes something you read off the sites instead of asking a team lead. A rebrand collapses from one migration project per site into one edit with a visible blast radius. Editors keep full speed. The brand holds. Nobody takes anybody’s word for it.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"fontSize":"base"} -->
+<p class="has-base-font-size">The role I’m after is VIP Support Engineer at Automattic — the support rung on purpose — with Solutions Engineer at WordPress VIP as the aim. At VIP, drift doesn’t show up as a governance initiative; it shows up as tickets: this page looks wrong, the rebrand broke our header, who changed the styles and can we get Thursday back. Support is where the problem arrives in the customer’s own words, and an engineer who has built a token system reads those tickets for the missing schema under the symptom. I’ve done Automattic support before — WordPress.com Happiness Engineer, 2012, consumer-side, not enterprise, and I won’t dress it up as more. What it left me with is what a queue teaches: how people actually break things, at volume. Support first, to learn what VIP’s customers break. Then the SE seat.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"align":"wide","className":"hp-operational-story","layout":{"type":"constrained"}} -->
+<div class="wp-block-group alignwide hp-operational-story"><!-- wp:group {"tagName":"header","className":"hp-operational-story__header","layout":{"type":"default"}} -->
+<header class="wp-block-group hp-operational-story__header"><!-- wp:paragraph {"className":"hp-operational-story__eyebrow"} -->
+<p class="hp-operational-story__eyebrow">The path</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3,"className":"hp-operational-story__title"} -->
+<h3 class="wp-block-heading hp-operational-story__title">Support first, then the SE seat</h3>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph {"className":"hp-operational-story__intro"} -->
+<p class="hp-operational-story__intro">Drift arrives at VIP as tickets, in the customer’s own words. Read them for the missing schema under the symptom.</p>
+<!-- /wp:paragraph --></header>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-operational-story__panel","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-operational-story__panel"><!-- wp:group {"className":"hp-operational-story__panel-head","layout":{"type":"flex","justifyContent":"space-between","flexWrap":"nowrap"}} -->
+<div class="wp-block-group hp-operational-story__panel-head"><!-- wp:paragraph {"className":"hp-operational-story__panel-label"} -->
+<p class="hp-operational-story__panel-label">Why each rung</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-operational-story__check is-kind-governance","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-operational-story__check is-kind-governance"><!-- wp:paragraph {"className":"hp-operational-story__kind-label"} -->
+<p class="hp-operational-story__kind-label">governance</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-operational-story__check-body","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-operational-story__check-body"><!-- wp:paragraph {"className":"hp-operational-story__check-title"} -->
+<p class="hp-operational-story__check-title">VIP Support Engineer — the target</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-operational-story__check-meta"} -->
+<p class="hp-operational-story__check-meta">Learn what VIP’s customers break, at volume. A queue teaches how people actually break things.</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-operational-story__check is-kind-demo","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-operational-story__check is-kind-demo"><!-- wp:paragraph {"className":"hp-operational-story__kind-label"} -->
+<p class="hp-operational-story__kind-label">demo</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:group {"className":"hp-operational-story__check-body","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-operational-story__check-body"><!-- wp:paragraph {"className":"hp-operational-story__check-title"} -->
+<p class="hp-operational-story__check-title">Solutions Engineer, WordPress VIP — the aim</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-operational-story__check-meta"} -->
+<p class="hp-operational-story__check-meta">The same token discipline, argued before the build instead of after the ticket.</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:html -->
+<div class="hp-operational-story__path">
+	<span class="hp-operational-story__node"><span class="hp-operational-story__marker">12</span><span class="hp-operational-story__node-label">Happiness Engineer · 2012</span></span>
+	<span class="hp-operational-story__connector" aria-hidden="true"></span>
+	<span class="hp-operational-story__node is-emphasis"><span class="hp-operational-story__marker">01</span><span class="hp-operational-story__node-label">VIP Support Engineer</span></span>
+	<span class="hp-operational-story__connector" aria-hidden="true"></span>
+	<span class="hp-operational-story__node"><span class="hp-operational-story__marker">02</span><span class="hp-operational-story__node-label">Solutions Engineer</span></span>
+</div>
+<!-- /wp:html --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-artifact-row","layout":{"type":"constrained"}} -->
+<div class="wp-block-group hp-artifact-row"><!-- wp:paragraph {"className":"hp-artifact-row__legend"} -->
+<p class="hp-artifact-row__legend">Verify the claims yourself</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:columns {"className":"hp-artifacts"} -->
+<div class="wp-block-columns hp-artifacts"><!-- wp:column {"className":"hp-artifact"} -->
+<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
+<p class="hp-artifact__verifies">The theme</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-artifact__link"} -->
+<p class="hp-artifact__link"><a href="https://github.com/henryperkins/hperkins-tokens">henryperkins/hperkins-tokens</a></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:column -->
+
+<!-- wp:column {"className":"hp-artifact"} -->
+<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
+<p class="hp-artifact__verifies">The token layer</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-artifact__link"} -->
+<p class="hp-artifact__link"><a href="https://github.com/henryperkins/hperkins-tokens/blob/main/theme.json">theme.json — pickers off</a></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:column -->
+
+<!-- wp:column {"className":"hp-artifact"} -->
+<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
+<p class="hp-artifact__verifies">The record</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-artifact__link"} -->
+<p class="hp-artifact__link"><a href="/how-this-was-built/">How this site was built</a></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:column -->
+
+<!-- wp:column {"className":"hp-artifact"} -->
+<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
+<p class="hp-artifact__verifies">Resume</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-artifact__link is-download"} -->
+<p class="hp-artifact__link is-download"><a href="https://hperkins.blog/wp-content/uploads/2026/06/henry-perkins-wordpress-ai-open-source-resume-2026-06-30.pdf">Resume (PDF)</a></p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:column --></div>
+<!-- /wp:columns --></div>
+<!-- /wp:group -->
+
+<!-- wp:buttons {"style":{"spacing":{"margin":{"top":"var:preset|spacing|6"}}}} -->
+<div class="wp-block-buttons" style="margin-top:var(--wp--preset--spacing--6)"><!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/contact/">Start a conversation</a></div>
+<!-- /wp:button -->
+
+<!-- wp:button {"className":"is-style-secondary"} -->
+<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/work/">See the work</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons -->
