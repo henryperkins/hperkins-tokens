@@ -274,6 +274,16 @@
    Work — index ledger
    ========================================================================= */
 .hp-workindex__summary { margin-top: var(--wp--preset--spacing--6); }
+/* Closing note — the ledger's one-line rule, set in book body (not the mono
+   colophon) so it reads as an author's aside beneath the register. Left-aligned
+   with the wide ledger spine. */
+.hp-workindex__note {
+  margin: var(--wp--preset--spacing--4) 0 0;
+  font-family: var(--wp--preset--font-family--body);
+  font-size: var(--wp--preset--font-size--sm);
+  line-height: 1.55;
+  color: var(--wp--custom--text--muted);
+}
 .hp-workindex__colophon {
   margin: var(--wp--preset--spacing--9) 0 0;
   padding-top: var(--wp--preset--spacing--5);

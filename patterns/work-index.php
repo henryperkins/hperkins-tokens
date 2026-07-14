@@ -3,7 +3,7 @@
  * Title: Work — index ledger
  * Slug: hperkins-tokens/work-index
  * Categories: hperkins
- * Description: The /work/ portfolio listing — a standfirst over a ProofBar summary and a ledger of engagements, each a status-ruled WorkEntry whose outcome resolves to openable artifacts. Status verified, not asserted.
+ * Description: The /work/ portfolio listing — a standfirst over a ProofBar summary and a status-ruled ledger of engagements (problem → build → outcome → artifact), each a WorkEntry carrying its status word beside the rule colour, closing on the "state is a design decision" rule. Status verified, not asserted. Reusable seed/reference copy of the DB-owned /work/ page body.
  */
 ?>
 <!-- wp:group {"tagName":"section","className":"hp-page-hero","layout":{"type":"default"}} -->
@@ -16,7 +16,7 @@
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-page-hero__lead"} -->
-<p class="hp-page-hero__lead">Write-ups in problem &rarr; build &rarr; outcome &rarr; artifact form. Every engagement below carries one verifiable outcome &mdash; a release, a diff, a live surface you can open yourself.</p>
+<p class="hp-page-hero__lead">Write-ups in problem &rarr; build &rarr; outcome &rarr; artifact form. Every engagement carries one verifiable outcome &mdash; a release, a diff, a live surface you can open yourself.</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:group {"className":"hp-workindex__summary","layout":{"type":"default"}} -->
@@ -48,109 +48,13 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:heading {"level":2,"className":"hp-work__title"} -->
-<h2 class="wp-block-heading hp-work__title"><a href="/work/flavor-agent/">Flavor Agent</a></h2>
+<!-- wp:heading {"level":3,"className":"hp-work__title"} -->
+<h3 class="wp-block-heading hp-work__title"><a href="/work/flavor-agent/">Flavor Agent</a></h3>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-work__desc"} -->
-<p class="hp-work__desc">AI proposes edits inside native WordPress surfaces; WordPress keeps validation, attribution, freshness checks, and drift-safe undo. Who changed what, was it authorized, and can you prove the rollback.</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:group {"className":"hp-artifact-row","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-artifact-row"><!-- wp:paragraph {"className":"hp-artifact-row__legend"} -->
-<p class="hp-artifact-row__legend">Artifacts</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:columns {"className":"hp-artifacts"} -->
-<div class="wp-block-columns hp-artifacts"><!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">case study</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="/work/flavor-agent/">view page</a></p>
+<p class="hp-work__desc">AI proposes edits inside native WordPress surfaces; WordPress keeps validation, attribution, freshness checks, and drift-safe undo.</p>
 <!-- /wp:paragraph --></div>
-<!-- /wp:column -->
-
-<!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">source</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="https://github.com/henryperkins/flavor-agent" rel="noopener">flavor-agent</a></p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:column -->
-
-<!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">release</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link">pre-tag</p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:column --></div>
-<!-- /wp:columns --></div>
-<!-- /wp:group --></div>
-<!-- /wp:group -->
-
-<!-- wp:group {"className":"hp-work__entry is-status-merged","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-work__entry is-status-merged"><!-- wp:group {"className":"hp-work__head","layout":{"type":"flex","justifyContent":"space-between","flexWrap":"wrap"}} -->
-<div class="wp-block-group hp-work__head"><!-- wp:paragraph {"className":"hp-work__label"} -->
-<p class="hp-work__label">Shipped</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-work__meta"} -->
-<p class="hp-work__meta">Released 2026-06 &middot; v2.0</p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:group -->
-
-<!-- wp:heading {"level":2,"className":"hp-work__title"} -->
-<h2 class="wp-block-heading hp-work__title"><a href="/work/ai-provider-for-codex/">Scriptorium AI Provider for Codex</a></h2>
-<!-- /wp:heading -->
-
-<!-- wp:paragraph {"className":"hp-work__desc"} -->
-<p class="hp-work__desc">A localhost-sidecar Codex provider for the WP AI Client; text and capability-gated image generation run without Codex or ChatGPT secrets entering WordPress, and Request Log coverage keeps activity auditable.</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:group {"className":"hp-artifact-row","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-artifact-row"><!-- wp:paragraph {"className":"hp-artifact-row__legend"} -->
-<p class="hp-artifact-row__legend">Artifacts</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:columns {"className":"hp-artifacts"} -->
-<div class="wp-block-columns hp-artifacts"><!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">release</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v2.0" rel="noopener">v2.0</a></p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:column -->
-
-<!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">source</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="https://github.com/henryperkins/ai-provider-for-codex" rel="noopener">repo</a></p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:column -->
-
-<!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">write-up</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="/work/ai-provider-for-codex/">view page</a></p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:column --></div>
-<!-- /wp:columns --></div>
-<!-- /wp:group --></div>
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"hp-work__entry is-status-merged","layout":{"type":"default"}} -->
@@ -160,116 +64,40 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-work__meta"} -->
-<p class="hp-work__meta">core/ai 1.0.1 &middot; maintainer-adjudicated</p>
+<p class="hp-work__meta">upstream</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:heading {"level":2,"className":"hp-work__title"} -->
-<h2 class="wp-block-heading hp-work__title"><a href="/work/upstream-core-ai-stack/">Upstream: WordPress&rsquo;s core AI stack</a></h2>
+<!-- wp:heading {"level":3,"className":"hp-work__title"} -->
+<h3 class="wp-block-heading hp-work__title"><a href="/work/upstream-core-ai-stack/">WordPress&rsquo;s Core AI Contributions</a></h3>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-work__desc"} -->
-<p class="hp-work__desc">A docs PR named in the core/ai 1.0.0 changelog, a defect fixed in 1.0.1, and an open policy proposal &mdash; each adjudicated by maintainers, not by the author.</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:group {"className":"hp-artifact-row","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-artifact-row"><!-- wp:paragraph {"className":"hp-artifact-row__legend"} -->
-<p class="hp-artifact-row__legend">Artifacts</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:columns {"className":"hp-artifacts"} -->
-<div class="wp-block-columns hp-artifacts"><!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">diff</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="https://github.com/WordPress/ai/pull/501" rel="noopener">PR #501</a></p>
+<p class="hp-work__desc">Fixes and features landed in WordPress&rsquo;s core AI and agent-skills repositories, each tied to a merged or tracked artifact.</p>
 <!-- /wp:paragraph --></div>
-<!-- /wp:column -->
-
-<!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">release</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link">v1.0.1</p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:column -->
-
-<!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">write-up</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="/work/upstream-core-ai-stack/">view page</a></p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:column --></div>
-<!-- /wp:columns --></div>
-<!-- /wp:group --></div>
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"hp-work__entry is-status-merged","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-work__entry is-status-merged"><!-- wp:group {"className":"hp-work__head","layout":{"type":"flex","justifyContent":"space-between","flexWrap":"wrap"}} -->
 <div class="wp-block-group hp-work__head"><!-- wp:paragraph {"className":"hp-work__label"} -->
-<p class="hp-work__label">Delivered</p>
+<p class="hp-work__label">Shipped</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-work__meta"} -->
-<p class="hp-work__meta">Cloudflare Worker &middot; ~22 KB</p>
+<p class="hp-work__meta">v0.1.5</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:heading {"level":2,"className":"hp-work__title"} -->
-<h2 class="wp-block-heading hp-work__title"><a href="/work/dj-lee-voices-of-judah/">DJ Lee &amp; Voices of Judah</a></h2>
+<!-- wp:heading {"level":3,"className":"hp-work__title"} -->
+<h3 class="wp-block-heading hp-work__title"><a href="/work/ai-provider-for-codex/">AI Provider for Codex</a></h3>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-work__desc"} -->
-<p class="hp-work__desc">A single Cloudflare Worker serving a booking-first site with one /api/booking endpoint; &ldquo;info only used to reply&rdquo; is enforced architecturally, not merely promised.</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:group {"className":"hp-artifact-row","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-artifact-row"><!-- wp:paragraph {"className":"hp-artifact-row__legend"} -->
-<p class="hp-artifact-row__legend">Artifacts</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:columns {"className":"hp-artifacts"} -->
-<div class="wp-block-columns hp-artifacts"><!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">live</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="https://thevoicesofjudah.com" rel="noopener">thevoicesofjudah.com</a></p>
+<p class="hp-work__desc">A local-runtime Codex provider for the WordPress AI Client; the boundary has tests.</p>
 <!-- /wp:paragraph --></div>
-<!-- /wp:column -->
-
-<!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">write-up</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="/work/dj-lee-voices-of-judah/">view page</a></p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:column -->
-
-<!-- wp:column {"className":"hp-artifact"} -->
-<div class="wp-block-column hp-artifact"><!-- wp:paragraph {"className":"hp-artifact__verifies"} -->
-<p class="hp-artifact__verifies">scope</p>
-<!-- /wp:paragraph -->
-
-<!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link">~22 KB worker</p>
-<!-- /wp:paragraph --></div>
-<!-- /wp:column --></div>
-<!-- /wp:columns --></div>
-<!-- /wp:group --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group -->
 
-<!-- wp:paragraph {"className":"hp-workindex__colophon"} -->
-<p class="hp-workindex__colophon">The Imladris Journal &middot; Selected work &middot; Status verified, not asserted.</p>
+<!-- wp:paragraph {"align":"wide","className":"hp-workindex__note"} -->
+<p class="hp-workindex__note alignwide">Same rule across every entry: where state lives is a design decision, and the boundary is testable.</p>
 <!-- /wp:paragraph -->
