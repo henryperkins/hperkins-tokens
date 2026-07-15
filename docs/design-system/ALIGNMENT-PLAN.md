@@ -88,18 +88,18 @@ recreations faithful rather than merely truthful; each carries one decision (§4
 
 ### Tier 2 — recommended (complete the mirror; represent 0.3.42 in the DS)
 
-5. **Complete the `_source/theme/` mirror** so it stops being a partial snapshot (§5 table C):
+1. **Complete the `_source/theme/` mirror** so it stops being a partial snapshot (§5 table C):
    the four content patterns it lacks (`about-resume`, `ai-enablement`, `contact`,
    `how-this-was-built`), the seven `page-*` template shells, the
    `work-flavor-agent-demo` snapshot, and `readme.txt` (the version/changelog source of record).
-6. **Add a `guidelines/prominent-actions.card.html` specimen** documenting the 0.3.42
+2. **Add a `guidelines/prominent-actions.card.html` specimen** documenting the 0.3.42
    composition (**decision B**, §4 + §8). This is a *guideline card for a composition over the
    Button primitive* — **not** a new component; the theme is explicit that prominent actions add
    "no new canonical design-system primitive."
 
 ### Tier 3 — optional (live-content fidelity)
 
-7. **Verify the live surfaces match the DS recreations.** The project's
+1. **Verify the live surfaces match the DS recreations.** The project's
    `ui_kits/portfolio/{HomeView,WorkView,JournalView,DigestView}.jsx` and
    `design_handoff_imladris_design_system/templates/*.dc.html` are reference recreations of
    <https://hperkins.blog>. Every live route is now represented (Digest arrived with 0.3.41).
@@ -119,12 +119,12 @@ recreations faithful rather than merely truthful; each carries one decision (§4
 ## 4. Decisions to confirm before executing
 
 - **Decision A — mirror completeness.** Keep `_source/theme/` a curated subset (Tier 1 only), or
-  complete it to a faithful full mirror (Tier 2 item 5)?
+  complete it to a faithful full mirror (Tier 2 step 1)?
   **Recommendation: complete it.** A "reference mirror" that silently omits four live-route
   patterns and every `page-*` shell is a trap for the next reader; completeness is cheap here
   because every file already exists in the tree and uploads as-is.
 - **Decision B — represent the prominent action system in the DS.** Add a
-  `guidelines/prominent-actions.card.html` specimen (Tier 2 item 6), or leave the composition
+  `guidelines/prominent-actions.card.html` specimen (Tier 2 step 2), or leave the composition
   documented only theme-side (`docs/design-system/INDEX.md`, `readme.txt`)?
   **Recommendation: add the guideline card** and one cross-reference line in `readme.md`. It keeps
   the DS honest about what ships without violating the "not a new component" stance — a *guideline*
@@ -136,7 +136,8 @@ recreations faithful rather than merely truthful; each carries one decision (§4
 
 ## 5. DesignSync write manifest (localPath → project path)
 
-`finalize_plan` with `localDir` = the repo root (`/home/user/hperkins-tokens`), so every
+`finalize_plan` with `localDir` = the repo root (`<repo-root>` — the local `hperkins-tokens`
+checkout), so every
 `localPath` below is a real file in the tree that `write_files` uploads verbatim — **contents
 never enter model context.** The mirror flattens `assets/imladris-pages.css` →
 `_source/theme/imladris-pages.css`; `write_files` handles that because `localPath` and `path` are
@@ -204,7 +205,15 @@ independent. **No deletes** — the mirror only gains files.
 | `content/page-snapshots/work-flavor-agent-demo.html` | `_source/theme/content/page-snapshots/work-flavor-agent-demo.html` |
 | `readme.txt` | `_source/theme/readme.txt` |
 
-> All of Tables A–C match the single finalize glob **`_source/theme/**`**.
+### Table D — the prominent-actions guideline card (Tier 2, decision B only)
+
+| localPath (repo) | path (project) |
+|---|---|
+| `docs/design-system/design-sync/guidelines/prominent-actions.card.html` | `guidelines/prominent-actions.card.html` |
+
+> Tables A–C all match the single finalize glob **`_source/theme/**`**. Table D is a **single
+> file** that matches the separate **`guidelines/prominent-actions.card.html`** finalize entry, and
+> is written **only when decision B is taken** (§8 authors it in the repo at that localPath first).
 
 ---
 
@@ -215,8 +224,8 @@ Each FIND string below is unique in the current `readme.md`:
 
 ```text
 # Edit 1 — version in the "Theme source (canonical)" bullet
-FIND:    HPerkins Tokens" v0.3.40 on Automattic's Assembler parent
-REPLACE: HPerkins Tokens" v0.3.42 on Automattic's Assembler parent
+FIND:    "HPerkins Tokens" v0.3.40 on Automattic's Assembler parent
+REPLACE: "HPerkins Tokens" v0.3.42 on Automattic's Assembler parent
 
 # Edit 2 — version in the SETTLEMENT "canonical because…" sentence
 FIND:    this project is canonical because its tokens round-trip `theme.json` v0.3.40
@@ -331,8 +340,10 @@ design project, never the theme. Follow docs/design-system/ALIGNMENT-PLAN.md.
      deletes:   []
    (Drop the guidelines/ glob if decision B is "no".)
 4. DesignSync write_files (planId from step 3) using the localPath→path pairs in
-   ALIGNMENT-PLAN §5 Tables A, B, and C. Each mirrored file uploads verbatim from disk via
-   localPath. Split into ≤256-file batches if needed (there are ~45).
+   ALIGNMENT-PLAN §5 Tables A, B, and C — plus the Table D row
+   (docs/design-system/design-sync/guidelines/prominent-actions.card.html →
+   guidelines/prominent-actions.card.html) when decision B is taken. Each file uploads verbatim
+   from disk via localPath. Split into ≤256-file batches if needed (there are ~45).
 5. get_file readme.md, apply the four string edits in ALIGNMENT-PLAN §6 (v0.3.40→v0.3.42 twice,
    live-surface list, seven→eight templates) plus the Notes/honest-gaps line if decision B,
    then write_files readme.md with the edited content as inline data.
