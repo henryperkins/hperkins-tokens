@@ -396,3 +396,34 @@ This is a recorded theme composition, not a new token or canonical DS
 component. `scripts/verify-prominent-actions.js` guards source opt-in,
 compact-control exclusions, rendered counts, 44px targets, focus visibility,
 mobile stacking, overflow, and desktop/mobile screenshots.
+
+## 2026-07-15 — DS project alignment plan authored (design-sync **pending**)
+
+The canonical project (`b844cbab…`) was declared canonical against `theme.json`
+**v0.3.40**; the theme has since shipped **0.3.41** (Job Placement Digest) and
+**0.3.42** (prominent action composition), so the project's `_source/theme/`
+mirror and its `readme.md` version provenance are behind the source of truth.
+
+A full **push (design-*sync*, not pull)** plan and a copy-paste prompt were
+authored at **[`ALIGNMENT-PLAN.md`](./ALIGNMENT-PLAN.md)**. Summary of the gap and
+the fix:
+
+- **Token layer is already 1:1 — no change.** `theme.json` last changed at 0.3.39
+  (`136ee78`), *before* the mirror was captured, so `tokens/*.css` and
+  `_source/theme/theme.json` still round-trip. The only token-related falsehood is
+  the version string in the project `readme.md`, corrected by the plan.
+- **Mirror refresh.** Re-push the whole `_source/theme/` file-set from the current
+  tree (absorbs the 0.3.41 `overflow-wrap`/digest CSS and every 0.3.42
+  `hp-action-rail`/`hp-action-panel` edit), **add** `job-placement-digest.php` +
+  its snapshot, and — recommended — complete the mirror (the four content patterns,
+  the `page-*` shells, the flavor-agent-demo snapshot, `readme.txt`).
+- **`readme.md` edits.** v0.3.40 → v0.3.42 (twice), add `/job-placement-digest/` +
+  `/contact/` to live surfaces, and correct "seven"→"eight" template folders
+  (`digest` was already present but unnamed).
+- **Prominent actions in the DS.** Recommended: a `guidelines/prominent-actions.card.html`
+  specimen documenting the 0.3.42 composition as a *guideline over Button*, **not**
+  a `components/` entry (the theme's stance holds).
+
+**Status: plan + prompt only — nothing has been pushed to the project, and no theme
+file changed.** Execution is a separate `/design-sync` run (DesignSync MCP, auth via
+`/design-login`); this entry becomes the completed record once that runs.
