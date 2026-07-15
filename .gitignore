@@ -17,6 +17,7 @@ node_modules/
 vendor/
 .cache/
 coverage/
+.worktrees/
 
 # Archives/backups
 *.zip
