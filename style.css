@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.41
+Version: 0.3.42
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -2256,6 +2256,100 @@ samp {
 	font-family: var(--hp-font-body);
 }
 
+/* === Prominent actions ===
+	 The rail groups opted-in page actions without changing the core Button
+	 primitive. Closing panels add editorial punctuation only where the page
+	 is making a final invitation. */
+.hp-action-rail {
+	box-sizing: border-box;
+	width: fit-content;
+	max-width: 100%;
+	gap: var(--wp--preset--spacing--1);
+	align-items: stretch;
+	padding: var(--wp--preset--spacing--1);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--lg);
+	background: linear-gradient(
+		135deg,
+		var(--wp--custom--surface--sunken),
+		var(--wp--custom--surface--card)
+	);
+	box-shadow: var(--wp--custom--shadow--sm);
+}
+
+.hp-action-rail .wp-block-button {
+	margin: 0;
+}
+
+.hp-action-rail .wp-block-button__link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-block-size: var(--hp-touch-min);
+}
+
+.hp-action-panel.is-closing {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	padding: var(--wp--preset--spacing--5);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-left: var(--hp-rule-entry) solid var(--hp-gold);
+	border-radius: var(--wp--custom--radius--lg);
+	background: linear-gradient(
+		135deg,
+		var(--wp--custom--surface--sunken),
+		var(--wp--custom--surface--card)
+	);
+	box-shadow: var(--wp--custom--shadow--md);
+}
+
+.hp-action-panel.is-closing::after {
+	content: "";
+	position: absolute;
+	z-index: 0;
+	inset: var(--wp--preset--spacing--4) var(--wp--preset--spacing--4) auto auto;
+	inline-size: var(--wp--preset--spacing--6);
+	block-size: var(--wp--preset--spacing--6);
+	background: var(--hp-gold);
+	-webkit-mask: url("assets/img/emblem.svg") center / contain no-repeat;
+	mask: url("assets/img/emblem.svg") center / contain no-repeat;
+	opacity: 0.32;
+	pointer-events: none;
+}
+
+.hp-action-panel.is-closing > * {
+	position: relative;
+	z-index: 1;
+}
+
+.hp-action-panel.is-closing > .hp-action-rail {
+	margin-top: var(--wp--preset--spacing--5);
+}
+
+@media (max-width: 600px) {
+	.hp-action-rail {
+		width: 100%;
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.hp-action-rail .wp-block-button,
+	.hp-action-rail .wp-block-button__link {
+		width: 100%;
+	}
+
+	.hp-action-panel.is-closing {
+		padding: var(--wp--preset--spacing--4);
+	}
+
+	.hp-action-panel.is-closing::after {
+		inset: var(--wp--preset--spacing--3) var(--wp--preset--spacing--3) auto auto;
+		inline-size: var(--wp--preset--spacing--5);
+		block-size: var(--wp--preset--spacing--5);
+	}
+}
+
 /* === Imladris primitive patterns === */
 .hp-button-set,
 .hp-icon-button-set,
@@ -2949,8 +3043,6 @@ samp {
 
 .hp-front-template__cta {
 	box-sizing: border-box;
-	padding: clamp(1.5rem, 1.15rem + 1.2vw, 2.25rem) 0 0;
-	border-top: 1px solid var(--wp--custom--border--hair);
 }
 
 .hp-front-template__cta > * {
@@ -3009,10 +3101,6 @@ samp {
 }
 
 @media (max-width: 600px) {
-	.hp-front-template__cta {
-		padding-top: var(--wp--preset--spacing--6);
-	}
-
 	.hp-front-template__cta-actions {
 		justify-content: flex-start;
 	}

@@ -18,7 +18,7 @@ The **HPerkins Tokens** theme — the **"Imladris" design-system child theme** f
 # Lint — the de-facto check (no phpcs config). PHP syntax-check the whole theme:
 find . -name '*.php' -print0 | xargs -0 -n1 php -l
 
-# Theme verifiers (this repo's scripts/ — all ten). Dependency-free (Node built-ins).
+# Theme verifiers (this repo's scripts/ — all eleven). Dependency-free (Node built-ins).
 # Env overrides: CHROME_BIN (default /usr/bin/google-chrome), HPERKINS_ORIGIN (default https://hperkins.blog),
 # HPERKINS_WP_PATH (default /home/dev/hperkinsblog, for the wp-cli-backed scripts).
 #
@@ -26,6 +26,7 @@ find . -name '*.php' -print0 | xargs -0 -n1 php -l
 node scripts/verify-ring-cards-mobile.js        # 320px: three ring cards render, don't collide, no horizontal overflow on / and /ai-enablement/
 node scripts/verify-contact-form-styling.js     # /contact/: themed .hp-input beats parent input rules; gold-700 border + 2px outline focus ring; subscribe status states
 node scripts/verify-homepage-hero-polish.js     # / hero title weight: medium mobile, semibold desktop
+node scripts/verify-prominent-actions.js        # /, /about/, /job-placement-digest/, and Flavor Agent demo: rail/panel counts, 44px targets, focus, mobile stacking, overflow, screenshots
 node scripts/verify-journal-polish.js           # /essays/ masthead clamp + overflow at 390/320px; fallback plate-crop variety
 #
 # WP-CLI / HTTP / file checks (no Chrome):
@@ -58,6 +59,12 @@ It defines the entire token vocabulary: the palette (`parchment-*`, `mist-*`, `i
 
 - **`style.css`** — the hand-authored sheet. Its `:root` block **aliases onto the `theme.json`-generated `--wp--preset--*` / `--wp--custom--*` vars** (e.g. `--hp-neutral-900: var(--wp--custom--text--strong)`) so there are no parallel hex copies. It then holds the **core component CSS** (`.hp-lead`, `.hp-ring-card`, `.hp-site-header`, `.hp-footer`, chips/rows/quotes, etc.). Treat it as the authored artifact; keep it clean.
 - **`assets/imladris-pages.css`** — **page-layout CSS** for designs pulled from the design system (ai-enablement essay, contact, work index, job-placement digest). Deliberately kept **out of `style.css`** so the hand-authored sheet stays untouched; enqueued separately (handle `hperkins-pages`) and depends on `hperkins-tokens` so the cascade is right. Put page-specific layout here, component tokens/CSS in `style.css`.
+
+Prominent page actions compose the canonical Button primitive through
+`.hp-action-rail`; final invitations add `.hp-action-panel.is-closing`.
+Both are shared components in `style.css`. Page selectors may own surrounding
+typography and layout, but compact header, form, icon, and specimen controls
+must not opt into either class.
 
 ### `functions.php` — parent/child load-order surgery (read before touching enqueue/editor wiring)
 

@@ -22,6 +22,8 @@ const checks = [
 			'content/page-snapshots/job-placement-digest.html',
 			'content/page-snapshots/work-flavor-agent-demo.html',
 			'theme-owned Wapuu',
+			'hp-action-rail',
+			'hp-action-panel',
 		],
 		exclude: [
 			/then appends the Three Rings \(Vilya \/ Narya \/ Nenya\) framework section\./,
@@ -31,7 +33,14 @@ const checks = [
 	},
 	{
 		file: 'CLAUDE.md',
-		include: [ 'content/page-snapshots/', 'content/page-snapshots/job-placement-digest.html', 'content/page-snapshots/work-flavor-agent-demo.html', 'theme-owned `wapuu-home-hero` pattern' ],
+		include: [
+			'content/page-snapshots/',
+			'content/page-snapshots/job-placement-digest.html',
+			'content/page-snapshots/work-flavor-agent-demo.html',
+			'theme-owned `wapuu-home-hero` pattern',
+			'verify-prominent-actions.js',
+			'hp-action-rail',
+		],
 		exclude: [ /page-ai-enablement\.html is a \*\*shadow template\*\*/i ],
 	},
 	{
@@ -42,6 +51,8 @@ const checks = [
 			'content/page-snapshots/job-placement-digest.html',
 			'content/page-snapshots/work-flavor-agent-demo.html',
 			'hybrid mode: theme-owned Wapuu hero + Three Rings shell',
+			'`hp-action-rail`',
+			'`hp-action-panel is-closing`',
 		],
 		exclude: [
 			/\*\*Shadow template\*\* over live page 175/i,

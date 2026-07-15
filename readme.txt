@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.41
+Stable tag: 0.3.42
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -277,6 +277,19 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.42 =
+* Prominent actions: added the opted-in hp-action-rail composition for the
+  homepage and About heroes plus the front-page, Job Placement Digest, and
+  Flavor Agent demo invitations. Compact header, form, icon, and specimen
+  controls remain on the canonical Button primitive without the rail.
+* Closing invitations: added the hp-action-panel is-closing parchment panel,
+  fixed gold rule, Imladris emblem, and responsive full-width action stack.
+  The Digest now ends with the approved "Bring me the problem behind the
+  ticket" invitation instead of an uncontained button row.
+* Accessibility: prominent actions keep the existing gold focus-visible
+  treatment, guarantee 44px targets, and stack without horizontal overflow at
+  600px and below.
 
 = 0.3.41 =
 * Job Placement Digest: implemented the canonical Imladris DS Digest design

@@ -381,3 +381,18 @@ tokens round-trip `theme.json` v0.3.40*, and it mirrors this theme's source unde
 - **Deploy contract:** the DB body of page 433 must be replaced with the seed/snapshot markup (then
   `node scripts/export-page-snapshots.js` + `node scripts/verify-content-ownership.js` confirm), and the
   page must carry no explicit `_wp_page_template` so the slug-matched shell applies.
+
+## 2026-07-14 — prominent action composition (`core/button` → action rail)
+
+Version 0.3.42 adds a theme-side composition around the canonical Button
+primitive. `hp-action-rail` groups prominent page actions on an owned parchment
+surface without changing primary/secondary button anatomy;
+`hp-action-panel is-closing` adds the stronger gold-rule invitation panel only
+to page endings. The homepage and About heroes use the rail without the panel;
+the front page, Job Placement Digest, and Flavor Agent demo use both. Header
+Subscribe, forms, icon buttons, and the Button specimen remain primitive-only.
+
+This is a recorded theme composition, not a new token or canonical DS
+component. `scripts/verify-prominent-actions.js` guards source opt-in,
+compact-control exclusions, rendered counts, 44px targets, focus visibility,
+mobile stacking, overflow, and desktop/mobile screenshots.
