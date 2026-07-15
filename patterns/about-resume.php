@@ -43,8 +43,8 @@ $hperkins_about_portrait_src  = file_exists( $hperkins_about_portrait_file )
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:buttons {"className":"hp-about-hero__cta","layout":{"type":"flex","flexWrap":"wrap"}} -->
-<div class="wp-block-buttons hp-about-hero__cta"><!-- wp:button -->
+<!-- wp:buttons {"className":"hp-about-hero__cta hp-action-rail","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-buttons hp-about-hero__cta hp-action-rail"><!-- wp:button -->
 <div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="mailto:htperkins@gmail.com">Get in touch</a></div>
 <!-- /wp:button -->
 

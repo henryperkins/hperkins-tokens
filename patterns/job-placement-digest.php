@@ -172,12 +172,26 @@
 <!-- /wp:columns --></div>
 <!-- /wp:group -->
 
-<!-- wp:buttons {"style":{"spacing":{"margin":{"top":"var:preset|spacing|6"}}}} -->
-<div class="wp-block-buttons" style="margin-top:var(--wp--preset--spacing--6)"><!-- wp:button -->
+<!-- wp:group {"tagName":"section","className":"hp-action-panel is-closing hp-digest-cta","style":{"spacing":{"margin":{"top":"var:preset|spacing|8"}}},"layout":{"type":"constrained"}} -->
+<section class="wp-block-group hp-action-panel is-closing hp-digest-cta" style="margin-top:var(--wp--preset--spacing--8)"><!-- wp:paragraph {"className":"hp-page-hero__eyebrow"} -->
+<p class="hp-page-hero__eyebrow">A next step, stated plainly</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":2} -->
+<h2 class="wp-block-heading">Bring me the problem behind the ticket.</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>If you need WordPress systems thinking that can survive inspection, let’s compare notes.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:buttons {"className":"hp-action-rail","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-buttons hp-action-rail"><!-- wp:button -->
 <div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/contact/">Start a conversation</a></div>
 <!-- /wp:button -->
 
 <!-- wp:button {"className":"is-style-secondary"} -->
 <div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/work/">See the work</a></div>
 <!-- /wp:button --></div>
-<!-- /wp:buttons -->
+<!-- /wp:buttons --></section>
+<!-- /wp:group -->

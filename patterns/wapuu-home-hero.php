@@ -52,8 +52,8 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 			</div>
 			<!-- /wp:group -->
 
-			<!-- wp:buttons {"className":"hp-wapuu-hero__cta","layout":{"type":"flex","flexWrap":"wrap"}} -->
-			<div class="wp-block-buttons hp-wapuu-hero__cta">
+			<!-- wp:buttons {"className":"hp-wapuu-hero__cta hp-action-rail","layout":{"type":"flex","flexWrap":"wrap"}} -->
+			<div class="wp-block-buttons hp-wapuu-hero__cta hp-action-rail">
 				<!-- wp:button -->
 				<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/work/">See the work</a></div>
 				<!-- /wp:button -->
