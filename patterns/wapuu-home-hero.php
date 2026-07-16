@@ -17,7 +17,7 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 		<!-- wp:column {"verticalAlignment":"center","width":"55%","className":"hp-wapuu-hero__copy"} -->
 		<div class="wp-block-column is-vertically-aligned-center hp-wapuu-hero__copy" style="flex-basis:55%">
 			<!-- wp:paragraph {"className":"hp-wapuu-hero__eyebrow"} -->
-			<p class="hp-wapuu-hero__eyebrow"><a href="https://aileaderswp.blog/">AI Leaders — First Cohort Finalist</a></p>
+			<p class="hp-wapuu-hero__eyebrow"><a href="https://aileaderswp.blog/">AI Leaders 2026 Finalist</a></p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:heading {"level":1,"className":"hp-wapuu-hero__title"} -->
@@ -25,7 +25,7 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 			<!-- /wp:heading -->
 
 			<!-- wp:paragraph {"className":"hp-wapuu-hero__text"} -->
-			<p class="hp-wapuu-hero__text">I build WordPress AI tooling where the governance is part of the architecture, not a promise in the readme. Scope, build, deploy, explain — and every claim has an artifact behind it.</p>
+			<p class="hp-wapuu-hero__text">I build WordPress AI tooling where the governance is part of the architecture, not a promise in the readme. Scope, build, deploy, explain — and the load-bearing claims have an artifact behind them.</p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:paragraph {"className":"hp-wapuu-hero__text"} -->
@@ -43,7 +43,7 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 				<!-- /wp:paragraph -->
 
 				<!-- wp:paragraph {"className":"hp-chip is-status-review"} -->
-				<p class="hp-chip is-status-review"><a href="https://github.com/WordPress/agent-skills/pull/49">agent-skills PR #49</a> — in review</p>
+				<p class="hp-chip is-status-review"><a href="https://github.com/WordPress/agent-skills/pull/49">agent-skills PR #49</a> — awaiting review</p>
 				<!-- /wp:paragraph -->
 
 				<!-- wp:paragraph {"className":"hp-chip is-status-review"} -->
