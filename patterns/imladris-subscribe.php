@@ -16,7 +16,7 @@ $subscribe_title_id = wp_unique_id( 'hp-subscribe-title-' );
 $subscribe_email_id = wp_unique_id( 'hp-subscribe-email-' );
 
 if ( 'success' === $subscribe_status ) {
-	$subscribe_message = 'Request received. I will review the address and add it to the fortnightly dispatch shortly.';
+	$subscribe_message = 'Request received. I will review the address and add it to the occasional dispatch shortly.';
 } elseif ( 'invalid-email' === $subscribe_status ) {
 	$subscribe_message = 'Enter a valid email to join the dispatch.';
 	$subscribe_role    = 'alert';
@@ -33,7 +33,7 @@ if ( 'success' === $subscribe_status ) {
 ?>
 <!-- wp:html -->
 <section id="subscribe" class="hp-subscribe" aria-labelledby="<?php echo esc_attr( $subscribe_title_id ); ?>">
-	<p class="hp-subscribe__kicker">The fortnightly dispatch</p>
+	<p class="hp-subscribe__kicker">The occasional dispatch</p>
 	<h2 id="<?php echo esc_attr( $subscribe_title_id ); ?>" class="hp-subscribe__title">Join the council</h2>
 	<p class="hp-subscribe__blurb">Essays on AI governance, oversight, and the long stewardship of power.</p>
 	<form class="hp-subscribe__form" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
