@@ -21,5 +21,6 @@ See **[INDEX.md](./INDEX.md)** for the full provenance, the DS-component → the
 implemented in this pull, and an honest account of what is vendored locally vs. what still lives only
 in the project (and how to re-pull it).
 
-The token layer was verified **1:1** against `theme.json` (zero drift); the faithful token mirror is
-staged under `../../.design-pull/imladris-design-system/`.
+The token layer was verified **1:1 against `theme.json` at the 2026-06-20 pull**, with the deliberate
+theme-side deltas since recorded in [INDEX.md](./INDEX.md) — re-diff against the DS project before
+asserting parity today. The faithful token mirror is staged under `../../.design-pull/imladris-design-system/`.

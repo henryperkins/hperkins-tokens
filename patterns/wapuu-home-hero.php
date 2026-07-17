@@ -17,7 +17,7 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 		<!-- wp:column {"verticalAlignment":"center","width":"55%","className":"hp-wapuu-hero__copy"} -->
 		<div class="wp-block-column is-vertically-aligned-center hp-wapuu-hero__copy" style="flex-basis:55%">
 			<!-- wp:paragraph {"className":"hp-wapuu-hero__eyebrow"} -->
-			<p class="hp-wapuu-hero__eyebrow"><a href="https://aileaderswp.blog/">AI Leaders — First Cohort Finalist</a></p>
+			<p class="hp-wapuu-hero__eyebrow"><a href="https://aileaderswp.blog/">AI Leaders 2026 Finalist</a></p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:heading {"level":1,"className":"hp-wapuu-hero__title"} -->

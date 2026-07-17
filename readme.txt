@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.42
+Stable tag: 0.3.43
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -32,9 +32,11 @@ installed for this theme to activate.
 
 = Token vocabulary =
 
-The Imladris token layer lives in theme.json and round-trips 1:1 with the design
-system; style.css aliases onto the generated --wp--preset--* / --wp--custom--*
-variables rather than duplicating any hex.
+The Imladris token layer lives in theme.json and is kept in sync with the design
+system — verified 1:1 at the 2026-06-20 pull, with theme-side deltas since recorded
+in docs/design-system/INDEX.md; re-diff before asserting parity. style.css aliases
+onto the generated --wp--preset--* / --wp--custom--* variables rather than
+duplicating any hex.
 
 Color palette (settings.color.palette — defaultPalette, defaultGradients,
 defaultDuotone, custom, customGradient, and customDuotone are all false, so the
@@ -277,6 +279,34 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.43 =
+* Claim-accuracy pass over theme-owned copy (per the 2026-07-15 site claim
+  audit). Corrections are limited to files this theme owns; database-owned page
+  bodies (About, Work, AI Governance, Privacy, etc.) are out of the theme's
+  reach and are unchanged here.
+* How-this-was-built build report (patterns/how-this-was-built.php): rewrote the
+  platform section and colophon for the current WordPress.com Business/Atomic
+  deployment that runs Flavor Agent, dropping the self-hosted DigitalOcean
+  narrative; replaced enforced "every pull" language with the documented
+  /design-pull and recorded-delta workflow; corrected the Cormorant Garamond
+  label; removed unsupported 14-component, six-template, and 11k-line counts;
+  retained the indexed 19-component count; and dated the 30-commit build window.
+* Footer and home hero: corrected the WordPress history line to "WordPress.org
+  member since 2007 · professional WordPress work since 2012"; changed the hero
+  proof and Flavor Agent trust claims to their supported wording; marked
+  agent-skills PR #49 "open, unreviewed" with pending status; dated the Flavor
+  Agent release; and updated the AI Leaders label to "2026 Finalist".
+* Subscribe and contact: changed the unsupported fortnightly cadence to
+  occasional across public copy, notification mail, privacy export/erase
+  labels, and verification; disclosed that the contact form opens the visitor's
+  email app and that the site does not receive or store its fields.
+* Design-system docs (docs/design-system/README.md, readme.txt): softened the
+  bare "1:1 / zero drift" assertions to "verified 1:1 at the 2026-06-20 pull,
+  with theme-side deltas recorded in INDEX.md; re-diff before asserting parity",
+  matching what INDEX.md already documents.
+* Release verification now compares the current style.css Version and readme
+  Stable tag/changelog dynamically while retaining the 0.3.42 history check.
 
 = 0.3.42 =
 * Prominent actions: added the opted-in hp-action-rail composition for the
