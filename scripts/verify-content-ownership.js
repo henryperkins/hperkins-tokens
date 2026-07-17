@@ -1,18 +1,19 @@
 #!/usr/bin/env node
 
-const { execFileSync } = require( 'node:child_process' );
 const crypto = require( 'node:crypto' );
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
+const { getWordPressPath, runWp } = require( './lib/wp-cli' );
 
 const {
-	WP_PATH,
 	THEME_PATH,
 	SNAPSHOT_DIR,
 	PAGE_CONTRACTS,
 	RETIRED_PAGE_PATHS,
 	normalizeContent,
 } = require( './lib/page-content-contract' );
+
+const WP_PATH = getWordPressPath();
 
 function escapePhpString( value ) {
 	return `'${ value.replace( /\\/g, '\\\\' ).replace( /'/g, "\\'" ) }'`;
@@ -48,7 +49,7 @@ function assert( condition, message ) {
 }
 
 function runWpEval( code ) {
-	return execFileSync( 'wp', [ `--path=${ WP_PATH }`, 'eval', code ], {
+	return runWp( [ `--path=${ WP_PATH }`, 'eval', code ], {
 		encoding: 'utf8',
 		stdio: [ 'ignore', 'pipe', 'pipe' ],
 	} ).trim();

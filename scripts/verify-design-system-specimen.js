@@ -6,11 +6,11 @@
  * are actively maintained in this theme, rather than carrying stale inline
  * copies whose classes can drift away from style.css.
  */
-const { execFileSync } = require( 'node:child_process' );
+const { getWordPressPath, runWp } = require( './lib/wp-cli' );
 
 const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
 const DESIGN_SYSTEM_URL = new URL( '/design-system/', ORIGIN );
-const WP_PATH = process.env.HPERKINS_WP_PATH || '/home/dev/hperkinsblog';
+const WP_PATH = getWordPressPath();
 
 const LEGACY_MARKERS = [
 	'hp-operational-story__grid',
@@ -39,8 +39,7 @@ function assert( condition, message ) {
 }
 
 async function main() {
-	const postContent = execFileSync(
-		'wp',
+	const postContent = runWp(
 		[
 			`--path=${ WP_PATH }`,
 			`--url=${ ORIGIN }`,
@@ -69,8 +68,7 @@ async function main() {
 	// The specimen page is an internal reference and may deliberately sit in
 	// draft. The DB-content checks above always run; the rendered-page checks
 	// only make sense once the page is published.
-	const postStatus = execFileSync(
-		'wp',
+	const postStatus = runWp(
 		[ `--path=${ WP_PATH }`, `--url=${ ORIGIN }`, 'post', 'get', '79', '--field=post_status' ],
 		{ encoding: 'utf8' }
 	).trim();

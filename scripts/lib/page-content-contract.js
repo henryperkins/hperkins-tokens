@@ -2,8 +2,7 @@
 
 const path = require( 'node:path' );
 
-const WP_PATH = '/home/dev/hperkinsblog';
-const THEME_PATH = `${ WP_PATH }/wp-content/themes/hperkins-tokens`;
+const THEME_PATH = path.resolve( __dirname, '..', '..' );
 const SNAPSHOT_DIR = path.join( THEME_PATH, 'content', 'page-snapshots' );
 
 const PAGE_CONTRACTS = [
@@ -67,7 +66,6 @@ function normalizeContent( value ) {
 }
 
 module.exports = {
-	WP_PATH,
 	THEME_PATH,
 	SNAPSHOT_DIR,
 	PAGE_CONTRACTS,

@@ -9,12 +9,12 @@
 const { execFileSync } = require( 'node:child_process' );
 const { readFileSync } = require( 'node:fs' );
 const path = require( 'node:path' );
+const { getWordPressPath, runWp } = require( './lib/wp-cli' );
 
 const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
 const DEFAULT_ORIGIN = 'https://hperkins.blog';
 const CONTACT_URL = new URL( '/contact/', ORIGIN );
 const ENDPOINT_URL = new URL( '/wp-admin/admin-post.php', ORIGIN );
-const WP_PATH = process.env.HPERKINS_WP_PATH || '/home/dev/hperkinsblog';
 const THEME_PATH = path.join( __dirname, '..' );
 
 function assert( condition, message ) {
@@ -94,10 +94,10 @@ async function main() {
 	// HPERKINS_ORIGIN at a staging origin must not rewrite the production DB.
 	let runtimeCheck = 'runtime checks skipped (HPERKINS_ORIGIN does not match the local WP install; set HPERKINS_WP_PATH to opt in)';
 	if ( ORIGIN === DEFAULT_ORIGIN || process.env.HPERKINS_WP_PATH ) {
-		runtimeCheck = execFileSync(
-		'wp',
-		[
-			`--path=${ WP_PATH }`,
+		const wpPath = getWordPressPath();
+		runtimeCheck = runWp(
+			[
+			`--path=${ wpPath }`,
 			`--url=${ ORIGIN }`,
 			'eval',
 			`
