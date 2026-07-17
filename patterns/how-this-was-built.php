@@ -3,7 +3,7 @@
  * Title: How hperkins.blog Was Built — build report
  * Slug: hperkins-tokens/how-this-was-built
  * Categories: hperkins
- * Description: The /how-this-was-built/ build report in the Imladris "parchment dossier" treatment — the making-of hperkins.blog end to end: the premise, the WordPress.com Atomic platform requirement set by Flavor Agent, the two design systems (tokens-kit → Imladris), the theme.json source of truth, the content system, the verify-first build loop, the git-evidenced build, and the discipline. Layout CSS is scoped to .hp-buildreport in assets/imladris-pages.css.
+ * Description: The /how-this-was-built/ build report in the Imladris "parchment dossier" treatment — the making-of hperkins.blog end to end: the premise, the WordPress.com Business deployment on Atomic infrastructure, the two design systems (tokens-kit → Imladris), the theme.json source of truth, the content system, the verify-first build loop, the git-evidenced build, and the discipline. Layout CSS is scoped to .hp-buildreport in assets/imladris-pages.css.
  */
 ?>
 <!-- wp:html -->
@@ -30,7 +30,7 @@
 	</div>
 
 	<div class="hp-buildreport__lede">
-		<p>This site is not a showcase wrapped around a r&eacute;sum&eacute;. It is built so that every load-bearing claim points at something a stranger can check &mdash; the proof bar renders state, never intent, and is designed to keep representing the work as it changes, not only on the day it is &lsquo;done&rsquo;.</p>
+		<p>This site is not a showcase wrapped around a r&eacute;sum&eacute;. It is built so that every load-bearing claim points at something a stranger can check &mdash; the proof bar renders state, never intent, and the site is designed to keep representing the work as it changes, not only on the day it is &lsquo;done&rsquo;.</p>
 	</div>
 
 	<section>
@@ -44,9 +44,9 @@
 	</section>
 
 	<section>
-		<h2><span class="hp-buildreport__n" aria-hidden="true">02</span> The platform, chosen then outgrown</h2>
+		<h2><span class="hp-buildreport__n" aria-hidden="true">02</span> The platform &mdash; an audit, not a default</h2>
 		<p>The hosting choice was an audit, not a default. WordPress.com Business sat at the intersection of near-zero maintenance, a real code-to-production path, and infrastructure that makes the same governance-first argument as the work it showcases &mdash; and the trade-off was stated plainly rather than hidden: Business is not VIP.</p>
-		<p>Then the centerpiece set the requirement. <strong>Flavor Agent</strong> &mdash; the governed-AI plugin the whole site exists to demonstrate &mdash; needs custom-plugin and code access that a fully managed tier restricts. The site runs on WordPress.com&rsquo;s Atomic infrastructure, which grants that plugin plus SFTP/SSH access on the same platform. The work set the requirements for the infrastructure, not the other way around.</p>
+		<p>Then the centerpiece set the requirement. <strong>Flavor Agent</strong> &mdash; the governed-AI plugin the whole site exists to demonstrate &mdash; needs custom-plugin and code access. The site runs on <a href="https://wordpress.com/support/plan-features/business-plan/">WordPress.com Business</a> on Atomic infrastructure, which provides the custom-plugin support and SFTP/SSH access Flavor Agent needs. The work set the requirements for the infrastructure, not the other way around.</p>
 		<div class="hp-buildreport__takeaway">
 			<span class="hp-buildreport__takeaway-label">For your build</span>
 			<p>Let the work set the infrastructure requirements, not the reverse. Pick the smallest platform that still lets your centerpiece run &mdash; and state the trade-off out loud, because a named limitation reads as judgment, not a gap.</p>
@@ -94,7 +94,7 @@
 	<section>
 		<h2><span class="hp-buildreport__n" aria-hidden="true">04</span> The theme &mdash; a design system in theme.json</h2>
 		<p>The site runs on a custom <a href="https://developer.wordpress.org/themes/advanced-topics/child-themes/">block child theme</a> &mdash; <strong>HPerkins Tokens</strong> &mdash; on Automattic&rsquo;s <a href="https://wordpress.com/theme/assembler">Assembler</a> parent. Its premise is that the design system lives in <a href="https://developer.wordpress.org/themes/global-settings-and-styles/"><code>theme.json</code></a> as a small, named token vocabulary, and every component is a consequence of those tokens rather than a parallel set of hardcoded values.</p>
-		<p>The colour contract is locked at the schema level: the stock swatches and every custom colour, gradient, and duotone picker are <a href="https://developer.wordpress.org/block-editor/reference-guides/theme-json-reference/">turned off</a>, so to change a colour you edit <code>theme.json</code>, not a block. The four families are self-hosted, not pulled from a CDN. And the theme consumes the shared semantic and editor tokens from the Imladris project kept in <a href="https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design">Claude Design</a>; a scripted diff on every pull surfaces any divergence between the source and the theme, and the documented per-theme deltas and the geometry and browser values that live in component CSS are tracked rather than pretended away.</p>
+		<p>The colour contract is locked at the schema level: the stock swatches and every custom colour, gradient, and duotone picker are <a href="https://developer.wordpress.org/block-editor/reference-guides/theme-json-reference/">turned off</a>, so to change a colour you edit <code>theme.json</code>, not a block. The four families are self-hosted, not pulled from a CDN. And the theme consumes the shared semantic and editor tokens from the Imladris project kept in <a href="https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design">Claude Design</a>; when <code>/design-pull</code> is run, the token layer is re-diffed to surface any divergence between the source and the theme, while the documented per-theme deltas and the geometry and browser values that live in component CSS are tracked rather than pretended away.</p>
 		<div class="hp-buildreport__steps">
 			<p class="hp-buildreport__steps-intro">Put a <a href="https://developer.wordpress.org/themes/block-themes/">block theme&rsquo;s</a> design system in one token layer</p>
 			<div class="hp-buildreport__step">
@@ -115,7 +115,7 @@
 			</div>
 			<div class="hp-buildreport__step">
 				<div class="hp-buildreport__step-marker">05</div>
-				<p><strong>Diff against the source.</strong> Keep the token layer synced with wherever it&rsquo;s authored and run a scripted diff on every pull &mdash; so any divergence between source and theme surfaces as a reported change instead of a surprise.</p>
+				<p><strong>Diff against the source.</strong> Keep the token layer synced with wherever it&rsquo;s authored; run <code>/design-pull</code> and re-diff at pull time so any divergence between source and theme surfaces as a reported change instead of a surprise.</p>
 			</div>
 		</div>
 		<div class="hp-buildreport__takeaway">
@@ -211,7 +211,7 @@
 		</ul>
 	</section>
 
-	<p class="hp-buildreport__colophon"><strong>Colophon</strong> &mdash; Custom block child theme (HPerkins Tokens) on Automattic&rsquo;s Assembler parent &middot; Imladris design system authored at the <code>theme.json</code> token level, mirrored from a Claude Design project with per-theme deltas tracked on every pull &middot; hosted on WordPress.com Atomic &middot; verified locally with WordPress Studio, <code>wp&nbsp;server</code>, and Playwright.</p>
+	<p class="hp-buildreport__colophon"><strong>Colophon</strong> &mdash; Custom block child theme (HPerkins Tokens) on Automattic&rsquo;s Assembler parent &middot; Imladris design system authored at the <code>theme.json</code> token level, mirrored from a Claude Design project with per-theme deltas recorded in <code>docs/design-system/INDEX.md</code> &middot; hosted on WordPress.com Business on Atomic infrastructure &middot; verified locally with WordPress Studio, <code>wp&nbsp;server</code>, and Playwright.</p>
 
 	<footer class="hp-buildreport__footer">
 		<span>hperkins.blog &mdash; build report</span>
