@@ -3,11 +3,11 @@
  * Fail when style.css references an unresolved CSS custom property without a
  * fallback. Dynamic runtime variables can be allow-listed explicitly.
  */
-const { execFileSync } = require( 'node:child_process' );
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
+const { getWordPressPath, runWp } = require( './lib/wp-cli' );
 
-const WP_PATH = process.env.HPERKINS_WP_PATH || '/home/dev/hperkinsblog';
+const WP_PATH = getWordPressPath();
 const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
 const ALLOWED_DYNAMIC = new Set( [
 	'--hp-footer-backdrop-url',
@@ -21,8 +21,7 @@ function assert( condition, message ) {
 
 // Resolve style.css relative to the theme root so the script works from any CWD.
 const style = fs.readFileSync( path.join( __dirname, '..', 'style.css' ), 'utf8' );
-const generatedVariables = execFileSync(
-	'wp',
+const generatedVariables = runWp(
 	[
 		`--path=${ WP_PATH }`,
 		`--url=${ ORIGIN }`,

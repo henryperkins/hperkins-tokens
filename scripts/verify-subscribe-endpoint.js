@@ -9,12 +9,12 @@
 const { execFileSync } = require( 'node:child_process' );
 const { readFileSync } = require( 'node:fs' );
 const path = require( 'node:path' );
+const { assertMatchingSiteUrl } = require( './lib/site-url' );
+const { getWordPressPath, runWp } = require( './lib/wp-cli' );
 
 const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
-const DEFAULT_ORIGIN = 'https://hperkins.blog';
 const CONTACT_URL = new URL( '/contact/', ORIGIN );
 const ENDPOINT_URL = new URL( '/wp-admin/admin-post.php', ORIGIN );
-const WP_PATH = process.env.HPERKINS_WP_PATH || '/home/dev/hperkinsblog';
 const THEME_PATH = path.join( __dirname, '..' );
 
 function assert( condition, message ) {
@@ -89,15 +89,21 @@ async function main() {
 		`no-nonce subscribe POST reached business validation/status instead of failing request verification: "${ location }".`
 	);
 
-	// The runtime half mutates (then restores) options in the WP install at
-	// WP_PATH. Only run it when ORIGIN matches that install — pointing
-	// HPERKINS_ORIGIN at a staging origin must not rewrite the production DB.
-	let runtimeCheck = 'runtime checks skipped (HPERKINS_ORIGIN does not match the local WP install; set HPERKINS_WP_PATH to opt in)';
-	if ( ORIGIN === DEFAULT_ORIGIN || process.env.HPERKINS_WP_PATH ) {
-		runtimeCheck = execFileSync(
-		'wp',
-		[
-			`--path=${ WP_PATH }`,
+	// The runtime half mutates (then restores) options in the selected WP install.
+	// Requiring an explicit path is the opt-in; matching its home URL prevents
+	// an HTTP probe for one site from mutating another site's database.
+	let runtimeCheck = 'runtime checks skipped (set HPERKINS_WP_PATH to opt in with a matching local site)';
+	if ( process.env.HPERKINS_WP_PATH ) {
+		const wpPath = getWordPressPath();
+		const wpHomeUrl = runWp(
+			[ `--path=${ wpPath }`, 'option', 'get', 'home' ],
+			{ encoding: 'utf8' }
+		).trim();
+		assertMatchingSiteUrl( ORIGIN, wpHomeUrl );
+
+		runtimeCheck = runWp(
+			[
+			`--path=${ wpPath }`,
 			`--url=${ ORIGIN }`,
 			'eval',
 			`

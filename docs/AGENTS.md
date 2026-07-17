@@ -1,34 +1,45 @@
 # Repository Guidelines
 
-## Project Structure & Module Organization
+## Project Structure
 
-This repository is a WordPress core/site checkout. Core files live in `wp-admin/` and `wp-includes/`; avoid changing them unless the task is explicitly a core patch. Site code is under `wp-content/`. The most project-specific areas are `wp-content/themes/hperkins-tokens/`, `wp-content/themes/assembler/`, and the AI provider plugins in `wp-content/plugins/ai-provider-for-openai/` and `wp-content/plugins/ai-provider-for-anthropic/`. Uploaded media is in `wp-content/uploads/`; migration artifacts and backups live in `migration/`.
+This repository is the standalone `hperkins-tokens` WordPress block child theme, not a WordPress core or site checkout. Theme PHP, `theme.json`, templates, parts, patterns, assets, tracked page snapshots, and dependency-free Node verifiers live at the repository root. WordPress core, the database, uploads, plugins, and the required `assembler` parent theme belong to a separate local WordPress installation.
 
-## Build, Test, and Development Commands
+For local development, link or junction this repository into `<wordpress>/wp-content/themes/hperkins-tokens` and install `assembler` beside it. Do not copy local WordPress core, databases, uploads, credentials, or generated Studio state into this repository.
 
-There is no root `package.json`, Composer config, or Makefile. Use WordPress tooling directly:
+## Local WordPress and WP-CLI
 
-- `wp --path=/home/dev/hperkinsblog plugin list` checks installed plugin state.
-- `wp --path=/home/dev/hperkinsblog theme list` checks active and available themes.
-- `node scripts/verify-hperkins-tokens.js` verifies editor stylesheets and mobile overflow for the HPerkins Tokens theme. It requires WP-CLI, a reachable `https://hperkins.blog`, and Chrome at `CHROME_PATH` or `/usr/bin/google-chrome`.
-- `find wp-content/themes/hperkins-tokens wp-content/plugins/ai-provider-for-openai wp-content/plugins/ai-provider-for-anthropic -name '*.php' -print0 | xargs -0 -n1 php -l` runs PHP syntax checks on the custom theme and AI provider plugins.
+Database-backed verifier scripts require an explicit `HPERKINS_WP_PATH`; there is no hard-coded site fallback. `HPERKINS_ORIGIN` selects the matching HTTP origin. On Windows, `scripts/lib/wp-cli.js` invokes PHP plus a WP-CLI PHAR directly, avoiding Node's inability to launch the `wp.cmd` wrapper safely. Set `HPERKINS_PHP_BIN` if the PHP executable is not available as `php` on `PATH`.
 
-## Coding Style & Naming Conventions
+PowerShell example for the Studio development site:
 
-Follow WordPress coding standards for PHP: tabs for indentation, escaped output, sanitized input, nonce and capability checks for privileged actions, and prefix project-specific functions/hooks. Theme templates and parts use block-theme conventions under `templates/`, `parts/`, `patterns/`, and `theme.json`. Plugin PHP classes are organized under `src/` with descriptive namespaces and filenames such as `OpenAiTextGenerationModel.php`.
+```powershell
+$env:HPERKINS_WP_PATH = Join-Path $env:USERPROFILE 'Studio\hperkins-tokens-dev'
+$env:HPERKINS_WP_CLI_PHAR = "$env:USERPROFILE\.local\bin\wp-cli.phar"
+$env:HPERKINS_ORIGIN = (& studio wp option get home --path $env:HPERKINS_WP_PATH).Trim()
 
-## Testing Guidelines
+studio wp core version --path $env:HPERKINS_WP_PATH
+wp --path=$env:HPERKINS_WP_PATH core version
+wp --path=$env:HPERKINS_WP_PATH theme list
+```
 
-No root PHPUnit, Jest, Playwright, or `wp-env` configuration is present. For focused changes, run PHP linting and any relevant WP-CLI checks. For visual/theme changes, run `node scripts/verify-hperkins-tokens.js` and manually review affected pages at desktop and mobile widths.
+Use `studio wp ... --path <site>` for an imported or Studio-specific site that depends on Studio's PHP/runtime. Standalone `wp --path=<site> ...` is appropriate when the selected PHP has every database extension required by that installation.
 
-## Applicable Agent Skills
+## Build and Verification
 
-Use `wordpress-router` or `wp-project-triage` before broad repository work. Use `wp-block-themes` for `theme.json`, templates, parts, and patterns. Use `wp-plugin-development` for general plugin changes, `wp-ai-connectors` for provider plugins, `wp-ai-plugin` for the canonical AI plugin, and `wp-ai-client` for core AI Client usage. Use `wp-abilities-api`, `wp-rest-api`, `wp-wpcli-and-ops`, or `wp-performance` when those areas are involved.
+There is no package install, Composer install, or asset build. Use the repository's dependency-free checks:
 
-## Commit & Pull Request Guidelines
+- PHP-lint every tracked PHP file.
+- Run `node --test scripts/lib/wp-cli.test.js` for the cross-platform WP-CLI launcher.
+- Run `node scripts/verify-performance-assets.js` for source-only asset checks.
+- With the local environment variables set, run the relevant database/HTTP verifiers listed in `CLAUDE.md`.
+- Run `git diff --check` before committing.
 
-This checkout has no local Git metadata, so repository-specific commit history is unavailable. Use concise imperative commits with a scope, for example `theme: tighten mobile spacing` or `plugin: validate OpenAI settings`. Pull requests should describe the change, list verification commands, link related issues, and include screenshots for theme or admin UI changes.
+`scripts/verify-subscribe-endpoint.js` performs a bounded runtime check that mutates and restores local options. Point it only at a disposable local installation whose `HPERKINS_WP_PATH` and `HPERKINS_ORIGIN` match.
 
-## Security & Configuration Tips
+## Coding Style
 
-Do not commit secrets from `wp-config.php`, database dumps, or migration backups. Treat `migration/backups/`, uploaded media, and generated bundles as sensitive unless the task specifically involves migration packaging.
+Follow WordPress coding standards for PHP: tabs, escaped output, sanitized input, nonce and capability checks for privileged actions, and the existing `hperkins_` prefixes. Keep design tokens in `theme.json`, component CSS in `style.css`, page-layout CSS in `assets/imladris-pages.css`, and block-theme markup in `templates/`, `parts/`, and `patterns/`.
+
+## Commits and Security
+
+Use concise imperative commits and list exact verification commands in pull requests. Never commit `wp-config.php`, Studio credentials, SQLite files, database dumps, uploads, local environment paths outside documentation examples, or generated runtime state.

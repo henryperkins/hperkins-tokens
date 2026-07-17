@@ -4,23 +4,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-The **HPerkins Tokens** theme — the **"Imladris" design-system child theme** for hperkins.blog (a Rivendell-inspired, parchment-and-evergreen serif editorial system). This directory is its **own git repo** (remote `github.com/henryperkins/hperkins-tokens`, branch `main`) with real history, nested inside a larger WordPress site checkout.
+The **HPerkins Tokens** theme — the **"Imladris" design-system child theme** for hperkins.blog (a Rivendell-inspired, parchment-and-evergreen serif editorial system). This directory is its **own git repo** (remote `github.com/henryperkins/hperkins-tokens`, branch `main`) with real history. Link or junction it into a separate WordPress installation for local development; WordPress core, the database, uploads, and the parent theme are not part of this repo.
 
-- **Parent theme:** `assembler` (Automattic), vendored as a sibling at `../assembler`. It is **required** for this theme to activate — this is a child theme (`Template: assembler` in `style.css`).
+- **Parent theme:** `assembler` (Automattic), installed as a sibling of this theme in the target WordPress site's `wp-content/themes/` directory. It is **required** for this theme to activate — this is a child theme (`Template: assembler` in `style.css`).
 - **Baseline:** block theme, `theme.json` v3. Tested to WP 7.0; `Requires PHP: 8.0` (the wider custom stack targets PHP 8.2 / WP 7.0+).
 - **No build step, no `package.json`, no Composer.** Everything is hand-authored HTML/CSS/PHP + `theme.json`. The `scripts/*.js` verifiers are dependency-free (Node built-ins driving Chrome over the DevTools Protocol — no `npm install`).
 
-**For site-wide and plugin-stack context, defer to the parent checkout's docs**, which load alongside this file: `/home/dev/hperkinsblog/CLAUDE.md` and `/home/dev/hperkinsblog/AGENTS.md`. They cover the governed-AI plugin stack (`flavor-agent`, AI Client, MCP), the migration runbook, and the **site-level** theme verifiers (`scripts/verify-hperkins-tokens.js`, `scripts/verify-nav-close.js`) that live *one level up*, in the site checkout — **distinct** from this repo's own `scripts/` (see Commands). This file adds the theme-internal depth those don't cover.
+Site-wide plugin stacks and production operations belong to their own checkout. This repository's commands and `scripts/` cover the theme only.
 
 ## Commands
 
+Database-backed scripts require `HPERKINS_WP_PATH`; there is intentionally no machine-specific fallback. `HPERKINS_ORIGIN` selects the matching HTTP site. On Windows, the shared launcher invokes PHP plus the WP-CLI PHAR directly because Node cannot execute the `wp.cmd` wrapper safely. `HPERKINS_PHP_BIN` can select a non-default PHP executable when `php` is not on `PATH`.
+
+```powershell
+# Local WordPress Studio development site (PowerShell).
+$env:HPERKINS_WP_PATH = Join-Path $env:USERPROFILE 'Studio\hperkins-tokens-dev'
+$env:HPERKINS_WP_CLI_PHAR = "$env:USERPROFILE\.local\bin\wp-cli.phar"
+$env:HPERKINS_ORIGIN = (& studio wp option get home --path $env:HPERKINS_WP_PATH).Trim()
+
+# Studio-managed WP-CLI and standalone WP-CLI should agree for this clean site.
+studio wp core version --path $env:HPERKINS_WP_PATH
+wp --path=$env:HPERKINS_WP_PATH core version
+wp --path=$env:HPERKINS_WP_PATH theme list
+```
+
 ```bash
+# POSIX local setup. HPERKINS_WP_BIN may override the default `wp` executable.
+export HPERKINS_WP_PATH=/absolute/path/to/wordpress
+export HPERKINS_ORIGIN="$(wp --path="$HPERKINS_WP_PATH" option get home)"
+
 # Lint — the de-facto check (no phpcs config). PHP syntax-check the whole theme:
 find . -name '*.php' -print0 | xargs -0 -n1 php -l
 
 # Theme verifiers (this repo's scripts/ — all eleven). Dependency-free (Node built-ins).
 # Env overrides: CHROME_BIN (default /usr/bin/google-chrome), HPERKINS_ORIGIN (default https://hperkins.blog),
-# HPERKINS_WP_PATH (default /home/dev/hperkinsblog, for the wp-cli-backed scripts).
+# HPERKINS_WP_PATH (required for the wp-cli-backed scripts).
 #
 # Chrome + live site:
 node scripts/verify-ring-cards-mobile.js        # 320px: three ring cards render, don't collide, no horizontal overflow on / and /ai-enablement/
@@ -38,13 +56,12 @@ node scripts/verify-design-system-specimen.js   # post 79 specimen references li
 node scripts/verify-subscribe-endpoint.js       # subscribe nonce rejection over HTTP + storage/rate-limit/privacy runtime checks (wp-cli; MUTATES+restores options — the runtime half only runs when ORIGIN matches the local install)
 node scripts/export-page-snapshots.js           # refresh content/page-snapshots/*.html after intentional edits to DB-owned page bodies (wp-cli)
 
-# WP-CLI targets the SITE checkout, not this dir:
-wp --path=/home/dev/hperkinsblog theme list                 # hperkins-tokens active, assembler = parent
-wp --path=/home/dev/hperkinsblog eval 'echo wp_get_theme()->get("Version");'
-wp --path=/home/dev/hperkinsblog cache flush                 # after theme.json / global-styles changes
+# WP-CLI targets the configured WordPress site, not this theme repo:
+wp --path="$HPERKINS_WP_PATH" theme list                 # hperkins-tokens active, assembler = parent
+wp --path="$HPERKINS_WP_PATH" eval 'echo wp_get_theme()->get("Version");'
+wp --path="$HPERKINS_WP_PATH" cache flush                # after theme.json / global-styles changes
 
-# Re-classify this repo after structural changes (adds theme.json/templates/etc.):
-node /home/dev/.claude/skills/wp-project-triage/scripts/detect_wp_project.mjs
+# Re-classify this repo after structural changes with the wp-project-triage skill.
 ```
 
 The verifiers load the **deployed** site at `https://hperkins.blog`; set `HPERKINS_ORIGIN` to point them elsewhere. Behavioral nav checks (tap → overlay closes across the Interactivity Router swap) are covered by the site-level `verify-nav-close.js` / Playwright MCP, not by this repo's scripts.
