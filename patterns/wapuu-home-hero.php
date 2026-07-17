@@ -25,11 +25,11 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 			<!-- /wp:heading -->
 
 			<!-- wp:paragraph {"className":"hp-wapuu-hero__text"} -->
-			<p class="hp-wapuu-hero__text">I build WordPress AI tooling where the governance is part of the architecture, not a promise in the readme. Scope, build, deploy, explain — and every claim has an artifact behind it.</p>
+			<p class="hp-wapuu-hero__text">I build WordPress AI tooling where the governance is part of the architecture, not a promise in the readme. Scope, build, deploy, explain — and link the proof next to the work.</p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:paragraph {"className":"hp-wapuu-hero__text"} -->
-			<p class="hp-wapuu-hero__text">I build <a href="/about/">WordPress and AI systems</a> where governance, approval, and proof stay visible.</p>
+			<p class="hp-wapuu-hero__text">Flavor Agent-mediated changes are reviewable and attributable, with drift-checked undo for supported operations.</p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:group {"className":"hp-proof-bar hp-wapuu-hero__signals","layout":{"type":"flex","flexWrap":"wrap"}} -->
@@ -42,12 +42,12 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 				<p class="hp-chip is-status-merged"><a href="https://github.com/WordPress/ai/issues/529">core/ai #529</a> — fixed in 1.0.1</p>
 				<!-- /wp:paragraph -->
 
-				<!-- wp:paragraph {"className":"hp-chip is-status-review"} -->
-				<p class="hp-chip is-status-review"><a href="https://github.com/WordPress/agent-skills/pull/49">agent-skills PR #49</a> — in review</p>
+				<!-- wp:paragraph {"className":"hp-chip is-status-pending"} -->
+				<p class="hp-chip is-status-pending"><a href="https://github.com/WordPress/agent-skills/pull/49">agent-skills PR #49</a> — open, unreviewed</p>
 				<!-- /wp:paragraph -->
 
 				<!-- wp:paragraph {"className":"hp-chip is-status-review"} -->
-				<p class="hp-chip is-status-review"><a href="/work/flavor-agent/">flavor-agent</a> — 0.1.0 RC</p>
+				<p class="hp-chip is-status-review"><a href="/work/flavor-agent/">flavor-agent</a> — v0.1.0-rc.1 · Jun 2026</p>
 				<!-- /wp:paragraph -->
 			</div>
 			<!-- /wp:group -->
