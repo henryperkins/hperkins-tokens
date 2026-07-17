@@ -14,13 +14,13 @@ Site-wide plugin stacks and production operations belong to their own checkout. 
 
 ## Commands
 
-Database-backed scripts require `HPERKINS_WP_PATH`; there is intentionally no machine-specific fallback. `HPERKINS_ORIGIN` selects the HTTP site. On Windows, the shared launcher invokes PHP plus the WP-CLI PHAR directly because Node cannot execute the `wp.cmd` wrapper safely.
+Database-backed scripts require `HPERKINS_WP_PATH`; there is intentionally no machine-specific fallback. `HPERKINS_ORIGIN` selects the matching HTTP site. On Windows, the shared launcher invokes PHP plus the WP-CLI PHAR directly because Node cannot execute the `wp.cmd` wrapper safely. `HPERKINS_PHP_BIN` can select a non-default PHP executable when `php` is not on `PATH`.
 
 ```powershell
 # Local WordPress Studio development site (PowerShell).
 $env:HPERKINS_WP_PATH = Join-Path $env:USERPROFILE 'Studio\hperkins-tokens-dev'
-$env:HPERKINS_ORIGIN = 'http://localhost:8882'
 $env:HPERKINS_WP_CLI_PHAR = "$env:USERPROFILE\.local\bin\wp-cli.phar"
+$env:HPERKINS_ORIGIN = (& studio wp option get home --path $env:HPERKINS_WP_PATH).Trim()
 
 # Studio-managed WP-CLI and standalone WP-CLI should agree for this clean site.
 studio wp core version --path $env:HPERKINS_WP_PATH
@@ -31,7 +31,7 @@ wp --path=$env:HPERKINS_WP_PATH theme list
 ```bash
 # POSIX local setup. HPERKINS_WP_BIN may override the default `wp` executable.
 export HPERKINS_WP_PATH=/absolute/path/to/wordpress
-export HPERKINS_ORIGIN=http://localhost:8882
+export HPERKINS_ORIGIN="$(wp --path="$HPERKINS_WP_PATH" option get home)"
 
 # Lint — the de-facto check (no phpcs config). PHP syntax-check the whole theme:
 find . -name '*.php' -print0 | xargs -0 -n1 php -l

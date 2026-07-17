@@ -8,14 +8,14 @@ For local development, link or junction this repository into `<wordpress>/wp-con
 
 ## Local WordPress and WP-CLI
 
-Database-backed verifier scripts require an explicit `HPERKINS_WP_PATH`; there is no hard-coded site fallback. `HPERKINS_ORIGIN` selects the matching HTTP origin. On Windows, `scripts/lib/wp-cli.js` invokes PHP plus a WP-CLI PHAR directly, avoiding Node's inability to launch the `wp.cmd` wrapper safely.
+Database-backed verifier scripts require an explicit `HPERKINS_WP_PATH`; there is no hard-coded site fallback. `HPERKINS_ORIGIN` selects the matching HTTP origin. On Windows, `scripts/lib/wp-cli.js` invokes PHP plus a WP-CLI PHAR directly, avoiding Node's inability to launch the `wp.cmd` wrapper safely. Set `HPERKINS_PHP_BIN` if the PHP executable is not available as `php` on `PATH`.
 
 PowerShell example for the Studio development site:
 
 ```powershell
 $env:HPERKINS_WP_PATH = Join-Path $env:USERPROFILE 'Studio\hperkins-tokens-dev'
-$env:HPERKINS_ORIGIN = 'http://localhost:8882'
 $env:HPERKINS_WP_CLI_PHAR = "$env:USERPROFILE\.local\bin\wp-cli.phar"
+$env:HPERKINS_ORIGIN = (& studio wp option get home --path $env:HPERKINS_WP_PATH).Trim()
 
 studio wp core version --path $env:HPERKINS_WP_PATH
 wp --path=$env:HPERKINS_WP_PATH core version
