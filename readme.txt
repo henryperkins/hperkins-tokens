@@ -286,24 +286,27 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   bodies (About, Work, AI Governance, Privacy, etc.) are out of the theme's
   reach and are unchanged here.
 * How-this-was-built build report (patterns/how-this-was-built.php): rewrote the
-  platform section and colophon to describe the current WordPress.com (Atomic)
-  deployment that runs Flavor Agent, dropping the "forced move to self-hosted
-  DigitalOcean" narrative; softened the "1:1 / nothing left to drift" parity
-  absolutes to "tracked and diffed on every pull, deltas reported"; corrected
-  the display-font specimen label to "Cormorant Garamond"; and reframed
-  "accurate at every point in time" as a correction discipline.
-* Footer (parts/footer.html): "WordPress since 2012" -> "WordPress.org member
-  since 2007; professional WordPress work since 2012".
-* Home hero (patterns/wapuu-home-hero.php): "AI Leaders — First Cohort Finalist"
-  -> "AI Leaders 2026 Finalist"; agent-skills PR #49 chip "in review" ->
-  "awaiting review"; scoped "every claim has an artifact" to "the load-bearing
-  claims".
-* Subscribe block (patterns/imladris-subscribe.php): "fortnightly dispatch" ->
-  "occasional dispatch" (no fixed cadence is promised).
+  platform section and colophon for the current WordPress.com Business/Atomic
+  deployment that runs Flavor Agent, dropping the self-hosted DigitalOcean
+  narrative; replaced enforced "every pull" language with the documented
+  /design-pull and recorded-delta workflow; corrected the Cormorant Garamond
+  label; removed unsupported 14-component, six-template, and 11k-line counts;
+  retained the indexed 19-component count; and dated the 30-commit build window.
+* Footer and home hero: corrected the WordPress history line to "WordPress.org
+  member since 2007 · professional WordPress work since 2012"; changed the hero
+  proof and Flavor Agent trust claims to their supported wording; marked
+  agent-skills PR #49 "open, unreviewed" with pending status; dated the Flavor
+  Agent release; and updated the AI Leaders label to "2026 Finalist".
+* Subscribe and contact: changed the unsupported fortnightly cadence to
+  occasional across public copy, notification mail, privacy export/erase
+  labels, and verification; disclosed that the contact form opens the visitor's
+  email app and that the site does not receive or store its fields.
 * Design-system docs (docs/design-system/README.md, readme.txt): softened the
   bare "1:1 / zero drift" assertions to "verified 1:1 at the 2026-06-20 pull,
   with theme-side deltas recorded in INDEX.md; re-diff before asserting parity",
   matching what INDEX.md already documents.
+* Release verification now compares the current style.css Version and readme
+  Stable tag/changelog dynamically while retaining the 0.3.42 history check.
 
 = 0.3.42 =
 * Prominent actions: added the opted-in hp-action-rail composition for the

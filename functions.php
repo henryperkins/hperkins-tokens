@@ -482,7 +482,7 @@ function hperkins_tokens_handle_subscribe_request() {
 			$status = 'success';
 		} else {
 			$message = sprintf(
-				"Please add %s to the fortnightly dispatch.\n\nSubmitted from: %s",
+				"Please add %s to the occasional dispatch.\n\nSubmitted from: %s",
 				$email,
 				$referer ? $referer : home_url( '/' )
 			);
@@ -492,7 +492,7 @@ function hperkins_tokens_handle_subscribe_request() {
 			$recipient = apply_filters( 'hperkins_tokens_subscribe_notify_email', 'htperkins@gmail.com' );
 			$mail_sent = wp_mail(
 				$recipient,
-				'Fortnightly dispatch subscription',
+				'Occasional dispatch subscription',
 				$message,
 				array( 'Reply-To: ' . $email )
 			);
@@ -521,7 +521,7 @@ add_action( 'admin_post_nopriv_hperkins_tokens_subscribe', 'hperkins_tokens_hand
  */
 function hperkins_tokens_register_subscribe_privacy_exporter( $exporters ) {
 	$exporters['hperkins-tokens-subscribe-requests'] = array(
-		'exporter_friendly_name' => __( 'Fortnightly dispatch subscription requests', 'hperkins-tokens' ),
+		'exporter_friendly_name' => __( 'Occasional dispatch subscription requests', 'hperkins-tokens' ),
 		'callback'               => 'hperkins_tokens_export_subscribe_request_personal_data',
 	);
 
@@ -563,7 +563,7 @@ function hperkins_tokens_export_subscribe_request_personal_data( $email_address,
 
 		$export_items[] = array(
 			'group_id'    => 'hperkins-tokens-subscribe',
-			'group_label' => __( 'Fortnightly dispatch subscription requests', 'hperkins-tokens' ),
+			'group_label' => __( 'Occasional dispatch subscription requests', 'hperkins-tokens' ),
 			'item_id'     => 'hperkins-tokens-subscribe-' . md5( $request_email . '|' . $index . '|' . $submitted_at ),
 			'data'        => array(
 				array(
@@ -596,7 +596,7 @@ function hperkins_tokens_export_subscribe_request_personal_data( $email_address,
  */
 function hperkins_tokens_register_subscribe_privacy_eraser( $erasers ) {
 	$erasers['hperkins-tokens-subscribe-requests'] = array(
-		'eraser_friendly_name' => __( 'Fortnightly dispatch subscription requests', 'hperkins-tokens' ),
+		'eraser_friendly_name' => __( 'Occasional dispatch subscription requests', 'hperkins-tokens' ),
 		'callback'             => 'hperkins_tokens_erase_subscribe_request_personal_data',
 	);
 
