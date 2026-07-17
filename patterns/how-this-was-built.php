@@ -3,7 +3,7 @@
  * Title: How hperkins.blog Was Built — build report
  * Slug: hperkins-tokens/how-this-was-built
  * Categories: hperkins
- * Description: The /how-this-was-built/ build report in the Imladris "parchment dossier" treatment — the making-of hperkins.blog end to end: the premise, the WordPress.com → DigitalOcean droplet platform move (forced by Flavor Agent), the two design systems (tokens-kit → Imladris), the theme.json source of truth, the content system, the verify-first build loop, the git-evidenced build, and the discipline. Layout CSS is scoped to .hp-buildreport in assets/imladris-pages.css.
+ * Description: The /how-this-was-built/ build report in the Imladris "parchment dossier" treatment — the making-of hperkins.blog end to end: the premise, the WordPress.com Business deployment on Atomic infrastructure, the two design systems (tokens-kit → Imladris), the theme.json source of truth, the content system, the verify-first build loop, the git-evidenced build, and the discipline. Layout CSS is scoped to .hp-buildreport in assets/imladris-pages.css.
  */
 ?>
 <!-- wp:html -->
@@ -30,7 +30,7 @@
 	</div>
 
 	<div class="hp-buildreport__lede">
-		<p>This site is not a showcase wrapped around a r&eacute;sum&eacute;. It is built so that every load-bearing claim points at something a stranger can check &mdash; the proof bar renders state, never intent, and the site represents the work accurately at every point in time, not only on the day it is &lsquo;done&rsquo;.</p>
+		<p>This site is not a showcase wrapped around a r&eacute;sum&eacute;. It is built so that every load-bearing claim points at something a stranger can check &mdash; the proof bar renders state, never intent, and the site is designed to keep representing the work as it changes, not only on the day it is &lsquo;done&rsquo;.</p>
 	</div>
 
 	<section>
@@ -44,9 +44,9 @@
 	</section>
 
 	<section>
-		<h2><span class="hp-buildreport__n" aria-hidden="true">02</span> The platform, chosen then outgrown</h2>
+		<h2><span class="hp-buildreport__n" aria-hidden="true">02</span> The platform &mdash; an audit, not a default</h2>
 		<p>The hosting choice was an audit, not a default. WordPress.com Business sat at the intersection of near-zero maintenance, a real code-to-production path, and infrastructure that makes the same governance-first argument as the work it showcases &mdash; and the trade-off was stated plainly rather than hidden: Business is not VIP.</p>
-		<p>Then the centerpiece forced a move. <strong>Flavor Agent</strong> &mdash; the governed-AI plugin the whole site exists to demonstrate &mdash; could not run under WordPress.com&rsquo;s plugin constraints. So the install was exported, imported onto a self-hosted <a href="https://docs.digitalocean.com/products/droplets/">DigitalOcean droplet</a>, and development continued there. The work set the requirements for the infrastructure, not the other way around.</p>
+		<p>Then the centerpiece set the requirement. <strong>Flavor Agent</strong> &mdash; the governed-AI plugin the whole site exists to demonstrate &mdash; needs custom-plugin and code access. The site runs on <a href="https://wordpress.com/support/plan-features/business-plan/">WordPress.com Business</a> on Atomic infrastructure, which provides the custom-plugin support and SFTP/SSH access Flavor Agent needs. The work set the requirements for the infrastructure, not the other way around.</p>
 		<div class="hp-buildreport__takeaway">
 			<span class="hp-buildreport__takeaway-label">For your build</span>
 			<p>Let the work set the infrastructure requirements, not the reverse. Pick the smallest platform that still lets your centerpiece run &mdash; and state the trade-off out loud, because a named limitation reads as judgment, not a gap.</p>
@@ -55,8 +55,8 @@
 
 	<section>
 		<h2><span class="hp-buildreport__n" aria-hidden="true">03</span> Two design systems</h2>
-		<p>The design language was built twice, both in <a href="https://support.claude.com/en/articles/14604416-get-started-with-claude-design">Claude Design</a>. The first &mdash; <code>@hperkins/tokens-kit</code>, an &lsquo;evidence ledger&rsquo; &mdash; was a React kit of fourteen components over a deliberately quiet neutral palette, where the only saturated colour was the three status hues. Its idiom was <em>compose components, don&rsquo;t author classes</em>: status shipped as a prop, never faked with markup, so a &lsquo;merged&rsquo; row was the same green and the same word everywhere it appeared.</p>
-		<p>That system was then re-skinned into the current one &mdash; <strong>Imladris</strong> &mdash; a Rivendell-inspired parchment, evergreen, and mallorn-gold serif editorial system of nineteen components and six page templates. The shift traded a neutral proof-ledger for a literary register that frames <em>why</em> the work matters, while keeping the evidence layer intact underneath.</p>
+		<p>The design language was built twice, both in <a href="https://support.claude.com/en/articles/14604416-get-started-with-claude-design">Claude Design</a>. The first &mdash; <code>@hperkins/tokens-kit</code>, an &lsquo;evidence ledger&rsquo; &mdash; was a React component kit over a deliberately quiet neutral palette, where the only saturated colour was the three status hues. Its idiom was <em>compose components, don&rsquo;t author classes</em>: status shipped as a prop, never faked with markup, so a &lsquo;merged&rsquo; row was the same green and the same word everywhere it appeared.</p>
+		<p>That system was then re-skinned into the current one &mdash; <strong>Imladris</strong> &mdash; a Rivendell-inspired parchment, evergreen, and mallorn-gold serif editorial system of nineteen components. The shift traded a neutral proof-ledger for a literary register that frames <em>why</em> the work matters, while keeping the evidence layer intact underneath.</p>
 		<div class="hp-buildreport__grid">
 			<div class="hp-buildreport__spec">
 				<h3>Palette</h3>
@@ -79,7 +79,7 @@
 			<div class="hp-buildreport__spec">
 				<h3>Typography</h3>
 				<p class="hp-buildreport__spec-note">Serif-led, four self-hosted families with clear roles. Body reads at a book-like measure; labels are set as lapidary roman capitals.</p>
-				<div class="hp-buildreport__type-row"><span style="font-family:var(--wp--preset--font-family--display);font-size:1.5rem;color:var(--wp--custom--text--strong)">Cormorant</span><span class="lbl">Display</span></div>
+				<div class="hp-buildreport__type-row"><span style="font-family:var(--wp--preset--font-family--display);font-size:1.5rem;color:var(--wp--custom--text--strong)">Cormorant Garamond</span><span class="lbl">Display</span></div>
 				<div class="hp-buildreport__type-row"><span style="font-family:var(--wp--preset--font-family--label);text-transform:uppercase;letter-spacing:.16em;font-size:.875rem;color:var(--wp--custom--text--strong)">Marcellus</span><span class="lbl">Labels &middot; nav</span></div>
 				<div class="hp-buildreport__type-row"><span style="font-family:var(--wp--preset--font-family--body);font-size:var(--wp--preset--font-size--base);color:var(--wp--custom--text--strong)">EB Garamond &mdash; long-form reading</span><span class="lbl">Body</span></div>
 				<div class="hp-buildreport__type-row"><span style="font-family:var(--wp--preset--font-family--mono);font-size:.875rem;color:var(--wp--custom--text--strong)">JetBrains Mono</span><span class="lbl">Data &middot; meta</span></div>
@@ -94,7 +94,7 @@
 	<section>
 		<h2><span class="hp-buildreport__n" aria-hidden="true">04</span> The theme &mdash; a design system in theme.json</h2>
 		<p>The site runs on a custom <a href="https://developer.wordpress.org/themes/advanced-topics/child-themes/">block child theme</a> &mdash; <strong>HPerkins Tokens</strong> &mdash; on Automattic&rsquo;s <a href="https://wordpress.com/theme/assembler">Assembler</a> parent. Its premise is that the design system lives in <a href="https://developer.wordpress.org/themes/global-settings-and-styles/"><code>theme.json</code></a> as a small, named token vocabulary, and every component is a consequence of those tokens rather than a parallel set of hardcoded values.</p>
-		<p>The colour contract is locked at the schema level: the stock swatches and every custom colour, gradient, and duotone picker are <a href="https://developer.wordpress.org/block-editor/reference-guides/theme-json-reference/">turned off</a>, so to change a colour you edit <code>theme.json</code>, not a block. The four families are self-hosted, not pulled from a CDN. And the token layer round-trips 1:1 with the Imladris project kept in <a href="https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design">Claude Design</a>, diffed on every pull &mdash; so a token &lsquo;refresh&rsquo; changes nothing, because nothing is left to drift.</p>
+		<p>The colour contract is locked at the schema level: the stock swatches and every custom colour, gradient, and duotone picker are <a href="https://developer.wordpress.org/block-editor/reference-guides/theme-json-reference/">turned off</a>, so to change a colour you edit <code>theme.json</code>, not a block. The four families are self-hosted, not pulled from a CDN. And the theme consumes the shared semantic and editor tokens from the Imladris project kept in <a href="https://support.claude.com/en/articles/14604397-set-up-your-design-system-in-claude-design">Claude Design</a>; when <code>/design-pull</code> is run, the token layer is re-diffed to surface any divergence between the source and the theme, while the documented per-theme deltas and the geometry and browser values that live in component CSS are tracked rather than pretended away.</p>
 		<div class="hp-buildreport__steps">
 			<p class="hp-buildreport__steps-intro">Put a <a href="https://developer.wordpress.org/themes/block-themes/">block theme&rsquo;s</a> design system in one token layer</p>
 			<div class="hp-buildreport__step">
@@ -115,7 +115,7 @@
 			</div>
 			<div class="hp-buildreport__step">
 				<div class="hp-buildreport__step-marker">05</div>
-				<p><strong>Diff against the source.</strong> Keep the token layer round-tripping with wherever it&rsquo;s authored and diff on every pull &mdash; so a &lsquo;refresh&rsquo; that changes nothing proves nothing drifted.</p>
+				<p><strong>Diff against the source.</strong> Keep the token layer synced with wherever it&rsquo;s authored; run <code>/design-pull</code> and re-diff at pull time so any divergence between source and theme surfaces as a reported change instead of a surprise.</p>
 			</div>
 		</div>
 		<div class="hp-buildreport__takeaway">
@@ -165,7 +165,7 @@
 
 	<section>
 		<h2><span class="hp-buildreport__n" aria-hidden="true">07</span> What the git log shows</h2>
-		<p>The current system&rsquo;s build is in the record. The re-skin from the first system to the parchment one landed fast &mdash; its opening two days were thirty reviewable commits, the live site reflecting each as caches cleared &mdash; and the work has continued in the open since. <a href="https://github.com/henryperkins/hperkins-tokens">The source is public</a>, so the running total is whatever the log shows the day you read this; the figures below mark that opening push.</p>
+		<p>The current system&rsquo;s build is in the record. The re-skin from the first system to the parchment one landed fast &mdash; its opening two days &mdash; 20&ndash;21 June 2026 &mdash; were thirty reviewable commits, the live site reflecting each as caches cleared &mdash; and the work has continued in the open since. <a href="https://github.com/henryperkins/hperkins-tokens">The source is public</a>, so the running total is whatever the log shows the day you read this; the figures below mark that opening push.</p>
 		<div class="hp-buildreport__stats">
 			<div class="hp-buildreport__stat">
 				<div class="num">30</div>
@@ -178,10 +178,6 @@
 			<div class="hp-buildreport__stat">
 				<div class="num">1</div>
 				<div class="cap">Author</div>
-			</div>
-			<div class="hp-buildreport__stat">
-				<div class="num">11k</div>
-				<div class="cap">Lines</div>
 			</div>
 		</div>
 		<div class="hp-buildreport__takeaway">
@@ -215,7 +211,7 @@
 		</ul>
 	</section>
 
-	<p class="hp-buildreport__colophon"><strong>Colophon</strong> &mdash; Custom block child theme (HPerkins Tokens) on Automattic&rsquo;s Assembler parent &middot; Imladris design system authored at the <code>theme.json</code> token level, mirrored 1:1 from a Claude Design project &middot; self-hosted on a DigitalOcean droplet &middot; verified locally with WordPress Studio, <code>wp&nbsp;server</code>, and Playwright.</p>
+	<p class="hp-buildreport__colophon"><strong>Colophon</strong> &mdash; Custom block child theme (HPerkins Tokens) on Automattic&rsquo;s Assembler parent &middot; Imladris design system authored at the <code>theme.json</code> token level, mirrored from a Claude Design project with per-theme deltas recorded in <code>docs/design-system/INDEX.md</code> &middot; hosted on WordPress.com Business on Atomic infrastructure &middot; verified locally with WordPress Studio, <code>wp&nbsp;server</code>, and Playwright.</p>
 
 	<footer class="hp-buildreport__footer">
 		<span>hperkins.blog &mdash; build report</span>
