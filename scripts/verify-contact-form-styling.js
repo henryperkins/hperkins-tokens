@@ -15,7 +15,7 @@ const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
 const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
 const CONTACT_EMAIL = 'htperkins@gmail.com';
 const SUBSCRIBE_ACTION = new URL( '/wp-admin/admin-post.php', ORIGIN ).href;
-const SUBSCRIBE_RECEIVED = 'Request received. I will review the address and add it to the fortnightly dispatch shortly.';
+const SUBSCRIBE_RECEIVED = 'Request received. I will review the address and add it to the occasional dispatch shortly.';
 const SUBSCRIBE_EMAIL_ERROR = 'Enter a valid email to join the dispatch.';
 const VIEWPORT = { width: 390, height: 1400, deviceScaleFactor: 1, mobile: false };
 
