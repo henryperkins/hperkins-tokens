@@ -1698,12 +1698,10 @@ header.wp-block-template-part {
 	}
 
 	.hp-wapuu-hero-wrap::before {
-		/* Keep the decorative CSS bitmap out of the mobile LCP path. The separate
-		   ::after parchment and radial gradients preserve the hero atmosphere. */
-		background-image: none;
-		background-position: 50% 0;
-		background-size: auto 100%;
-		opacity: 0.42;
+		/* Drop the decorative bitmap layer entirely on mobile so it can never
+		   enter the LCP path. The ::after parchment/linear-gradient wash carries
+		   the hero atmosphere on its own at this width. */
+		display: none;
 	}
 
 	/* Council mobile hero: re-composed, not a shrunk desktop. Wapuu rides ON TOP

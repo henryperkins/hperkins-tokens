@@ -39,9 +39,43 @@ for ( const [ relativePath, maxBytes ] of Object.entries( modernArtworkBudgets )
 }
 
 const styleCss = readFileSync( join( themeRoot, 'style.css' ), 'utf8' );
+
+// Collect the body of each `@media (max-width: 781px)` block by brace-matching,
+// so the hero check is scoped to the mobile query instead of a whole-file scan
+// that could match a ::before rule living in unrelated (e.g. desktop) CSS.
+function extractMediaBlocks( css, mediaQuery ) {
+	const source = css.replace( /\/\*[\s\S]*?\*\//g, '' );
+	const blocks = [];
+	let from = 0;
+	for (
+		let start = source.indexOf( mediaQuery, from );
+		start !== -1;
+		start = source.indexOf( mediaQuery, from )
+	) {
+		const open = source.indexOf( '{', start );
+		let depth = 1;
+		let index = open + 1;
+		while ( depth > 0 && index < source.length ) {
+			if ( source[ index ] === '{' ) {
+				depth += 1;
+			} else if ( source[ index ] === '}' ) {
+				depth -= 1;
+			}
+			index += 1;
+		}
+		blocks.push( source.slice( open + 1, index - 1 ) );
+		from = index;
+	}
+	return blocks;
+}
+
+const mobileHeroDisabled = extractMediaBlocks( styleCss, '@media (max-width: 781px)' ).some( ( block ) => {
+	const rule = block.match( /\.hp-wapuu-hero-wrap::before\s*\{([^}]*)\}/ );
+	return !! rule && /(?:display:\s*none|background-image:\s*none)\s*;/.test( rule[1] );
+} );
 assert(
-	/@media \(max-width: 781px\)[\s\S]*?\.hp-wapuu-hero-wrap::before\s*\{[^}]*background-image:\s*none;[^}]*\}/.test( styleCss ),
-	'Mobile hero CSS must keep the decorative backdrop image out of the critical path.'
+	mobileHeroDisabled,
+	'A @media (max-width: 781px) block must disable .hp-wapuu-hero-wrap::before (display: none or background-image: none).'
 );
 
 const themeJson = JSON.parse( readFileSync( join( themeRoot, 'theme.json' ), 'utf8' ) );
