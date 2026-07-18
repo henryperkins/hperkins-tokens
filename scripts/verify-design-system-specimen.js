@@ -6,9 +6,10 @@
  * are actively maintained in this theme, rather than carrying stale inline
  * copies whose classes can drift away from style.css.
  */
+const { getOrigin } = require( './lib/site-url' );
 const { runWp } = require( './lib/wp-cli' );
 
-const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
+const ORIGIN = getOrigin();
 const DESIGN_SYSTEM_URL = new URL( '/design-system/', ORIGIN );
 
 const LEGACY_MARKERS = [

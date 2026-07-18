@@ -11,8 +11,10 @@ const fs = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
+const { getOrigin } = require( './lib/site-url' );
+
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
-const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
+const ORIGIN = getOrigin();
 const CONTACT_EMAIL = 'htperkins@gmail.com';
 const SUBSCRIBE_ACTION = new URL( '/wp-admin/admin-post.php', ORIGIN ).href;
 const SUBSCRIBE_RECEIVED = 'Request received. I will review the address and add it to the occasional dispatch shortly.';

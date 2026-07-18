@@ -9,12 +9,12 @@
 const { execFileSync } = require( 'node:child_process' );
 const { readFileSync } = require( 'node:fs' );
 const path = require( 'node:path' );
-const { assertMatchingSiteUrl } = require( './lib/site-url' );
+const { assertMatchingSiteUrl, getOrigin, resolveSiteUrl } = require( './lib/site-url' );
 const { runWp, tryGetWordPressPath } = require( './lib/wp-cli' );
 
-const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
-const CONTACT_URL = new URL( '/contact/', ORIGIN );
-const ENDPOINT_URL = new URL( '/wp-admin/admin-post.php', ORIGIN );
+const ORIGIN = getOrigin();
+const CONTACT_URL = resolveSiteUrl( ORIGIN, '/contact/' );
+const ENDPOINT_URL = resolveSiteUrl( ORIGIN, '/wp-admin/admin-post.php' );
 const THEME_PATH = path.join( __dirname, '..' );
 
 function assert( condition, message ) {

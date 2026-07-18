@@ -4,8 +4,10 @@ const fs = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
+const { getOrigin } = require( './lib/site-url' );
+
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
-const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
+const ORIGIN = getOrigin();
 
 function assert( condition, message ) {
 	if ( ! condition ) {

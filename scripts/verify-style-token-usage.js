@@ -5,9 +5,10 @@
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
+const { getOrigin } = require( './lib/site-url' );
 const { runWp } = require( './lib/wp-cli' );
 
-const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
+const ORIGIN = getOrigin();
 const ALLOWED_DYNAMIC = new Set( [
 	'--hp-footer-backdrop-url',
 ] );

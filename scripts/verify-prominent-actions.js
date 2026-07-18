@@ -6,9 +6,11 @@ const fsPromises = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
+const { getOrigin } = require( './lib/site-url' );
+
 const THEME_ROOT = path.join( __dirname, '..' );
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
-const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
+const ORIGIN = getOrigin();
 const SOURCE_ONLY = process.argv.includes( '--source-only' );
 const CAPTURE_DIR = process.env.HPERKINS_CAPTURE_DIR ||
 	path.join( os.tmpdir(), 'hperkins-prominent-actions' );

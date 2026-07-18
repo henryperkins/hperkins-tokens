@@ -12,8 +12,10 @@ const http = require( 'node:http' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
+const { getOrigin } = require( './lib/site-url' );
+
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
-const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
+const ORIGIN = getOrigin();
 const PAGES = [ '/', '/ai-enablement/' ];
 const VIEWPORT = { width: 320, height: 800, deviceScaleFactor: 1, mobile: true };
 
