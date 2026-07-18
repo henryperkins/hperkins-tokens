@@ -8,6 +8,7 @@
  */
 const { spawn } = require( 'node:child_process' );
 const fs = require( 'node:fs/promises' );
+const { readFileSync } = require( 'node:fs' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
@@ -17,8 +18,27 @@ const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
 const ORIGIN = getOrigin();
 const CONTACT_EMAIL = 'htperkins@gmail.com';
 const SUBSCRIBE_ACTION = new URL( '/wp-admin/admin-post.php', ORIGIN ).href;
-const SUBSCRIBE_RECEIVED = 'Request received. I will review the address and add it to the occasional dispatch shortly.';
-const SUBSCRIBE_EMAIL_ERROR = 'Enter a valid email to join the dispatch.';
+
+// Derive the expected status copy from the subscribe pattern itself so this
+// verifier can never drift from the strings the pattern actually renders.
+function extractSubscribeMessage( source, status ) {
+	const match = source.match( new RegExp(
+		String.raw`'${ status }'\s*===\s*\$subscribe_status\s*\)\s*\{\s*\$subscribe_message\s*=\s*'((?:[^'\\]|\\.)*)';`
+	) );
+	if ( ! match ) {
+		throw new Error(
+			`patterns/imladris-subscribe.php no longer assigns $subscribe_message for the "${ status }" status; update the extractor in verify-contact-form-styling.js alongside the pattern.`
+		);
+	}
+	return match[1].replace( /\\(['\\])/g, '$1' );
+}
+
+const subscribePatternSource = readFileSync(
+	path.join( __dirname, '..', 'patterns/imladris-subscribe.php' ),
+	'utf8'
+);
+const SUBSCRIBE_RECEIVED = extractSubscribeMessage( subscribePatternSource, 'success' );
+const SUBSCRIBE_EMAIL_ERROR = extractSubscribeMessage( subscribePatternSource, 'invalid-email' );
 const VIEWPORT = { width: 390, height: 1400, deviceScaleFactor: 1, mobile: false };
 
 function wait( ms ) {
