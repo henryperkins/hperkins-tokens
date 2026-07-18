@@ -6,7 +6,7 @@
  * are actively maintained in this theme, rather than carrying stale inline
  * copies whose classes can drift away from style.css.
  */
-const { getOrigin } = require( './lib/site-url' );
+const { assertMatchingSiteUrl, getOrigin } = require( './lib/site-url' );
 const { runWp } = require( './lib/wp-cli' );
 
 const ORIGIN = getOrigin();
@@ -39,6 +39,11 @@ function assert( condition, message ) {
 }
 
 async function main() {
+	// This verifier reads the DB at HPERKINS_WP_PATH and fetches ORIGIN over
+	// HTTP; a mismatched pair silently mixes two different sites' conclusions.
+	const wpHomeUrl = runWp( [ `--url=${ ORIGIN }`, 'option', 'get', 'home' ] ).trim();
+	assertMatchingSiteUrl( ORIGIN, wpHomeUrl );
+
 	const postContent = runWp( [
 		`--url=${ ORIGIN }`,
 		'post',

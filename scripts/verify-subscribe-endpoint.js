@@ -94,7 +94,7 @@ async function main() {
 	// an HTTP probe for one site from mutating another site's database.
 	let runtimeCheck = 'runtime checks skipped (set HPERKINS_WP_PATH to opt in with a matching local site)';
 	if ( tryGetWordPressPath() ) {
-		const wpHomeUrl = runWp( [ 'option', 'get', 'home' ] ).trim();
+		const wpHomeUrl = runWp( [ `--url=${ ORIGIN }`, 'option', 'get', 'home' ] ).trim();
 		assertMatchingSiteUrl( ORIGIN, wpHomeUrl );
 
 		runtimeCheck = runWp(

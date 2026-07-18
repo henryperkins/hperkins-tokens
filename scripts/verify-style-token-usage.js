@@ -5,7 +5,7 @@
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
-const { getOrigin } = require( './lib/site-url' );
+const { assertMatchingSiteUrl, getOrigin } = require( './lib/site-url' );
 const { runWp } = require( './lib/wp-cli' );
 
 const ORIGIN = getOrigin();
@@ -21,6 +21,14 @@ function assert( condition, message ) {
 
 // Resolve style.css relative to the theme root so the script works from any CWD.
 const style = fs.readFileSync( path.join( __dirname, '..', 'style.css' ), 'utf8' );
+
+// The generated variables come from the DB at HPERKINS_WP_PATH while ORIGIN
+// names the site under test; refuse a mismatched pair instead of mixing sites.
+assertMatchingSiteUrl(
+	ORIGIN,
+	runWp( [ `--url=${ ORIGIN }`, 'option', 'get', 'home' ] ).trim()
+);
+
 const generatedVariables = runWp( [
 	`--url=${ ORIGIN }`,
 	'eval',
