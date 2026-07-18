@@ -4172,7 +4172,7 @@ samp {
 .hp-work-template .hp-page-hero > h1,
 .hp-work-template .hp-page-hero > .wp-block-heading {
 	margin: var(--wp--preset--spacing--4) 0 0;
-	font: var(--wp--custom--type--h-1, 500 4rem/1.08 'Cormorant Garamond', Georgia, serif);
+	font: var(--wp--custom--type--h-1, 500 4rem/1.08 'HPerkins Cormorant Garamond', Georgia, serif);
 	letter-spacing: var(--wp--custom--tracking--tight);
 	color: var(--wp--custom--text--strong);
 	text-wrap: balance;
@@ -4284,7 +4284,7 @@ samp {
 /* Title (display serif) + relaxed description. */
 .hp-work-template .hp-work__title {
 	margin: var(--wp--preset--spacing--3) 0 0;
-	font: var(--wp--custom--type--h-4, 600 1.75rem/1.22 'Cormorant Garamond', Georgia, serif);
+	font: var(--wp--custom--type--h-4, 600 1.75rem/1.22 'HPerkins Cormorant Garamond', Georgia, serif);
 	letter-spacing: -0.005em;
 	color: var(--wp--custom--text--strong);
 }

@@ -46,21 +46,22 @@ assert(
 
 const themeJson = JSON.parse( readFileSync( join( themeRoot, 'theme.json' ), 'utf8' ) );
 const fontFamilies = themeJson.settings.typography.fontFamilies;
-const bodyFontFamily = fontFamilies.find( ( family ) => family.slug === 'body' );
-assert( bodyFontFamily, 'theme.json must define the body font family.' );
-assert(
-	bodyFontFamily.fontFamily.startsWith( "'HPerkins EB Garamond'," ),
-	'Body typography must prefer the uniquely named self-hosted HPerkins EB Garamond family.'
-);
-assert(
-	bodyFontFamily.fontFace.every( ( fontFace ) => fontFace.fontFamily === 'HPerkins EB Garamond' ),
-	'Every body font face must use the unique HPerkins EB Garamond family name.'
-);
+// Every self-hosted family must lead with a unique "HPerkins …" internal name so
+// WordPress.com's same-named remote @font-face rules can't join the family and
+// win selection over the smaller local subset (see the 0.3.44 body isolation).
 for ( const family of fontFamilies ) {
 	if ( ! Array.isArray( family.fontFace ) ) {
 		continue;
 	}
+	assert(
+		family.fontFamily.startsWith( "'HPerkins " ),
+		`theme.json "${ family.slug }" family must lead with a unique 'HPerkins …' internal name (got: ${ family.fontFamily }).`
+	);
 	for ( const fontFace of family.fontFace ) {
+		assert(
+			fontFace.fontFamily.startsWith( 'HPerkins ' ),
+			`theme.json "${ family.slug }" font face must use the unique HPerkins-prefixed name (got: ${ fontFace.fontFamily }).`
+		);
 		assert(
 			[ 'swap', 'optional' ].includes( fontFace.fontDisplay ),
 			`${ family.slug } font face is missing fontDisplay: swap|optional.`
