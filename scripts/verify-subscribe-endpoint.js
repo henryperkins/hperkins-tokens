@@ -113,7 +113,13 @@ async function main() {
 			};
 
 			try {
-				update_option(
+				// Seed in the exact shape the store function creates: a
+				// non-autoloaded option. update_option() would create it
+				// autoloaded on a fresh install, and the store function's raw
+				// UPDATE + per-key cache delete would then read back a stale
+				// alloptions copy.
+				delete_option( $option_name );
+				add_option(
 					$option_name,
 					array(
 						array(
@@ -126,7 +132,9 @@ async function main() {
 							'source'       => 'https://hperkins.blog/contact/',
 							'submitted_at' => '2026-06-22 00:01:00',
 						),
-					)
+					),
+					'',
+					false
 				);
 
 				add_filter( 'hperkins_tokens_subscribe_max_requests', static fn() => 2 );
