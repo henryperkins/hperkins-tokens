@@ -15,6 +15,16 @@
 > (<https://claude.ai/design/p/b844cbab-6656-458c-91f4-81f1762117a5>),
 > `PROJECT_TYPE_DESIGN_SYSTEM`, owner Henry Perkins, `canEdit: true`.
 > Driven by the `DesignSync` MCP (auth via `/design-login`) together with the `/design-sync` skill.
+>
+> **Update (2026-07-18) — this plan was authored against theme v0.3.42 and has NOT run.**
+> The theme has since shipped **0.3.43** (claim-accuracy copy pass), **0.3.44**, and **0.3.45**.
+> Two of those touched `theme.json`: the self-hosted font families were given unique
+> `HPerkins …` internal names (body at 0.3.44; display/label/mono at 0.3.45) to isolate them
+> from WordPress.com's same-named remote faces — see the **2026-07-18** entry in
+> [`INDEX.md`](./INDEX.md). So the "token layer unchanged since 0.3.39 / refresh is a no-op"
+> premise below is **false as of 0.3.44**, and the target version throughout is now **v0.3.45**.
+> Re-scope before executing: the mirror push must carry the current `theme.json`, and the
+> `readme.md` version edits below (v0.3.42) become v0.3.45.
 
 ---
 
@@ -34,14 +44,20 @@ PortfolioPage design (leaner ledger)"** — touching `patterns/work-index.php`,
 uncertain, which is exactly why the plan **re-pushes the whole mirror file-set** rather than a
 hand-computed minimal diff (overwriting an unchanged file is a harmless no-op).
 
-### The token layer is already aligned — do not touch it
+### The token layer — palette/spacing/type SCALES still round-trip; the font FAMILY NAMES do not (0.3.44/0.3.45)
 
-`theme.json` last changed at **0.3.39** (`136ee78`), *before* the mirror was captured. It is
-unchanged across 0.3.40 → 0.3.42. Therefore the project's `tokens/*.css`,
-`design_handoff_imladris_design_system/tokens/*.css`, and `_source/theme/theme.json`
-**still round-trip 1:1** — a token "refresh" is a verified no-op. The only durable falsehood the
-token drift creates is the *version number* in `readme.md` ("round-trip `theme.json` v0.3.40"),
-which the doc edits below correct.
+At authoring time `theme.json` had last changed at **0.3.39** (`136ee78`), so this section read
+"the token layer is aligned — do not touch it." That is **no longer true**: 0.3.44 and 0.3.45
+renamed every self-hosted font family to a unique `HPerkins …` internal name
+(`settings.typography.fontFamilies[].fontFamily` and each `fontFace.fontFamily`). The palette,
+spacing scale, radius/shadow/type-scale tokens are still unchanged and still round-trip 1:1, but
+`_source/theme/theme.json` is now stale and the DS `tokens/typography.css` family declarations no
+longer match the theme's internal names. Two correct options at execution time: (a) re-push the
+current `_source/theme/theme.json` (byte-mirror — carries the rename verbatim) and leave the DS
+`tokens/*.css` at their design-level names, recording the delta exactly as
+[`INDEX.md` 2026-07-18](./INDEX.md) does; or (b) additionally reflect the `HPerkins …` names in
+`tokens/typography.css` if the project wants byte-parity there too. Either way the token "refresh"
+is **not** a no-op, and `readme.md`'s version string must read **v0.3.45**.
 
 ---
 
@@ -225,11 +241,11 @@ Each FIND string below is unique in the current `readme.md`:
 ```text
 # Edit 1 — version in the "Theme source (canonical)" bullet
 FIND:    "HPerkins Tokens" v0.3.40 on Automattic's Assembler parent
-REPLACE: "HPerkins Tokens" v0.3.42 on Automattic's Assembler parent
+REPLACE: "HPerkins Tokens" v0.3.45 on Automattic's Assembler parent
 
 # Edit 2 — version in the SETTLEMENT "canonical because…" sentence
 FIND:    this project is canonical because its tokens round-trip `theme.json` v0.3.40
-REPLACE: this project is canonical because its tokens round-trip `theme.json` v0.3.42
+REPLACE: this project is canonical because its palette/spacing/type-scale tokens round-trip `theme.json` v0.3.45 (font family names diverge — see INDEX.md 2026-07-18)
 
 # Edit 3 — live-surface list in "Sources"
 FIND:    **Live site:** https://hperkins.blog (Home, /work/, /about/, /ai-enablement/, /how-this-was-built/)
@@ -249,16 +265,20 @@ If **decision B = add the card**, also append to the "Notes / honest gaps" list:
 
 ---
 
-## 7. Token round-trip re-verification (no-op, but prove it)
+## 7. Token round-trip re-verification (colors/spacing/effects no-op; typography changed)
 
-1. `get_file tokens/colors.css` (and `effects.css`, `spacing.css`, `typography.css`) and confirm
-   values still equal the `theme.json` presets/custom tree. They will: `theme.json` is unchanged
-   since 0.3.39.
+1. `get_file tokens/colors.css` (and `effects.css`, `spacing.css`) and confirm values still equal
+   the `theme.json` presets/custom tree. They will: the palette, spacing, radius, shadow, and
+   type-*scale* tokens are unchanged since 0.3.39. **`typography.css` is the exception** — 0.3.44/0.3.45
+   renamed the self-hosted `fontFamily` internal names to `HPerkins …`, so the theme's
+   `theme.json` family declarations no longer match the DS family names (see the divergence note in §1
+   and [`INDEX.md` 2026-07-18](./INDEX.md)); decide per §1 whether to mirror that into `tokens/typography.css`.
 2. Theme-side, `node scripts/verify-style-token-usage.js` already proves every `var()` in
    `style.css` resolves against `theme.json`-generated variables — reference it as the standing guard.
-3. Record the round-trip as **verified 1:1 at v0.3.42** in the INDEX (§9). Do not edit any token file.
+3. Record the round-trip as **colors/spacing/effects verified 1:1 at v0.3.45, font family names
+   diverged (recorded)** in the INDEX (§9). Do not edit any token file unless option (b) in §1 is chosen.
 
-Confirmed values (for spot-checking, from `theme.json` at v0.3.42): `radius.lg 12px`,
+Confirmed values (for spot-checking, from `theme.json` at v0.3.45): `radius.lg 12px`,
 `shadow.sm "0 1px 3px rgba(27,35,29,0.07), 0 1px 2px rgba(27,35,29,0.05)"`,
 `shadow.md "0 4px 14px rgba(27,35,29,0.08), 0 2px 5px rgba(27,35,29,0.05)"`,
 `surface.card #FAF6EC`, `surface.sunken #ECE4D2`, `border.hair #DED2B8`,
@@ -304,11 +324,12 @@ first (so it is reviewable and version-controlled), then `write_files` it to the
 
 After the push succeeds:
 
-1. Spot-check via `get_file`: `_source/theme/style.css` header reads `Version: 0.3.42`;
-   `_source/theme/patterns/job-placement-digest.php` exists; `readme.md` shows v0.3.42.
+1. Spot-check via `get_file`: `_source/theme/style.css` header reads `Version: 0.3.45`;
+   `_source/theme/patterns/job-placement-digest.php` exists; `readme.md` shows v0.3.45.
 2. Add a dated entry to `docs/design-system/INDEX.md` recording the sync (project mirror refreshed
-   to v0.3.42, token round-trip re-verified 1:1, digest route + prominent-action composition now
-   represented). Convert the "pending" note (added with this plan) into the completed record.
+   to v0.3.45, colors/spacing/effects round-trip re-verified 1:1 with the font-family-name
+   divergence recorded, digest route + prominent-action composition now represented). Convert the
+   "pending" note (added with this plan) into the completed record.
 3. Bump nothing in the theme — **no `style.css`/`theme.json`/`Version` change**; this alignment is
    entirely project-side. This plan doc and the INDEX note are docs-only.
 
@@ -323,7 +344,7 @@ both recommendations taken; trim Tables/steps to change the tier or reverse a de
 ```text
 Align the canonical claude.ai/design "Imladris Design System" project
 (UUID b844cbab-6656-458c-91f4-81f1762117a5) with the current hperkins-tokens theme
-(this repo, v0.3.42) and https://hperkins.blog. This is a design-SYNC push — change only the
+(this repo, v0.3.45) and https://hperkins.blog. This is a design-SYNC push — change only the
 design project, never the theme. Follow docs/design-system/ALIGNMENT-PLAN.md.
 
 1. DesignSync get_project b844cbab-6656-458c-91f4-81f1762117a5 — confirm type
@@ -344,12 +365,15 @@ design project, never the theme. Follow docs/design-system/ALIGNMENT-PLAN.md.
    (docs/design-system/design-sync/guidelines/prominent-actions.card.html →
    guidelines/prominent-actions.card.html) when decision B is taken. Each file uploads verbatim
    from disk via localPath. Split into ≤256-file batches if needed (there are ~45).
-5. get_file readme.md, apply the four string edits in ALIGNMENT-PLAN §6 (v0.3.40→v0.3.42 twice,
-   live-surface list, seven→eight templates) plus the Notes/honest-gaps line if decision B,
-   then write_files readme.md with the edited content as inline data.
-6. Verify the token round-trip is still 1:1 (theme.json is unchanged since 0.3.39, so no
-   tokens/*.css edit is expected) — spot-check tokens/colors.css against theme.json.
-7. Spot-check via get_file that _source/theme/style.css reads Version: 0.3.42 and
+5. get_file readme.md, apply the four string edits in ALIGNMENT-PLAN §6 (v0.3.40→v0.3.45 twice
+   with the font-family-divergence qualifier on edit 2, live-surface list, seven→eight templates)
+   plus the Notes/honest-gaps line if decision B, then write_files readme.md with the edited
+   content as inline data.
+6. Verify the colors/spacing/effects round-trip is still 1:1, but note theme.json DID change at
+   0.3.44/0.3.45 (font family internal names → HPerkins …): the pushed _source/theme/theme.json
+   carries that rename, and per ALIGNMENT-PLAN §1 decide whether to also mirror it into
+   tokens/typography.css — spot-check tokens/colors.css against theme.json.
+7. Spot-check via get_file that _source/theme/style.css reads Version: 0.3.45 and
    _source/theme/patterns/job-placement-digest.php now exists.
 8. Report exactly what was written/edited and the token-round-trip result. Do NOT modify any
    theme file. Afterward, record the completed sync in docs/design-system/INDEX.md.
@@ -359,7 +383,10 @@ design project, never the theme. Follow docs/design-system/ALIGNMENT-PLAN.md.
 
 ### One-line summary
 
-Push the current theme (v0.3.42) into the design project's `_source/theme/` mirror, add the
+Push the current theme (v0.3.45) into the design project's `_source/theme/` mirror, add the
 Job Placement Digest files, correct `readme.md`'s stale v0.3.40 provenance, optionally document the
-0.3.42 prominent-action composition as a guideline card — and change **nothing** in the theme,
-because its `theme.json` tokens already round-trip the project 1:1.
+0.3.42 prominent-action composition as a guideline card — and change **nothing** in the theme.
+Its palette/spacing/effects/type-scale tokens still round-trip the project 1:1; only the
+self-hosted font *family names* diverged at 0.3.44/0.3.45 (recorded in INDEX.md, not a token
+redefinition), so the `_source/theme/theme.json` byte-mirror carries them and the DS
+`tokens/typography.css` decision is per §1.
