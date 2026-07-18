@@ -14,7 +14,7 @@ Site-wide plugin stacks and production operations belong to their own checkout. 
 
 ## Commands
 
-Database-backed scripts require `HPERKINS_WP_PATH`; there is intentionally no machine-specific fallback. `HPERKINS_ORIGIN` selects the matching HTTP site. On Windows, the shared launcher invokes PHP plus the WP-CLI PHAR directly because Node cannot execute the `wp.cmd` wrapper safely. `HPERKINS_PHP_BIN` can select a non-default PHP executable when `php` is not on `PATH`.
+Database-backed scripts require `HPERKINS_WP_PATH`; there is intentionally no machine-specific fallback (`verify-subscribe-endpoint.js` is the one partial exception — its HTTP nonce-rejection half runs without it, and only the mutating runtime half is gated on the path). `HPERKINS_ORIGIN` selects the matching HTTP site; the wp-cli **and** HTTP verifiers that touch the DB (`verify-subscribe-endpoint`, `verify-design-system-specimen`, `verify-style-token-usage`) now assert that `HPERKINS_ORIGIN` and the selected install's `home` URL name the same site before running, so a mismatched pair fails fast instead of mixing two sites. On Windows, the shared launcher invokes PHP plus the WP-CLI PHAR directly because Node cannot execute the `wp.cmd` wrapper safely. `HPERKINS_PHP_BIN` can select a non-default PHP executable when `php` is not on `PATH`.
 
 ```powershell
 # Local WordPress Studio development site (PowerShell).
@@ -53,7 +53,7 @@ node scripts/verify-content-ownership-docs.js   # readme / CLAUDE / design-syste
 node scripts/verify-performance-assets.js       # image budgets, fontDisplay, eager LCP hero (fetchpriority=high, never loading=lazy), front-page CSS skip
 node scripts/verify-style-token-usage.js        # every var() in style.css resolves against theme.json-generated variables (wp-cli)
 node scripts/verify-design-system-specimen.js   # post 79 specimen references live patterns; rendered checks auto-skip while the page is draft (wp-cli + HTTP)
-node scripts/verify-subscribe-endpoint.js       # subscribe nonce rejection over HTTP + storage/rate-limit/privacy runtime checks (wp-cli; MUTATES+restores options — the runtime half only runs when ORIGIN matches the local install)
+node scripts/verify-subscribe-endpoint.js       # subscribe nonce rejection over HTTP + storage/rate-limit/privacy runtime checks (wp-cli; MUTATES+restores options — the runtime half runs only when HPERKINS_WP_PATH is set, and then hard-fails rather than skips if HPERKINS_ORIGIN doesn't match that install's home URL, refusing to mutate a different site)
 node scripts/export-page-snapshots.js           # refresh content/page-snapshots/*.html after intentional edits to DB-owned page bodies (wp-cli)
 
 # WP-CLI targets the configured WordPress site, not this theme repo:
@@ -117,5 +117,5 @@ Status is expressed by a **semantic palette plus a redundant word** (done/review
 - **Tokens first:** new design values go in `theme.json`, then alias in `style.css`. No parallel hardcoded hex.
 - **Respect the CSS split:** component tokens/CSS → `style.css`; page-layout CSS for pulled designs → `assets/imladris-pages.css`.
 - **Bump `style.css` `Version:`** (and mirror in `readme.txt` + add a changelog entry) when `style.css` or `theme.json` changes — release/version tracking; the cache key is `filemtime()`.
-- **Don't edit the parent as if it's ours:** `../assembler` is vendored upstream.
+- **Don't edit the parent as if it's ours:** `assembler` is vendored upstream and lives beside this theme in the target WordPress install's `wp-content/themes/`, not in this repo.
 - **`.design-pull/` is disposable** (gitignored, re-pullable); the durable provenance is `docs/design-system/`.

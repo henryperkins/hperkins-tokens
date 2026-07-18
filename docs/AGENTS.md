@@ -10,26 +10,14 @@ For local development, link or junction this repository into `<wordpress>/wp-con
 
 Database-backed verifier scripts require an explicit `HPERKINS_WP_PATH`; there is no hard-coded site fallback. `HPERKINS_ORIGIN` selects the matching HTTP origin. On Windows, `scripts/lib/wp-cli.js` invokes PHP plus a WP-CLI PHAR directly, avoiding Node's inability to launch the `wp.cmd` wrapper safely. Set `HPERKINS_PHP_BIN` if the PHP executable is not available as `php` on `PATH`.
 
-PowerShell example for the Studio development site:
-
-```powershell
-$env:HPERKINS_WP_PATH = Join-Path $env:USERPROFILE 'Studio\hperkins-tokens-dev'
-$env:HPERKINS_WP_CLI_PHAR = "$env:USERPROFILE\.local\bin\wp-cli.phar"
-$env:HPERKINS_ORIGIN = (& studio wp option get home --path $env:HPERKINS_WP_PATH).Trim()
-
-studio wp core version --path $env:HPERKINS_WP_PATH
-wp --path=$env:HPERKINS_WP_PATH core version
-wp --path=$env:HPERKINS_WP_PATH theme list
-```
-
-Use `studio wp ... --path <site>` for an imported or Studio-specific site that depends on Studio's PHP/runtime. Standalone `wp --path=<site> ...` is appropriate when the selected PHP has every database extension required by that installation.
+For the exact PowerShell environment setup (Studio development site), see the **Commands** section of [`../CLAUDE.md`](../CLAUDE.md) — it is the single source of truth for the `HPERKINS_WP_PATH` / `HPERKINS_WP_CLI_PHAR` / `HPERKINS_ORIGIN` block and the Studio-vs-standalone WP-CLI note, so it is not duplicated here.
 
 ## Build and Verification
 
 There is no package install, Composer install, or asset build. Use the repository's dependency-free checks:
 
 - PHP-lint every tracked PHP file.
-- Run `node --test scripts/lib/wp-cli.test.js` for the cross-platform WP-CLI launcher.
+- Run `node --test scripts/lib/wp-cli.test.js scripts/lib/site-url.test.js` for the cross-platform WP-CLI launcher and the runtime-mutation site-URL guard (name both files explicitly; the directory form of `node --test` is unreliable on Windows).
 - Run `node scripts/verify-performance-assets.js` for source-only asset checks.
 - With the local environment variables set, run the relevant database/HTTP verifiers listed in `CLAUDE.md`.
 - Run `git diff --check` before committing.
