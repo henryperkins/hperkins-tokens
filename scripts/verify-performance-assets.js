@@ -126,4 +126,22 @@ assert(
 	'Footer backdrop should prefer the WebP asset via image-set().'
 );
 
+// Release-sync contract: style.css Version, readme.txt Stable tag, and the
+// matching changelog entry must agree. filemtime() busts the cache, but the
+// declared Version is the theme's release source of truth.
+const styleVersionMatch = styleCss.match( /^Version:\s*(\S+)/m );
+assert( styleVersionMatch, 'style.css must declare a Version.' );
+const currentVersion = styleVersionMatch[1];
+const readmeTxt = readFileSync( join( themeRoot, 'readme.txt' ), 'utf8' );
+const stableTagMatch = readmeTxt.match( /^Stable tag:\s*(\S+)/m );
+assert( stableTagMatch, 'readme.txt must declare a Stable tag.' );
+assert(
+	stableTagMatch[1] === currentVersion,
+	`readme.txt Stable tag ${ stableTagMatch[1] } must match style.css Version ${ currentVersion }.`
+);
+assert(
+	readmeTxt.includes( `= ${ currentVersion } =` ),
+	`readme.txt must contain the ${ currentVersion } changelog.`
+);
+
 console.log( 'verified performance asset contracts' );

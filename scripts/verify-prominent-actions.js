@@ -126,21 +126,11 @@ function verifySourceContracts() {
 		);
 	}
 
-	const versionMatch = css.match( /^Version:\s*(\S+)/m );
-	assert( versionMatch, 'style.css must declare a Version.' );
-	const currentVersion = versionMatch[1];
-	const readme = read( 'readme.txt' );
-	const stableTagMatch = readme.match( /^Stable tag:\s*(\S+)/m );
-	assert( stableTagMatch, 'readme.txt must declare a Stable tag.' );
-	assert(
-		stableTagMatch[1] === currentVersion,
-		`readme.txt Stable tag ${ stableTagMatch[1] } must match style.css Version ${ currentVersion }.`
-	);
-	assert(
-		readme.includes( `= ${ currentVersion } =` ),
-		`readme.txt must contain the ${ currentVersion } changelog.`
-	);
-	assert( readme.includes( '= 0.3.42 =' ), 'readme.txt must retain the 0.3.42 changelog.' );
+	// The Version <-> Stable tag <-> changelog release-sync contract lives in
+	// verify-performance-assets.js (a source-only verifier). Here we only pin the
+	// 0.3.42 changelog entry — the prominent-action system's own release — so its
+	// history can never be dropped from readme.txt.
+	assert( read( 'readme.txt' ).includes( '= 0.3.42 =' ), 'readme.txt must retain the 0.3.42 changelog.' );
 
 	console.log( 'prominent action source contracts verified' );
 }
