@@ -3,44 +3,18 @@
 const crypto = require( 'node:crypto' );
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
-const { getWordPressPath, runWp } = require( './lib/wp-cli' );
+const { runWpEval } = require( './lib/wp-cli' );
 
 const {
 	THEME_PATH,
 	SNAPSHOT_DIR,
 	PAGE_CONTRACTS,
 	RETIRED_PAGE_PATHS,
+	getPageRecord,
+	getRetiredPageTargetsPhp,
+	getTrackedPageTargetsPhp,
 	normalizeContent,
 } = require( './lib/page-content-contract' );
-
-const WP_PATH = getWordPressPath();
-
-function escapePhpString( value ) {
-	return `'${ value.replace( /\\/g, '\\\\' ).replace( /'/g, "\\'" ) }'`;
-}
-
-function getTrackedPageTargetsPhp() {
-	return PAGE_CONTRACTS.filter( ( contract ) => contract.pagePath )
-		.map( ( contract ) => {
-			const entries = [
-				`'key' => ${ escapePhpString( contract.key ) }`,
-				`'path' => ${ escapePhpString( contract.pagePath ) }`,
-			];
-
-			if ( contract.templateId ) {
-				entries.push( `'template' => ${ escapePhpString( contract.templateId ) }` );
-			}
-
-			return `array( ${ entries.join( ', ' ) } )`;
-		} )
-		.join( ',\n\t\t\t' );
-}
-
-function getRetiredPageTargetsPhp() {
-	return RETIRED_PAGE_PATHS.map( ( contract ) =>
-		`array( 'key' => ${ escapePhpString( contract.key ) }, 'path' => ${ escapePhpString( contract.pagePath ) } )`
-	).join( ',\n\t\t\t' );
-}
 
 function assert( condition, message ) {
 	if ( ! condition ) {
@@ -48,19 +22,12 @@ function assert( condition, message ) {
 	}
 }
 
-function runWpEval( code ) {
-	return runWp( [ `--path=${ WP_PATH }`, 'eval', code ], {
-		encoding: 'utf8',
-		stdio: [ 'ignore', 'pipe', 'pipe' ],
-	} ).trim();
-}
-
 function readTemplate( relativePath ) {
 	return fs.readFileSync( path.join( THEME_PATH, relativePath ), 'utf8' );
 }
 
 function getOwnershipState() {
-	const trackedPageTargets = getTrackedPageTargetsPhp();
+	const trackedPageTargets = getTrackedPageTargetsPhp( { includeTemplate: true } );
 	const retiredPageTargets = getRetiredPageTargetsPhp();
 
 	return JSON.parse(
@@ -116,14 +83,6 @@ function getOwnershipState() {
 			echo wp_json_encode( $result );
 		` )
 	);
-}
-
-function getPageRecord( state, contract ) {
-	if ( contract.key === 'front-page' ) {
-		return state.frontPage;
-	}
-
-	return state.pages[ contract.key ];
 }
 
 function getSha256( value ) {

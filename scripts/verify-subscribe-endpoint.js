@@ -10,7 +10,7 @@ const { execFileSync } = require( 'node:child_process' );
 const { readFileSync } = require( 'node:fs' );
 const path = require( 'node:path' );
 const { assertMatchingSiteUrl } = require( './lib/site-url' );
-const { getWordPressPath, runWp } = require( './lib/wp-cli' );
+const { runWp, tryGetWordPressPath } = require( './lib/wp-cli' );
 
 const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
 const CONTACT_URL = new URL( '/contact/', ORIGIN );
@@ -93,17 +93,12 @@ async function main() {
 	// Requiring an explicit path is the opt-in; matching its home URL prevents
 	// an HTTP probe for one site from mutating another site's database.
 	let runtimeCheck = 'runtime checks skipped (set HPERKINS_WP_PATH to opt in with a matching local site)';
-	if ( process.env.HPERKINS_WP_PATH ) {
-		const wpPath = getWordPressPath();
-		const wpHomeUrl = runWp(
-			[ `--path=${ wpPath }`, 'option', 'get', 'home' ],
-			{ encoding: 'utf8' }
-		).trim();
+	if ( tryGetWordPressPath() ) {
+		const wpHomeUrl = runWp( [ 'option', 'get', 'home' ] ).trim();
 		assertMatchingSiteUrl( ORIGIN, wpHomeUrl );
 
 		runtimeCheck = runWp(
 			[
-			`--path=${ wpPath }`,
 			`--url=${ ORIGIN }`,
 			'eval',
 			`
@@ -188,9 +183,7 @@ async function main() {
 
 				echo 'checked subscribe storage, rate limit, and privacy hooks';
 			`,
-		],
-			{ encoding: 'utf8' }
-		).trim();
+		] ).trim();
 	}
 
 	console.log( `checked subscribe cleanup guardrails, endpoint nonce rejection; ${ runtimeCheck }` );

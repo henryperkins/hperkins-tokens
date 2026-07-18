@@ -65,9 +65,22 @@ function runWp( args, options = {}, context = {} ) {
 	} );
 }
 
+function escapePhpString( value ) {
+	return `'${ value.replace( /\\/g, '\\\\' ).replace( /'/g, "\\'" ) }'`;
+}
+
+function runWpEval( code, options = {}, context = {} ) {
+	return runWp( [ 'eval', code ], {
+		stdio: [ 'ignore', 'pipe', 'pipe' ],
+		...options,
+	}, context ).trim();
+}
+
 module.exports = {
+	escapePhpString,
 	getWordPressPath,
 	resolveWpCliInvocation,
 	runWp,
+	runWpEval,
 	tryGetWordPressPath,
 };

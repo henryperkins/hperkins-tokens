@@ -2,35 +2,15 @@
 
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
-const { getWordPressPath, runWp } = require( './lib/wp-cli' );
+const { runWpEval } = require( './lib/wp-cli' );
 
 const {
 	SNAPSHOT_DIR,
 	PAGE_CONTRACTS,
+	getPageRecord,
+	getTrackedPageTargetsPhp,
 	normalizeContent,
 } = require( './lib/page-content-contract' );
-
-const WP_PATH = getWordPressPath();
-
-function escapePhpString( value ) {
-	return `'${ value.replace( /\\/g, '\\\\' ).replace( /'/g, "\\'" ) }'`;
-}
-
-function getTrackedPageTargetsPhp() {
-	return PAGE_CONTRACTS.filter( ( contract ) => contract.pagePath )
-		.map(
-			( contract ) =>
-				`array( 'key' => ${ escapePhpString( contract.key ) }, 'path' => ${ escapePhpString( contract.pagePath ) } )`
-		)
-		.join( ',\n\t\t\t\t' );
-}
-
-function runWpEval( code ) {
-	return runWp( [ `--path=${ WP_PATH }`, 'eval', code ], {
-		encoding: 'utf8',
-		stdio: [ 'ignore', 'pipe', 'pipe' ],
-	} ).trim();
-}
 
 function getLiveState() {
 	const trackedPageTargets = getTrackedPageTargetsPhp();
@@ -65,14 +45,6 @@ function getLiveState() {
 			echo wp_json_encode( $result );
 		` )
 	);
-}
-
-function getPageRecord( state, contract ) {
-	if ( contract.key === 'front-page' ) {
-		return state.frontPage;
-	}
-
-	return state.pages[ contract.key ];
 }
 
 function main() {

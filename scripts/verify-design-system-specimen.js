@@ -6,11 +6,10 @@
  * are actively maintained in this theme, rather than carrying stale inline
  * copies whose classes can drift away from style.css.
  */
-const { getWordPressPath, runWp } = require( './lib/wp-cli' );
+const { runWp } = require( './lib/wp-cli' );
 
 const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
 const DESIGN_SYSTEM_URL = new URL( '/design-system/', ORIGIN );
-const WP_PATH = getWordPressPath();
 
 const LEGACY_MARKERS = [
 	'hp-operational-story__grid',
@@ -39,17 +38,13 @@ function assert( condition, message ) {
 }
 
 async function main() {
-	const postContent = runWp(
-		[
-			`--path=${ WP_PATH }`,
-			`--url=${ ORIGIN }`,
-			'post',
-			'get',
-			'79',
-			'--field=post_content',
-		],
-		{ encoding: 'utf8' }
-	);
+	const postContent = runWp( [
+		`--url=${ ORIGIN }`,
+		'post',
+		'get',
+		'79',
+		'--field=post_content',
+	] );
 
 	for ( const marker of LEGACY_MARKERS ) {
 		assert(
@@ -69,8 +64,7 @@ async function main() {
 	// draft. The DB-content checks above always run; the rendered-page checks
 	// only make sense once the page is published.
 	const postStatus = runWp(
-		[ `--path=${ WP_PATH }`, `--url=${ ORIGIN }`, 'post', 'get', '79', '--field=post_status' ],
-		{ encoding: 'utf8' }
+		[ `--url=${ ORIGIN }`, 'post', 'get', '79', '--field=post_status' ]
 	).trim();
 	if ( 'publish' !== postStatus ) {
 		console.log( `checked design-system specimen post content; post 79 is "${ postStatus }" — rendered-page checks skipped until it is published` );

@@ -2,6 +2,8 @@
 
 const path = require( 'node:path' );
 
+const { escapePhpString } = require( './wp-cli' );
+
 const THEME_PATH = path.resolve( __dirname, '..', '..' );
 const SNAPSHOT_DIR = path.join( THEME_PATH, 'content', 'page-snapshots' );
 
@@ -65,10 +67,44 @@ function normalizeContent( value ) {
 	return value.replace( /\r\n/g, '\n' ).trimEnd();
 }
 
+function getTrackedPageTargetsPhp( { includeTemplate = false } = {} ) {
+	return PAGE_CONTRACTS.filter( ( contract ) => contract.pagePath )
+		.map( ( contract ) => {
+			const entries = [
+				`'key' => ${ escapePhpString( contract.key ) }`,
+				`'path' => ${ escapePhpString( contract.pagePath ) }`,
+			];
+
+			if ( includeTemplate && contract.templateId ) {
+				entries.push( `'template' => ${ escapePhpString( contract.templateId ) }` );
+			}
+
+			return `array( ${ entries.join( ', ' ) } )`;
+		} )
+		.join( ',\n\t\t\t' );
+}
+
+function getRetiredPageTargetsPhp() {
+	return RETIRED_PAGE_PATHS.map( ( contract ) =>
+		`array( 'key' => ${ escapePhpString( contract.key ) }, 'path' => ${ escapePhpString( contract.pagePath ) } )`
+	).join( ',\n\t\t\t' );
+}
+
+function getPageRecord( state, contract ) {
+	if ( contract.key === 'front-page' ) {
+		return state.frontPage;
+	}
+
+	return state.pages[ contract.key ];
+}
+
 module.exports = {
 	THEME_PATH,
 	SNAPSHOT_DIR,
 	PAGE_CONTRACTS,
 	RETIRED_PAGE_PATHS,
+	getPageRecord,
+	getRetiredPageTargetsPhp,
+	getTrackedPageTargetsPhp,
 	normalizeContent,
 };
