@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.44
+Version: 0.3.45
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -1698,12 +1698,10 @@ header.wp-block-template-part {
 	}
 
 	.hp-wapuu-hero-wrap::before {
-		/* Keep the decorative CSS bitmap out of the mobile LCP path. The separate
-		   ::after parchment and radial gradients preserve the hero atmosphere. */
-		background-image: none;
-		background-position: 50% 0;
-		background-size: auto 100%;
-		opacity: 0.42;
+		/* Drop the decorative bitmap layer entirely on mobile so it can never
+		   enter the LCP path. The ::after parchment/linear-gradient wash carries
+		   the hero atmosphere on its own at this width. */
+		display: none;
 	}
 
 	/* Council mobile hero: re-composed, not a shrunk desktop. Wapuu rides ON TOP
@@ -4172,7 +4170,7 @@ samp {
 .hp-work-template .hp-page-hero > h1,
 .hp-work-template .hp-page-hero > .wp-block-heading {
 	margin: var(--wp--preset--spacing--4) 0 0;
-	font: var(--wp--custom--type--h-1, 500 4rem/1.08 'Cormorant Garamond', Georgia, serif);
+	font: var(--wp--custom--type--h-1, 500 4rem/1.08 'HPerkins Cormorant Garamond', Georgia, serif);
 	letter-spacing: var(--wp--custom--tracking--tight);
 	color: var(--wp--custom--text--strong);
 	text-wrap: balance;
@@ -4284,7 +4282,7 @@ samp {
 /* Title (display serif) + relaxed description. */
 .hp-work-template .hp-work__title {
 	margin: var(--wp--preset--spacing--3) 0 0;
-	font: var(--wp--custom--type--h-4, 600 1.75rem/1.22 'Cormorant Garamond', Georgia, serif);
+	font: var(--wp--custom--type--h-4, 600 1.75rem/1.22 'HPerkins Cormorant Garamond', Georgia, serif);
 	letter-spacing: -0.005em;
 	color: var(--wp--custom--text--strong);
 }

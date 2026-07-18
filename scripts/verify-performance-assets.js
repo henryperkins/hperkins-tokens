@@ -39,28 +39,63 @@ for ( const [ relativePath, maxBytes ] of Object.entries( modernArtworkBudgets )
 }
 
 const styleCss = readFileSync( join( themeRoot, 'style.css' ), 'utf8' );
+
+// Collect the body of each `@media (max-width: 781px)` block by brace-matching,
+// so the hero check is scoped to the mobile query instead of a whole-file scan
+// that could match a ::before rule living in unrelated (e.g. desktop) CSS.
+function extractMediaBlocks( css, mediaQuery ) {
+	const source = css.replace( /\/\*[\s\S]*?\*\//g, '' );
+	const blocks = [];
+	let from = 0;
+	for (
+		let start = source.indexOf( mediaQuery, from );
+		start !== -1;
+		start = source.indexOf( mediaQuery, from )
+	) {
+		const open = source.indexOf( '{', start );
+		let depth = 1;
+		let index = open + 1;
+		while ( depth > 0 && index < source.length ) {
+			if ( source[ index ] === '{' ) {
+				depth += 1;
+			} else if ( source[ index ] === '}' ) {
+				depth -= 1;
+			}
+			index += 1;
+		}
+		blocks.push( source.slice( open + 1, index - 1 ) );
+		from = index;
+	}
+	return blocks;
+}
+
+const mobileHeroDisabled = extractMediaBlocks( styleCss, '@media (max-width: 781px)' ).some( ( block ) => {
+	const rule = block.match( /\.hp-wapuu-hero-wrap::before\s*\{([^}]*)\}/ );
+	return !! rule && /(?:display:\s*none|background-image:\s*none)\s*;/.test( rule[1] );
+} );
 assert(
-	/@media \(max-width: 781px\)[\s\S]*?\.hp-wapuu-hero-wrap::before\s*\{[^}]*background-image:\s*none;[^}]*\}/.test( styleCss ),
-	'Mobile hero CSS must keep the decorative backdrop image out of the critical path.'
+	mobileHeroDisabled,
+	'A @media (max-width: 781px) block must disable .hp-wapuu-hero-wrap::before (display: none or background-image: none).'
 );
 
 const themeJson = JSON.parse( readFileSync( join( themeRoot, 'theme.json' ), 'utf8' ) );
 const fontFamilies = themeJson.settings.typography.fontFamilies;
-const bodyFontFamily = fontFamilies.find( ( family ) => family.slug === 'body' );
-assert( bodyFontFamily, 'theme.json must define the body font family.' );
-assert(
-	bodyFontFamily.fontFamily.startsWith( "'HPerkins EB Garamond'," ),
-	'Body typography must prefer the uniquely named self-hosted HPerkins EB Garamond family.'
-);
-assert(
-	bodyFontFamily.fontFace.every( ( fontFace ) => fontFace.fontFamily === 'HPerkins EB Garamond' ),
-	'Every body font face must use the unique HPerkins EB Garamond family name.'
-);
+// Every self-hosted family must lead with a unique "HPerkins …" internal name so
+// WordPress.com's same-named remote @font-face rules can't join the family and
+// win selection over the smaller local subset (see the 0.3.44 body isolation).
 for ( const family of fontFamilies ) {
 	if ( ! Array.isArray( family.fontFace ) ) {
 		continue;
 	}
+	assert(
+		family.fontFamily.startsWith( "'HPerkins " ),
+		`theme.json "${ family.slug }" family must lead with a unique 'HPerkins …' internal name (got: ${ family.fontFamily }).`
+	);
 	for ( const fontFace of family.fontFace ) {
+		assert(
+			fontFace.fontFamily.startsWith( 'HPerkins ' ),
+			`theme.json "${ family.slug }" font face must use the unique HPerkins-prefixed name (got: ${ fontFace.fontFamily }).`
+		);
 		assert(
 			[ 'swap', 'optional' ].includes( fontFace.fontDisplay ),
 			`${ family.slug } font face is missing fontDisplay: swap|optional.`
@@ -124,6 +159,24 @@ assert(
 assert(
 	functionsPhp.includes( 'valley-twilight.webp' ) && functionsPhp.includes( 'image-set(' ),
 	'Footer backdrop should prefer the WebP asset via image-set().'
+);
+
+// Release-sync contract: style.css Version, readme.txt Stable tag, and the
+// matching changelog entry must agree. filemtime() busts the cache, but the
+// declared Version is the theme's release source of truth.
+const styleVersionMatch = styleCss.match( /^Version:\s*(\S+)/m );
+assert( styleVersionMatch, 'style.css must declare a Version.' );
+const currentVersion = styleVersionMatch[1];
+const readmeTxt = readFileSync( join( themeRoot, 'readme.txt' ), 'utf8' );
+const stableTagMatch = readmeTxt.match( /^Stable tag:\s*(\S+)/m );
+assert( stableTagMatch, 'readme.txt must declare a Stable tag.' );
+assert(
+	stableTagMatch[1] === currentVersion,
+	`readme.txt Stable tag ${ stableTagMatch[1] } must match style.css Version ${ currentVersion }.`
+);
+assert(
+	readmeTxt.includes( `= ${ currentVersion } =` ),
+	`readme.txt must contain the ${ currentVersion } changelog.`
 );
 
 console.log( 'verified performance asset contracts' );

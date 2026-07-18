@@ -427,3 +427,36 @@ the fix:
 **Status: plan + prompt only — nothing has been pushed to the project, and no theme
 file changed.** Execution is a separate `/design-sync` run (DesignSync MCP, auth via
 `/design-login`); this entry becomes the completed record once that runs.
+
+## 2026-07-18 — self-hosted font isolation (0.3.44 body, 0.3.45 display/label/mono)
+
+Recorded theme-side delta from the 2026-06-20 token pull, so the "deltas recorded
+in INDEX.md" contract (README.md, `readme.txt`, CLAUDE.md) stays honest. **This
+supersedes the 2026-07-15 entry's "token layer is already 1:1 / `theme.json`
+unchanged since 0.3.39" premise** — `theme.json` changed at both 0.3.44 and 0.3.45.
+
+- **What changed.** Each self-hosted family's *internal* `fontFamily` name (the
+  `settings.typography.fontFamilies[].fontFamily` stack head and every
+  `fontFace.fontFamily`) was uniquely prefixed: `EB Garamond → HPerkins EB Garamond`
+  (0.3.44, body), then `Cormorant Garamond → HPerkins Cormorant Garamond`,
+  `Marcellus → HPerkins Marcellus`, `JetBrains Mono → HPerkins JetBrains Mono`
+  (0.3.45, display/label/mono). The two `style.css` `var(--wp--custom--type--h-*)`
+  fallbacks that spelled the display face were updated to match.
+- **What did NOT change.** The editor-facing `name` fields (e.g. "Display —
+  Cormorant Garamond"), the family `slug`s, the generated `--wp--preset--font-family--*`
+  variable names, the `src` font files, and the front-page Cormorant `<link rel=preload>`
+  (it matches the file URL, not the family name). The DS project's `tokens/*.css` keep
+  their design-level family names; this is a theme-side integration delta, not a token
+  redefinition — so it is **recorded here, not pushed** to the design project.
+- **Why.** WordPress.com emits its own `@font-face` rules under the *public* Google-font
+  names; a same-named theme family lets a heavier remote face join the family and win
+  selection over the small local subset (the 149 KiB `fonts.wp.com` EB Garamond seen in
+  the 2026-07-18 mobile trace). Unique internal names keep every self-hosted face local.
+- **Accepted deltas (clamping).** Isolating the families forgoes any weights/styles the
+  remote faces used to supplement. The self-hosted upright body face is `400 600`, so
+  bold body text (`<strong>`, weight 700) now resolves within the local face (600 /
+  synthesized) rather than a remote 700; display italic is `400 500`, so display italic
+  above 500 clamps similarly. Cormorant upright (`400 700`) covers the headings, Marcellus
+  is single-weight by design, and mono (`400 500`) covers every mono use — so those are
+  unaffected. `scripts/verify-performance-assets.js` enforces the unique-prefix invariant
+  across all four families.

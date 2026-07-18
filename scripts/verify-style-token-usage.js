@@ -5,10 +5,10 @@
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
-const { getWordPressPath, runWp } = require( './lib/wp-cli' );
+const { assertMatchingSiteUrl, getOrigin } = require( './lib/site-url' );
+const { runWp } = require( './lib/wp-cli' );
 
-const WP_PATH = getWordPressPath();
-const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
+const ORIGIN = getOrigin();
 const ALLOWED_DYNAMIC = new Set( [
 	'--hp-footer-backdrop-url',
 ] );
@@ -21,15 +21,19 @@ function assert( condition, message ) {
 
 // Resolve style.css relative to the theme root so the script works from any CWD.
 const style = fs.readFileSync( path.join( __dirname, '..', 'style.css' ), 'utf8' );
-const generatedVariables = runWp(
-	[
-		`--path=${ WP_PATH }`,
-		`--url=${ ORIGIN }`,
-		'eval',
-		'echo wp_get_global_stylesheet( array( "variables" ) );',
-	],
-	{ encoding: 'utf8' }
+
+// The generated variables come from the DB at HPERKINS_WP_PATH while ORIGIN
+// names the site under test; refuse a mismatched pair instead of mixing sites.
+assertMatchingSiteUrl(
+	ORIGIN,
+	runWp( [ `--url=${ ORIGIN }`, 'option', 'get', 'home' ] ).trim()
 );
+
+const generatedVariables = runWp( [
+	`--url=${ ORIGIN }`,
+	'eval',
+	'echo wp_get_global_stylesheet( array( "variables" ) );',
+] );
 
 const defined = new Set();
 for ( const css of [ style, generatedVariables ] ) {

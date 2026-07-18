@@ -419,10 +419,14 @@ function hperkins_tokens_store_subscribe_request( $email, $referer ) {
 
 		if ( $updated > 0 ) {
 			wp_cache_delete( $option_name, 'options' );
+			// The raw UPDATE bypasses the options API, so if the option was ever
+			// created autoloaded the per-key delete alone leaves alloptions stale.
+			wp_cache_delete( 'alloptions', 'options' );
 			return 'stored';
 		}
 
 		wp_cache_delete( $option_name, 'options' );
+		wp_cache_delete( 'alloptions', 'options' );
 	}
 
 	return 'save-error';

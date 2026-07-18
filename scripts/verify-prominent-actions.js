@@ -6,9 +6,11 @@ const fsPromises = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
+const { getOrigin } = require( './lib/site-url' );
+
 const THEME_ROOT = path.join( __dirname, '..' );
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
-const ORIGIN = process.env.HPERKINS_ORIGIN || 'https://hperkins.blog';
+const ORIGIN = getOrigin();
 const SOURCE_ONLY = process.argv.includes( '--source-only' );
 const CAPTURE_DIR = process.env.HPERKINS_CAPTURE_DIR ||
 	path.join( os.tmpdir(), 'hperkins-prominent-actions' );
@@ -124,21 +126,11 @@ function verifySourceContracts() {
 		);
 	}
 
-	const versionMatch = css.match( /^Version:\s*(\S+)/m );
-	assert( versionMatch, 'style.css must declare a Version.' );
-	const currentVersion = versionMatch[1];
-	const readme = read( 'readme.txt' );
-	const stableTagMatch = readme.match( /^Stable tag:\s*(\S+)/m );
-	assert( stableTagMatch, 'readme.txt must declare a Stable tag.' );
-	assert(
-		stableTagMatch[1] === currentVersion,
-		`readme.txt Stable tag ${ stableTagMatch[1] } must match style.css Version ${ currentVersion }.`
-	);
-	assert(
-		readme.includes( `= ${ currentVersion } =` ),
-		`readme.txt must contain the ${ currentVersion } changelog.`
-	);
-	assert( readme.includes( '= 0.3.42 =' ), 'readme.txt must retain the 0.3.42 changelog.' );
+	// The Version <-> Stable tag <-> changelog release-sync contract lives in
+	// verify-performance-assets.js (a source-only verifier). Here we only pin the
+	// 0.3.42 changelog entry — the prominent-action system's own release — so its
+	// history can never be dropped from readme.txt.
+	assert( read( 'readme.txt' ).includes( '= 0.3.42 =' ), 'readme.txt must retain the 0.3.42 changelog.' );
 
 	console.log( 'prominent action source contracts verified' );
 }

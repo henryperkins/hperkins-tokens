@@ -17,7 +17,7 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 		<!-- wp:column {"verticalAlignment":"center","width":"55%","className":"hp-wapuu-hero__copy"} -->
 		<div class="wp-block-column is-vertically-aligned-center hp-wapuu-hero__copy" style="flex-basis:55%">
 			<!-- wp:paragraph {"className":"hp-wapuu-hero__eyebrow"} -->
-			<p class="hp-wapuu-hero__eyebrow"><a href="https://aileaderswp.blog/">AI Leaders 2026 Finalist</a></p>
+			<p class="hp-wapuu-hero__eyebrow"><a href="https://wordpress.org/news/2026/06/ai-leaders-graduates/">AI Leaders 2026 Finalist</a></p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:heading {"level":1,"className":"hp-wapuu-hero__title"} -->
@@ -42,8 +42,8 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 				<p class="hp-chip is-status-merged"><a href="https://github.com/WordPress/ai/issues/529">core/ai #529</a> — fixed in 1.0.1</p>
 				<!-- /wp:paragraph -->
 
-				<!-- wp:paragraph {"className":"hp-chip is-status-pending"} -->
-				<p class="hp-chip is-status-pending"><a href="https://github.com/WordPress/agent-skills/pull/49">agent-skills PR #49</a> — open, unreviewed</p>
+				<!-- wp:paragraph {"className":"hp-chip is-status-merged"} -->
+				<p class="hp-chip is-status-merged"><a href="https://github.com/henryperkins/agent-skills">agent-skills fork</a> — +3 WP AI skills · maintained</p>
 				<!-- /wp:paragraph -->
 
 				<!-- wp:paragraph {"className":"hp-chip is-status-review"} -->

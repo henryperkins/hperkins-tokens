@@ -312,10 +312,10 @@
         {
           "slug": "display",
           "name": "Display — Cormorant Garamond",
-          "fontFamily": "'Cormorant Garamond', 'Hoefler Text', Georgia, serif",
+          "fontFamily": "'HPerkins Cormorant Garamond', 'Hoefler Text', Georgia, serif",
           "fontFace": [
             {
-              "fontFamily": "Cormorant Garamond",
+              "fontFamily": "HPerkins Cormorant Garamond",
               "fontWeight": "400 700",
               "fontStyle": "normal",
               "fontStretch": "normal",
@@ -325,7 +325,7 @@
               ]
             },
             {
-              "fontFamily": "Cormorant Garamond",
+              "fontFamily": "HPerkins Cormorant Garamond",
               "fontWeight": "400 500",
               "fontStyle": "italic",
               "fontStretch": "normal",
@@ -339,10 +339,10 @@
         {
           "slug": "label",
           "name": "Label — Marcellus",
-          "fontFamily": "'Marcellus', 'Optima', 'Palatino Linotype', serif",
+          "fontFamily": "'HPerkins Marcellus', 'Optima', 'Palatino Linotype', serif",
           "fontFace": [
             {
-              "fontFamily": "Marcellus",
+              "fontFamily": "HPerkins Marcellus",
               "fontWeight": "400",
               "fontStyle": "normal",
               "fontDisplay": "swap",
@@ -380,10 +380,10 @@
         {
           "slug": "mono",
           "name": "Mono — JetBrains Mono",
-          "fontFamily": "'JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace",
+          "fontFamily": "'HPerkins JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace",
           "fontFace": [
             {
-              "fontFamily": "JetBrains Mono",
+              "fontFamily": "HPerkins JetBrains Mono",
               "fontWeight": "400 500",
               "fontStyle": "normal",
               "fontDisplay": "swap",
