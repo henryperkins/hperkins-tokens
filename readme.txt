@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.44
+Stable tag: 0.3.45
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -279,6 +279,22 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.45 =
+* Typography: extend the self-hosted font isolation from 0.3.44 to the
+  display (Cormorant Garamond), label (Marcellus), and mono (JetBrains Mono)
+  families, so WordPress.com's same-named remote faces cannot join and win
+  selection over the local subsets — the hero display face included.
+* Performance: drop the decorative hero backdrop pseudo-element outright on
+  mobile (it already painted nothing) instead of only nulling its image.
+* Content: replace the stale "agent-skills PR #49" home-hero proof chip
+  (the PR was closed unmerged) with the maintained agent-skills fork, and
+  point the AI Leaders finalist eyebrow at the WordPress News story.
+* Tooling: harden the dependency-free verifiers — runWp targets the
+  configured install by construction, origin/site coherence is checked
+  before any database-backed probe, the release-version sync check moved to
+  the always-on verifier, and the subscribe runtime check seeds its option
+  the way the endpoint does so it passes on fresh local installs.
 
 = 0.3.44 =
 * Performance: keep the decorative council hero bitmap out of the mobile
