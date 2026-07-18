@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.43
+Version: 0.3.44
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -1698,6 +1698,9 @@ header.wp-block-template-part {
 	}
 
 	.hp-wapuu-hero-wrap::before {
+		/* Keep the decorative CSS bitmap out of the mobile LCP path. The separate
+		   ::after parchment and radial gradients preserve the hero atmosphere. */
+		background-image: none;
 		background-position: 50% 0;
 		background-size: auto 100%;
 		opacity: 0.42;

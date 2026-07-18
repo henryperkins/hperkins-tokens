@@ -355,10 +355,10 @@
         {
           "slug": "body",
           "name": "Body — EB Garamond",
-          "fontFamily": "'EB Garamond', 'Iowan Old Style', Georgia, serif",
+          "fontFamily": "'HPerkins EB Garamond', 'Iowan Old Style', Georgia, serif",
           "fontFace": [
             {
-              "fontFamily": "EB Garamond",
+              "fontFamily": "HPerkins EB Garamond",
               "fontWeight": "400 600",
               "fontStyle": "normal",
               "fontDisplay": "swap",
@@ -367,7 +367,7 @@
               ]
             },
             {
-              "fontFamily": "EB Garamond",
+              "fontFamily": "HPerkins EB Garamond",
               "fontWeight": "400",
               "fontStyle": "italic",
               "fontDisplay": "swap",

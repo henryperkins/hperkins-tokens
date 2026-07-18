@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.43
+Stable tag: 0.3.44
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -279,6 +279,12 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.44 =
+* Performance: keep the decorative council hero bitmap out of the mobile
+  critical path while preserving the gradient composition.
+* Typography: isolate the self-hosted EB Garamond family from WordPress.com
+  font declarations to avoid the larger remote face.
 
 = 0.3.43 =
 * Claim-accuracy pass over theme-owned copy (per the 2026-07-15 site claim

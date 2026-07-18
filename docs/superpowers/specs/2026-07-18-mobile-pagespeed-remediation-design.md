@@ -48,7 +48,7 @@ The body typography preset keeps its user-facing name and the EB Garamond assets
 The unique internal name prevents WordPress.com's generated `EB Garamond` declarations from joining the same CSS family. The body stack remains:
 
 ```text
-'HPerkins EB Garamond', 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif
+'HPerkins EB Garamond', 'Iowan Old Style', Georgia, serif
 ```
 
 ### Jetpack settings

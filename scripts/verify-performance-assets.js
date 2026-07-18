@@ -38,8 +38,24 @@ for ( const [ relativePath, maxBytes ] of Object.entries( modernArtworkBudgets )
 	assertFileSmallerThan( relativePath, maxBytes );
 }
 
+const styleCss = readFileSync( join( themeRoot, 'style.css' ), 'utf8' );
+assert(
+	/@media \(max-width: 781px\)[\s\S]*?\.hp-wapuu-hero-wrap::before\s*\{[^}]*background-image:\s*none;[^}]*\}/.test( styleCss ),
+	'Mobile hero CSS must keep the decorative backdrop image out of the critical path.'
+);
+
 const themeJson = JSON.parse( readFileSync( join( themeRoot, 'theme.json' ), 'utf8' ) );
 const fontFamilies = themeJson.settings.typography.fontFamilies;
+const bodyFontFamily = fontFamilies.find( ( family ) => family.slug === 'body' );
+assert( bodyFontFamily, 'theme.json must define the body font family.' );
+assert(
+	bodyFontFamily.fontFamily.startsWith( "'HPerkins EB Garamond'," ),
+	'Body typography must prefer the uniquely named self-hosted HPerkins EB Garamond family.'
+);
+assert(
+	bodyFontFamily.fontFace.every( ( fontFace ) => fontFace.fontFamily === 'HPerkins EB Garamond' ),
+	'Every body font face must use the unique HPerkins EB Garamond family name.'
+);
 for ( const family of fontFamilies ) {
 	if ( ! Array.isArray( family.fontFace ) ) {
 		continue;
@@ -61,15 +77,15 @@ assert(
 	heroPattern.includes( 'width="962"' ) && heroPattern.includes( 'height="1024"' ),
 	'Wapuu hero image needs intrinsic width and height attributes.'
 );
-// The hero is the LCP element: 0.3.33 deliberately made it eager after
-// loading="lazy" measurably delayed the largest contentful paint.
+// Keep the above-the-fold signature artwork eager. The decorative CSS backdrop
+// is disabled on mobile separately so it cannot compete in the LCP path.
 assert(
 	heroPattern.includes( 'fetchpriority="high"' ) && heroPattern.includes( 'decoding="async"' ),
-	'Wapuu hero image must stay the eager LCP element (fetchpriority="high" + decoding="async").'
+	'Wapuu hero image must stay eager (fetchpriority="high" + decoding="async").'
 );
 assert(
 	! heroPattern.includes( 'loading="lazy"' ),
-	'Wapuu hero image must not be lazy-loaded — it is the LCP element (see 0.3.33).'
+	'Wapuu hero image must not be lazy-loaded because it is above the fold.'
 );
 
 const frontPageSnapshot = readFileSync( join( SNAPSHOT_DIR, 'front-page.html' ), 'utf8' );
