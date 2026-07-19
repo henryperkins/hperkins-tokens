@@ -399,6 +399,10 @@ function buildExpression( opts ) {
 		for (const el of document.body.querySelectorAll('*')) {
 			const tag = el.tagName;
 			if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'TEMPLATE') continue;
+			// SVG <text>/<tspan> are measured by the dedicated getScreenCTM loop below
+			// (effective size after transforms, fill-based contrast); skip them here so
+			// the general px floor, color contrast, and family allowlist don't double-flag.
+			if (el.namespaceURI === 'http://www.w3.org/2000/svg') continue;
 			if (!hasDirectText(el) || !isVisible(el) || isVisuallyHidden(el)) continue;
 			const style = getComputedStyle(el);
 			const family = firstFamily(style);
@@ -562,6 +566,10 @@ async function inspectPage( cdp, pagePath, viewport, opts ) {
 		}, sessionId );
 
 		const loaded = cdp.once( 'Page.loadEventFired', sessionId, 30000 );
+		// If Page.navigate rejects (send timeout / CDP error), `await loaded` is
+		// never reached; swallow the orphaned rejection so its 30s timer can't fire
+		// unhandled and crash the process mid-run, defeating --report's keep-going.
+		loaded.catch( () => {} );
 		await cdp.send( 'Page.navigate', { url: new URL( pagePath, ORIGIN ).href }, sessionId );
 		await loaded;
 		await cdp.send( 'Runtime.evaluate', { expression: 'document.fonts && document.fonts.ready', awaitPromise: true }, sessionId );

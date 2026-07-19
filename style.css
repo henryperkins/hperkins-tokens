@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.46
+Version: 0.3.47
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -4458,10 +4458,10 @@ body {
 /* (2) Reading measure. The constrained column is 44rem (~77ch of EB
 	 Garamond at 19px); sustained prose reads best nearer 68ch. Applies to
 	 narrative flow content only — groups, figures, tables, and embeds keep
-	 the full column. max-inline-size composes with (never overrides) the
-	 layout's own max-width. */
-.hp-prose > :where(p, ul, ol, blockquote),
-.wp-block-post-content.is-layout-constrained > :where(p, ul, ol, blockquote) {
+	 the full column. Components that set their own measure (.hp-lead) and
+	 wide/full-aligned children are excluded so this never overrides them. */
+.hp-prose > :where(p, ul, ol, blockquote):not(.alignwide):not(.alignfull):not(.hp-lead),
+.wp-block-post-content.is-layout-constrained > :where(p, ul, ol, blockquote):not(.alignwide):not(.alignfull):not(.hp-lead) {
 	max-inline-size: var(--wp--custom--measure--prose);
 	margin-inline: auto;
 }

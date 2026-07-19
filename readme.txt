@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.46
+Stable tag: 0.3.47
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -153,7 +153,7 @@ unchanged.
 
 = Template overrides =
 
-The child theme owns eleven block templates (page-case-study is also registered
+The child theme owns thirteen block templates (page-case-study is also registered
 as a selectable "Case study" template in theme.json; the others map by the
 WordPress template hierarchy):
 
@@ -166,6 +166,13 @@ WordPress template hierarchy):
 * single.html — the essay reader: a twilight cover hero (title, standfirst, meta)
   over constrained prose, post tags, the subscribe block, and a "Continue
   reading" related-posts grid.
+* archive.html — category, tag, author, and date archives: a hero masthead with
+  a proper H1 (`wp:query-title`), then journal postcards for the matched posts
+  (query ID 13, inheriting the main query).
+* search.html — search results: the same masthead and postcard grid keyed to the
+  search query (query ID 14), plus an in-content search control.
+* 404.html — the "Page not found" surface: a hero H1, a short lead, and a search
+  control, styled through the shared archive-hero and content-search classes.
 * page-about.html — wraps the stored About page content in the narrow/wide About
   composition shell. The current live content is versioned at
   `content/page-snapshots/about.html`.
@@ -281,6 +288,18 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
 
+= 0.3.47 =
+* Typography: exclude components that set their own measure (.hp-lead) and
+  wide/full-aligned children from the 68ch prose measure, so the constrained
+  post-content rule no longer widens the case-study/demo lead from 46ch to 68ch.
+* Docs: correct the readme block-template count (thirteen) and document the new
+  archive.html / search.html / 404.html overrides; sharpen the 0.3.46 note on
+  the 404's role CSS (it rides shared classes, not an error404 body class).
+* Tooling: harden scripts/verify-typography.js — swallow the orphaned
+  Page.loadEventFired rejection so a navigate failure can't abort a --report
+  run, and skip SVG <text>/<tspan> in the general text pass (the dedicated
+  getScreenCTM loop already measures them with the right effective size).
+
 = 0.3.46 =
 * Typography: make the 2xl–5xl heading presets fluid in theme.json
   (clamp 24–36 / 32–48 / 40–64 / 48–88px), so every template and stored
@@ -311,8 +330,9 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 * Templates: add theme-owned archive.html, search.html, and 404.html with a
   proper H1 on each (query-title / "Page not found"), journal postcard
   results at 28px titles and 17px excerpts, a canonical search control, and
-  role CSS keyed to the archive/search/error404 body classes; restyle
-  Jetpack share/like headings as Marcellus labels.
+  role CSS keyed to the archive and search body classes (the 404 reuses the
+  shared archive-hero and content-search classes); restyle Jetpack share/like
+  headings as Marcellus labels.
 * Typography: lower the journal masthead's mobile slope to a 44px floor
   (~47px at 390px) and give the homepage hero's governance status note its
   own supporting-copy role (17px muted, no longer a second lead).
