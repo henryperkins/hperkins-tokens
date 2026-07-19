@@ -217,6 +217,11 @@
   font-size: var(--wp--preset--font-size--xs);
   color: var(--wp--custom--text--faint);
 }
+/* The standalone hint paragraph is reading copy (a full privacy sentence), so
+   it clears the 15px long-copy floor; the inline <span> helpers stay compact. */
+p.hp-contact-form__hint {
+  font-size: var(--wp--preset--font-size--sm);
+}
 .hp-contact-form__actions {
   display: flex;
   align-items: center;

@@ -240,6 +240,30 @@ async function verifyStaticContract() {
 				violations.push( `theme.json fontSizes ${ slug } must stay ${ pinned[ slug ] }; found ${ JSON.stringify( bySlug.get( slug ) ) }.` );
 			}
 		}
+
+		// Every self-hosted face declared in theme.json must exist on disk. This
+		// is the real guard against a missing font: the in-page
+		// document.fonts.check() returns true for a family with no matching face,
+		// and getComputedStyle reports the SPECIFIED family stack (not the used
+		// font), so a silent fallback is invisible to the runtime checks.
+		const fontFamilies = ( ( ( themeJson.settings || {} ).typography || {} ).fontFamilies ) || [];
+		for ( const family of fontFamilies ) {
+			for ( const face of family.fontFace || [] ) {
+				const sources = Array.isArray( face.src ) ? face.src : [ face.src ];
+				for ( const source of sources ) {
+					if ( typeof source !== 'string' || ! source.startsWith( 'file:' ) ) {
+						continue;
+					}
+					const relative = source.replace( /^file:\.?\/?/, '' );
+					const absolute = path.join( THEME_PATH, relative );
+					try {
+						await fs.access( absolute );
+					} catch ( error ) {
+						violations.push( `theme.json font "${ face.fontFamily || family.fontFamily }" src "${ source }" is missing on disk (${ absolute }).` );
+					}
+				}
+			}
+		}
 	}
 
 	let css = '';
@@ -297,6 +321,19 @@ function buildExpression( opts ) {
 			if (el.closest('[aria-hidden="true"]')) return false;
 			return true;
 		};
+		// WordPress .screen-reader-text (and most sr-only utilities) stay in the
+		// a11y tree but paint nowhere: clip-path: inset(50%), or a legacy clip
+		// rect collapsed onto a 1px box. They pass isVisible (real client rect,
+		// visibility:visible, not aria-hidden), so exclude them from the VISUAL
+		// checks below; size floors and contrast do not apply to text a sighted
+		// user never sees. Structural checks (h1, heading order) still count them.
+		const isVisuallyHidden = (el) => {
+			const s = getComputedStyle(el);
+			if (/inset\\(\\s*50%\\s*\\)/.test(s.clipPath || '')) return true;
+			const rect = el.getBoundingClientRect();
+			const clipped = (s.overflow === 'hidden' || s.clip !== 'auto') && (s.position === 'absolute' || s.position === 'fixed');
+			return rect.width <= 1 && rect.height <= 1 && clipped;
+		};
 		const firstFamily = (style) => (style.fontFamily.split(',')[0] || '').trim().replace(/^["']+|["']+$/g, '').toLowerCase();
 		const hasDirectText = (el) => {
 			for (const node of el.childNodes) {
@@ -336,16 +373,15 @@ function buildExpression( opts ) {
 		}
 		out.violations.headings = headingViolations;
 
-		// c. the four theme faces must actually be loaded.
-		// document.fonts.check() after fonts.ready is the reliable availability
-		// signal. Its known spec weakness (returns true for a NON-existent
-		// family) is covered by the family-allowlist check below: if an
-		// @font-face went missing, painted text falls back off the four theme
-		// families and is flagged there. The stronger-looking alternatives —
-		// fonts.load() / iterating document.fonts — are NOT usable here: Chromium
-		// populates document.fonts lazily with only the faces a given page has
-		// actually painted, so a real-but-unpainted family (e.g. mono on a page
-		// with no code) reports as missing, a per-page false positive.
+		// c. the four theme faces should report as loaded. Cheap sanity signal,
+		// not a guarantee: document.fonts.check() returns true for a family with
+		// NO matching face (nothing to load), and the allowlist below reads the
+		// SPECIFIED family stack rather than the used font, so neither can catch a
+		// face that silently 404ed. That gap is closed deterministically by the
+		// src-on-disk check in verifyStaticContract(). fonts.load()/iterating
+		// document.fonts stays unusable here: Chromium populates document.fonts
+		// lazily with only the faces a page actually painted, so a real-but-
+		// unpainted family (mono on a page with no code) reports a false miss.
 		const fontsLoadedViolations = [];
 		const faces = ['19px "HPerkins EB Garamond"', '19px "HPerkins Cormorant Garamond"', '16px "HPerkins Marcellus"', '13px "HPerkins JetBrains Mono"'];
 		for (const face of faces) {
@@ -363,7 +399,7 @@ function buildExpression( opts ) {
 		for (const el of document.body.querySelectorAll('*')) {
 			const tag = el.tagName;
 			if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'TEMPLATE') continue;
-			if (!hasDirectText(el) || !isVisible(el)) continue;
+			if (!hasDirectText(el) || !isVisible(el) || isVisuallyHidden(el)) continue;
 			const style = getComputedStyle(el);
 			const family = firstFamily(style);
 			const fontSize = Number.parseFloat(style.fontSize) || 0;
@@ -386,8 +422,13 @@ function buildExpression( opts ) {
 			if ((tag === 'P' || tag === 'LI') && readingFamily && el.textContent.replace(/\\s+/g, ' ').trim().length >= 140 && fontSize < 15) {
 				floorViolations.push('long copy ' + describe(el) + ' "' + truncate(el.textContent, 40) + '" is ' + fontSize + 'px; expected >= 15px');
 			}
-			if (family === 'hperkins marcellus' && fontWeight >= 600) {
-				marcellusViolations.push(describe(el) + ' "' + truncate(el.textContent, 40) + '" renders Marcellus at weight ' + fontWeight + ' (400-only face; synthetic bold banned)');
+			// Marcellus ships 400 only, so a computed weight >= 600 would smear a
+			// faux bold, UNLESS font-synthesis-weight:none suppresses it (the theme
+			// sets it on <body>, inherited here). getComputedStyle reports the
+			// cascaded weight regardless of synthesis, so gate on the real
+			// protection: only flag when a fake bold could still be painted.
+			if (family === 'hperkins marcellus' && fontWeight >= 600 && style.fontSynthesisWeight !== 'none') {
+				marcellusViolations.push(describe(el) + ' "' + truncate(el.textContent, 40) + '" renders Marcellus at weight ' + fontWeight + ' with font-synthesis-weight:' + style.fontSynthesisWeight + ' (400-only face; faux bold not suppressed)');
 			}
 		}
 		out.counts.textElements = textElements.length;

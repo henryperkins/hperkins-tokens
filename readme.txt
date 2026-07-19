@@ -296,7 +296,8 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   copy (About capability/impact/résumé bullets, work-entry descriptions,
   build-report takeaways, journal excerpts, work-index note), 15px for
   supporting notes (evidence meta and summaries, artifact-embed captions,
-  About stat labels), 13px for functional metadata (postcard/reader
+  About stat labels, the contact form's standalone privacy note), 13px for
+  functional metadata (postcard/reader
   topic-and-date lines, proof links, footer colophon), and 12px minimum for
   the build report's label register (artifact/takeaway/stat/section
   labels, up from 10–11.5px) with eased tracking on long uppercase labels.
