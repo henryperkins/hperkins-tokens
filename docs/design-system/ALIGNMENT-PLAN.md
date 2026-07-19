@@ -25,6 +25,16 @@
 > premise below is **false as of 0.3.44**, and the target version throughout is now **v0.3.45**.
 > Re-scope before executing: the mirror push must carry the current `theme.json`, and the
 > `readme.md` version edits below (v0.3.42) become v0.3.45.
+>
+> **Update (2026-07-19) — target is now v0.3.46.** The typography pass changed `theme.json`
+> again: the `2xl`–`5xl` presets became fluid `clamp()` values (mirrored in
+> `custom.type.hero/h1/h2/h3`), `custom.text.faint` darkened to the ink-500 value,
+> `styles.elements.h4` gained weight 600, and a `styles.elements.button` type role was added —
+> see the **2026-07-19** entry in [`INDEX.md`](./INDEX.md). The DS `tokens/typography.css`
+> still describes the fixed pixel scale, so the type-scale round-trip claim below is also
+> stale now; the same two execution options (byte-mirror + recorded delta, or reflect into DS
+> tokens) apply. `style.css`, `imladris-pages.css`, `patterns/wapuu-home-hero.php`, and the
+> new `templates/archive.html`/`search.html`/`404.html` are additional mirror-set changes.
 
 ---
 

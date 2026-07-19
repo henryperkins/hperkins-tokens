@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.45
+Version: 0.3.46
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -79,10 +79,10 @@ button,
 }
 
 /* === case-study lead ===
-	 One shared opening-paragraph treatment: large scale, muted ink, a calmer 1.45
-	 leading (the single non-body line-height, tokenized), and the artifact-terminus
-	 space beneath. Promoted out of four hand-styled copies so the hub and demo
-	 leads stop drifting from the rest. */
+	 One shared opening-paragraph treatment: large scale, muted ink, the relaxed
+	 1.7 reading leading (via --hp-leading-lead → leading.relaxed), and the
+	 artifact-terminus space beneath. Promoted out of four hand-styled copies so
+	 the hub and demo leads stop drifting from the rest. */
 .hp-lead {
 	max-width: var(--wp--custom--measure--narrow);
 	margin-bottom: var(--wp--preset--spacing--6);
@@ -309,7 +309,9 @@ button,
 
 .hp-work__desc {
 	margin: 0;
-	font-size: var(--wp--preset--font-size--sm);
+	/* base, not sm: entry descriptions are explanatory copy, which keeps the
+		 17px floor (2026-07 typography review). */
+	font-size: var(--wp--preset--font-size--base);
 	line-height: 1.55;
 	color: var(--hp-neutral-600);
 }
@@ -553,7 +555,9 @@ button,
 .hp-evidence-board__summary {
 	margin: var(--wp--preset--spacing--2) 0 0;
 	max-width: var(--wp--custom--measure--prose);
-	font-size: var(--wp--preset--font-size--xs);
+	/* sm, not xs: the summary is a full explanatory sentence, not a proof ID
+		 (2026-07 typography review). */
+	font-size: var(--wp--preset--font-size--sm);
 	line-height: 1.55;
 	color: var(--hp-neutral-600);
 }
@@ -630,7 +634,10 @@ button,
 
 .hp-evidence-row__meta {
 	margin: var(--hp-gap-sm) 0 0;
-	font-size: var(--wp--preset--font-size--xs);
+	/* sm, not xs: row meta carries explanatory sentences ("Link the diff,
+		 branch…"), and evidence explanations keep a 15px floor; bare proof IDs
+		 may stay at xs elsewhere (2026-07 typography review). */
+	font-size: var(--wp--preset--font-size--sm);
 	line-height: 1.5;
 	color: var(--hp-neutral-600);
 }
@@ -668,7 +675,9 @@ button,
 	margin: 0 0 var(--hp-gap-xs);
 	font-family: var(--wp--preset--font-family--mono);
 	font-size: var(--wp--preset--font-size--base);
-	font-weight: var(--hp-weight-strong);
+	/* medium, not bold: JetBrains Mono ships 400–500, so a 700 request
+		 synthesized a faux bold (2026-07 typography review). */
+	font-weight: var(--wp--custom--weight--medium);
 	line-height: 1.2;
 	color: var(--hp-neutral-900);
 }
@@ -1139,7 +1148,9 @@ header.wp-block-template-part {
 	font-family: var(--wp--preset--font-family--label);
 	font-size: var(--wp--preset--font-size--lg);
 	font-weight: var(--wp--custom--weight--regular);
-	line-height: 1;
+	/* 1.1, not 1: exactly-1 leading clips Marcellus ascenders at some zoom
+		 levels (2026-07 typography review). */
+	line-height: 1.1;
 	letter-spacing: var(--wp--custom--tracking--caps);
 	text-transform: uppercase;
 }
@@ -1174,14 +1185,17 @@ header.wp-block-template-part {
 	}
 }
 
+/* Primary navigation reads at sm (15px), not xs: 13px Marcellus was elegant
+	 but under-sized for the site's primary wayfinding (2026-07 typography
+	 review). The mobile drawer already sits at base (17px) below. */
 .hp-site-header .wp-block-navigation {
-	font-size: var(--wp--preset--font-size--xs);
+	font-size: var(--wp--preset--font-size--sm);
 	line-height: 1.3;
 }
 
 .hp-site-header .wp-block-navigation a {
 	font-family: var(--wp--preset--font-family--label);
-	font-size: var(--wp--preset--font-size--xs);
+	font-size: var(--wp--preset--font-size--sm);
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: var(--wp--custom--text--body);
@@ -1302,7 +1316,9 @@ header.wp-block-template-part {
 	line-height: 1.4;
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--gold-700);
+	/* Color comes from the re-skin layer (.hp-wapuu-hero__eyebrow, .hp-eyebrow
+		 → text.muted); the gold-700 that used to sit here was dead weight and
+		 under AA on parchment anyway (2026-07 typography review). */
 }
 
 /* Linked eyebrow (AI Leaders finalist showcase) keeps the lapidary-caps register:
@@ -1337,6 +1353,15 @@ header.wp-block-template-part {
 	font-size: var(--wp--preset--font-size--lg);
 	line-height: 1.7;
 	color: var(--wp--custom--text--body);
+}
+
+/* The governance status note under the lead is supporting copy, not a second
+	 lead: one step down in scale and one ink-step quieter, same narrow measure
+	 (2026-07 typography review). */
+.hp-wapuu-hero__note {
+	margin-top: var(--wp--preset--spacing--3);
+	font-size: var(--wp--preset--font-size--base);
+	color: var(--wp--custom--text--muted);
 }
 
 .hp-wapuu-hero__signals {
@@ -1627,8 +1652,10 @@ header.wp-block-template-part {
 		width: auto;
 		margin: var(--wp--preset--spacing--4) var(--wp--preset--spacing--4) 0;
 		padding: var(--wp--preset--spacing--3);
-		font-size: var(--wp--preset--font-size--xs);
-		letter-spacing: 0.12em;
+		/* sm, not xs: the drawer pill is the only mobile subscribe affordance
+			 (2026-07 typography review). */
+		font-size: var(--wp--preset--font-size--sm);
+		letter-spacing: 0.1em;
 		color: var(--wp--preset--color--parchment-50);
 		background: var(--wp--preset--color--green-700);
 		border: 0;
@@ -1880,6 +1907,9 @@ header.wp-block-template-part {
 	font-family: var(--hp-font-display);
 	font-size: var(--wp--preset--font-size--2-xl);
 	font-weight: var(--wp--custom--weight--semibold);
+	/* Display leading of its own — without this the 36px name inherited the
+		 body's 1.7 reading leading (2026-07 typography review). */
+	line-height: 1.15;
 	letter-spacing: -0.01em;
 	color: var(--wp--preset--color--parchment-50);
 }
@@ -1891,6 +1921,7 @@ header.wp-block-template-part {
 	margin: var(--wp--preset--spacing--4) 0 0;
 	font-family: var(--hp-font-label);
 	font-size: var(--wp--preset--font-size--xs);
+	line-height: 1.5;
 	letter-spacing: var(--wp--custom--tracking--wide);
 	text-transform: uppercase;
 	color: var(--wp--preset--color--parchment-300);
@@ -1948,7 +1979,9 @@ header.wp-block-template-part {
 .hp-footer__nav {
 	margin: var(--wp--preset--spacing--4) 0 0;
 	font-family: var(--hp-font-mono);
-	font-size: var(--wp--preset--font-size--xs);
+	/* sm, not xs: these are functional links (14px minimum per the 2026-07
+		 typography review). */
+	font-size: var(--wp--preset--font-size--sm);
 	color: var(--wp--preset--color--parchment-300);
 }
 .hp-footer__nav a {
@@ -1966,7 +1999,10 @@ header.wp-block-template-part {
 	border-top: 1px solid
 		color-mix(in srgb, var(--wp--preset--color--parchment-50) 14%, transparent);
 	font-family: var(--hp-font-mono);
-	font-size: var(--wp--preset--font-size--2-xs);
+	/* xs/1.55, not 2xs: the colophon carries real links (build report,
+		 privacy) — functional text keeps the 13px floor. */
+	font-size: var(--wp--preset--font-size--xs);
+	line-height: 1.55;
 	color: var(--wp--preset--color--parchment-300);
 }
 .hp-footer__colophon a {
@@ -2201,10 +2237,16 @@ samp {
 
 /* === Buttons — the Imladris control vocabulary ===
 	 Marcellus label, evergreen primary, gold accent. Variants are core block
-	 styles registered in functions.php (secondary / ghost / accent / link). */
+	 styles registered in functions.php (secondary / ghost / accent / link).
+	 The size is explicit (base 17px / 1.2), not inherited: buttons rendered
+	 outside the 19px reading column (search, 404, plugin UI) were falling to
+	 13px when the primitive had no size of its own (2026-07 typography
+	 review). theme.json styles.elements.button mirrors the same role. */
 .wp-block-button__link {
 	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--base);
 	font-weight: var(--wp--custom--weight--regular);
+	line-height: 1.2;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	border-radius: var(--hp-radius-card);
@@ -2255,6 +2297,16 @@ samp {
 	text-transform: none;
 	letter-spacing: 0;
 	font-family: var(--hp-font-body);
+}
+
+/* Buttons that live in running content are real touch targets (44px min);
+	 compact header controls keep their own sizing above. */
+.wp-block-post-content .wp-block-button__link,
+.hp-subscribe__form button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-block-size: var(--hp-touch-min);
 }
 
 /* === Prominent actions ===
@@ -2744,6 +2796,11 @@ samp {
 	background: var(--wp--custom--accent--default);
 	color: var(--wp--custom--text--strong);
 	font-family: var(--hp-font-label);
+	/* Explicit control size: <button> does not inherit the reading size, so
+		 without this the submit fell to the UA default (2026-07 typography
+		 review). */
+	font-size: var(--wp--preset--font-size--base);
+	line-height: 1.2;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	cursor: pointer;
@@ -2788,6 +2845,12 @@ samp {
 
 .hp-ring-card {
 	--hp-ring-tint: var(--wp--preset--color--river-400);
+	/* Tint splits in two: --hp-ring-tint keeps coloring rules, dots, and
+		 decoration; --hp-ring-tint-text is the lighter step of the same family
+		 for RUNNING TEXT on the dark card (river-400 on twilight-900 read
+		 ~4.2:1 at 12px caps — below AA; river-200 clears it comfortably).
+		 2026-07 typography review. */
+	--hp-ring-tint-text: var(--wp--preset--color--river-200);
 	--hp-ring-base: var(--wp--preset--color--twilight-900);
 	--hp-ring-scrim: var(--wp--custom--scrim--ring);
 	/* "Way less opaque": the Rivendell-era backdrop is faded back to a faint
@@ -2810,12 +2873,14 @@ samp {
 
 .hp-ring-card.is-fire {
 	--hp-ring-tint: var(--wp--preset--color--gold-400);
+	--hp-ring-tint-text: var(--wp--preset--color--gold-200);
 	--hp-ring-base: var(--wp--preset--color--rust);
 	--hp-ring-scrim: var(--wp--custom--scrim--fire);
 }
 
 .hp-ring-card.is-water {
 	--hp-ring-tint: var(--wp--preset--color--green-200);
+	--hp-ring-tint-text: var(--wp--preset--color--green-200);
 	--hp-ring-base: var(--wp--preset--color--green-700);
 	--hp-ring-scrim: var(--wp--custom--scrim--water);
 }
@@ -2900,13 +2965,15 @@ samp {
 	font-size: var(--wp--preset--font-size--2-xs);
 	letter-spacing: var(--wp--custom--tracking--caps);
 	text-transform: uppercase;
-	color: var(--hp-ring-tint);
+	color: var(--hp-ring-tint-text);
 	text-shadow: 0 1px 8px
 		color-mix(in srgb, var(--hp-ring-scrim) 86%, transparent);
 }
 
 .hp-ring-card__action {
 	margin: 0;
+	/* The 48px action word stays on the decoration tint: at display scale the
+		 3:1 large-text threshold applies and river-400 on twilight clears it. */
 	color: var(--hp-ring-tint);
 	font-family: var(--hp-font-display);
 	font-size: var(--wp--preset--font-size--3-xl);
@@ -2932,7 +2999,7 @@ samp {
 }
 
 .hp-ring-card__virtues span {
-	color: var(--hp-ring-tint);
+	color: var(--hp-ring-tint-text);
 }
 
 .hp-ring-card__description {
@@ -3309,7 +3376,9 @@ samp {
 
 .hp-about-template .hp-capability__text {
 	margin: 0 0 var(--wp--preset--spacing--3);
-	font-size: var(--wp--preset--font-size--sm);
+	/* base, not sm: capability copy is substantial explanatory text — 17px
+		 floor (2026-07 typography review). */
+	font-size: var(--wp--preset--font-size--base);
 	line-height: var(--wp--custom--leading--relaxed);
 	color: var(--wp--custom--text--muted);
 }
@@ -3467,7 +3536,9 @@ samp {
 .hp-about-template .hp-project__impact {
 	flex: 1;
 	margin: var(--wp--preset--spacing--3) 0 var(--wp--preset--spacing--4);
-	font-size: var(--wp--preset--font-size--sm);
+	/* base, not sm: project impact statements are explanatory copy — 17px
+		 floor (2026-07 typography review). */
+	font-size: var(--wp--preset--font-size--base);
 	line-height: var(--wp--custom--leading--relaxed);
 	color: var(--wp--custom--text--muted);
 }
@@ -3580,7 +3651,9 @@ samp {
 .hp-about-template .hp-about-impact .hp-signal__label {
 	margin-top: 6px;
 	font-family: var(--hp-font-body);
-	font-size: var(--wp--preset--font-size--xs);
+	/* sm, not xs: these labels describe what each stat means — supporting
+		 copy, not an identifier (2026-07 typography review). */
+	font-size: var(--wp--preset--font-size--sm);
 	font-weight: var(--wp--custom--weight--regular);
 	letter-spacing: var(--wp--custom--tracking--normal);
 	line-height: var(--wp--custom--leading--normal);
@@ -3751,7 +3824,9 @@ samp {
 	grid-template-columns: auto 1fr;
 	gap: var(--wp--preset--spacing--3);
 	margin: 0;
-	font-size: var(--wp--preset--font-size--sm);
+	/* base, not sm: résumé bullets are the page's primary evidence copy —
+		 17px floor (2026-07 typography review). */
+	font-size: var(--wp--preset--font-size--base);
 	line-height: var(--wp--custom--leading--relaxed);
 	color: var(--wp--custom--text--muted);
 }
@@ -3770,7 +3845,9 @@ samp {
 	padding-top: var(--wp--preset--spacing--3);
 	border-top: 1px solid var(--wp--custom--border--hair);
 	font-family: var(--hp-font-mono);
-	font-size: var(--wp--preset--font-size--2-xs);
+	/* xs, not 2xs: these are functional proof links — 13px floor (2026-07
+		 typography review). */
+	font-size: var(--wp--preset--font-size--xs);
 	line-height: 1.6;
 	color: var(--wp--custom--text--faint);
 }
@@ -3839,8 +3916,11 @@ samp {
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--wp--preset--spacing--2);
-	color: var(--hp-ring-tint);
-	font-weight: var(--wp--custom--weight--semibold, 600);
+	color: var(--hp-ring-tint-text);
+	/* Regular, not semibold: Marcellus ships weight 400 only, so a 600
+		 request here synthesized a faux bold (2026-07 typography review).
+		 Emphasis comes from the tint color and the arrow glyph instead. */
+	font-weight: var(--wp--custom--weight--regular, 400);
 	text-decoration: none;
 	transition: color 140ms var(--wp--custom--ease--calm, ease);
 }
@@ -4043,8 +4123,10 @@ samp {
 .hp-site-actions .hp-site-subscribe .wp-block-button__link {
 	padding: 0.6rem 1.1rem;
 	font-family: var(--wp--preset--font-family--label);
-	font-size: var(--wp--preset--font-size--xs);
-	letter-spacing: 0.12em;
+	/* sm, not xs: the bar Subscribe is a primary action, sized with the nav
+		 (2026-07 typography review). */
+	font-size: var(--wp--preset--font-size--sm);
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--parchment-50);
 	background: var(--wp--preset--color--green-700);
@@ -4355,4 +4437,136 @@ samp {
 	font-family: var(--hp-font-mono);
 	font-size: var(--wp--preset--font-size--2-xs);
 	color: var(--wp--custom--text--faint);
+}
+
+/* =====================================================================
+   GLOBAL TYPOGRAPHY PASS (2026-07 typography review) — additive only.
+   The four systemic corrections the review asked to make role-based
+   rather than page-based: (1) fluid headings ship from theme.json's
+   2xl–5xl presets, so nothing to do here; (2) the 68ch prose measure;
+   (3) explicit roles for plugin UI (Jetpack share/like headings);
+   (4) role styles for the inherited archive/search/404 surfaces.
+   ===================================================================== */
+
+/* No synthetic weights anywhere: Marcellus ships 400 only, JetBrains Mono
+	 tops out at 500, EB Garamond at 600. A heavier request now renders the
+	 heaviest real face instead of a smeared faux bold. */
+body {
+	font-synthesis-weight: none;
+}
+
+/* (2) Reading measure. The constrained column is 44rem (~77ch of EB
+	 Garamond at 19px); sustained prose reads best nearer 68ch. Applies to
+	 narrative flow content only — groups, figures, tables, and embeds keep
+	 the full column. max-inline-size composes with (never overrides) the
+	 layout's own max-width. */
+.hp-prose > :where(p, ul, ol, blockquote),
+.wp-block-post-content.is-layout-constrained > :where(p, ul, ol, blockquote) {
+	max-inline-size: var(--wp--custom--measure--prose);
+	margin-inline: auto;
+}
+
+/* (3) Jetpack sharing/like headings are utility labels, not content
+	 sections: Marcellus lapidary caps at label scale, not 12px bold
+	 Cormorant H3s. */
+.sharedaddy .sd-title,
+.jp-relatedposts .jp-relatedposts-headline {
+	margin-bottom: var(--wp--preset--spacing--2);
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--xs);
+	font-weight: var(--wp--custom--weight--regular);
+	line-height: 1.4;
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+	color: var(--wp--custom--text--muted);
+}
+.sharedaddy .sd-title::before,
+.jp-relatedposts .jp-relatedposts-headline::before {
+	display: none;
+}
+
+/* (4) Inherited archive / search / 404 surfaces — role styles keyed to
+	 body classes so they hold for both the child templates in templates/
+	 and any DB-customised variant that keeps core block markup. Result
+	 titles read at card scale, excerpts at the 17px supporting floor. */
+body.archive .wp-block-query .wp-block-post-title,
+body.search .wp-block-query .wp-block-post-title {
+	font-size: var(--wp--preset--font-size--xl);
+	line-height: 1.2;
+	letter-spacing: -0.01em;
+}
+
+body.archive .wp-block-post-excerpt__excerpt,
+body.archive .wp-block-post-excerpt__more-text,
+body.search .wp-block-post-excerpt__excerpt,
+body.search .wp-block-post-excerpt__more-text {
+	font-size: var(--wp--preset--font-size--base);
+	line-height: var(--wp--custom--leading--relaxed);
+}
+
+body.archive .wp-block-post-date,
+body.search .wp-block-post-date {
+	font-family: var(--hp-font-mono);
+	font-size: var(--wp--preset--font-size--xs);
+	color: var(--wp--custom--text--muted);
+}
+
+/* The archive/search/404 page titles sit a step below a page H1 — these are
+	 utility surfaces, not editorial heroes (fluid 32–48px via the 3xl
+	 preset). */
+.hp-archive-hero__title {
+	margin: 0;
+	font-family: var(--hp-font-display);
+	font-size: var(--wp--preset--font-size--3-xl);
+	font-weight: var(--wp--custom--weight--medium);
+	line-height: var(--wp--custom--leading--snug);
+	letter-spacing: var(--wp--custom--tracking--tight);
+	overflow-wrap: break-word;
+}
+
+/* In-content search (search results hero + 404): reading-size input, the
+	 canonical Marcellus control on the button. */
+.hp-content-search .wp-block-search__input {
+	padding: 0.6rem 0.9rem;
+	font-family: var(--hp-font-body);
+	font-size: var(--wp--preset--font-size--base);
+	color: var(--wp--custom--text--body);
+	background: var(--wp--custom--surface--raised);
+	border: 1.5px solid var(--wp--preset--color--ink-400);
+	border-radius: var(--hp-radius-register);
+}
+.hp-content-search .wp-block-search__button {
+	min-block-size: var(--hp-touch-min);
+	padding: 0.6rem 1.2rem;
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--base);
+	line-height: 1.2;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--wp--custom--text--inverse);
+	background: var(--wp--custom--brand--default);
+	border: 0;
+	border-radius: var(--hp-radius-register);
+	cursor: pointer;
+}
+.hp-content-search .wp-block-search__button:hover {
+	background: var(--wp--custom--brand--hover);
+}
+
+/* Jetpack instant-search overlay: keep the results legible if/where the
+	 overlay renders (low-specificity on purpose — harmless when absent). */
+:where(.jetpack-instant-search) .jetpack-instant-search__search-result-title {
+	font-family: var(--hp-font-display);
+	font-size: var(--wp--preset--font-size--xl);
+	line-height: 1.2;
+}
+:where(.jetpack-instant-search) .jetpack-instant-search__search-result-expanded__content {
+	font-size: var(--wp--preset--font-size--base);
+}
+:where(.jetpack-instant-search) .jetpack-instant-search__search-filter-header,
+:where(.jetpack-instant-search) .jetpack-instant-search__search-results-count {
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: var(--wp--custom--tracking--wide);
+	text-transform: uppercase;
 }

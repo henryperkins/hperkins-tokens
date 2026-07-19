@@ -28,8 +28,8 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 			<p class="hp-wapuu-hero__text">I build WordPress AI tooling where the governance is part of the architecture, not a promise in the readme. Scope, build, deploy, explain — and link the proof next to the work.</p>
 			<!-- /wp:paragraph -->
 
-			<!-- wp:paragraph {"className":"hp-wapuu-hero__text"} -->
-			<p class="hp-wapuu-hero__text">Flavor Agent-mediated changes are reviewable and attributable, with drift-checked undo for supported operations.</p>
+			<!-- wp:paragraph {"className":"hp-wapuu-hero__text hp-wapuu-hero__note"} -->
+			<p class="hp-wapuu-hero__text hp-wapuu-hero__note">Flavor Agent-mediated changes are reviewable and attributable, with drift-checked undo for supported operations.</p>
 			<!-- /wp:paragraph -->
 
 			<!-- wp:group {"className":"hp-proof-bar hp-wapuu-hero__signals","layout":{"type":"flex","flexWrap":"wrap"}} -->
