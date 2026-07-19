@@ -65,6 +65,12 @@ async function waitForDevToolsUrl( chrome ) {
 	let buffer = '';
 	return new Promise( ( resolve, reject ) => {
 		const timer = setTimeout( () => reject( new Error( 'Timed out waiting for Chrome DevTools URL.' ) ), 10000 );
+		// A failed spawn (missing/incorrect CHROME_BIN) emits 'error'; without a
+		// listener that becomes an uncaught exception instead of a clean reject.
+		chrome.on( 'error', ( error ) => {
+			clearTimeout( timer );
+			reject( new Error( `Chrome failed to launch (${ CHROME }): ${ error.message }` ) );
+		} );
 		chrome.stderr.on( 'data', ( chunk ) => {
 			buffer += chunk.toString();
 			const match = buffer.match( /(ws:\/\/127\.0\.0\.1:\d+\/devtools\/browser\/[^\s]+)/ );
@@ -81,6 +87,12 @@ async function waitForDevToolsUrl( chrome ) {
 }
 
 function createCdpClient( wsUrl ) {
+	// WebSocket is a Node global from v21+ (unflagged in v22 LTS), matching the
+	// other dependency-free verifiers. Fail with a clear message on older Node
+	// rather than a bare "WebSocket is not defined".
+	if ( typeof WebSocket === 'undefined' ) {
+		throw new Error( 'Global WebSocket is unavailable — this verifier needs Node.js v22+ (or v21 with --experimental-websocket).' );
+	}
 	const ws = new WebSocket( wsUrl );
 	let nextId = 1;
 	const pending = new Map();
@@ -230,12 +242,19 @@ async function verifyStaticContract() {
 		}
 	}
 
-	const css = await fs.readFile( path.join( THEME_PATH, 'style.css' ), 'utf8' );
-	if ( ! css.includes( '--wp--custom--measure--prose' ) ) {
-		violations.push( 'style.css must reference --wp--custom--measure--prose (the 68ch prose measure).' );
+	let css = '';
+	try {
+		css = await fs.readFile( path.join( THEME_PATH, 'style.css' ), 'utf8' );
+	} catch ( error ) {
+		violations.push( `style.css could not be read: ${ error.message }` );
 	}
-	if ( ! /\.hp-site-header \.wp-block-navigation\s*\{[^}]*var\(--wp--preset--font-size--sm\)/.test( css ) ) {
-		violations.push( 'style.css desktop nav rule .hp-site-header .wp-block-navigation must set var(--wp--preset--font-size--sm).' );
+	if ( css ) {
+		if ( ! css.includes( '--wp--custom--measure--prose' ) ) {
+			violations.push( 'style.css must reference --wp--custom--measure--prose (the 68ch prose measure).' );
+		}
+		if ( ! /\.hp-site-header \.wp-block-navigation\s*\{[^}]*var\(--wp--preset--font-size--sm\)/.test( css ) ) {
+			violations.push( 'style.css desktop nav rule .hp-site-header .wp-block-navigation must set var(--wp--preset--font-size--sm).' );
+		}
 	}
 
 	return violations;
@@ -318,6 +337,15 @@ function buildExpression( opts ) {
 		out.violations.headings = headingViolations;
 
 		// c. the four theme faces must actually be loaded.
+		// document.fonts.check() after fonts.ready is the reliable availability
+		// signal. Its known spec weakness (returns true for a NON-existent
+		// family) is covered by the family-allowlist check below: if an
+		// @font-face went missing, painted text falls back off the four theme
+		// families and is flagged there. The stronger-looking alternatives —
+		// fonts.load() / iterating document.fonts — are NOT usable here: Chromium
+		// populates document.fonts lazily with only the faces a given page has
+		// actually painted, so a real-but-unpainted family (e.g. mono on a page
+		// with no code) reports as missing, a per-page false positive.
 		const fontsLoadedViolations = [];
 		const faces = ['19px "HPerkins EB Garamond"', '19px "HPerkins Cormorant Garamond"', '16px "HPerkins Marcellus"', '13px "HPerkins JetBrains Mono"'];
 		for (const face of faces) {
@@ -350,7 +378,12 @@ function buildExpression( opts ) {
 			if (fontSize < 12 && !ariaHiddenNearby(el)) {
 				floorViolations.push(describe(el) + ' "' + truncate(el.textContent, 30) + '" is ' + fontSize + 'px; expected >= 12px');
 			}
-			if ((tag === 'P' || tag === 'LI') && el.textContent.replace(/\\s+/g, ' ').trim().length >= 140 && fontSize < 15) {
+			// The 15px long-copy floor is for READING text (body/display). The
+			// mono and label families are the metadata/technical register — proof
+			// IDs, datelines, colophons — which the review keeps at 12–14px; they
+			// stay subject only to the general 12px floor above.
+			const readingFamily = family !== 'hperkins jetbrains mono' && family !== 'hperkins marcellus';
+			if ((tag === 'P' || tag === 'LI') && readingFamily && el.textContent.replace(/\\s+/g, ' ').trim().length >= 140 && fontSize < 15) {
 				floorViolations.push('long copy ' + describe(el) + ' "' + truncate(el.textContent, 40) + '" is ' + fontSize + 'px; expected >= 15px');
 			}
 			if (family === 'hperkins marcellus' && fontWeight >= 600) {
@@ -362,10 +395,14 @@ function buildExpression( opts ) {
 		out.violations.floor = floorViolations;
 		out.violations.marcellus = marcellusViolations;
 
-		// g. prose measure (desktop viewport only).
+		// g. prose measure (desktop viewport only). Scoped to DIRECT flow
+		// children of the prose/post-content column — the same elements the
+		// style.css measure rule constrains. Deeply-nested component paragraphs
+		// (evidence rows, artifact strips) have their own layouts and are not
+		// reading prose, so they are intentionally out of scope here.
 		const proseViolations = [];
 		if (OPTS.proseMeasure) {
-			for (const p of document.querySelectorAll('.hp-prose p, .wp-block-post-content p')) {
+			for (const p of document.querySelectorAll('.hp-prose > p, .wp-block-post-content > p')) {
 				if (!isVisible(p)) continue;
 				if (p.textContent.replace(/\\s+/g, ' ').trim().length < 140) continue;
 				const style = getComputedStyle(p);
@@ -399,7 +436,10 @@ function buildExpression( opts ) {
 			let scale = 1;
 			try {
 				const m = el.getScreenCTM();
-				scale = m ? Math.hypot(m.a, m.b) : 1;
+				// Font size is a vertical measure, so scale by the transformed
+				// y-axis vector (m.c, m.d) — the x-axis (m.a, m.b) would miss a
+				// non-uniform scale(1, .5) that squashes text height.
+				scale = m ? Math.hypot(m.c, m.d) : 1;
 			} catch (error) { scale = 1; }
 			const effective = (Number.parseFloat(getComputedStyle(el).fontSize) || 0) * scale;
 			if (effective > 0 && effective < 12) {
@@ -425,7 +465,6 @@ function buildExpression( opts ) {
 			return 0.2126 * channel(color.r) + 0.7152 * channel(color.g) + 0.0722 * channel(color.b);
 		};
 		for (const item of textElements) {
-			if (item.fontSize >= 24) continue;
 			if (item.el.closest('.wp-block-cover')) continue;
 			const fg = parseColor(item.style.color);
 			if (!fg || fg.a < 1) continue;
@@ -447,7 +486,11 @@ function buildExpression( opts ) {
 			const lighter = Math.max(luminance(fg), luminance(bg));
 			const darker = Math.min(luminance(fg), luminance(bg));
 			const ratio = (lighter + 0.05) / (darker + 0.05);
-			const needed = (item.fontWeight < 600 && item.fontSize < 18.66) ? 4.5 : 3;
+			// WCAG large text (3:1) = >=24px, or >=18.66px when bold (>=700);
+			// everything else is normal text (4.5:1). Large text is still
+			// checked — it just gets the relaxed threshold, never skipped.
+			const isLargeText = item.fontSize >= 24 || (item.fontSize >= 18.66 && item.fontWeight >= 700);
+			const needed = isLargeText ? 3 : 4.5;
 			if (ratio < needed && contrastViolations.length < 10) {
 				contrastViolations.push(describe(item.el) + ' "' + truncate(item.el.textContent, 30) + '" ' + item.style.color +
 					' vs rgb(' + bg.r + ', ' + bg.g + ', ' + bg.b + ') = ' + (Math.round(ratio * 100) / 100) + ' (needs ' + needed + ')');
@@ -524,12 +567,27 @@ async function main() {
 	await withChrome( async ( cdp ) => {
 		for ( const pagePath of PAGES ) {
 			for ( const viewport of FULL_VIEWPORTS ) {
-				const result = await inspectPage( cdp, pagePath, viewport, {
-					fullBattery: true,
-					proseMeasure: viewport.width === 1440,
-				} );
+				let result;
+				try {
+					result = await inspectPage( cdp, pagePath, viewport, {
+						fullBattery: true,
+						proseMeasure: viewport.width === 1440,
+					} );
+				} catch ( error ) {
+					// One unreachable page (draft, transient local-server hiccup)
+					// records a violation and lets the rest of the audit finish —
+					// essential in --report mode.
+					handleViolations( `${ pagePath } @${ viewport.width }px`, [ `failed to inspect page: ${ error.message }` ] );
+					continue;
+				}
 				if ( pagePath === PROBE_404 && viewport === FULL_VIEWPORTS[0] && ! result.is404 ) {
-					console.log( `warning: ${ pagePath } did not present as a 404 (title/body class); typography battery still applies.` );
+					// A hard violation, not a warning: if the probe path doesn't
+					// resolve to the 404 template (WordPress adds the error404 body
+					// class on is_404()), 404.html is going unverified.
+					handleViolations(
+						`${ pagePath } @${ viewport.width }px 404 identity`,
+						[ 'probe did not present as a 404 via title or body class' ]
+					);
 				}
 				for ( const [ key, name ] of BATTERY_ORDER ) {
 					handleViolations( `${ pagePath } @${ viewport.width }px ${ name }`, result.violations[ key ] || [] );
@@ -539,7 +597,13 @@ async function main() {
 				);
 			}
 			for ( const viewport of OVERFLOW_VIEWPORTS ) {
-				const result = await inspectPage( cdp, pagePath, viewport, { fullBattery: false } );
+				let result;
+				try {
+					result = await inspectPage( cdp, pagePath, viewport, { fullBattery: false } );
+				} catch ( error ) {
+					handleViolations( `${ pagePath } @${ viewport.width }px overflow`, [ `failed to inspect page: ${ error.message }` ] );
+					continue;
+				}
 				handleViolations( `${ pagePath } @${ viewport.width }px overflow`, result.violations.overflow );
 				console.log( `checked ${ pagePath } at ${ viewport.width }px: overflow only, scrollWidth=${ result.scrollWidth }` );
 			}

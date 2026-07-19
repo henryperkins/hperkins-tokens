@@ -4514,7 +4514,13 @@ body.search .wp-block-post-date {
 /* The archive/search/404 page titles sit a step below a page H1 — these are
 	 utility surfaces, not editorial heroes (fluid 32–48px via the 3xl
 	 preset). */
-.hp-archive-hero__title {
+/* The `.hp-page-hero .` prefix is deliberate: the archive/search/404 titles sit
+	 inside .hp-page-hero, whose imladris-pages.css rule `.hp-page-hero h1`
+	 (specificity 0,1,1, and it loads after this sheet) would otherwise win and
+	 render these utility titles at the full 36–64px hero clamp. Two classes
+	 (0,2,0) beat it so the intended 32–48px 3xl role applies. */
+.hp-archive-hero__title,
+.hp-page-hero .hp-archive-hero__title {
 	margin: 0;
 	font-family: var(--hp-font-display);
 	font-size: var(--wp--preset--font-size--3-xl);
