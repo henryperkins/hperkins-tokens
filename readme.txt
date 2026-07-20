@@ -299,6 +299,11 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   Page.loadEventFired rejection so a navigate failure can't abort a --report
   run, and skip SVG <text>/<tspan> in the general text pass (the dedicated
   getScreenCTM loop already measures them with the right effective size).
+* Accessibility: add !important to the AI Enablement dateline override so it
+  actually applies — WordPress emits the .has-ink-400-color preset class with
+  !important, so the plain 0.3.46 rule silently no-oped and the dateline stayed
+  at ink-400 (~3.9:1); it now renders at muted ink until the stored body is
+  re-authored.
 
 = 0.3.46 =
 * Typography: make the 2xl–5xl heading presets fluid in theme.json

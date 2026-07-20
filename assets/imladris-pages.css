@@ -79,9 +79,12 @@
    body carries has-ink-400-color, which reads ~3.9:1 on parchment — below AA
    for 13px mono. Re-point it at the muted ink until the body itself is
    re-authored (2026-07 typography review; DB-side fix tracked in
-   docs/typography-followups.md). */
+   docs/typography-followups.md). !important is required: WordPress emits the
+   preset utility class .has-ink-400-color with !important, so a plain
+   declaration here — however specific — loses the cascade and the override
+   silently no-ops. */
 .hp-aie-template .hp-page-hero .has-ink-400-color {
-  color: var(--wp--custom--text--muted);
+  color: var(--wp--custom--text--muted) !important;
 }
 
 /* Ring section marker — a tinted dot + eyebrow at the head of Expose/Govern/Attest. */
