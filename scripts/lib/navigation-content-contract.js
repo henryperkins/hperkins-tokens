@@ -22,7 +22,25 @@ const EXPECTED_COUNCIL_SHAPE = [
 function normalizeNavigationContent( value, homeUrl ) {
 	const normalized = String( value ).replace( /\r\n/g, '\n' ).trimEnd();
 	const origin = new URL( homeUrl ).origin;
-	return normalized.split( origin ).join( '' );
+	return normalized.replace( /<!--\s+wp:[\s\S]*?-->/g, ( blockComment ) =>
+		blockComment.replace(
+			/("url"\s*:\s*)("(?:\\.|[^"\\])*")/g,
+			( match, prefix, encodedValue ) => {
+				let url;
+				try {
+					url = new URL( JSON.parse( encodedValue ) );
+				} catch {
+					return match;
+				}
+
+				if ( url.origin !== origin ) {
+					return match;
+				}
+
+				return prefix + JSON.stringify( url.pathname + url.search + url.hash );
+			}
+		)
+	);
 }
 
 module.exports = {

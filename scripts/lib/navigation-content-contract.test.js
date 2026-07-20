@@ -17,16 +17,40 @@ test( 'navigation contract is pinned to post 237', () => {
 	);
 } );
 
-test( 'normalization removes only the selected home origin', () => {
+test( 'normalization makes an exact selected home origin root-relative', () => {
 	const source = [
-		'<!-- wp:navigation-link {"label":"Work","url":"http://localhost:8882/work/"} /-->',
+		'<!-- wp:navigation-link {"label":"Work","url":"https://hperkins.blog/work/"} /-->',
 		'<!-- wp:navigation-link {"label":"GitHub","url":"https://github.com/henryperkins"} /-->',
 	].join( "\r\n" );
 	assert.equal(
-		normalizeNavigationContent( source, 'http://localhost:8882' ),
+		normalizeNavigationContent( source, 'https://hperkins.blog' ),
 		[
 			'<!-- wp:navigation-link {"label":"Work","url":"/work/"} /-->',
 			'<!-- wp:navigation-link {"label":"GitHub","url":"https://github.com/henryperkins"} /-->',
 		].join( "\n" )
+	);
+} );
+
+test( 'normalization preserves a lookalike external origin byte-for-byte', () => {
+	const source = '<!-- wp:navigation-link {"label":"External","url":"https://hperkins.blog.example/path"} /-->';
+	assert.equal(
+		normalizeNavigationContent( source, 'https://hperkins.blog' ),
+		source
+	);
+} );
+
+test( 'normalization preserves selected-origin bytes in an external query value', () => {
+	const source = '<!-- wp:navigation-link {"label":"External","url":"https://example.com/redirect?next=https://hperkins.blog/work/"} /-->';
+	assert.equal(
+		normalizeNavigationContent( source, 'https://hperkins.blog' ),
+		source
+	);
+} );
+
+test( 'normalization preserves selected-origin text outside URL fields', () => {
+	const source = '<!-- wp:paragraph --><p>See https://hperkins.blog for details.</p><!-- /wp:paragraph -->';
+	assert.equal(
+		normalizeNavigationContent( source, 'https://hperkins.blog' ),
+		source
 	);
 } );
