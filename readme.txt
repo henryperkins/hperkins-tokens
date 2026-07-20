@@ -144,8 +144,11 @@ block's Advanced → Additional CSS class(es) field.
 The Wapuu homepage hero owns the single page h1. Section-level patterns such as
 Evidence First and Proof + Product open with h2 titles, while nested boards inside
 an already-titled section, such as Operational Story, use h3. Work entry (ledger)
-is composed under a section heading; insert a section heading before the pattern
-when a page does not already provide one.
+takes its level from whatever encloses it. On /work/ the entries are the page's
+top-level sections and their titles are h2: the "Selected work" standfirst is the
+hero eyebrow, not a heading, so there is nothing to nest under and an h3 would
+skip a level. Where the ledger does sit inside a titled section, keep the entry
+titles at h3 beneath that section's h2.
 
 Starter pattern links use href="#" placeholders. Replace them with live release,
 pull request, page, review, or documentation URLs before publishing the pattern
@@ -287,6 +290,38 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.48 =
+* Content identity: /work/ is one page again. The four-project, artifact-bearing
+  ledger that had been stranded on the duplicate /work-2/ record is merged into
+  the canonical page 13 — DJ Lee & Voices of Judah restored as a fourth entry,
+  and an artifact row (the documented terminus of a Work entry) added to all
+  four. Twelve artifact links where the page previously promised "a release, a
+  diff, a live surface you can open yourself" and delivered none.
+* Accessibility: the /work/ entry titles are h2 in the stored page body, so the
+  rendered order is h1 -> h2 -> h2 -> h2 -> h2. The 0.3.34 promotion was reverted
+  by the 2026-07-14 redesign and re-fixed in the snapshot layer only on
+  2026-07-19; this is the first release in which the page body itself carries it.
+* Duplicate pages retired: /work-2/, /about-2/, /ai-enablement-2/ and
+  /privacy-policy-2/, plus the second AI Governance record that shared page 12's
+  parent, slug and permalink and was therefore unreachable at any public URL.
+  All four -2 bodies were hash-compared first: about-2 and ai-enablement-2 were
+  byte-identical to their canonicals, the extra AI Governance record byte-
+  identical to page 12, and privacy-policy-2 a strictly older revision.
+* Summary chips now partition the ledger instead of miscounting it ("shipped:
+  three live" survived the drop to three entries and then the return to four).
+* Seed parity: patterns/work-index.php is regenerated from
+  content/page-snapshots/work.html and is byte-identical to it. It had drifted
+  for seventeen days — h3 headings, stale labels, and a v0.1.5 version string
+  where the live page said v2.1.
+* New gate: scripts/verify-no-duplicate-pages.js asserts no two published pages
+  share a resolved permalink or a (parent, slug) tuple or a title, that every
+  Work entry carries a real artifact link, that the homepage and /work/ list the
+  same projects, and that the seed pattern matches the snapshot. Permalink
+  comparison is the load-bearing one: a "-2" suffix heuristic would have found
+  four of the five duplicate groups and missed the invisible one.
+* Docs: corrected the 0.3.34 changelog claim about the work-index headings, and
+  reconciled the composition contract with the heading level actually shipped.
 
 = 0.3.47 =
 * Typography: exclude components that set their own measure (.hp-lead) and
@@ -585,6 +620,8 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 * single.html: the "Continue reading" related loop no longer lists the current
   post (excluded server-side via query_loop_block_query_vars on queryId 12), and
   its section heading is now h2. work-index pattern headings promoted h3 -> h2.
+  (Superseded: the 2026-07-14 "leaner ledger" redesign reverted those pattern
+  headings to h3 and dropped an entry. Both were restored in 0.3.48.)
 * Tokens: promoted the four hand-tuned ring/footer scrim colors into theme.json
   (custom.scrim.*) so no raw hex bypasses the token layer; named the faint text
   color (ink-450); type.* shorthands now reference the preset font-family vars;

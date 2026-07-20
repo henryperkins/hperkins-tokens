@@ -36,7 +36,7 @@ export HPERKINS_ORIGIN="$(wp --path="$HPERKINS_WP_PATH" option get home)"
 # Lint — the de-facto check (no phpcs config). PHP syntax-check the whole theme:
 find . -name '*.php' -print0 | xargs -0 -n1 php -l
 
-# Theme verifiers (this repo's scripts/ — all twelve). Dependency-free (Node built-ins).
+# Theme verifiers (this repo's scripts/ — all thirteen). Dependency-free (Node built-ins).
 # Env overrides: CHROME_BIN (default /usr/bin/google-chrome), HPERKINS_ORIGIN (default https://hperkins.blog),
 # HPERKINS_WP_PATH (required for the wp-cli-backed scripts).
 #
@@ -50,6 +50,7 @@ node scripts/verify-typography.js               # site-wide typography contract:
 #
 # WP-CLI / HTTP / file checks (no Chrome):
 node scripts/verify-content-ownership.js        # front/about/work/ai-enablement/job-placement-digest ownership + snapshots, the DB-owned /work/flavor-agent/demo/ snapshot, and retired-route absence (wp-cli)
+node scripts/verify-no-duplicate-pages.js       # no two published pages share a resolved permalink, a (parent, slug) tuple, or a title; every /work/ entry carries a real artifact link; homepage and /work/ list the same projects; patterns/work-index.php stays byte-identical to content/page-snapshots/work.html (wp-cli + file reads)
 node scripts/verify-content-ownership-docs.js   # readme / CLAUDE / design-system docs still describe the DB-owned page contract accurately (pure file reads)
 node scripts/verify-performance-assets.js       # image budgets, fontDisplay, eager LCP hero (fetchpriority=high, never loading=lazy), front-page CSS skip
 node scripts/verify-style-token-usage.js        # every var() in style.css resolves against theme.json-generated variables (wp-cli)

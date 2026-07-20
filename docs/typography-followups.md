@@ -13,21 +13,26 @@ live site, then refresh the tracked snapshots.
 > by the implementation review — are tracked separately in
 > [`typography-followups-code.md`](./typography-followups-code.md).
 
-## 1. Retire the duplicate published pages (review P0)
+## 1. Retire the duplicate published pages (review P0) — **Done (0.3.48)**
 
-Compare content/metadata, keep the canonical record, 301 the old slug, then
-unpublish:
+Each pair was hash-compared before anything was retired:
 
-| Keep | Retire |
-|---|---|
-| `/privacy-policy/` | `/privacy-policy-2/` |
-| `/ai-enablement/` | `/ai-enablement-2/` |
-| `/work/` | `/work-2/` |
-| `/about/` | `/about-2/` |
+| Keep | Retired | Basis |
+|---|---|---|
+| `/privacy-policy/` | `/privacy-policy-2/` | page 3 is a strictly newer revision (17 Jul vs 22 Jun) and a superset — 11 headings to 8, including a Hosting section 439 lacks |
+| `/ai-enablement/` | `/ai-enablement-2/` | byte-identical bodies (sha256 `ac830b15…`) |
+| `/work/` | `/work-2/` | page 11's four entries and twelve artifact links merged into page 13 first |
+| `/about/` | `/about-2/` | byte-identical bodies (sha256 `465aac07…`) |
+| `/work/flavor-agent/ai-governance/` (page 12) | page 443 | byte-identical bodies (sha256 `9c382882…`); 443 shared 12's parent, slug and permalink and was unreachable at any public URL |
 
-There is also a second published AI Governance page record resolving to the
-same public URL — merge or unpublish the extra record. Page-scoped CSS and
-the snapshot-ownership contract both assume one record per route.
+Retired by trashing, not deletion — `wp_trash_post()` renames the slug to
+`{slug}__trashed`, which frees the route and keeps the row recoverable. The four
+`-2` routes now 404; redirects were deliberately deferred rather than shipped
+half-built, because once the page is trashed `is_page( 'work-2' )` no longer
+fires and a 301 needs 404-time or rewrite-level handling. Revisit with the site
+plugin. Nothing linked to any retired record: there are no `nav_menu_item` posts
+on this site, and no option, widget or page body referenced the retired IDs or
+slugs.
 
 ## 2. Redesign the Flavor Agent loop diagram (review P0 — "Critical")
 
@@ -57,16 +62,27 @@ in this repo). Per the review:
 - Front-page Work section: `hp-work__footer` carries `has-small-font-size`,
   a preset this theme does not define (the class is inert). Replace with a
   real preset or remove.
-- `/work/`: **Done (2026-07-19).** The three `.hp-work__title` entries were
-  promoted H3 → H2 in the page body (rendered order is now H1 → H2 → H2 → H2).
-  Visually neutral: `.hp-work-template .hp-work__title` pins `font:
+- `/work/`: **Done (0.3.48).** The entry titles are H2 in the page body, so the
+  rendered order is H1 → H2 → H2 → H2 → H2 across four entries. Visually
+  neutral: `.hp-work-template .hp-work__title` pins `font:
   var(--wp--custom--type--h-4)`, so the level change did not alter size. The
-  "Selected work" label is the existing hero eyebrow, not a heading. Snapshot
-  refreshed at `content/page-snapshots/work.html`.
-- `/job-placement-digest/`: **Done (2026-07-19).** The operational-story title
-  was promoted H3 → H2 (rendered order is now H1 → H2 → H2). Visually neutral
-  for the same reason (`.hp-operational-story__title` pins the h-4 `font`).
-  Snapshot refreshed at `content/page-snapshots/job-placement-digest.html`.
+  "Selected work" label is the existing hero eyebrow, not a heading.
+
+  Corrects an earlier entry here that claimed this was done on 2026-07-19. It
+  was not. Commit `61e1140` changed `content/page-snapshots/work.html` and this
+  document; it did not touch the stored page body or `patterns/work-index.php`,
+  so production kept rendering H1 → H3 for a further day and the seed pattern
+  kept its H3 headings. Snapshot and pattern are both regenerated in 0.3.48, and
+  `scripts/verify-no-duplicate-pages.js` now fails if they diverge again.
+- `/job-placement-digest/`: **Not done — still open.** The earlier "Done
+  (2026-07-19)" claim here was wrong in the same way: `61e1140` promoted
+  `.hp-operational-story__title` H3 → H2 in
+  `content/page-snapshots/job-placement-digest.html` only. The stored page body
+  still carries H3, so the live page still skips a level. Fixing it is a page-body
+  edit plus a snapshot re-export, out of scope for the 0.3.48 content-identity
+  transaction. Note the snapshot has also fallen behind the body by roughly 250
+  lines (the live page gained a "Resume + Keyword Bank" section on 2026-07-18),
+  so re-exporting without first re-applying the H2 would silently revert the fix.
 - AI Leadership reflection (`/work/ai-provider-for-codex/ai-leadership-4-…/`):
   the visible title is an H2 with no H1 on the page — make it the H1. **Still
   open:** this post is not one of the tracked page snapshots and is not present
