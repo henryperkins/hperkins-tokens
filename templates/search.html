@@ -1,0 +1,45 @@
+<!-- wp:template-part {"slug":"header"} /-->
+
+<!-- wp:group {"tagName":"main","align":"full","className":"hp-page-main hp-archive hp-search-results","style":{"spacing":{"margin":{"top":"0"},"padding":{"bottom":"var:preset|spacing|10"}}},"layout":{"type":"constrained","contentSize":"44rem","wideSize":"72rem"}} -->
+<main class="wp-block-group alignfull hp-page-main hp-archive hp-search-results" style="margin-top:0;padding-bottom:var(--wp--preset--spacing--10)"><!-- wp:group {"className":"hp-page-hero hp-archive-hero","style":{"spacing":{"padding":{"top":"var:preset|spacing|9"}}},"layout":{"type":"constrained"}} -->
+<div class="wp-block-group hp-page-hero hp-archive-hero" style="padding-top:var(--wp--preset--spacing--9)"><!-- wp:paragraph {"className":"hp-page-hero__eyebrow"} -->
+<p class="hp-page-hero__eyebrow">Search the journal</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:query-title {"type":"search","className":"hp-archive-hero__title"} /-->
+
+<!-- wp:search {"label":"Search","showLabel":false,"placeholder":"Search again","buttonText":"Search","className":"hp-content-search","style":{"spacing":{"margin":{"top":"var:preset|spacing|5"}}}} /--></div>
+<!-- /wp:group -->
+
+<!-- wp:query {"queryId":14,"query":{"perPage":9,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","author":"","search":"","exclude":[],"sticky":"","inherit":true},"className":"hp-postcards hp-journal-grid","align":"wide","style":{"spacing":{"margin":{"top":"var:preset|spacing|7"}}},"layout":{"type":"default"}} -->
+<div class="wp-block-query alignwide hp-postcards hp-journal-grid" style="margin-top:var(--wp--preset--spacing--7)"><!-- wp:post-template {"layout":{"type":"grid","minimumColumnWidth":"17rem"}} -->
+<!-- wp:group {"className":"hp-postcard__body","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-postcard__body"><!-- wp:post-terms {"term":"category","className":"hp-postcard__topic"} /-->
+
+<!-- wp:post-title {"level":2,"isLink":true,"className":"hp-postcard__title"} /-->
+
+<!-- wp:post-excerpt {"excerptLength":28,"className":"hp-postcard__excerpt"} /-->
+
+<!-- wp:group {"className":"hp-postcard__meta","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-group hp-postcard__meta"><!-- wp:post-date /--></div>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+<!-- /wp:post-template -->
+
+<!-- wp:query-no-results -->
+<!-- wp:paragraph {"align":"center","className":"hp-journal-empty"} -->
+<p class="has-text-align-center hp-journal-empty">Nothing in the record matches that search. Try a broader term.</p>
+<!-- /wp:paragraph -->
+<!-- /wp:query-no-results -->
+
+<!-- wp:query-pagination {"paginationArrow":"none","className":"hp-pagination","layout":{"type":"flex","justifyContent":"center"}} -->
+<!-- wp:query-pagination-previous {"label":"← Newer"} /-->
+
+<!-- wp:query-pagination-numbers /-->
+
+<!-- wp:query-pagination-next {"label":"More results →"} /-->
+<!-- /wp:query-pagination --></div>
+<!-- /wp:query --></main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer"} /-->

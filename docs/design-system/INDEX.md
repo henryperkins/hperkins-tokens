@@ -460,3 +460,39 @@ unchanged since 0.3.39" premise** — `theme.json` changed at both 0.3.44 and 0.
   is single-weight by design, and mono (`400 500`) covers every mono use — so those are
   unaffected. `scripts/verify-performance-assets.js` enforces the unique-prefix invariant
   across all four families.
+
+## 2026-07-19 — typography pass: fluid heading scale, text floors, AA text tokens (0.3.46)
+
+Recorded theme-side deltas from the 2026-07-19 site-wide typography review, in the
+same recorded-not-pushed contract as the entries above. The design project's
+`tokens/typography.css` still describes the fixed pixel scale; re-scope the pending
+`/design-sync` (ALIGNMENT-PLAN.md) to v0.3.46 before pushing.
+
+- **What changed.** (1) The `2xl`–`5xl` font-size presets became fluid **by value**
+  — `size` is now a hand-authored `clamp()` (24–36 / 32–48 / 40–64 / 48–88px
+  between 320 and 1200px viewports) while `settings.typography.fluid` stays
+  `false`; the `custom.type.hero/h1/h2/h3` shorthand mirrors carry the identical
+  clamps. (2) `custom.text.faint` darkened `#656E64 → #515C52` (the ink-500 value)
+  so faint metadata clears WCAG AA on the parchment surfaces; the `ink-450`
+  palette entry itself is unchanged and remains for non-text use. (3)
+  `styles.elements.h4` now requests weight 600, resolving the long-standing
+  mismatch with `custom.type.h4` ("600 1.75rem/1.22"). (4) A
+  `styles.elements.button` type role was added (base 17px / 1.2), mirrored by an
+  explicit size on the `style.css` Button primitive.
+- **What did NOT change.** Preset slugs and count, the palette (every hex,
+  including `ink-450`), the reading scale (`md` 19/1.7, `base` 17, `lg` 22), the
+  spacing scale, the font families and their internal `HPerkins *` names, and the
+  `measure.prose` 68ch token (now actually applied to narrative flow content by
+  `style.css`).
+- **Why.** The review found the fixed 64/48px H1/H2 presets produced four-to-six-line
+  mobile headings on every default-template page while hand-clamped pages behaved;
+  making the presets themselves fluid moves the correction into the token layer,
+  where duplicates and future pages cannot bypass it. The faint-token darkening is
+  the one-edit systemic fix for ~30 sub-AA metadata selectors across both sheets.
+- **Accepted deltas (clamping).** `faint` and `muted` now share a value — the
+  hierarchy step between them is carried by size/family until a compliant
+  intermediate ink exists. Synthetic weights are disabled site-wide
+  (`font-synthesis-weight: none`), which supersedes the 0.3.44 note that bold body
+  text may synthesize: `<strong>` in EB Garamond now renders the real 600.
+  `scripts/verify-typography.js` (new) asserts the fluid presets, text floors,
+  measure, family allow-list, and no-synthetic-Marcellus invariants.

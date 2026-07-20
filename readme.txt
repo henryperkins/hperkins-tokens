@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.45
+Stable tag: 0.3.47
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -22,9 +22,10 @@ a component state changes only the rule color, the surface tint, and a
 filled-vs-hollow dot — never the shape of the thing.
 
 This is a child theme. It overrides the header and footer template parts; ships
-front-page.html, home.html, single.html, page-about.html,
-page-ai-enablement.html, page-contact.html, page-how-this-was-built.html,
-page-job-placement-digest.html, page-work.html, and page-case-study.html as
+front-page.html, home.html, single.html, archive.html, search.html, 404.html,
+page-about.html, page-ai-enablement.html, page-contact.html,
+page-how-this-was-built.html, page-job-placement-digest.html, page-work.html,
+and page-case-study.html as
 additive block templates (each detailed under Template overrides below); and provides its own token
 vocabulary, component CSS, and patterns. Unspecified page/post templates are
 inherited from the Assembler parent. The Assembler parent theme must be
@@ -152,7 +153,7 @@ unchanged.
 
 = Template overrides =
 
-The child theme owns eleven block templates (page-case-study is also registered
+The child theme owns thirteen block templates (page-case-study is also registered
 as a selectable "Case study" template in theme.json; the others map by the
 WordPress template hierarchy):
 
@@ -165,6 +166,13 @@ WordPress template hierarchy):
 * single.html — the essay reader: a twilight cover hero (title, standfirst, meta)
   over constrained prose, post tags, the subscribe block, and a "Continue
   reading" related-posts grid.
+* archive.html — category, tag, author, and date archives: a hero masthead with
+  a proper H1 (`wp:query-title`), then journal postcards for the matched posts
+  (query ID 13, inheriting the main query).
+* search.html — search results: the same masthead and postcard grid keyed to the
+  search query (query ID 14), plus an in-content search control.
+* 404.html — the "Page not found" surface: a hero H1, a short lead, and a search
+  control, styled through the shared archive-hero and content-search classes.
 * page-about.html — wraps the stored About page content in the narrow/wide About
   composition shell. The current live content is versioned at
   `content/page-snapshots/about.html`.
@@ -279,6 +287,70 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.47 =
+* Typography: exclude components that set their own measure (.hp-lead) and
+  wide/full-aligned children from the 68ch prose measure, so the constrained
+  post-content rule no longer widens the case-study/demo lead from 46ch to 68ch.
+* Docs: correct the readme block-template count (thirteen) and document the new
+  archive.html / search.html / 404.html overrides; sharpen the 0.3.46 note on
+  the 404's role CSS (it rides shared classes, not an error404 body class).
+* Tooling: harden scripts/verify-typography.js — swallow the orphaned
+  Page.loadEventFired rejection so a navigate failure can't abort a --report
+  run, and skip SVG <text>/<tspan> in the general text pass (the dedicated
+  getScreenCTM loop already measures them with the right effective size).
+* Accessibility: add !important to the AI Enablement dateline override so it
+  actually applies — WordPress emits the .has-ink-400-color preset class with
+  !important, so the plain 0.3.46 rule silently no-oped and the dateline stayed
+  at ink-400 (~3.9:1); it now renders at muted ink until the stored body is
+  re-authored.
+
+= 0.3.46 =
+* Typography: make the 2xl–5xl heading presets fluid in theme.json
+  (clamp 24–36 / 32–48 / 40–64 / 48–88px), so every template and stored
+  page body inherits responsive headings from the token layer instead of
+  page-scoped corrections; the custom.type mirrors carry the same clamps.
+* Typography: apply the 68ch prose measure to narrative flow content
+  (.hp-prose and constrained post content), raise the desktop nav and
+  Subscribe pill from 13px to 15px Marcellus, give the Button primitive an
+  explicit 17px/1.2 role (mirrored in theme.json styles.elements.button),
+  and set the footer name's own 1.15 display leading with 13px links and
+  colophon.
+* Typography: enforce a floor for meaningful text — 17px for explanatory
+  copy (About capability/impact/résumé bullets, work-entry descriptions,
+  build-report takeaways, journal excerpts, work-index note), 15px for
+  supporting notes (evidence meta and summaries, artifact-embed captions,
+  About stat labels, the contact form's standalone privacy note), 13px for
+  functional metadata (postcard/reader
+  topic-and-date lines, proof links, footer colophon), and 12px minimum for
+  the build report's label register (artifact/takeaway/stat/section
+  labels, up from 10–11.5px) with eased tracking on long uppercase labels.
+* Accessibility: darken the text.faint token to the ink-500 value so faint
+  metadata clears WCAG AA on parchment surfaces; split the ring-card tint
+  into decoration and text variables (river-200/gold-200 text on the dark
+  cards); set the digest's marked ask in strong ink on its gold wash;
+  re-point the AI Enablement stored dateline's ink-400 at muted ink; stop
+  requesting synthetic bold (Marcellus 600 ring CTA and mono 700 signal
+  values now use real weights, font-synthesis-weight none site-wide).
+* Templates: add theme-owned archive.html, search.html, and 404.html with a
+  proper H1 on each (query-title / "Page not found"), journal postcard
+  results at 28px titles and 17px excerpts, a canonical search control, and
+  role CSS keyed to the archive and search body classes (the 404 reuses the
+  shared archive-hero and content-search classes); restyle Jetpack share/like
+  headings as Marcellus labels.
+* Typography: lower the journal masthead's mobile slope to a 44px floor
+  (~47px at 390px) and give the homepage hero's governance status note its
+  own supporting-copy role (17px muted, no longer a second lead).
+* Tooling: add scripts/verify-typography.js — browser-based typography
+  regression assertions (single H1, no heading skips, text floors, the
+  prose measure, the four approved families, no synthetic Marcellus bold,
+  bounded contrast spot checks, overflow at 320–1440px, effective SVG text
+  size via getScreenCTM, and document.fonts checks) with --report and
+  --source-only modes.
+* Docs: record the typography-pass deltas in docs/design-system/INDEX.md,
+  re-scope the stale design-sync plan note to 0.3.46, and add
+  docs/typography-followups.md for the database-side work the theme cannot
+  fix (duplicate pages, the Flavor Agent loop diagram, stored-body sizes).
 
 = 0.3.45 =
 * Typography: extend the self-hosted font isolation from 0.3.44 to the

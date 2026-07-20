@@ -432,23 +432,23 @@
         },
         {
           "slug": "2xl",
-          "size": "2.25rem",
-          "name": "2XL · 36"
+          "size": "clamp(1.5rem, 1.227rem + 1.364vw, 2.25rem)",
+          "name": "2XL · 24–36 fluid"
         },
         {
           "slug": "3xl",
-          "size": "3rem",
-          "name": "3XL · 48"
+          "size": "clamp(2rem, 1.636rem + 1.818vw, 3rem)",
+          "name": "3XL · 32–48 fluid"
         },
         {
           "slug": "4xl",
-          "size": "4rem",
-          "name": "4XL · 64"
+          "size": "clamp(2.5rem, 1.955rem + 2.727vw, 4rem)",
+          "name": "4XL · 40–64 fluid"
         },
         {
           "slug": "5xl",
-          "size": "5.5rem",
-          "name": "5XL · 88"
+          "size": "clamp(3rem, 2.091rem + 4.545vw, 5.5rem)",
+          "name": "5XL · 48–88 fluid"
         }
       ]
     },
@@ -469,7 +469,7 @@
         "strong": "#1B231D",
         "body": "#313B33",
         "muted": "#515C52",
-        "faint": "#656E64",
+        "faint": "#515C52",
         "disabled": "#94A095",
         "inverse": "#FAF6EC",
         "link": "#2E4A3A",
@@ -520,10 +520,10 @@
       },
       "artifactLink": "#3F6E89",
       "type": {
-        "hero": "500 5.5rem/1.08 var(--wp--preset--font-family--display)",
-        "h1": "500 4rem/1.08 var(--wp--preset--font-family--display)",
-        "h2": "500 3rem/1.22 var(--wp--preset--font-family--display)",
-        "h3": "500 2.25rem/1.22 var(--wp--preset--font-family--display)",
+        "hero": "500 clamp(3rem, 2.091rem + 4.545vw, 5.5rem)/1.08 var(--wp--preset--font-family--display)",
+        "h1": "500 clamp(2.5rem, 1.955rem + 2.727vw, 4rem)/1.08 var(--wp--preset--font-family--display)",
+        "h2": "500 clamp(2rem, 1.636rem + 1.818vw, 3rem)/1.22 var(--wp--preset--font-family--display)",
+        "h3": "500 clamp(1.5rem, 1.227rem + 1.364vw, 2.25rem)/1.22 var(--wp--preset--font-family--display)",
         "h4": "600 1.75rem/1.22 var(--wp--preset--font-family--display)",
         "lead": "400 1.375rem/1.7 var(--wp--preset--font-family--body)",
         "body": "400 1.1875rem/1.7 var(--wp--preset--font-family--body)",
@@ -630,6 +630,7 @@
       "h4": {
         "typography": {
           "fontSize": "var(--wp--preset--font-size--xl)",
+          "fontWeight": "600",
           "lineHeight": "1.22"
         }
       },
@@ -643,6 +644,12 @@
         "typography": {
           "fontSize": "var(--wp--preset--font-size--md)",
           "lineHeight": "1.22"
+        }
+      },
+      "button": {
+        "typography": {
+          "fontSize": "var(--wp--preset--font-size--base)",
+          "lineHeight": "1.2"
         }
       },
       "link": {

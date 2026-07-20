@@ -75,6 +75,18 @@
   text-align: center;
 }
 
+/* Accessibility override for the stored hero dateline ("Updated …"): the DB
+   body carries has-ink-400-color, which reads ~3.9:1 on parchment — below AA
+   for 13px mono. Re-point it at the muted ink until the body itself is
+   re-authored (2026-07 typography review; DB-side fix tracked in
+   docs/typography-followups.md). !important is required: WordPress emits the
+   preset utility class .has-ink-400-color with !important, so a plain
+   declaration here — however specific — loses the cascade and the override
+   silently no-ops. */
+.hp-aie-template .hp-page-hero .has-ink-400-color {
+  color: var(--wp--custom--text--muted) !important;
+}
+
 /* Ring section marker — a tinted dot + eyebrow at the head of Expose/Govern/Attest. */
 .hp-aie__ringmark {
   display: flex;
@@ -208,6 +220,11 @@
   font-size: var(--wp--preset--font-size--xs);
   color: var(--wp--custom--text--faint);
 }
+/* The standalone hint paragraph is reading copy (a full privacy sentence), so
+   it clears the 15px long-copy floor; the inline <span> helpers stay compact. */
+p.hp-contact-form__hint {
+  font-size: var(--wp--preset--font-size--sm);
+}
 .hp-contact-form__actions {
   display: flex;
   align-items: center;
@@ -279,8 +296,11 @@
    with the wide ledger spine. */
 .hp-workindex__note {
   margin: var(--wp--preset--spacing--4) 0 0;
+  /* Explanatory copy at the 17px floor, held to the prose measure so the
+     aside never runs the full wide ledger (2026-07 typography review). */
+  max-inline-size: var(--wp--custom--measure--prose);
   font-family: var(--wp--preset--font-family--body);
-  font-size: var(--wp--preset--font-size--sm);
+  font-size: var(--wp--preset--font-size--base);
   line-height: 1.55;
   color: var(--wp--custom--text--muted);
 }
@@ -307,7 +327,9 @@
 }
 .hp-digest__hero .hp-page-hero__eyebrow mark {
   background: var(--wp--preset--color--gold-200);
-  color: inherit;
+  /* Strong ink, not the inherited accent: gold-on-gold sat at ~4.4:1 for
+     13px caps — below AA (2026-07 typography review). */
+  color: var(--wp--custom--text--strong);
   padding: 1px 5px 2px;
   border-radius: var(--wp--custom--radius--xs);
 }
@@ -366,7 +388,10 @@
 }
 @media (max-width: 600px) {
   .hp-masthead__title {
-    font-size: clamp(3rem, 14.5vw, 4.25rem);
+    /* Floor at 44px and slope to ~47px at 390px — the previous 14.5vw slope
+       left the masthead ~57px / four lines on a 390px phone (2026-07
+       typography review). */
+    font-size: clamp(2.75rem, 12vw, 4.25rem);
     line-height: 1.04;
   }
 }
@@ -495,7 +520,9 @@
 .hp-postcard__topic,
 .hp-postcard__topic a {
   font-family: var(--wp--preset--font-family--label);
-  font-size: var(--wp--preset--font-size--2-xs);
+  /* xs, not 2xs: card metadata keeps the 13px floor (2026-07 typography
+     review). */
+  font-size: var(--wp--preset--font-size--xs);
   letter-spacing: var(--wp--custom--tracking--caps);
   text-transform: uppercase;
   color: var(--wp--custom--text--accent);
@@ -522,7 +549,9 @@
   margin-top: auto;
   padding-top: var(--wp--preset--spacing--3);
   font-family: var(--wp--preset--font-family--mono);
-  font-size: var(--wp--preset--font-size--2-xs);
+  /* xs, not 2xs: author/date metadata keeps the 13px floor (2026-07
+     typography review). */
+  font-size: var(--wp--preset--font-size--xs);
   color: var(--wp--custom--text--faint);
 }
 .hp-postcard__meta a { color: inherit; text-decoration: none; }
@@ -582,7 +611,9 @@
     font-size: var(--wp--preset--font-size--lg);
   }
   .hp-journal-featured .wp-block-post-template > li:nth-child(n+2) .hp-postcard__excerpt {
-    font-size: var(--wp--preset--font-size--sm);
+    /* base, not sm: excerpts are the primary descriptive copy of each card —
+       17px floor (2026-07 typography review). */
+    font-size: var(--wp--preset--font-size--base);
   }
 }
 
@@ -689,7 +720,9 @@
 .hp-reader-hero__topic,
 .hp-reader-hero__topic a {
   font-family: var(--wp--preset--font-family--label);
-  font-size: var(--wp--preset--font-size--2-xs);
+  /* xs, not 2xs: 13px floor for functional metadata (2026-07 typography
+     review). */
+  font-size: var(--wp--preset--font-size--xs);
   letter-spacing: var(--wp--custom--tracking--caps);
   text-transform: uppercase;
   color: var(--wp--preset--color--gold-200);
@@ -707,7 +740,9 @@
 .hp-reader-hero__meta a {
   margin-top: var(--wp--preset--spacing--5);
   font-family: var(--wp--preset--font-family--mono);
-  font-size: var(--wp--preset--font-size--2-xs);
+  /* xs, not 2xs: 13px floor for article metadata (2026-07 typography
+     review). */
+  font-size: var(--wp--preset--font-size--xs);
   color: var(--wp--preset--color--green-200);
 }
 
@@ -803,7 +838,9 @@
   flex-wrap: wrap;
   gap: .625rem 2.125rem;
   font-family: var(--wp--preset--font-family--mono);
-  font-size: .75rem;
+  /* 13px, not 12: the meta strip carries real information (2026-07
+     typography review floor for functional labels). */
+  font-size: .8125rem;
   letter-spacing: .02em;
   color: var(--wp--custom--text--faint);
   padding-bottom: 2.125rem;
@@ -838,8 +875,10 @@
 .hp-buildreport__artifact-label {
   font-family: var(--wp--preset--font-family--label);
   text-transform: uppercase;
-  letter-spacing: .13em;
-  font-size: .625rem;
+  /* 12px/.12em, up from 10px/.13em: these label live proof links — never
+     below 12px for functional text (2026-07 typography review). */
+  letter-spacing: .12em;
+  font-size: .75rem;
   color: var(--wp--custom--text--accent);
 }
 .hp-buildreport__artifact-val {
@@ -854,8 +893,10 @@
 .hp-buildreport h2 {
   font-family: var(--wp--preset--font-family--label);
   text-transform: uppercase;
-  letter-spacing: .16em;
-  font-size: .8125rem;
+  /* 14px/.12em, up from 13px/.16em: long uppercase section titles need more
+     size and less air (2026-07 typography review). */
+  letter-spacing: .12em;
+  font-size: .875rem;
   color: var(--wp--preset--color--green-700);
   margin: 0 0 1rem;
   display: flex;
@@ -864,7 +905,7 @@
 }
 .hp-buildreport__n {
   font-family: var(--wp--preset--font-family--mono);
-  font-size: .6875rem;
+  font-size: .75rem;
   color: var(--wp--custom--text--accent);
   letter-spacing: .04em;
 }
@@ -923,8 +964,10 @@
 .hp-buildreport__sw { flex: 1; height: 42px; border-radius: 5px; border: 1px solid var(--wp--custom--border--hair); }
 .hp-buildreport__key {
   font-family: var(--wp--preset--font-family--mono);
-  font-size: .71875rem;
-  line-height: 1.9;
+  /* 13px, up from 11.5px: the color key is functional reference text
+     (2026-07 typography review). */
+  font-size: .8125rem;
+  line-height: 1.8;
   color: var(--wp--custom--text--faint);
   list-style: none;
   padding: 0;
@@ -934,14 +977,14 @@
 .hp-buildreport__key b { color: var(--wp--preset--color--green-700); font-weight: 500; }
 .hp-buildreport__type-row { border-top: 1px solid var(--wp--custom--border--hair); padding: .6875rem 0; display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
 .hp-buildreport__type-row:first-of-type { border-top: 0; }
-.hp-buildreport__type-row .lbl { font-family: var(--wp--preset--font-family--mono); font-size: .6875rem; color: var(--wp--custom--text--faint); white-space: nowrap; }
+.hp-buildreport__type-row .lbl { font-family: var(--wp--preset--font-family--mono); font-size: .75rem; color: var(--wp--custom--text--faint); white-space: nowrap; }
 
 /* stats bar */
 .hp-buildreport__stats { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--wp--custom--border--hair); border-radius: 8px; overflow: hidden; margin-top: .25rem; }
 .hp-buildreport__stat { padding: 1.125rem 1.25rem; border-right: 1px solid var(--wp--custom--border--hair); }
 .hp-buildreport__stat:last-child { border-right: 0; }
 .hp-buildreport__stat .num { font-family: var(--wp--preset--font-family--display); font-weight: 600; font-size: 2.125rem; color: var(--wp--preset--color--green-700); line-height: 1; }
-.hp-buildreport__stat .cap { font-family: var(--wp--preset--font-family--label); text-transform: uppercase; letter-spacing: .13em; font-size: .65625rem; color: var(--wp--custom--text--faint); margin-top: .5rem; }
+.hp-buildreport__stat .cap { font-family: var(--wp--preset--font-family--label); text-transform: uppercase; letter-spacing: .12em; font-size: .75rem; color: var(--wp--custom--text--faint); margin-top: .5rem; }
 
 /* (diamond-bullet list removed in 0.3.18 — the Three Rings now read as prose) */
 
@@ -958,20 +1001,24 @@
   display: block;
   font-family: var(--wp--preset--font-family--label);
   text-transform: uppercase;
-  letter-spacing: .14em;
-  font-size: .625rem;
+  /* 12px/.12em, up from 10px/.14em (2026-07 typography review floor). */
+  letter-spacing: .12em;
+  font-size: .75rem;
   color: var(--wp--custom--text--accent);
   margin: 0 0 .375rem;
 }
-.hp-buildreport__takeaway p { margin: 0; color: var(--wp--custom--text--body); font-size: 1rem; }
+/* 17px, up from 16: takeaways are the essential "for your build" copy. */
+.hp-buildreport__takeaway p { margin: 0; color: var(--wp--custom--text--body); font-size: 1.0625rem; }
 
 /* "do it yourself" steps intro (the .hp-buildreport__steps grid itself is defined above) */
 .hp-buildreport__steps-intro {
   margin: 0;
   font-family: var(--wp--preset--font-family--label);
   text-transform: uppercase;
-  letter-spacing: .1em;
-  font-size: .6875rem;
+  /* 13px/.08em, up from 11px/.1em: a long uppercase sentence, not a chip
+     (2026-07 typography review). */
+  letter-spacing: .08em;
+  font-size: .8125rem;
   color: var(--wp--custom--text--muted);
 }
 
@@ -1004,7 +1051,7 @@
   padding-top: 1.5rem;
   border-top: 1px solid var(--wp--custom--border--hair);
   font-family: var(--wp--preset--font-family--mono);
-  font-size: .6875rem;
+  font-size: .75rem;
   color: var(--wp--custom--text--faint);
   letter-spacing: .02em;
   display: flex;
@@ -1030,7 +1077,7 @@
   .hp-buildreport__lede p { font-size: 1.0625rem; line-height: 1.5; }
 
   /* section headings: stack the number over the title and ease tracking so they stop wrapping 2–3 lines */
-  .hp-buildreport h2 { flex-direction: column; align-items: flex-start; gap: .3125rem; letter-spacing: .12em; }
+  .hp-buildreport h2 { flex-direction: column; align-items: flex-start; gap: .3125rem; letter-spacing: .1em; }
 
   /* specimen grid → single column; stats → 2×2 (was 4 full-width rows, ~383px tall) with a plus-shaped divider */
   .hp-buildreport__grid { grid-template-columns: 1fr; }
@@ -1077,7 +1124,9 @@
 .hp-artifact-embed__caption {
   margin-top: 0.875rem;
   font-family: var(--wp--preset--font-family--mono);
-  font-size: var(--wp--preset--font-size--xs);
+  /* sm, not xs: presenter notes and captions are explanatory copy — 15px
+     floor (2026-07 typography review). */
+  font-size: var(--wp--preset--font-size--sm);
   line-height: 1.5;
   color: var(--wp--custom--text--muted);
   display: flex;
