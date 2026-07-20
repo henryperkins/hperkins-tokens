@@ -8,6 +8,11 @@ The items below live in the WordPress database — page bodies, page records,
 or Site Editor state — so the theme cannot fix them. Work through them on the
 live site, then refresh the tracked snapshots.
 
+> **Code-side follow-ups** — bugs and polish in the theme's own files
+> (`verify-typography.js`, `style.css`, the new templates, `readme.txt`) surfaced
+> by the implementation review — are tracked separately in
+> [`typography-followups-code.md`](./typography-followups-code.md).
+
 ## 1. Retire the duplicate published pages (review P0)
 
 Compare content/metadata, keep the canonical record, 301 the old slug, then
@@ -52,13 +57,20 @@ in this repo). Per the review:
 - Front-page Work section: `hp-work__footer` carries `has-small-font-size`,
   a preset this theme does not define (the class is inert). Replace with a
   real preset or remove.
-- `/work/`: H1 jumps to H3 entries — add a "Selected work" H2 or promote the
-  entry titles to H2.
-- `/job-placement-digest/`: H1 jumps to the operational-story H3, and the
-  page's only H2 comes after it — insert the missing section H2 (or demote
-  and reorder).
+- `/work/`: **Done (2026-07-19).** The three `.hp-work__title` entries were
+  promoted H3 → H2 in the page body (rendered order is now H1 → H2 → H2 → H2).
+  Visually neutral: `.hp-work-template .hp-work__title` pins `font:
+  var(--wp--custom--type--h-4)`, so the level change did not alter size. The
+  "Selected work" label is the existing hero eyebrow, not a heading. Snapshot
+  refreshed at `content/page-snapshots/work.html`.
+- `/job-placement-digest/`: **Done (2026-07-19).** The operational-story title
+  was promoted H3 → H2 (rendered order is now H1 → H2 → H2). Visually neutral
+  for the same reason (`.hp-operational-story__title` pins the h-4 `font`).
+  Snapshot refreshed at `content/page-snapshots/job-placement-digest.html`.
 - AI Leadership reflection (`/work/ai-provider-for-codex/ai-leadership-4-…/`):
-  the visible title is an H2 with no H1 on the page — make it the H1.
+  the visible title is an H2 with no H1 on the page — make it the H1. **Still
+  open:** this post is not one of the tracked page snapshots and is not present
+  in the local Studio site, so it must be edited on the live site directly.
 
 After the body edits: `node scripts/export-page-snapshots.js`, then
 `node scripts/verify-content-ownership.js`, and bump the pinned `?v=` only if
@@ -80,5 +92,6 @@ node scripts/verify-typography.js --report   # non-failing audit of what remains
 ```
 
 The remaining known failures until §1–§3 land: the Flavor Agent SVG text
-size/contrast, the duplicate pages' un-scoped typography, the heading-order
-skips listed above, and the missing H1 on the reflection page.
+size/contrast, the duplicate pages' un-scoped typography, and the missing H1
+on the reflection page. (The `/work/` and `/job-placement-digest/` heading-order
+skips were fixed 2026-07-19 — see §3.)
