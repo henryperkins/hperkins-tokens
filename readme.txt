@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.49
+Stable tag: 0.3.50
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -55,9 +55,10 @@ authors choose only from these named tokens):
   the brand and link color, green-050 the merged-chip tint
 * River (links / info) — river-900 #1E3040 … river-100 #DCE9F0; the Bruinen blue
   used for artifact links
-* Gold (accent) — gold-700 #9A7530 … gold-100 #F4EBCF; gold-500 #C29A44 is the
-  accent; the 3px focus-visible ring uses the deeper gold-700 so it clears 3:1
-  on parchment and twilight surfaces
+* Gold (accent) — gold-800 #6E531B / gold-700 #9A7530 … gold-100 #F4EBCF;
+  gold-500 #C29A44 is the accent, gold-800 is the accessible small-text color
+  for the Digest cue, and the 3px focus-visible ring uses gold-700 so it clears
+  3:1 on parchment and twilight surfaces
 * Twilight (inverse plates) — twilight-900 #161D24 / twilight-800 #1E2730 /
   twilight-700 #283440 (footer and hero plates)
 * Status (semantic; rule-color AND a redundant word, never color alone) —
@@ -222,6 +223,26 @@ filesystem patterns (`about-resume`, `work-index`, `ai-enablement`, and
 live route owners for those pages, while `wapuu-home-hero` remains the live
 front-page hero.
 
+= Condensed Council header =
+
+The header template part renders `[hperkins_council_header]`; the theme-owned
+renderer in `inc/council-header.php` treats WordPress Navigation post 237 as DB
+data rather than rendering its core Navigation markup directly. The portable
+source copy is `content/nav-snapshots/nav-237.html`. Refresh it with
+`node scripts/export-navigation-snapshot.js`, prove live parity with
+`node scripts/verify-content-ownership.js`, and use only the pinned,
+hash-guarded `node scripts/apply-council-navigation.js` for the approved recut.
+
+Desktop Work and Writing disclosures, anchored search, and the flat mobile
+drawer share one mutually exclusive state in `assets/js/header-controller.js`.
+The state is `closed|work|writing|search|drawer`, and the controller also owns
+focus restoration, breakpoint settlement, and Interactivity Router cleanup.
+`node scripts/verify-header.js` checks the source contract plus eight-width
+geometry, interactions, focus, reduced motion, containment, and screenshots.
+The mobile drawer intentionally exposes the real Work, Essays, AI Enablement,
+About, Job Placement Digest, Search, and Subscribe destinations; it does not
+invent a dead `/writing/` route. Contact remains reachable in the footer.
+
 = Portfolio art direction =
 
 The portfolio uses a light operations-desk art system. Site-owned visuals use
@@ -290,6 +311,49 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.50 =
+* Design: ship the selected Condensed Council header with a calm, genuinely
+  centred desktop bar, current-data Work evidence panel, Writing disclosure,
+  restrained Digest signal, and non-displacing anchored search.
+* Mobile: replace the nested overlay treatment with a flat, reachable drawer
+  containing Work, Essays, AI Enablement, About, Job Placement Digest, Search,
+  and an outlined Subscribe action across the exact 781/782 boundary.
+* Data safety: track and verify menu 237 at
+  `content/nav-snapshots/nav-237.html`, with repeatable export and guarded,
+  idempotent apply commands instead of an untracked design-pull backup.
+* Interaction: replace the two competing header listeners with the single
+  router-safe `header-controller.js` owner for disclosures, drawer, search,
+  focus restoration, history settlement, and reduced motion.
+* Verification: `verify-header.js` covers eight widths from 320px through
+  1440px, accessibility and interaction behavior, viewport containment, and
+  state-specific screenshots.
+* Accessibility: the header says where the visitor is again. All ten
+  destinations carry `aria-current="page"`, and the Work and Writing items take
+  `is-current` for any route beneath them — the retired core Navigation block
+  supplied this, so rendering our own markup had dropped it.
+* Accessibility: keyboard focus is no longer lost or stolen. Escape restores
+  focus only when focus is inside the header, so a hover-opened panel cannot rip
+  it away; the hover close stands down while focus is inside a panel; the drawer
+  close rescues focus only when stranded, leaving a router-focused hash target
+  alone; and tabbing past an open panel closes it.
+* Fix: a pending hover close can no longer shut a panel that was just reopened,
+  and a route swap that detaches the header no longer leaves stale state that
+  swallowed the next drawer click.
+* Fix: Work panel rows draw an inset focus ring, so the panel's rounded-corner
+  clipping no longer cuts off its leading and trailing edges. The drawer
+  contains its own overscroll, and the reduced-motion reset covers the closing
+  and chosen-link states in CSS rather than relying on the controller's gate.
+* Fix: the shortcode block re-renders in both branches, so stored header markup
+  can never freeze the site name, the menu-237 model, or the URLs. A
+  protocol-relative destination no longer collapses into an on-host 404.
+* Verification: the header root now reports `data-hp-header-source`, so a silent
+  detach from menu 237 onto the identical-looking fallback is detectable. The
+  suite also asserts the noscript navigation, the four Work status words and
+  their fixed row anatomy, focus rings that are painted but clipped, and the
+  four pinned sub-12px type exemptions. `verify-no-duplicate-pages.js`
+  cross-checks the header's five hardcoded /work/ routes against the tracked
+  Work snapshot.
 
 = 0.3.49 =
 * Accessibility: the /job-placement-digest/ operational-story title is h2 in the

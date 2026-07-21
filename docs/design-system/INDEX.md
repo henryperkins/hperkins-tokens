@@ -28,7 +28,9 @@ shadows, easings and durations.
 > group was dropped (0.3.34); `ink-450` #656E64 was added and the gold/amber **text** tokens
 > darkened for WCAG AA — `text.accent` #7A5C1E, `feedback.warning` #855F1E, `on.review` (0.3.34);
 > the four ring/footer scrims were promoted into `custom.scrim.*` (0.3.34); and the link **hover**
-> color moved onto `text.accent` (0.3.38). Re-diff against the DS project before asserting 1:1 today. The only DS token-CSS not represented as `theme.json` presets are
+> color moved onto `text.accent` (0.3.38). `gold-800` #6E531B was added in 0.3.50 as the
+> accessible small-text color for the gold-200 Digest cue. Re-diff against the DS project before
+> asserting 1:1 today. The only DS token-CSS not represented as `theme.json` presets are
 alias/util vars (`--gutter-*`, `--focus-*`, the `--surface-*`/`--text-*` semantic aliases), which the
 theme's `style.css` already provides via the `--wp--custom--*` / `--wp--preset--*` cascade. A token
 "refresh" therefore changes nothing. The faithful token mirror is staged at
@@ -93,7 +95,7 @@ block pattern (or template part / card markup) in the theme:
 | `evidence/EvidenceBoard` | `patterns/evidence-first.php` (`.hp-evidence-board`) |
 | `evidence/ProductHero` | `patterns/proof-product.php` (`.hp-product-hero`) |
 | `evidence/OperationalStory` | `patterns/operational-story.php` |
-| `site/SiteHeader` | `parts/header.html` (`.hp-site-header`) |
+| `site/SiteHeader` | `parts/header.html` (`.hp-site-header` + `[hperkins_council_header]`), `inc/council-header.php`, `assets/js/header-controller.js` |
 | `site/SiteFooter` | `parts/footer.html` (`.hp-footer`) |
 
 ## Gap report — vendored vs. available-in-project
@@ -167,18 +169,38 @@ render (host-shim + `wp server` + Playwright) at 1440 / 375 / 320, home (page 36
     shade than the textured center at viewports wider than 72rem. Fixed with `.hp-footer > .hp-footer__backdrop
     { max-width: none; margin: 0; }` (higher specificity than the layout rule) so image + gradient span the
     full plate. Confirmed `backdropWidth == footerWidth` at 1440.
-- **Search in the mobile overlay**: a `core/search` block (`className: hp-nav-search`, button-inside icon)
-  was added to the **Navigation menu (post 237)** so it surfaces at the top of the open nav overlay. CSS
-  hides it on desktop (`@media (min-width:782px) .hp-site-nav .hp-nav-search{display:none}` — the actions
-  cluster owns desktop search) and styles it as a field inside `.is-menu-open`. Re-verified: 320/375 no
-  overflow (closed + open), close-on-tap (Interactivity Router) still navigates + closes, search posts `s`.
-  > **Caveat:** the search lives in the **menu (DB content)**, not the theme files, so it does NOT travel
-  > with the theme. To enable elsewhere, add a Search block to the nav menu (Site Editor → Navigation, or
-  > `wp post update <nav-id>`) with `className: hp-nav-search`. Kept the `ref:237` architecture rather than
-  > inlining the nav (which would travel but lose central menu management).
-  > **Superseded 2026-06-24 (0.3.24):** `hp-nav-search` was removed from menu 237; search is theme-owned
-  > in `parts/header.html` (`hp-site-search`) at every width, and menu 237 instead carries the trailing
-  > `hp-nav-subscribe` drawer-foot link. Do **not** re-add a search block to the menu.
+- **Search in the mobile overlay (historical):** 0.3.23 added a `core/search` block with
+  `className: hp-nav-search` to Navigation post 237; 0.3.24 removed it and temporarily made search a
+  `parts/header.html` block at every width. This is provenance, not current authoring guidance.
+  > **Superseded 2026-07-20 (0.3.50):** the Condensed Council recut restores a Search block to menu 237
+  > with the explicit data class `hp-drawer-search`. Core Navigation markup is not rendered directly:
+  > `inc/council-header.php` consumes that record into the inline mobile drawer form, while desktop
+  > search remains theme-owned, anchored to the action cluster, and unable to displace the centred nav.
+
+## 2026-07-20 — Condensed Council header (`Header rework.dc.html` → theme renderer)
+
+The selected handoff is a visual and interaction reference only. Its DC runtime, design-system bundle,
+duplicate fonts, and exploration controls are not production dependencies. The block theme implements
+the composition through `parts/header.html`, `inc/council-header.php`, `style.css`, and the single
+router-safe `assets/js/header-controller.js` state owner.
+
+- **Selected desktop constants:** a 68px `1fr / auto / 1fr` shell keeps navigation genuinely centred;
+  labels are 15px with a 28px gap and 26px active rule. Work opens the 592px two-column Work evidence panel,
+  Writing opens a 262px destination panel, desktop search is a 278px right-anchored surface, and Subscribe
+  is 116px by 42px.
+- **Selected mobile constants:** the 781px-and-below composition uses a 62px bar and a flat drawer with
+  20px by 18px body padding, 50px route rows, a 46px search form, and a 48px outlined Subscribe action.
+- **Intentional live-data correction:** the Work panel uses the repository's current four labels,
+  destinations, and release states rather than stale prototype copy. Mobile Work remains a plain route;
+  it does not expose the desktop evidence composition.
+- **Intentional mobile-IA correction:** there is no published `/writing/` route. The reachable drawer
+  order is Work, Essays, AI Enablement, About, Job Placement Digest, Search, and Subscribe. Contact stays
+  reachable in the labelled footer rather than returning to the constrained bar.
+- **Search ownership:** menu post 237 supplies `hp-drawer-search` as structured data for the renderer's
+  mobile form. Desktop search is emitted and anchored by the theme, so opening it never changes the
+  centred navigation geometry.
+- **Accessible cue delta:** `gold-800` #6E531B on gold-200 is the theme-side accessible text treatment
+  for the restrained Digest cue. The cue is supplementary and does not enter Writing's accessible name.
 
 ## 2026-06-21 — header cache-bust (ship the fidelity pass): `Version` 0.3.8 → 0.3.9
 
