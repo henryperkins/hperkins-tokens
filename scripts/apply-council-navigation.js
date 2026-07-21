@@ -8,7 +8,19 @@ const {
 	normalizeNavigationContent,
 } = require( './lib/navigation-content-contract' );
 
-const EXPECTED_BEFORE_SHA256 = '29d2a38e38999cf3992b533133c30f03867804b2bc4e70de3a658f502a18242b';
+// The canonical sha256 of PRODUCTION's menu 237, captured 2026-07-20 from
+// https://hperkins.blog via the authenticated REST route with context=edit. The
+// byte-exact backup of that read is content/nav-snapshots/nav-237.production.html.
+//
+// The previous pin (29d2a38e…) was taken against the local Studio site's
+// synthetic menu, which never existed on production — so this guard would have
+// refused the real recut, correctly. normalizeNavigationContent() rewrites
+// same-origin URLs to paths, so this hash is home-agnostic and holds whichever
+// site computes it.
+//
+// A site already at the target short-circuits before this guard, so re-pinning
+// does not disturb the local site, which is already recut.
+const EXPECTED_BEFORE_SHA256 = '19c48c289376456803975a3cf64e831230a90488d11fb31d56ee4deb54f2ca88';
 const NEW_CONTENT = [
 	'<!-- wp:navigation-link {"label":"Work","url":"/work/","kind":"custom","isTopLevelLink":true,"className":"hp-nav-work"} /-->',
 	'<!-- wp:navigation-submenu {"label":"Writing","kind":"custom","isTopLevelItem":true,"className":"hp-nav-writing"} -->',

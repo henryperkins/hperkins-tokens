@@ -122,9 +122,21 @@ test( 'normalization preserves selected-origin text outside URL fields', () => {
 } );
 
 test( 'Council migration exports the guarded exact navigation tree', () => {
+	// Tie the guard to a state we actually have on disk. Asserting the literal
+	// only restated the constant; this fails if the pin is ever moved to a hash
+	// that matches no recorded navigation, which is exactly the mistake that let
+	// the pin sit on a synthetic local menu that production never had.
+	const productionBackup = fs.readFileSync(
+		NAVIGATION_SNAPSHOT_PATH.replace( 'nav-237.html', 'nav-237.production.html' ),
+		'utf8'
+	);
 	assert.equal(
 		EXPECTED_BEFORE_SHA256,
-		'29d2a38e38999cf3992b533133c30f03867804b2bc4e70de3a658f502a18242b'
+		crypto
+			.createHash( 'sha256' )
+			.update( normalizeNavigationContent( productionBackup, 'https://hperkins.blog' ) )
+			.digest( 'hex' ),
+		'The recut guard must pin the canonical hash of the tracked production backup.'
 	);
 	assert.doesNotMatch( NEW_CONTENT, /-->\s+<!--/, 'Navigation blocks must not carry blank text between them.' );
 
