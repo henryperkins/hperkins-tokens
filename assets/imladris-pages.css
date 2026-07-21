@@ -817,7 +817,11 @@ p.hp-contact-form__hint {
 }
 
 /* masthead */
-.hp-buildreport__eyebrow {
+/* These three modifiers are <p> elements inside .hp-buildreport, so each is
+   scoped to the article to reach (0,2,0). Unscoped they are (0,1,0) and lose
+   their margin to `.hp-buildreport p` at (0,1,1) below — the same shape as the
+   `.hp-buildreport__step p` rule, which already uses the descendant form. */
+.hp-buildreport .hp-buildreport__eyebrow {
   font-family: var(--wp--preset--font-family--label);
   text-transform: uppercase;
   letter-spacing: .2em;
@@ -835,7 +839,7 @@ p.hp-contact-form__hint {
   margin: 0 0 .875rem;
   text-wrap: balance;
 }
-.hp-buildreport__standfirst {
+.hp-buildreport .hp-buildreport__standfirst {
   font-size: 1.25rem;
   line-height: 1.5;
   color: var(--wp--custom--text--muted);
@@ -1027,7 +1031,7 @@ p.hp-contact-form__hint {
 .hp-buildreport__takeaway p { margin: 0; color: var(--wp--custom--text--body); font-size: 1.0625rem; }
 
 /* "do it yourself" steps intro (the .hp-buildreport__steps grid itself is defined above) */
-.hp-buildreport__steps-intro {
+.hp-buildreport .hp-buildreport__steps-intro {
   margin: 0;
   font-family: var(--wp--preset--font-family--label);
   text-transform: uppercase;
@@ -1083,8 +1087,8 @@ p.hp-contact-form__hint {
   .hp-buildreport { padding-top: 2.25rem; padding-left: 1.375rem; padding-right: 1.375rem; }
 
   /* ease the intro density — tighten the masthead stack so the proof strip earns its place without pushing §01 further down (was ~1041px at 320; the lede + standfirst carried most of the weight) */
-  .hp-buildreport__eyebrow { margin-bottom: .875rem; }
-  .hp-buildreport__standfirst { font-size: 1.0625rem; line-height: 1.45; margin-bottom: 1.125rem; }
+  .hp-buildreport .hp-buildreport__eyebrow { margin-bottom: .875rem; }
+  .hp-buildreport .hp-buildreport__standfirst { font-size: 1.0625rem; line-height: 1.45; margin-bottom: 1.125rem; }
   .hp-buildreport__rule { margin-bottom: 1.375rem; }
   .hp-buildreport__artifacts { gap: .5rem; margin-bottom: 1.125rem; }
   .hp-buildreport a.hp-buildreport__artifact { padding: .5rem .75rem; }

@@ -322,6 +322,12 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 * Verification: verify-header.js now asserts that exactly one drawer-trigger
   icon is visible in each state, at every mobile width. The whole icon swap
   previously had no coverage, which is why a purely visual regression shipped.
+* Fix: /how-this-was-built/ recovers three margins that had been silently dead
+  for the same reason. `.hp-buildreport p` (0,1,1) out-specified the bare-class
+  eyebrow, standfirst, and steps-intro rules (0,1,0), so their spacing never
+  applied: measured 14px where 18px, 26px, and 0 were authored. The steps intro
+  was the most visible, adding 14px on top of the 22px flex gap that is meant
+  to own that spacing on its own.
 
 = 0.3.50 =
 * Design: ship the selected Condensed Council header with a calm, genuinely
