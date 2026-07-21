@@ -509,6 +509,10 @@ async function assertFocusVisible( cdp, sessionId, selector, label ) {
 	const focus = await evaluate( cdp, sessionId, `(() => {
 		const target = document.querySelector(${ JSON.stringify( selector ) });
 		if (!target) return null;
+		const describe = (node) => node
+			? node.tagName.toLowerCase() + (node.className && typeof node.className === 'string' ? '.' + node.className.trim().split(/\\s+/).join('.') : '')
+			: 'none';
+		const before = describe(document.activeElement);
 		target.focus();
 		const style = getComputedStyle(target);
 		const width = parseFloat(style.outlineWidth) || 0;
@@ -544,11 +548,20 @@ async function assertFocusVisible( cdp, sessionId, selector, label ) {
 			outlineStyle: style.outlineStyle,
 			outlineWidth: width,
 			clipped,
+			focusedBefore: before,
 		};
 	})()` );
 	assert( focus, `${ label } focus target is missing.` );
+	// :focus-visible is a modality heuristic, not a state we control directly —
+	// say so when it is the reason, otherwise the message blames the outline for
+	// a selector that never matched.
 	assert(
-		focus.matches && focus.outlineStyle !== 'none' && focus.outlineWidth >= 3,
+		focus.matches,
+		`${ label } did not match :focus-visible after programmatic focus (focus was on ${ focus.focusedBefore } before). ` +
+			'The browser only treats scripted focus as visible while the last input modality was the keyboard.'
+	);
+	assert(
+		focus.outlineStyle !== 'none' && focus.outlineWidth >= 3,
 		`${ label } focus-visible outline is ${ focus.outlineStyle } ${ focus.outlineWidth }px.`
 	);
 	assert(
