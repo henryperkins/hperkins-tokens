@@ -570,6 +570,55 @@ async function assertFocusVisible( cdp, sessionId, selector, label ) {
 	);
 }
 
+// Assembler's theme.json `styles.css` string puts
+// `button:focus-visible { outline: 2px solid var(--wp--preset--color--theme-4) }`
+// into global-styles-inline-css. This theme replaces Assembler's palette, so
+// `theme-4` never resolves, the shorthand is invalid at computed-value time, and
+// `outline-style` falls back to `none` — the ring is removed, not recoloured.
+//
+// Both that rule and ours are (0,1,1), so source order alone picks the winner,
+// and the two environments disagree: locally the child sheet prints after global
+// styles and wins, while production's Page Optimize concatenation hoists it above
+// them and loses. A same-order check therefore passes locally no matter how
+// fragile the ring is, which is exactly how buttons reached production with no
+// focus ring at all. Re-assert the ring with Assembler's declaration replayed
+// last, so the local run measures production's order instead of assuming it.
+async function assertRingBeatsGlobalStyles( cdp, sessionId, selector, label ) {
+	const result = await evaluate( cdp, sessionId, `(() => {
+		const target = document.querySelector(${ JSON.stringify( selector ) });
+		if (!target) return null;
+		const gold = getComputedStyle(document.documentElement)
+			.getPropertyValue('--wp--preset--color--gold-700').trim();
+		const style = document.createElement('style');
+		style.id = 'hp-verify-global-styles-order';
+		// Byte-for-byte Assembler's declaration, appended last.
+		style.textContent = 'button:focus-visible, .wp-block-button__link:focus-visible' +
+			' { outline: 2px solid var(--wp--preset--color--theme-4); outline-offset: 2px; }';
+		document.head.appendChild(style);
+		target.focus();
+		const computed = getComputedStyle(target);
+		const measured = {
+			gold,
+			outlineStyle: computed.outlineStyle,
+			outlineWidth: parseFloat(computed.outlineWidth) || 0,
+			outlineColor: computed.outlineColor,
+		};
+		style.remove();
+		return measured;
+	})()` );
+	assert( result, `${ label } focus target is missing for the cascade-order check.` );
+	assert(
+		result.gold,
+		'--wp--preset--color--gold-700 did not resolve, so the ring colour cannot be checked.'
+	);
+	assert(
+		result.outlineStyle !== 'none' && result.outlineWidth >= 3,
+		`${ label } loses its focus ring (${ result.outlineStyle } ${ result.outlineWidth }px) when Assembler's ` +
+			"global-styles rule is ordered last. Our rule must out-specify it, not merely follow it — " +
+			'production serves the sheets in that order.'
+	);
+}
+
 async function stateSnapshot( cdp, sessionId ) {
 	return evaluate( cdp, sessionId, `(() => {
 		const root = document.querySelector('[data-hp-header-root]');
@@ -948,6 +997,7 @@ async function verifyDesktopInteractions( cdp, sessionId ) {
 	assert( writingName === 'Writing', `Writing accessible name is "${ writingName }"; expected exactly "Writing".` );
 	await pressKey( cdp, sessionId, 'Tab' );
 	await assertFocusVisible( cdp, sessionId, '[data-hp-header-trigger="work"]', 'Work trigger' );
+	await assertRingBeatsGlobalStyles( cdp, sessionId, '[data-hp-header-trigger="work"]', 'Work trigger' );
 
 	for ( const next of [ 'work', 'writing', 'search' ] ) {
 		for ( const key of [ 'Enter', 'Space' ] ) {

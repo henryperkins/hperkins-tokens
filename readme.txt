@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.51
+Stable tag: 0.3.52
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -311,6 +311,33 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.52 =
+* Accessibility: restore the keyboard focus ring on every button in production.
+  Assembler's theme.json `styles.css` string emits
+  `button:focus-visible, .wp-block-button__link:focus-visible { outline: 2px
+  solid var(--wp--preset--color--theme-4) }` into global-styles-inline-css.
+  `theme-4` belongs to Assembler's colour variations, which this theme hides and
+  whose palette it replaces, so the token resolves to nothing — the shorthand is
+  invalid at computed-value time and `outline-style` falls back to its initial
+  `none`. The ring was removed outright rather than recoloured; the reported
+  `outline: none 3px` is that fallback, since `medium` computes to 3px.
+* Both that rule and ours were (0,1,1), so source order alone decided the
+  winner, and the environments disagreed: locally the child sheet prints after
+  global styles and won, while in production Page Optimize concatenates the
+  file-based sheets and hoists the bundle above the inline global styles, so the
+  dead declaration won and `<button>` and `.wp-block-button__link` had no visible
+  focus ring at all. Links were unaffected — Assembler's rule does not match
+  them — which is why the site otherwise looked correct. Overriding Assembler's
+  whole `styles.css` string from this theme.json would discard its
+  disabled-button and WooCommerce rules with it, so the two selectors are lifted
+  to (0,2,1) and win on specificity in either order.
+* Verification: verify-header.js now replays Assembler's declaration last and
+  re-asserts the ring, so the local run measures production's stylesheet order
+  instead of assuming its own. A same-order check passes locally however fragile
+  the ring is, which is how this reached production unseen — it was the first
+  defect found by running the Chrome half against the live site rather than the
+  dev site.
 
 = 0.3.51 =
 * Fix: the mobile menu button no longer draws its close glyph on top of the
