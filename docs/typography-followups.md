@@ -74,15 +74,16 @@ in this repo). Per the review:
   so production kept rendering H1 → H3 for a further day and the seed pattern
   kept its H3 headings. Snapshot and pattern are both regenerated in 0.3.48, and
   `scripts/verify-no-duplicate-pages.js` now fails if they diverge again.
-- `/job-placement-digest/`: **Not done — still open.** The earlier "Done
-  (2026-07-19)" claim here was wrong in the same way: `61e1140` promoted
-  `.hp-operational-story__title` H3 → H2 in
-  `content/page-snapshots/job-placement-digest.html` only. The stored page body
-  still carries H3, so the live page still skips a level. Fixing it is a page-body
-  edit plus a snapshot re-export, out of scope for the 0.3.48 content-identity
-  transaction. Note the snapshot has also fallen behind the body by roughly 250
-  lines (the live page gained a "Resume + Keyword Bank" section on 2026-07-18),
-  so re-exporting without first re-applying the H2 would silently revert the fix.
+- `/job-placement-digest/`: **Done (0.3.49).** The stored page body now carries
+  `.hp-operational-story__title` as H2, so the rendered order is H1 → H2 with no
+  skip. The earlier "Done (2026-07-19)" claim here was wrong in the same way
+  `/work/`'s was: `61e1140` promoted the heading in
+  `content/page-snapshots/job-placement-digest.html` only, so production kept
+  rendering H1 → H3 for a further day. The snapshot had also fallen behind the
+  body by roughly 250 lines (the page gained a "Resume + Keyword Bank" section on
+  2026-07-18); the body edit landed **before** the re-export, which is the order
+  that matters — exporting first would have overwritten the fix with the stale
+  mirror. Snapshot and body are back in sync.
 - AI Leadership reflection (`/work/ai-provider-for-codex/ai-leadership-4-…/`):
   the visible title is an H2 with no H1 on the page — make it the H1. **Still
   open:** this post is not one of the tracked page snapshots and is not present
@@ -109,5 +110,6 @@ node scripts/verify-typography.js --report   # non-failing audit of what remains
 
 The remaining known failures until §1–§3 land: the Flavor Agent SVG text
 size/contrast, the duplicate pages' un-scoped typography, and the missing H1
-on the reflection page. (The `/work/` and `/job-placement-digest/` heading-order
-skips were fixed 2026-07-19 — see §3.)
+on the reflection page. (`/work/`'s heading-order skip was fixed in 0.3.48 and
+`/job-placement-digest/`'s in 0.3.49 — see §3. Both were previously recorded
+here as fixed on 2026-07-19, when only the snapshots had changed.)

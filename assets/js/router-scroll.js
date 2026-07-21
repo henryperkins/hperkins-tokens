@@ -1,5 +1,6 @@
 /**
- * hperkins-tokens — native scroll parity for Interactivity Router navigations.
+ * hperkins-tokens — native scroll and focus parity for in-page anchors and
+ * Interactivity Router navigations.
  *
  * This site runs Gutenberg's full-page Interactivity Router: internal link
  * clicks are intercepted and the <body> region is swapped in place. The router
@@ -28,17 +29,44 @@
 ( function () {
 	'use strict';
 
+	function resolveHash( hash ) {
+		if ( ! hash || hash.length < 2 ) {
+			return null;
+		}
+		try {
+			return document.getElementById( decodeURIComponent( hash.slice( 1 ) ) );
+		} catch ( e ) {
+			/* malformed percent-encoding — treat as a missing anchor */
+			return null;
+		}
+	}
+
+	// Scrolling alone leaves focus on the link that was activated, so a screen
+	// reader keeps reading from the link instead of the section just revealed —
+	// the target is merely the *starting point* for the next tab, never focused,
+	// unless it is focusable. Give it a programmatic-only tabstop (-1: reachable
+	// by script, never inserted into the tab order) and move focus there.
+	// preventScroll because the caller has already placed the viewport.
+	function focusTarget( target ) {
+		if ( ! target ) {
+			return;
+		}
+		if ( ! target.hasAttribute( 'tabindex' ) ) {
+			target.setAttribute( 'tabindex', '-1' );
+		}
+		try {
+			target.focus( { preventScroll: true } );
+		} catch ( e ) {
+			target.focus();
+		}
+	}
+
 	function applyScroll( fromPath ) {
 		var navigated = window.location.pathname !== fromPath;
 		var hash = window.location.hash;
 
 		if ( hash && hash.length > 1 ) {
-			var target = null;
-			try {
-				target = document.getElementById( decodeURIComponent( hash.slice( 1 ) ) );
-			} catch ( e ) {
-				/* malformed percent-encoding — treat as a missing anchor */
-			}
+			var target = resolveHash( hash );
 			if ( target ) {
 				var reduce = !! ( window.matchMedia &&
 					window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches );
@@ -46,6 +74,7 @@
 					behavior: reduce ? 'auto' : 'smooth',
 					block: 'start',
 				} );
+				focusTarget( target );
 				return;
 			}
 			// Missing anchor on a swapped-in page: fall through to the plain-
@@ -90,4 +119,14 @@
 	}
 
 	wrapHistory( 'pushState' );
+
+	// Same-page fragment links (the digest's "Read the verified artifacts" ->
+	// #resume-keyword-bank) never reach the code above: the router leaves them
+	// alone and the browser navigates natively, so no pushState fires. The
+	// browser has already scrolled by the time hashchange lands — only focus is
+	// missing. Initial loads carrying a hash are deliberately not handled here;
+	// stealing focus during load fights the browser's own restoration.
+	window.addEventListener( 'hashchange', function () {
+		focusTarget( resolveHash( window.location.hash ) );
+	} );
 }() );

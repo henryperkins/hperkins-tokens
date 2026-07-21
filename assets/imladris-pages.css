@@ -319,7 +319,8 @@ p.hp-contact-form__hint {
    the pitch with no hairline; a gold-washed <mark> in the eyebrow carries the
    ask and a mono dateline pins the digest to its date. Everything below the
    hero is existing component anatomy (proof bar, callout, operational story,
-   artifact row) and needs no page CSS.
+   artifact row) and needs no page CSS beyond the narrow-viewport padding
+   relief at the end of this section.
    ========================================================================= */
 .hp-digest__hero.hp-page-hero {
   border-bottom: 0;
@@ -338,6 +339,21 @@ p.hp-contact-form__hint {
   font-family: var(--wp--preset--font-family--mono);
   font-size: var(--wp--preset--font-size--xs);
   color: var(--wp--custom--text--faint);
+}
+
+/* The digest's three bordered sections carry spacing-6 (2rem) side padding as
+   *inline* block styles, which leaves a ~261px text column at 390px — enough
+   wrapping to hurt the long resume and market-analysis prose. Halving it to
+   1rem returns ~32px of measure. !important is load-bearing here: an inline
+   style cannot be reached any other way. The alternative — stripping padding
+   from the block attributes and owning it here — was rejected because an
+   editor re-saving the block in Gutenberg would silently reintroduce it. */
+@media (max-width: 600px) {
+  .hp-resume-keyword-bank,
+  .hp-non-negotiables,
+  .hp-validated-set {
+    padding-inline: var(--wp--preset--spacing--4) !important;
+  }
 }
 
 /* --- Component tweak: contact submit -------------------------------- */

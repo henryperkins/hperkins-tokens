@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.48
+Stable tag: 0.3.49
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -290,6 +290,27 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.49 =
+* Accessibility: the /job-placement-digest/ operational-story title is h2 in the
+  stored page body, so the rendered order is h1 -> h2 with no skipped level.
+  This is the same failure /work/ had in 0.3.48 — 61e1140 promoted the heading
+  in content/page-snapshots/job-placement-digest.html only, a mirror WordPress
+  never reads, so production kept rendering h1 -> h3 for a further day.
+* Accessibility: #resume-keyword-bank is a reachable jump target. It had been an
+  empty aria-hidden div — hidden from the accessibility tree, so the "Read the
+  verified artifacts" link scrolled to something assistive tech could not land
+  on. The anchor now rides the section group, and router-scroll.js gives
+  fragment targets a programmatic tabstop and moves focus to them, for native
+  #hash navigation as well as router pushes.
+* Content: the digest's closing action panel is restored. The stored body ended
+  in bare buttons while patterns/job-placement-digest.php and
+  scripts/verify-prominent-actions.js both expected .hp-digest-cta — the
+  verifier had been failing on the missing panel, rail and heading.
+* Content: the hero dateline carries the verification date (18 Jul) rather than
+  the authoring date (13 Jul), which contradicted the screening notes below it.
+* Mobile: halve the side padding on the digest's three bordered sections at
+  <=600px. Their spacing-6 inline padding left a ~261px text column at 390px.
 
 = 0.3.48 =
 * Content identity: /work/ is one page again. The four-project, artifact-bearing
