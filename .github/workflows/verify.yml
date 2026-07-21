@@ -70,7 +70,11 @@ jobs:
           node --test \
             scripts/lib/wp-cli.test.js \
             scripts/lib/site-url.test.js \
-            scripts/lib/navigation-content-contract.test.js
+            scripts/lib/navigation-content-contract.test.js \
+            scripts/lib/zip-archive.test.js
+
+      - name: Placement artifact contracts
+        run: node scripts/verify-placement-artifacts.js
 
       - name: Council header source contract
         run: node scripts/verify-header.js --source-only

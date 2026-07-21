@@ -314,45 +314,338 @@ p.hp-contact-form__hint {
 }
 
 /* ===========================================================================
-   Job Placement Digest — /job-placement-digest/
-   The digest reads as one continuous address, so the hero flows straight into
-   the pitch with no hairline; a gold-washed <mark> in the eyebrow carries the
-   ask and a mono dateline pins the digest to its date. Everything below the
-   hero is existing component anatomy (proof bar, callout, operational story,
-   artifact row) and needs no page CSS beyond the narrow-viewport padding
-   relief at the end of this section.
+   Job Placement Digest + Placement Method appendix
+   Recruiter-facing composition stays compact and proof-led. The linked method
+   page keeps the deeper ledgers in disclosures and dated research notes. Core
+   components live in style.css; this section owns only page rhythm, column
+   composition, and table widths.
    ========================================================================= */
 .hp-digest__hero.hp-page-hero {
+  max-inline-size: var(--wp--style--global--wide-size, 72rem);
   border-bottom: 0;
   padding-bottom: 0;
 }
-.hp-digest__hero .hp-page-hero__eyebrow mark {
-  background: var(--wp--preset--color--gold-200);
-  /* Strong ink, not the inherited accent: gold-on-gold sat at ~4.4:1 for
-     13px caps — below AA (2026-07 typography review). */
-  color: var(--wp--custom--text--strong);
-  padding: 1px 5px 2px;
-  border-radius: var(--wp--custom--radius--xs);
+
+.hp-digest-template {
+  padding-block-start: var(--wp--preset--spacing--6) !important;
 }
+
+.hp-digest__hero h1,
+.hp-method-hero h1 {
+  max-inline-size: 28ch;
+  margin-block: var(--wp--preset--spacing--4) 0;
+}
+
+.hp-digest__support-line {
+  max-inline-size: var(--wp--custom--measure--prose);
+  margin: var(--wp--preset--spacing--4) 0 0;
+  font-family: var(--wp--preset--font-family--label);
+  font-size: var(--wp--preset--font-size--sm);
+  line-height: 1.5;
+  color: var(--wp--custom--text--muted);
+}
+
+.hp-digest__current-role {
+  max-inline-size: var(--wp--custom--measure--prose);
+  margin: var(--wp--preset--spacing--5) 0 0;
+  padding-inline-start: var(--wp--preset--spacing--4);
+  line-height: var(--wp--custom--leading--relaxed);
+  color: var(--wp--custom--text--strong);
+  border-inline-start: 3px solid var(--wp--custom--rule--gold);
+}
+
 .hp-digest__dateline {
   margin: var(--wp--preset--spacing--4) 0 0;
   font-family: var(--wp--preset--font-family--mono);
   font-size: var(--wp--preset--font-size--xs);
-  color: var(--wp--custom--text--faint);
+  line-height: 1.45;
+  color: var(--wp--custom--text--muted);
 }
 
-/* The digest's three bordered sections carry spacing-6 (2rem) side padding as
-   *inline* block styles, which leaves a ~261px text column at 390px — enough
-   wrapping to hurt the long resume and market-analysis prose. Halving it to
-   1rem returns ~32px of measure. !important is load-bearing here: an inline
-   style cannot be reached any other way. The alternative — stripping padding
-   from the block attributes and owning it here — was rejected because an
-   editor re-saving the block in Gutenberg would silently reintroduce it. */
+.hp-category-bar {
+  margin-block: var(--wp--preset--spacing--4);
+}
+
+/* Four first-screen actions share one compact rail. Grid keeps long labels
+   inside their cells rather than letting one button force page overflow. */
+.hp-digest__primary-actions.hp-action-rail {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+  margin-block-start: 0;
+}
+
+.hp-digest__primary-actions .wp-block-button,
+.hp-digest__primary-actions .wp-block-button__link {
+  min-width: 0;
+  width: 100%;
+}
+
+.hp-digest__primary-actions .wp-block-button__link {
+  padding-inline: var(--wp--preset--spacing--3);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.hp-digest-section,
+.hp-method-section {
+  box-sizing: border-box;
+  margin-block-start: var(--wp--preset--spacing--9);
+  scroll-margin-block-start: calc(var(--hp-header-h-compact) + var(--wp--preset--spacing--4));
+}
+
+.hp-digest-section > h2:first-child,
+.hp-method-section > h2:first-child {
+  margin-block-start: 0;
+}
+
+.hp-support-now > p,
+.hp-theme-governance > p,
+.hp-method-link > p {
+  max-inline-size: var(--wp--custom--measure--prose);
+}
+
+/* Two-column fit is short enough to wrap in place at every width. The final
+   row is visibly a gap, not a proxy claim presented as evidence. */
+.hp-fit-table table {
+  table-layout: fixed;
+}
+
+.hp-fit-table :is(th, td):first-child {
+  inline-size: 38%;
+}
+
+.hp-fit-table tbody tr:last-child {
+  background: var(--wp--custom--surface--pending);
+}
+
+.hp-fit-table tbody tr:last-child th {
+  color: var(--wp--custom--on--pending);
+}
+
+.hp-proof-cards.wp-block-columns {
+  max-inline-size: 100%;
+  align-items: stretch;
+  gap: var(--wp--preset--spacing--4);
+}
+
+.hp-proof-cards > .hp-proof-card {
+  flex-basis: 0;
+}
+
+.hp-incident-card > h2 {
+  max-inline-size: 24ch;
+}
+
+.hp-incident-card > p:last-child {
+  margin-block-end: 0;
+  padding-block-start: var(--wp--preset--spacing--3);
+  border-block-start: 1px solid var(--wp--custom--border--hair);
+}
+
+/* The evidence register is deliberately compact: direct proof, state, link.
+   Wide and dense ledgers scroll within their figure rather than widening the
+   page. Long repository labels and URLs may wrap at any safe character. */
+.hp-evidence-ledger > p {
+  max-inline-size: var(--wp--custom--measure--prose);
+}
+
+.hp-evidence-table table {
+  min-inline-size: 50rem;
+}
+
+.hp-evidence-table :is(th, td):nth-child(1) {
+  inline-size: 27%;
+}
+
+.hp-evidence-table :is(th, td):nth-child(2) {
+  inline-size: 31%;
+}
+
+.hp-method-hero > p:not(.hp-page-hero__eyebrow, .hp-digest__dateline) {
+  max-inline-size: var(--wp--custom--measure--prose);
+  line-height: var(--wp--custom--leading--relaxed);
+}
+
+.hp-method-hero .wp-block-buttons {
+  margin-block-start: var(--wp--preset--spacing--5);
+}
+
+/* Disclosure/index: the closed row is the index. Open content becomes a
+   lighter internal ledger and retains native Details keyboard behavior. */
+.hp-keyword-disclosure > .hp-keyword-table {
+  margin: 0;
+  background: var(--wp--custom--surface--sunken);
+  border: 0;
+  border-block-start: 1px solid var(--wp--custom--border--hair);
+  border-radius: 0;
+}
+
+.hp-keyword-table table {
+  min-inline-size: 48rem;
+}
+
+.hp-keyword-table :is(th, td):first-child {
+  inline-size: 29%;
+}
+
+.hp-screen-rules > p {
+  max-inline-size: var(--wp--custom--measure--prose);
+}
+
+.hp-research-note > p {
+  max-inline-size: var(--wp--custom--measure--prose);
+}
+
+.hp-state-table table {
+  min-inline-size: 42rem;
+}
+
+.hp-state-table :is(th, td):nth-child(2) {
+  inline-size: 8rem;
+  font-family: var(--wp--preset--font-family--mono);
+  white-space: nowrap;
+}
+
+.hp-market-table table {
+  min-inline-size: 90rem;
+}
+
+.hp-market-table :is(th, td):nth-child(1) {
+  inline-size: 15%;
+}
+
+.hp-market-table :is(th, td):nth-child(2) {
+  inline-size: 12%;
+}
+
+.hp-market-table :is(th, td):nth-child(3) {
+  inline-size: 14%;
+}
+
+.hp-market-table :is(th, td):nth-child(4),
+.hp-market-table :is(th, td):nth-child(5),
+.hp-market-table :is(th, td):nth-child(6) {
+  inline-size: 10%;
+}
+
+.hp-overturn-list {
+  max-inline-size: var(--wp--custom--measure--prose);
+}
+
+.hp-overturn-list li + li {
+  margin-block-start: var(--wp--preset--spacing--3);
+}
+
+.hp-decision-audit .wp-block-quote {
+  margin-block-start: var(--wp--preset--spacing--6);
+}
+
+@media (max-width: 960px) {
+  .hp-digest__primary-actions.hp-action-rail {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hp-proof-cards.wp-block-columns {
+    flex-wrap: wrap !important;
+  }
+
+  .hp-proof-cards > .hp-proof-card {
+    flex-basis: calc(50% - var(--wp--preset--spacing--4));
+  }
+}
+
 @media (max-width: 600px) {
-  .hp-resume-keyword-bank,
-  .hp-non-negotiables,
-  .hp-validated-set {
-    padding-inline: var(--wp--preset--spacing--4) !important;
+  .hp-digest__hero h1,
+  .hp-method-hero h1 {
+    max-inline-size: none;
+  }
+
+  .hp-digest__primary-actions.hp-action-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hp-proof-cards > .hp-proof-card {
+    flex-basis: 100%;
+  }
+
+  .hp-fit-table :is(th, td) {
+    padding-inline: var(--wp--preset--spacing--3);
+  }
+
+  .hp-fit-table :is(th, td):first-child {
+    inline-size: 42%;
+  }
+
+  .hp-incident-card,
+  .hp-research-note,
+  .wp-block-group.is-style-hperkins-incident-card,
+  .wp-block-group.is-style-hperkins-research-note {
+    padding: var(--wp--preset--spacing--4);
+  }
+
+  .hp-disclosure > summary,
+  .wp-block-details.is-style-hperkins-disclosure > summary {
+    padding-inline: var(--wp--preset--spacing--3);
+  }
+}
+
+/* At the 320px verification width, two prose columns leave less than one
+   readable word per line. Preserve the table semantics in the accessibility
+   tree while presenting each role/proof pair as one stacked ledger row. */
+@media (max-width: 359px) {
+  .hp-fit-table thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .hp-fit-table :is(table, tbody, tr, th, td) {
+    box-sizing: border-box;
+    display: block;
+    inline-size: 100% !important;
+  }
+
+  .hp-fit-table tbody tr {
+    border-block-end: 1px solid var(--wp--custom--border--hair);
+  }
+
+  .hp-fit-table tbody tr:last-child {
+    border-block-end: 0;
+  }
+
+  .hp-fit-table tbody :is(th, td) {
+    border-block-end: 0;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .hp-fit-table tbody th {
+    padding-block-end: var(--wp--preset--spacing--2);
+    background: var(--wp--custom--surface--sunken);
+  }
+
+  .hp-fit-table tbody td {
+    padding-block-start: var(--wp--preset--spacing--2);
+  }
+
+  .hp-fit-table tbody td::before {
+    content: "Strongest proof";
+    display: block;
+    margin-block-end: var(--wp--preset--spacing--2);
+    font-family: var(--wp--preset--font-family--label);
+    font-size: var(--wp--preset--font-size--xs);
+    font-weight: var(--wp--custom--weight--regular);
+    line-height: 1.35;
+    letter-spacing: var(--wp--custom--tracking--wide);
+    text-transform: uppercase;
+    color: var(--wp--custom--text--muted);
   }
 }
 

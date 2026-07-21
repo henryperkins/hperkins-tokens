@@ -25,7 +25,7 @@ This is a child theme. It overrides the header and footer template parts; ships
 front-page.html, home.html, single.html, archive.html, search.html, 404.html,
 page-about.html, page-ai-enablement.html, page-contact.html,
 page-how-this-was-built.html, page-job-placement-digest.html, page-work.html,
-and page-case-study.html as
+page-placement-method-and-evidence.html, and page-case-study.html as
 additive block templates (each detailed under Template overrides below); and provides its own token
 vocabulary, component CSS, and patterns. Unspecified page/post templates are
 inherited from the Assembler parent. The Assembler parent theme must be
@@ -157,7 +157,7 @@ unchanged.
 
 = Template overrides =
 
-The child theme owns thirteen block templates (page-case-study is also registered
+The child theme owns fourteen block templates (page-case-study is also registered
 as a selectable "Case study" template in theme.json; the others map by the
 WordPress template hierarchy):
 
@@ -192,6 +192,10 @@ WordPress template hierarchy):
 * page-job-placement-digest.html — the Job Placement Digest shell; renders the
   stored page body in the 44/72rem reading column. The current live content is
   versioned at `content/page-snapshots/job-placement-digest.html`.
+* page-placement-method-and-evidence.html — the research appendix shell; renders
+  the stored Placement Method and Evidence body in the 44/72rem reading
+  column. Its verified mirror is tracked at
+  `content/page-snapshots/placement-method-evidence.html`.
 * page-work.html — the work index shell; renders the stored page body in the
   44/72rem composition. The current live content is versioned at
   `content/page-snapshots/work.html`.
@@ -202,25 +206,30 @@ WordPress template hierarchy):
 
 Unspecified page/post templates are inherited from the Assembler parent.
 
-The public About, Work, AI Enablement, and Job Placement Digest routes are
-DB-owned page bodies. The public front page is hybrid: `front-page.html` keeps
+The public About, Work, AI Enablement, Job Placement Digest, and Placement
+Method and Evidence routes are DB-owned page bodies. The WordPress database
+body is canonical for visitor-facing content; each committed HTML snapshot is
+an automatically verified mirror, not another authoring source. The public
+front page is hybrid: `front-page.html` keeps
 the Wapuu hero and Three Rings framework theme-owned, while the middle Home
 section remains DB-owned and tracked at
 `content/page-snapshots/front-page.html`. The published Flavor Agent demo route
 (`/work/flavor-agent/demo/`) likewise keeps its iframe embed and explanatory
 copy in the database; because it inherits the generic page shell, its tracked
-source lives at `content/page-snapshots/work-flavor-agent-demo.html` rather
-than a theme-owned wrapper template. Keep the tracked source copies in sync at
+mirror lives at `content/page-snapshots/work-flavor-agent-demo.html` rather
+than a theme-owned wrapper template. Keep the verified mirrors in sync at
 `content/page-snapshots/front-page.html`,
 `content/page-snapshots/about.html`, `content/page-snapshots/work.html`,
 `content/page-snapshots/ai-enablement.html`,
-`content/page-snapshots/job-placement-digest.html`, and
+`content/page-snapshots/job-placement-digest.html`,
+`content/page-snapshots/placement-method-evidence.html`, and
 `content/page-snapshots/work-flavor-agent-demo.html`. After an intentional
 page-body edit, refresh the files with `node scripts/export-page-snapshots.js`
 and verify with `node scripts/verify-content-ownership.js`. The older
-filesystem patterns (`about-resume`, `work-index`, `ai-enablement`, and
-`job-placement-digest`) remain reusable seeds/reference copies rather than the
-live route owners for those pages, while `wapuu-home-hero` remains the live
+filesystem patterns (`about-resume`, `work-index`, and `ai-enablement`) remain
+reusable seeds/reference copies rather than the live route owners for those
+pages. The former full-page `job-placement-digest` pattern is retired so it
+cannot drift into a third maintained body. `wapuu-home-hero` remains the live
 front-page hero.
 
 = Condensed Council header =
@@ -311,6 +320,25 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.53 =
+* Rebuild the Job Placement Digest as a concise Support Engineer case with
+  neutral career-direction labels, explicit evidence states, a compact fit
+  ledger, three primary proof cards, and the production focus-regression case.
+* Separate the research notebook into the database-owned Placement Method and
+  Evidence appendix and retire the stale full-page digest pattern so the live
+  WordPress body has one automatically verified repository mirror, not a third
+  maintained copy.
+* Add a public read-only content-integrity endpoint plus local, CI, and
+  deployment verifiers that report both hashes and a useful line diff when a
+  database body diverges from its committed snapshot.
+* Ship the one-page Support Engineer résumé and seven-column public market
+  ledger with package-level privacy, page-count, searchable-text, version, and
+  link contracts.
+* Accessibility: register versioned proof-card, incident, ledger, disclosure,
+  numbered-rule, and research-note block styles; give disclosures a 48px
+  keyboard target; raise mobile Council controls to 44px; preserve long labels
+  without page-level overflow down to 320px.
 
 = 0.3.52 =
 * Accessibility: restore the keyboard focus ring on every button in production.
