@@ -3617,6 +3617,10 @@ samp {
 	box-sizing: border-box;
 }
 
+.hp-council-header [data-hp-header-panel][hidden] {
+	display: none;
+}
+
 .hp-council-header svg {
 	display: block;
 }
@@ -3793,6 +3797,13 @@ samp {
 
 .hp-council-work-row:hover {
 	background: var(--wp--preset--color--green-100);
+}
+
+/* The panel clips to its 8px radius, and these rows run flush to that edge, so
+   the standard 2px-offset ring would lose its leading and trailing sides. Draw
+   this one inset: the row keeps its fixed anatomy and its edge-to-edge rule. */
+.hp-council-work-row:focus-visible {
+	outline-offset: -3px;
 }
 
 .hp-council-work-row__dot {
@@ -4065,6 +4076,22 @@ samp {
 	}
 }
 
+@keyframes hp-council-drawer-collapse {
+	to {
+		opacity: 0;
+		transform: translateY(-6px) scale(0.97);
+	}
+}
+
+@keyframes hp-council-tap-echo {
+	from {
+		background-color: color-mix(in srgb, var(--hp-action) 12%, transparent);
+	}
+	to {
+		background-color: transparent;
+	}
+}
+
 @media (min-width: 782px) {
 	.hp-council-header__bar {
 		box-sizing: border-box;
@@ -4172,6 +4199,7 @@ samp {
 		max-block-size: calc(100svh - var(--hp-header-h-compact));
 		overflow-x: hidden;
 		overflow-y: auto;
+		overscroll-behavior: contain;
 		background: var(--wp--preset--color--parchment-50);
 		border-block-end: 1px solid var(--wp--custom--border--hair);
 		box-shadow: var(--wp--custom--shadow--lg);
@@ -4253,6 +4281,17 @@ samp {
 		text-decoration: none;
 	}
 
+	.hp-council-header.is-hp-closing .hp-council-drawer:not([hidden]) {
+		animation: hp-council-drawer-collapse 150ms cubic-bezier(0.4, 0, 1, 1) forwards;
+		transform-origin: 0 0;
+		pointer-events: none;
+	}
+
+	.hp-council-drawer a.is-hp-chosen {
+		animation: hp-council-tap-echo 140ms ease-out both;
+		box-shadow: inset 0 -2px 0 0 var(--hp-action);
+	}
+
 	@keyframes hp-council-drawer-drop {
 		from {
 			opacity: 0;
@@ -4269,7 +4308,12 @@ samp {
 	.hp-council-work-panel,
 	.hp-council-writing-panel,
 	.hp-council-search-panel,
-	.hp-council-drawer {
+	.hp-council-drawer,
+	/* The closing and chosen-link states outrank the bare selectors above, so
+	   they have to be named here too — the guarantee must hold in CSS alone,
+	   not only through the controller's reduced-motion gate. */
+	.hp-council-header.is-hp-closing .hp-council-drawer:not([hidden]),
+	.hp-council-drawer a.is-hp-chosen {
 		animation: none;
 		transition: none;
 	}
