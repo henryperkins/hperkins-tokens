@@ -29,7 +29,24 @@ const WORK_LABELS = [
 	'AI Provider for Codex',
 	'DJ Lee & Voices of Judah',
 ];
+// Status is a semantic colour PLUS a redundant word — never colour alone. These
+// are the words, and they must stay in the link's accessible name.
+const WORK_STATUSES = [
+	'Release candidate · v0.1.0-rc.1',
+	'Merged · upstream',
+	'Shipped · v2.1',
+	'Delivered · live site',
+];
 const WRITING_LABELS = [ 'AI Enablement', 'Essays', 'Job Placement Digest' ];
+// Four Council values sit below the site-wide 12px type floor by deliberate,
+// documented exemption (see CLAUDE.md). They are pinned here so the exemption
+// stays a decision rather than drift.
+const SUB_FLOOR_TYPE = {
+	'.hp-council-work-row__status': 9,
+	'.hp-council-work-panel__eyebrow': 9,
+	'.hp-council-drawer__legend': 10,
+	'.hp-council-digest-cue': 8,
+};
 const DRAWER_LABELS = [
 	'Work',
 	'Essays',
@@ -121,7 +138,7 @@ function verifySource() {
 		'if ( null !== $pre_render )',
 		"'core/shortcode' !== $parsed_block['blockName']",
 		"'[hperkins_council_header]' === $inner_html",
-		"0 === strpos( $inner_html, '<div class=\"hp-council-header alignwide\" data-hp-header-root>' )",
+		"0 === strpos( $inner_html, '<div class=\"hp-council-header alignwide\" data-hp-header-root' )",
 		"1 === substr_count( $inner_html, 'data-hp-header-root' )",
 		"add_filter( 'pre_render_block', 'hperkins_tokens_pre_render_council_header_block', 10, 2 );",
 		// Current-page indication: the retired core Navigation block emitted this
@@ -134,6 +151,12 @@ function verifySource() {
 		'id="hp-council-drawer-legend"',
 		// A protocol-relative value names a host and must reach the host compare.
 		"if ( 0 === strpos( $value, '/' ) && 0 !== strpos( $value, '//' ) )",
+		// The no-JS fallback is a documented contract, not decoration.
+		'<noscript>',
+		'class="hp-council-noscript"',
+		"'source'    => 'fallback',",
+		"'source'    => 'navigation',",
+		'data-hp-header-source="<?php echo esc_attr( $model[\'source\'] ); ?>"',
 	] );
 	const renderer = read( 'inc/council-header.php' );
 	// The already-rendered branch is a recognition signal only. Echoing stored
@@ -148,6 +171,25 @@ function verifySource() {
 	assert(
 		( renderer.match( /hperkins_tokens_council_current_attr\(/g ) || [] ).length === 11,
 		'Every Council destination must carry an aria-current attribute (1 definition + 10 call sites).'
+	);
+	// The noscript nav is the whole navigation when the controller never runs.
+	// Every route the drawer reaches has to be reachable there too, plus Contact,
+	// which is a labelled footer route with no drawer row.
+	const noscript = renderer.slice( renderer.indexOf( '<noscript>' ), renderer.indexOf( '</noscript>' ) );
+	assert( noscript.length > 0, 'inc/council-header.php is missing its <noscript> navigation.' );
+	assert(
+		( noscript.match( /<a href=/g ) || [] ).length === 7,
+		`The noscript nav exposes ${ ( noscript.match( /<a href=/g ) || [] ).length } routes; expected 7.`
+	);
+	for ( const route of [ 'work', 'essays', 'ai', 'about', 'digest', 'subscribe' ] ) {
+		assert(
+			noscript.includes( `$${ route }['url']` ) || noscript.includes( `$model['${ route }']['url']` ),
+			`The noscript nav does not reach ${ route }.`
+		);
+	}
+	assert(
+		noscript.includes( "home_url( '/contact/' )" ),
+		'The noscript nav does not reach Contact.'
 	);
 	assertIncludes( 'style.css', [
 		'--hp-header-h: 68px;',
@@ -458,16 +500,46 @@ async function assertFocusVisible( cdp, sessionId, selector, label ) {
 		if (!target) return null;
 		target.focus();
 		const style = getComputedStyle(target);
+		const width = parseFloat(style.outlineWidth) || 0;
+		const offset = parseFloat(style.outlineOffset) || 0;
+		// A ring can be fully specified and still never reach the screen: an
+		// ancestor that clips (overflow other than visible) cuts off whichever
+		// sides fall outside its box. Inflate the target by the ring's reach and
+		// compare against every clipping ancestor.
+		const rect = target.getBoundingClientRect();
+		const reach = width + Math.max( offset, 0 );
+		const ring = {
+			top: rect.top - reach, left: rect.left - reach,
+			bottom: rect.bottom + reach, right: rect.right + reach,
+		};
+		let clipped = null;
+		for (let node = target.parentElement; node && !clipped; node = node.parentElement) {
+			const nodeStyle = getComputedStyle(node);
+			const clips = [nodeStyle.overflowX, nodeStyle.overflowY].some((value) => value !== 'visible');
+			if (!clips) continue;
+			const box = node.getBoundingClientRect();
+			const sides = [];
+			if (ring.left < box.left - 0.5) sides.push('left');
+			if (ring.right > box.right + 0.5) sides.push('right');
+			if (ring.top < box.top - 0.5) sides.push('top');
+			if (ring.bottom > box.bottom + 0.5) sides.push('bottom');
+			if (sides.length) clipped = { by: node.className || node.tagName, sides };
+		}
 		return {
 			matches: target.matches(':focus-visible'),
 			outlineStyle: style.outlineStyle,
-			outlineWidth: parseFloat(style.outlineWidth) || 0,
+			outlineWidth: width,
+			clipped,
 		};
 	})()` );
 	assert( focus, `${ label } focus target is missing.` );
 	assert(
 		focus.matches && focus.outlineStyle !== 'none' && focus.outlineWidth >= 3,
 		`${ label } focus-visible outline is ${ focus.outlineStyle } ${ focus.outlineWidth }px.`
+	);
+	assert(
+		! focus.clipped,
+		`${ label } focus ring is painted but clipped on its ${ focus.clipped && focus.clipped.sides.join( '/' ) } side(s) by ${ focus.clipped && focus.clipped.by }.`
 	);
 }
 
@@ -589,6 +661,16 @@ async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
 	assert( approximately( navCenter, initial.clientWidth / 2 ), `${ viewport.name } nav centre is ${ navCenter }; expected ${ initial.clientWidth / 2 }.` );
 	assert( initial.brand.right <= initial.nav.left + 1, `${ viewport.name } brand overlaps the centered nav.` );
 	assert( initial.nav.right <= initial.actions.left + 1, `${ viewport.name } nav overlaps desktop actions.` );
+	// Without these counts the two loops below pass vacuously: rename either
+	// selector and every size, clipping and height check silently stops running.
+	assert(
+		initial.labels.length === 3,
+		`${ viewport.name } exposes ${ initial.labels.length } nav labels; expected 3 (Work, Writing, About).`
+	);
+	assert(
+		initial.disclosureHeights.length === 2,
+		`${ viewport.name } exposes ${ initial.disclosureHeights.length } disclosure triggers; expected 2 (Work, Writing).`
+	);
 	for ( const label of initial.labels ) {
 		assert( approximately( label.size, 15, 0.1 ), `${ viewport.name } ${ label.text } is ${ label.size }px; expected 15px.` );
 		assert( label.scrollWidth <= label.clientWidth + 1, `${ viewport.name } ${ label.text } is clipped.` );
@@ -612,11 +694,67 @@ async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
 			left: value.left, right: value.right, width: value.width,
 			navCenter: (nav.left + nav.right) / 2,
 			rows: Array.from(panel.querySelectorAll('.hp-council-work-row__label')).map((label) => label.textContent.trim()),
+			// The design invariant: status is a semantic colour PLUS a redundant
+			// word, and the row anatomy is fixed per component, never per state.
+			statuses: Array.from(panel.querySelectorAll('.hp-council-work-row__status')).map((status) => ({
+				text: status.textContent.trim(),
+				size: parseFloat(getComputedStyle(status).fontSize),
+				hidden: status.getAttribute('aria-hidden') === 'true',
+			})),
+			anatomy: Array.from(panel.querySelectorAll('.hp-council-work-row')).map((row) => {
+				const style = getComputedStyle(row);
+				return {
+					state: row.classList.contains('is-state-review') ? 'review' : 'done',
+					padding: [style.paddingTop, style.paddingRight, style.paddingBottom, style.paddingLeft].join(' '),
+					radius: style.borderRadius,
+					borderLeftWidth: style.borderLeftWidth,
+					minBlockSize: style.minBlockSize,
+				};
+			}),
+			eyebrowSize: (() => {
+				const eyebrow = panel.querySelector('.hp-council-work-panel__eyebrow');
+				return eyebrow ? parseFloat(getComputedStyle(eyebrow).fontSize) : null;
+			})(),
 		};
 	})()` );
 	assert( approximately( work.navCenter, navCenter ), `${ viewport.name } Work opening moved the nav centre.` );
 	assert( approximately( work.width, 592 ), `${ viewport.name } Work panel is ${ work.width }px; expected 592px.` );
 	assert( JSON.stringify( work.rows ) === JSON.stringify( WORK_LABELS ), `${ viewport.name } Work evidence rows are stale or out of order.` );
+	// Status must survive as words in the accessible name — colour and dot shape
+	// alone would fail every colour-blind and screen-reader visitor.
+	assert(
+		JSON.stringify( work.statuses.map( ( status ) => status.text ) ) === JSON.stringify( WORK_STATUSES ),
+		`${ viewport.name } Work status words are stale or out of order: ${ JSON.stringify( work.statuses.map( ( s ) => s.text ) ) }.`
+	);
+	assert(
+		work.statuses.every( ( status ) => ! status.hidden ),
+		`${ viewport.name } hides a Work status from assistive technology, leaving state as colour alone.`
+	);
+	assert(
+		work.statuses.every( ( status ) => approximately( status.size, SUB_FLOOR_TYPE[ '.hp-council-work-row__status' ], 0.1 ) ),
+		`${ viewport.name } Work status type drifted from its pinned ${ SUB_FLOOR_TYPE[ '.hp-council-work-row__status' ] }px exemption.`
+	);
+	assert(
+		approximately( work.eyebrowSize, SUB_FLOOR_TYPE[ '.hp-council-work-panel__eyebrow' ], 0.1 ),
+		`${ viewport.name } Work panel eyebrow is ${ work.eyebrowSize }px; pinned at ${ SUB_FLOOR_TYPE[ '.hp-council-work-panel__eyebrow' ] }px.`
+	);
+	// Row anatomy is fixed per component, never per state: only the rule colour,
+	// the surface tint and the filled-vs-hollow dot may change.
+	assert(
+		work.anatomy.length === WORK_LABELS.length,
+		`${ viewport.name } exposes ${ work.anatomy.length } Work rows; expected ${ WORK_LABELS.length }.`
+	);
+	assert(
+		new Set( work.anatomy.map( ( row ) => row.state ) ).size > 1,
+		`${ viewport.name } Work rows no longer cover more than one state, so the fixed-anatomy check proves nothing.`
+	);
+	for ( const key of [ 'padding', 'radius', 'borderLeftWidth', 'minBlockSize' ] ) {
+		const values = new Set( work.anatomy.map( ( row ) => row[ key ] ) );
+		assert(
+			values.size === 1,
+			`${ viewport.name } Work row ${ key } varies by state (${ [ ...values ].join( ' vs ' ) }); anatomy is fixed per component.`
+		);
+	}
 	assert( work.left >= -1 && work.right <= initial.clientWidth + 1, `${ viewport.name } Work panel exceeds the viewport.` );
 	if ( viewport.name === 'desktop-edge' ) {
 		assert( approximately( work.left, 95, 1 ), `${ viewport.name } Work left gutter is ${ work.left }px; expected 95px.` );
@@ -992,6 +1130,94 @@ async function verifyMobileInteractions( cdp, sessionId ) {
 		return clean;
 	})()` );
 	assert( cleaned, 'Drawer close treatment was not cleaned up.' );
+
+	// Tabbing past the end of the drawer closes it, the way a disclosure should.
+	await clickTrigger( cdp, sessionId, 'drawer' );
+	await assertState( cdp, sessionId, 'drawer', 'drawer tab-out open' );
+	await evaluate( cdp, sessionId, `(() => {
+		const outside = document.createElement('button');
+		outside.id = 'hp-tab-out-probe';
+		outside.textContent = 'Outside';
+		document.body.appendChild(outside);
+		outside.focus();
+	})()` );
+	await wait( 60 );
+	await assertState( cdp, sessionId, 'closed', 'drawer tab-out close' );
+	await evaluate( cdp, sessionId, `document.getElementById('hp-tab-out-probe').remove()` );
+
+	// The drawer's own closing and chosen-link rules outrank the bare selectors
+	// in the reduced-motion reset, so they have to be exercised directly rather
+	// than assumed from the desktop panels.
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		media: 'screen',
+		features: [ { name: 'prefers-reduced-motion', value: 'reduce' } ],
+	}, sessionId );
+	assert(
+		await evaluate( cdp, sessionId, `matchMedia('(prefers-reduced-motion: reduce)').matches` ),
+		'Reduced-motion emulation did not match for the drawer pass.'
+	);
+	await clickTrigger( cdp, sessionId, 'drawer' );
+	const drawerMotion = await evaluate( cdp, sessionId, `(() => {
+		const root = document.querySelector('[data-hp-header-root]');
+		const panel = root.querySelector('[data-hp-header-panel="drawer"]');
+		const link = document.createElement('a');
+		link.href = '#hp-reduced-motion-probe';
+		link.textContent = 'Reduced motion probe';
+		panel.appendChild(link);
+		// Force the two states the reset must also neutralise.
+		root.classList.add('is-hp-closing');
+		link.classList.add('is-hp-chosen');
+		const panelStyle = getComputedStyle(panel);
+		const linkStyle = getComputedStyle(link);
+		const result = {
+			panelAnimation: panelStyle.animationName,
+			panelTransition: panelStyle.transitionDuration,
+			linkAnimation: linkStyle.animationName,
+			linkTransition: linkStyle.transitionDuration,
+		};
+		root.classList.remove('is-hp-closing');
+		link.remove();
+		return result;
+	})()` );
+	assert(
+		drawerMotion.panelAnimation === 'none' && drawerMotion.linkAnimation === 'none',
+		`Reduced motion still animates the closing drawer or its chosen link: ${ JSON.stringify( drawerMotion ) }.`
+	);
+	assert(
+		maximumDurationSeconds( drawerMotion.panelTransition ) <= 0.001 &&
+		maximumDurationSeconds( drawerMotion.linkTransition ) <= 0.001,
+		`Reduced-motion drawer transitions are ${ drawerMotion.panelTransition } / ${ drawerMotion.linkTransition }.`
+	);
+	await closeCurrent( cdp, sessionId );
+	await cdp.send( 'Emulation.setEmulatedMedia', { media: 'screen', features: [] }, sessionId );
+
+	// The drawer legend and the Digest cue carry the two remaining pinned
+	// sub-floor type exemptions.
+	await clickTrigger( cdp, sessionId, 'drawer' );
+	const drawerType = await evaluate( cdp, sessionId, `(() => {
+		const pick = (selector) => {
+			const node = document.querySelector(selector);
+			return node ? parseFloat(getComputedStyle(node).fontSize) : null;
+		};
+		return {
+			legend: pick('.hp-council-drawer__legend'),
+			cue: pick('.hp-council-digest-cue'),
+			overscroll: getComputedStyle(document.querySelector('.hp-council-drawer')).overscrollBehaviorY,
+		};
+	})()` );
+	assert(
+		approximately( drawerType.legend, SUB_FLOOR_TYPE[ '.hp-council-drawer__legend' ], 0.1 ),
+		`Drawer legend is ${ drawerType.legend }px; pinned at ${ SUB_FLOOR_TYPE[ '.hp-council-drawer__legend' ] }px.`
+	);
+	assert(
+		approximately( drawerType.cue, SUB_FLOOR_TYPE[ '.hp-council-digest-cue' ], 0.1 ),
+		`Digest cue is ${ drawerType.cue }px; pinned at ${ SUB_FLOOR_TYPE[ '.hp-council-digest-cue' ] }px.`
+	);
+	assert(
+		drawerType.overscroll === 'contain',
+		`Drawer overscroll-behavior is ${ drawerType.overscroll }; expected contain so its scroll does not chain to the page.`
+	);
+	await closeCurrent( cdp, sessionId );
 }
 
 async function verifyHoverCorridor( cdp, sessionId, next ) {
@@ -1099,8 +1325,38 @@ async function inspectViewport( cdp, viewport, captureDir ) {
 			hasController: !!document.querySelector('[data-hp-header-root][data-hp-header-state="closed"]'),
 			breakCount: document.querySelectorAll('[data-hp-header-root] br').length,
 			strayParagraphCount: document.querySelectorAll('[data-hp-header-root] p > .hp-council-brand, [data-hp-header-root] p > button, [data-hp-header-root] p > nav, [data-hp-header-root] p > div, [data-hp-header-root] p > ul, [data-hp-header-root] p > form').length,
+			source: document.querySelector('[data-hp-header-root]') && document.querySelector('[data-hp-header-root]').getAttribute('data-hp-header-source'),
+			noscript: (() => {
+				// noscript content is inert text under a scripting UA, so read it
+				// as markup rather than querying for elements that do not exist.
+				const node = document.querySelector('[data-hp-header-root] noscript');
+				if (!node) return null;
+				const parsed = new DOMParser().parseFromString(node.textContent, 'text/html');
+				const nav = parsed.querySelector('.hp-council-noscript');
+				return {
+					hasNav: !!nav,
+					hrefs: nav ? Array.from(nav.querySelectorAll('a[href]')).map((a) => a.getAttribute('href')) : [],
+					labels: nav ? Array.from(nav.querySelectorAll('a[href]')).map((a) => a.textContent.trim()) : [],
+				};
+			})(),
 		})` );
 		assert( loadedState.hasRoot, `${ url } did not render the Council header (loaded ${ loadedState.href }).` );
+		// The fallback model carries labels and URLs identical to the DB model, so
+		// without this signal a silent detach from menu 237 passes every other
+		// rendered assertion in this file.
+		assert(
+			loadedState.source === 'navigation',
+			`${ url } rendered the Council header from the '${ loadedState.source }' model; expected 'navigation' (menu 237 did not validate).`
+		);
+		assert( loadedState.noscript && loadedState.noscript.hasNav, `${ url } is missing its noscript Council navigation.` );
+		assert(
+			loadedState.noscript.hrefs.length === 7,
+			`${ url } noscript nav exposes ${ loadedState.noscript.hrefs.length } routes; expected 7 (got ${ JSON.stringify( loadedState.noscript.labels ) }).`
+		);
+		assert(
+			loadedState.noscript.hrefs.every( ( href ) => /^https?:\/\//.test( href ) ),
+			`${ url } noscript nav has unresolved routes: ${ JSON.stringify( loadedState.noscript.hrefs ) }.`
+		);
 		assert( loadedState.hasController, `${ url } rendered the header without the controller's closed state.` );
 		assert( loadedState.breakCount === 0, `${ url } contains ${ loadedState.breakCount } wpautop-injected Council header BR elements.` );
 		assert( loadedState.strayParagraphCount === 0, `${ url } contains ${ loadedState.strayParagraphCount } stray Council header paragraph wrappers.` );

@@ -33,6 +33,7 @@ const {
 const PATTERN_FILE = path.join( THEME_PATH, 'patterns', 'work-index.php' );
 const WORK_SNAPSHOT = path.join( SNAPSHOT_DIR, 'work.html' );
 const FRONT_PAGE_SNAPSHOT = path.join( SNAPSHOT_DIR, 'front-page.html' );
+const COUNCIL_HEADER = path.join( THEME_PATH, 'inc', 'council-header.php' );
 
 const NUMBER_WORDS = {
 	one: 1,
@@ -270,6 +271,42 @@ function verifyHomepageParity( workEntries, frontPageSnapshot ) {
 	);
 }
 
+// The Council header's Work panel hardcodes its evidence rows in PHP — a third
+// copy of the project list, alongside the homepage and /work/. verify-header.js
+// only checks those literals against the same file that declares them, so
+// nothing else notices when a route is renamed out from under the header.
+function verifyCouncilHeaderRoutes( workEntries ) {
+	const renderer = readFile( COUNCIL_HEADER, 'Council header renderer' );
+	const known = new Set(
+		workEntries
+			.map( ( entry ) => getEntryTitle( entry ) )
+			.filter( Boolean )
+			.map( ( title ) => title.href.replace( /^https?:\/\/[^/]+/, '' ) )
+	);
+
+	// '/work/' itself is the section index the panel links out to, not a project.
+	const project = ( route ) => route !== '/work/';
+	const rowRoutes = [ ...renderer.matchAll( /'url'\s*=>\s*'(\/work\/[^']*)'/g ) ]
+		.map( ( match ) => match[ 1 ] )
+		.filter( project );
+	const caseRoutes = [ ...renderer.matchAll( /home_url\(\s*'(\/work\/[^']*)'\s*\)/g ) ]
+		.map( ( match ) => match[ 1 ] )
+		.filter( project );
+	const routes = [ ...rowRoutes, ...caseRoutes ];
+
+	assert(
+		rowRoutes.length > 0,
+		'inc/council-header.php declares no /work/ evidence rows. If the Work panel moved to dynamic data, retire this check with it.'
+	);
+
+	const orphans = routes.filter( ( route ) => ! known.has( route ) );
+	assert(
+		orphans.length === 0,
+		`The Council header Work panel points at ${ orphans.join( ', ' ) }, which /work/ does not list. ` +
+			'A visitor who opens the header ledger must not be sent somewhere the Work index has dropped.'
+	);
+}
+
 function verifyPatternMatchesSnapshot( snapshot ) {
 	const raw = readFile( PATTERN_FILE, 'work-index pattern' );
 	const headerEnd = raw.indexOf( '?>' );
@@ -334,6 +371,7 @@ function main() {
 	const workEntries = verifyWorkLedger( workSnapshot );
 	verifyChipCounts( workSnapshot, workEntries );
 	verifyHomepageParity( workEntries, frontPageSnapshot );
+	verifyCouncilHeaderRoutes( workEntries );
 	verifyPatternMatchesSnapshot( workSnapshot );
 
 	console.log( 'Page identity verified.' );

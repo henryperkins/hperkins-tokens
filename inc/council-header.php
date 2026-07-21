@@ -20,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function hperkins_tokens_get_council_navigation_fallback() {
 	return array(
+		'source'    => 'fallback',
 		'work'      => array( 'label' => 'Work', 'url' => '/work/' ),
 		'writing'   => array(
 			'label'    => 'Writing',
@@ -185,6 +186,10 @@ function hperkins_tokens_get_council_navigation_model() {
 	}
 
 	return array(
+		// The fallback carries labels and URLs identical to the DB model, so a
+		// silent detach is invisible in the rendered markup without this. The
+		// Chrome suite asserts it is 'navigation'.
+		'source'    => 'navigation',
 		'work'      => array(
 			'label' => $work_item['label'],
 			'url'   => $work_item['url'],
@@ -342,7 +347,7 @@ function hperkins_tokens_render_council_header() {
 
 	ob_start();
 	?>
-	<div class="hp-council-header alignwide" data-hp-header-root>
+	<div class="hp-council-header alignwide" data-hp-header-root data-hp-header-source="<?php echo esc_attr( $model['source'] ); ?>">
 		<div class="hp-council-header__bar">
 			<a class="hp-council-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>">
 				<span class="hp-council-brand__star" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none" focusable="false"><g stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z"></path><circle cx="50" cy="50" r="6" fill="currentColor" stroke="none"></circle></g></svg></span>
@@ -486,7 +491,7 @@ function hperkins_tokens_pre_render_council_header_block( $pre_render, $parsed_b
 	$inner_html          = trim( (string) $parsed_block['innerHTML'] );
 	$is_shortcode_marker = '[hperkins_council_header]' === $inner_html;
 	$is_rendered_header  =
-		0 === strpos( $inner_html, '<div class="hp-council-header alignwide" data-hp-header-root>' ) &&
+		0 === strpos( $inner_html, '<div class="hp-council-header alignwide" data-hp-header-root' ) &&
 		1 === substr_count( $inner_html, 'data-hp-header-root' );
 	if ( ! $is_shortcode_marker && ! $is_rendered_header ) {
 		return $pre_render;
