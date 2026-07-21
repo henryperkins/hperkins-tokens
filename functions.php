@@ -27,6 +27,8 @@ if ( ! defined( 'HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION' ) ) {
 	define( 'HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION', 'hperkins_tokens_subscribe_requests' );
 }
 
+require_once get_stylesheet_directory() . '/inc/council-header.php';
+
 if ( ! function_exists( 'hperkins_tokens_asset_url' ) ) {
 	/**
 	 * Return a cache-busted child-theme asset URL when the file exists.

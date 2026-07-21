@@ -163,6 +163,11 @@
           "name": "River 100"
         },
         {
+          "slug": "gold-800",
+          "color": "#6E531B",
+          "name": "Gold 800"
+        },
+        {
           "slug": "gold-700",
           "color": "#9A7530",
           "name": "Gold 700"

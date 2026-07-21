@@ -33,6 +33,10 @@ const FULL_VIEWPORTS = [
 const OVERFLOW_VIEWPORTS = [
 	{ width: 320, height: 900 },
 	{ width: 768, height: 1000 },
+	{ width: 782, height: 1000 },
+	{ width: 960, height: 1000 },
+	{ width: 1024, height: 1000 },
+	{ width: 1280, height: 1000 },
 ];
 
 let totalViolations = 0;
@@ -276,8 +280,8 @@ async function verifyStaticContract() {
 		if ( ! css.includes( '--wp--custom--measure--prose' ) ) {
 			violations.push( 'style.css must reference --wp--custom--measure--prose (the 68ch prose measure).' );
 		}
-		if ( ! /\.hp-site-header \.wp-block-navigation\s*\{[^}]*var\(--wp--preset--font-size--sm\)/.test( css ) ) {
-			violations.push( 'style.css desktop nav rule .hp-site-header .wp-block-navigation must set var(--wp--preset--font-size--sm).' );
+		if ( ! /\.hp-council-nav\s*\{[^}]*var\(--wp--preset--font-size--sm\)/.test( css ) ) {
+			violations.push( 'style.css desktop nav rule .hp-council-nav must set var(--wp--preset--font-size--sm).' );
 		}
 	}
 
