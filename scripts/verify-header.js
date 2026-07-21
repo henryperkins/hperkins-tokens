@@ -160,7 +160,7 @@ function verifySource() {
 		'registry.settle = settle;',
 		"var STATES = [ 'closed', 'work', 'writing', 'search', 'drawer' ];",
 		"node.setAttribute( 'data-hp-header-state', next );",
-		"applyState( 'closed', { restoreFocus: true } );",
+		'applyState( \'closed\', { restoreFocus: inside } );',
 		"window.matchMedia( '(min-width: 782px)' )",
 		"wrapHistory( 'pushState' );",
 		"wrapHistory( 'replaceState' );",
@@ -189,6 +189,39 @@ function verifySource() {
 	assert(
 		( controller.match( /setAttribute\( 'aria-expanded'/g ) || [] ).length === 1,
 		'header-controller.js must assign aria-expanded only inside applyState().'
+	);
+	// Every path that opens a panel, and every route settlement, must cancel a
+	// pending hover close — toggle(), the ArrowDown branch, settle(), and
+	// pointerover itself. A survivor shuts the panel the visitor just opened.
+	assert(
+		( controller.match( /window\.clearTimeout\( hoverTimer \);/g ) || [] ).length === 4,
+		'header-controller.js must clear hoverTimer in toggle(), the ArrowDown branch, settle(), and pointerover.'
+	);
+	// applyState() returns early when the router has detached the header, so
+	// settle() has to reset the closure itself or a stale state reads the next
+	// trigger click as a close.
+	assert(
+		/function settle\(\) \{[^]*?state = 'closed';[^]*?origin = null;[^]*?\}/.test( controller ),
+		'settle() must reset state and origin unconditionally, not only via applyState().'
+	);
+	// Focus ownership: a hover-opened panel records an origin the visitor never
+	// focused, so Escape must not restore to it, and a drifting pointer must not
+	// close a panel the visitor has tabbed into.
+	assert(
+		! /restoreFocus:\s*true/.test( controller ),
+		'header-controller.js must not restore focus unconditionally — a hover-only open would steal it.'
+	);
+	assert(
+		/if \( state === next && ! focusIsInside\(\) \)/.test( controller ),
+		'The hover close must not fire while focus is inside the header.'
+	);
+	assert(
+		/if \( ! focusIsInside\(\) \) \{\s*origin = triggerFor\( next \);/.test( controller ),
+		'pointerover must not overwrite an origin established by the keyboard.'
+	);
+	assert(
+		/var stranded = ! active \|\| active === document\.body \|\| drawerLink === active;/.test( controller ),
+		'The drawer close must rescue focus only when it was stranded, so it cannot steal a router-scroll hash target.'
 	);
 	assertIncludes( 'functions.php', [
 		"$header_controller_rel  = '/assets/js/header-controller.js';",

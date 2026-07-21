@@ -61,7 +61,15 @@
 		}
 	}
 
+	function focusIsInside() {
+		var node = root();
+		return !! ( node && document.activeElement && node.contains( document.activeElement ) );
+	}
+
 	function toggle( next, trigger ) {
+		// A pending hover close targets whatever was open a moment ago; letting it
+		// survive an explicit open would shut the panel the visitor just asked for.
+		window.clearTimeout( hoverTimer );
 		origin = trigger;
 		applyState( state === next ? 'closed' : next );
 		if ( next === 'search' && state === 'search' ) {
@@ -90,6 +98,13 @@
 	}
 
 	function settle() {
+		window.clearTimeout( hoverTimer );
+		// applyState() returns early when the router has detached the header, so
+		// it cannot be relied on to clear the closure. Reset the state directly:
+		// a stale 'drawer' here reads the next drawer click as a close and the
+		// panel refuses to open.
+		state = 'closed';
+		origin = null;
 		applyState( 'closed' );
 		if ( window.requestAnimationFrame ) {
 			window.requestAnimationFrame( function () {
@@ -153,9 +168,18 @@
 				drawerLink.classList.add( 'is-hp-chosen' );
 			}
 			window.setTimeout( function () {
+				// router-scroll.js focuses a hash target across the same commit
+				// window; only rescue focus when it is still on the link we are
+				// about to hide, so this never steals focus from that target.
+				var active = document.activeElement;
+				var stranded = ! active || active === document.body || drawerLink === active;
 				applyState( 'closed' );
 				node.classList.remove( 'is-hp-closing' );
 				drawerLink.classList.remove( 'is-hp-chosen' );
+				var drawerTrigger = stranded ? triggerFor( 'drawer' ) : null;
+				if ( drawerTrigger ) {
+					drawerTrigger.focus();
+				}
 			}, reducedMotion() ? 0 : 140 );
 			return;
 		}
@@ -168,8 +192,15 @@
 	document.addEventListener( 'keydown', function ( event ) {
 		if ( event.key === 'Escape' || event.key === 'Esc' ) {
 			if ( state !== 'closed' ) {
-				event.preventDefault();
-				applyState( 'closed', { restoreFocus: true } );
+				// A hover-opened panel records an origin the visitor never focused.
+				// Restoring to it would rip focus out of wherever they actually
+				// are, so only restore when focus is genuinely inside the header —
+				// and only claim the key in that case.
+				var inside = focusIsInside();
+				if ( inside ) {
+					event.preventDefault();
+				}
+				applyState( 'closed', { restoreFocus: inside } );
 			}
 			return;
 		}
@@ -187,6 +218,7 @@
 			return;
 		}
 		event.preventDefault();
+		window.clearTimeout( hoverTimer );
 		origin = trigger;
 		applyState( next );
 		var panel = panelFor( next );
@@ -212,7 +244,11 @@
 		}
 		window.clearTimeout( hoverTimer );
 		var next = group.getAttribute( 'data-hp-header-hover' );
-		origin = triggerFor( next );
+		// Never overwrite an origin a keyboard visitor established; the pointer
+		// is only passing through.
+		if ( ! focusIsInside() ) {
+			origin = triggerFor( next );
+		}
 		applyState( next );
 	} );
 
@@ -232,7 +268,9 @@
 		}
 		var next = group.getAttribute( 'data-hp-header-hover' );
 		hoverTimer = window.setTimeout( function () {
-			if ( state === next ) {
+			// Closing on pointer-out while focus sits inside the panel would
+			// destroy it — the visitor tabbed in and the pointer merely drifted.
+			if ( state === next && ! focusIsInside() ) {
 				applyState( 'closed' );
 			}
 		}, 120 );
