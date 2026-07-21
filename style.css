@@ -3643,6 +3643,11 @@ samp {
 	box-sizing: border-box;
 }
 
+/* This is the state contract for the header: [hidden] here, plus aria-expanded
+   on the trigger. header-controller.js also mirrors the open panel onto the
+   root as data-hp-header-state, but that attribute is a probe for
+   scripts/verify-header.js and is intentionally never styled — don't reach for
+   it when adding header rules. */
 .hp-council-header [data-hp-header-panel][hidden] {
 	display: none;
 }
