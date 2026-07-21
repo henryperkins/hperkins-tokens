@@ -283,7 +283,7 @@ function hperkins_tokens_render_council_header() {
 			<nav class="hp-council-nav" aria-label="<?php echo esc_attr__( 'Primary', 'hperkins-tokens' ); ?>">
 				<ul class="hp-council-nav__list">
 					<li class="hp-council-nav__item" data-hp-header-hover="work">
-						<button id="hp-council-work-trigger" class="hp-council-nav__trigger" type="button" data-hp-header-trigger="work" aria-controls="hp-council-work-panel" aria-expanded="false" aria-haspopup="true">
+						<button id="hp-council-work-trigger" class="hp-council-nav__trigger" type="button" data-hp-header-trigger="work" aria-controls="hp-council-work-panel" aria-expanded="false">
 							<span class="hp-council-nav__label"><?php echo esc_html( $model['work']['label'] ); ?></span>
 							<svg class="hp-council-nav__chevron" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="m1.5 4 4.5 4 4.5-4"></path></svg>
 						</button>
@@ -309,7 +309,7 @@ function hperkins_tokens_render_council_header() {
 					</li>
 
 					<li class="hp-council-nav__item hp-council-nav__item--writing" data-hp-header-hover="writing">
-						<button id="hp-council-writing-trigger" class="hp-council-nav__trigger" type="button" data-hp-header-trigger="writing" aria-controls="hp-council-writing-panel" aria-expanded="false" aria-haspopup="true">
+						<button id="hp-council-writing-trigger" class="hp-council-nav__trigger" type="button" data-hp-header-trigger="writing" aria-controls="hp-council-writing-panel" aria-expanded="false">
 							<span class="hp-council-nav__label"><?php echo esc_html( $model['writing']['label'] ); ?></span>
 							<svg class="hp-council-nav__chevron" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="m1.5 4 4.5 4 4.5-4"></path></svg>
 						</button>

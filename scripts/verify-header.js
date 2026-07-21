@@ -19,6 +19,15 @@ function assertIncludes( file, needles ) {
 	}
 }
 
+function assertNotIncludes( file, needles ) {
+	const value = read( file );
+	for ( const needle of needles ) {
+		if ( value.includes( needle ) ) {
+			throw new Error( file + ' still contains retired source: ' + needle );
+		}
+	}
+}
+
 function verifySource() {
 	assertIncludes( 'parts/header.html', [ '[hperkins_council_header]' ] );
 	assertIncludes( 'inc/council-header.php', [
@@ -58,10 +67,22 @@ function verifySource() {
 		'--hp-header-h-compact: 62px;',
 		'--hp-nav-gap: 28px;',
 		'--hp-nav-label: var(--wp--preset--font-size--sm);',
+		'.hp-council-nav {\n\tposition: relative;',
 		'.hp-council-work-panel',
 		'.hp-council-writing-panel',
 		'.hp-council-search-panel',
 		'.hp-council-drawer',
+	] );
+	assertNotIncludes( 'inc/council-header.php', [ 'aria-haspopup=' ] );
+	assertNotIncludes( 'style.css', [
+		'.hp-council-nav__item {\n\tposition: relative;',
+		'.hp-site-header__inner',
+		'.hp-site-brand',
+		'.hp-site-nav',
+		'.hp-site-actions',
+		'.hp-site-search',
+		'.hp-site-subscribe',
+		'.wp-block-navigation__responsive-container',
 	] );
 	assertIncludes( 'parts/footer.html', [ '<a href="/contact/">Contact</a>' ] );
 	assertIncludes( 'theme.json', [ '"slug": "gold-800"', '"color": "#6E531B"' ] );
