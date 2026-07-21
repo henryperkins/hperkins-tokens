@@ -17,7 +17,7 @@ For the exact PowerShell environment setup (Studio development site), see the **
 There is no package install, Composer install, or asset build. Use the repository's dependency-free checks:
 
 - PHP-lint every tracked PHP file.
-- Run `node --test scripts/lib/wp-cli.test.js scripts/lib/site-url.test.js` for the cross-platform WP-CLI launcher and the runtime-mutation site-URL guard (name both files explicitly; the directory form of `node --test` is unreliable on Windows).
+- Run `node --test scripts/lib/wp-cli.test.js scripts/lib/site-url.test.js scripts/lib/navigation-content-contract.test.js` for the cross-platform WP-CLI launcher, the runtime-mutation site-URL guard, and the navigation shape that guards the destructive `apply-council-navigation.js` recut (name every file explicitly; the directory form of `node --test` is unreliable on Windows).
 - Run `node scripts/verify-performance-assets.js` for source-only asset checks.
 - With the local environment variables set, run the relevant database/HTTP verifiers listed in `CLAUDE.md`.
 - Run `git diff --check` before committing.

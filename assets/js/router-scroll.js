@@ -20,7 +20,7 @@
  * loads never run it (native behavior untouched), history traversal (popstate)
  * is left to the browser's own scroll restoration, and replaceState is skipped
  * because it fires for non-navigation URL bookkeeping. Same-path pushes with
- * no hash are also left alone for the same reason. Like nav-close-delight.js
+ * no hash are also left alone for the same reason. Like header-controller.js
  * (same wrap pattern), the scroll settles across the commit window — at push
  * time, next frame, and a tick later — because the router's render/pushState
  * order varies; both scroll calls are idempotent, so the post-swap attempt
@@ -98,7 +98,8 @@
 	}
 
 	// Guarded against double-wrapping; the wrap composes with the
-	// nav-close-delight.js wrapper (each calls through to the one before).
+	// header-controller.js wrapper, which guards on its own __hpCouncilHeader
+	// marker, so each wrapper calls through to the one before it.
 	function wrapHistory( method ) {
 		var original = window.history[ method ];
 		if ( typeof original !== 'function' || original.__hpRouterScroll ) {
