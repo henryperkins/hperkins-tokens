@@ -110,7 +110,7 @@ button,
 	 fill. Mono lives on the base rule so a chip reads as a machine-set status
 	 label even where the block markup omits the mono font class (e.g. the Wapuu
 	 homepage hero signals). */
-.hp-proof-bar .hp-chip {
+.hp-chip {
 	margin: 0;
 	padding: 0.5rem 0.85rem;
 	font-family: var(--wp--preset--font-family--mono);
@@ -123,13 +123,13 @@ button,
 	border-radius: var(--hp-radius-chip);
 }
 
-.hp-proof-bar .hp-chip a {
+.hp-chip a {
 	color: var(--hp-neutral-900);
 	text-decoration: none;
 	border-bottom: 1px solid var(--hp-neutral-300);
 }
 
-.hp-proof-bar .hp-chip::before {
+.hp-chip::before {
 	content: "\25CF";
 	margin-right: 0.5em;
 	color: var(--hp-neutral-300);
@@ -158,6 +158,58 @@ button,
 	background: var(--hp-neutral-50);
 }
 .hp-chip.is-status-pending::before {
+	content: "\25CB";
+	color: var(--hp-status-pending);
+}
+
+/* Category labels describe direction, not workflow state. They deliberately
+	 omit the status rule/dot language so "current target" cannot be mistaken
+	 for shipped, open, verified, or gap. */
+.hp-chip.is-category {
+	color: var(--wp--custom--text--body);
+	background: var(--wp--custom--surface--sunken);
+	border-left-width: 1px;
+	border-radius: var(--hp-radius-pill);
+}
+
+.hp-chip.is-category::before {
+	content: none;
+}
+
+/* The digest uses reader-facing state words while the older portfolio uses
+	 merged/review/pending. Map both vocabularies onto the same redundant
+	 color-and-shape semantics. */
+.hp-chip.is-status-shipped,
+.hp-chip.is-status-live,
+.hp-chip.is-status-verified {
+	border-left-color: var(--hp-status-merged);
+	background: var(--hp-surface-merged);
+}
+
+.hp-chip.is-status-shipped::before,
+.hp-chip.is-status-live::before,
+.hp-chip.is-status-verified::before {
+	color: var(--hp-status-merged);
+}
+
+.hp-chip.is-status-open,
+.hp-chip.is-status-release-candidate {
+	border-left-color: var(--hp-status-review);
+	background: var(--hp-surface-review);
+}
+
+.hp-chip.is-status-open::before,
+.hp-chip.is-status-release-candidate::before {
+	content: "\25CB";
+	color: var(--hp-status-review);
+}
+
+.hp-chip.is-status-gap {
+	border-left-color: var(--hp-status-pending);
+	background: var(--hp-neutral-50);
+}
+
+.hp-chip.is-status-gap::before {
 	content: "\25CB";
 	color: var(--hp-status-pending);
 }
@@ -656,6 +708,302 @@ button,
 
 .hp-evidence-board--compact .hp-evidence-board__title {
 	font-size: var(--wp--preset--font-size--base);
+}
+
+/* === Recruiter evidence components ===
+	 These aliases support both the reviewed page-draft classes and the
+	 registered core-block styles exposed by functions.php. The block styles
+	 are the stable authoring path; the semantic hp-* classes keep the existing
+	 database body portable and readable. */
+.hp-proof-card,
+:is(.wp-block-group, .wp-block-column).is-style-hperkins-proof-card {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	height: 100%;
+	padding: var(--wp--preset--spacing--5);
+	background: var(--wp--custom--surface--card);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-top: var(--hp-rule-evidence) solid var(--wp--custom--rule--gold);
+	border-radius: var(--hp-radius-card);
+	box-shadow: var(--wp--custom--shadow--sm);
+}
+
+.hp-proof-card > :first-child,
+:is(.wp-block-group, .wp-block-column).is-style-hperkins-proof-card > :first-child {
+	margin-block-start: 0;
+}
+
+.hp-proof-card > .hp-chip,
+.hp-incident-card > .hp-chip,
+:is(.wp-block-group, .wp-block-column).is-style-hperkins-proof-card > .hp-chip,
+.wp-block-group.is-style-hperkins-incident-card > .hp-chip {
+	align-self: flex-start;
+	width: fit-content;
+	max-width: 100%;
+}
+
+.hp-proof-card > :last-child,
+:is(.wp-block-group, .wp-block-column).is-style-hperkins-proof-card > :last-child {
+	margin-block-end: 0;
+}
+
+.hp-proof-card h3,
+:is(.wp-block-group, .wp-block-column).is-style-hperkins-proof-card h3 {
+	margin-block: var(--wp--preset--spacing--4) var(--wp--preset--spacing--3);
+	font-family: var(--wp--preset--font-family--display);
+	font-size: var(--wp--preset--font-size--xl);
+	font-weight: var(--wp--custom--weight--semibold);
+	line-height: var(--wp--custom--leading--snug);
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-proof-card p,
+:is(.wp-block-group, .wp-block-column).is-style-hperkins-proof-card p {
+	overflow-wrap: anywhere;
+}
+
+.hp-proof-card > p:last-child,
+:is(.wp-block-group, .wp-block-column).is-style-hperkins-proof-card > p:last-child {
+	margin-block-start: auto;
+	padding-block-start: var(--wp--preset--spacing--3);
+}
+
+.hp-incident-card,
+.wp-block-group.is-style-hperkins-incident-card {
+	box-sizing: border-box;
+	padding: var(--wp--preset--spacing--6);
+	background: linear-gradient(
+		135deg,
+		var(--wp--custom--surface--sunken),
+		var(--wp--custom--surface--card)
+	);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-left: var(--hp-rule-evidence) solid var(--wp--custom--status--done);
+	border-radius: var(--hp-radius-card);
+	box-shadow: var(--wp--custom--shadow--md);
+}
+
+.hp-incident-card h3,
+.wp-block-group.is-style-hperkins-incident-card h3 {
+	margin: var(--wp--preset--spacing--5) 0 var(--wp--preset--spacing--2);
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--xs);
+	font-weight: var(--wp--custom--weight--regular);
+	line-height: 1.4;
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+	color: var(--wp--custom--text--accent);
+}
+
+.hp-incident-card h3 + p,
+.wp-block-group.is-style-hperkins-incident-card h3 + p {
+	margin-block-start: 0;
+}
+
+.hp-numbered-rule,
+.wp-block-group.is-style-hperkins-numbered-rule {
+	box-sizing: border-box;
+	margin-block: var(--wp--preset--spacing--4);
+	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+	background: var(--wp--custom--surface--card);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-left: var(--hp-rule-entry) solid var(--wp--custom--rule--gold);
+	border-radius: var(--hp-radius-panel);
+}
+
+.hp-numbered-rule h3,
+.wp-block-group.is-style-hperkins-numbered-rule h3 {
+	margin-block: 0 var(--wp--preset--spacing--2);
+	font-size: var(--wp--preset--font-size--lg);
+	line-height: var(--wp--custom--leading--snug);
+}
+
+.hp-numbered-rule > :last-child,
+.wp-block-group.is-style-hperkins-numbered-rule > :last-child {
+	margin-block-end: 0;
+}
+
+.hp-research-note,
+.wp-block-group.is-style-hperkins-research-note {
+	box-sizing: border-box;
+	padding: var(--wp--preset--spacing--6);
+	background: var(--wp--custom--surface--cool, var(--wp--preset--color--mist-100));
+	border: 1px solid var(--wp--custom--border--hair);
+	border-top: var(--hp-rule-evidence) solid var(--wp--preset--color--river-500);
+	border-radius: var(--hp-radius-card);
+}
+
+/* Native Details remains the interaction primitive: no custom JavaScript and
+	 no replacement accessibility model. The styled summary is a 44px row with
+	 an explicit count column and a non-color expanded/collapsed marker. */
+.hp-disclosure,
+.wp-block-details.is-style-hperkins-disclosure {
+	box-sizing: border-box;
+	margin-block: var(--wp--preset--spacing--3);
+	background: var(--wp--custom--surface--card);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--hp-radius-panel);
+	overflow: clip;
+}
+
+.hp-disclosure > summary,
+.wp-block-details.is-style-hperkins-disclosure > summary {
+	box-sizing: border-box;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto 1.25rem;
+	align-items: center;
+	gap: var(--wp--preset--spacing--3);
+	min-block-size: var(--hp-touch-min);
+	padding: var(--wp--preset--spacing--3) var(--wp--preset--spacing--4);
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--base);
+	line-height: 1.3;
+	color: var(--wp--custom--text--strong);
+	background: var(--wp--custom--surface--sunken);
+	list-style: none;
+	cursor: pointer;
+}
+
+.hp-disclosure > summary::-webkit-details-marker,
+.wp-block-details.is-style-hperkins-disclosure > summary::-webkit-details-marker {
+	display: none;
+}
+
+.hp-disclosure > summary::after,
+.wp-block-details.is-style-hperkins-disclosure > summary::after {
+	content: "+";
+	justify-self: end;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--lg);
+	font-weight: var(--wp--custom--weight--medium);
+	line-height: 1;
+	color: var(--wp--custom--text--link);
+}
+
+.hp-disclosure[open] > summary::after,
+.wp-block-details.is-style-hperkins-disclosure[open] > summary::after {
+	content: "\2212";
+}
+
+.hp-disclosure > summary:hover,
+.wp-block-details.is-style-hperkins-disclosure > summary:hover {
+	background: var(--wp--custom--brand--subtle);
+}
+
+.hp-disclosure > summary:focus-visible,
+.wp-block-details.is-style-hperkins-disclosure > summary:focus-visible {
+	position: relative;
+	z-index: 1;
+	outline: 3px solid var(--wp--preset--color--gold-700);
+	outline-offset: -3px;
+}
+
+.hp-disclosure__count {
+	justify-self: end;
+	min-inline-size: 2.25rem;
+	padding: 0.2rem 0.5rem;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+	line-height: 1.2;
+	text-align: center;
+	color: var(--wp--custom--text--muted);
+	background: var(--wp--custom--surface--card);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--hp-radius-pill);
+}
+
+.hp-disclosure > :not(summary),
+.wp-block-details.is-style-hperkins-disclosure > :not(summary) {
+	margin-block: 0;
+}
+
+/* Table block style shared by the fit, evidence, keyword, state, and market
+	 ledgers. Page CSS owns column widths and narrow-screen composition. */
+.wp-block-table.is-style-hperkins-ledger,
+.hp-fit-table,
+.hp-evidence-table,
+.hp-keyword-table,
+.hp-state-table,
+.hp-market-table {
+	box-sizing: border-box;
+	max-inline-size: 100%;
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--hp-radius-panel);
+	background: var(--wp--custom--surface--card);
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+.wp-block-table.is-style-hperkins-ledger table,
+.hp-fit-table table,
+.hp-evidence-table table,
+.hp-keyword-table table,
+.hp-state-table table,
+.hp-market-table table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.wp-block-table.is-style-hperkins-ledger :is(th, td),
+.hp-fit-table :is(th, td),
+.hp-evidence-table :is(th, td),
+.hp-keyword-table :is(th, td),
+.hp-state-table :is(th, td),
+.hp-market-table :is(th, td) {
+	padding: var(--wp--preset--spacing--3) var(--wp--preset--spacing--4);
+	vertical-align: top;
+	line-height: 1.45;
+	text-align: left;
+	border: 0;
+	border-block-end: 1px solid var(--wp--custom--border--hair);
+	overflow-wrap: anywhere;
+}
+
+.wp-block-table.is-style-hperkins-ledger thead th,
+.hp-fit-table thead th,
+.hp-evidence-table thead th,
+.hp-keyword-table thead th,
+.hp-state-table thead th,
+.hp-market-table thead th {
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--xs);
+	font-weight: var(--wp--custom--weight--regular);
+	line-height: 1.35;
+	letter-spacing: var(--wp--custom--tracking--wide);
+	text-transform: uppercase;
+	color: var(--wp--custom--text--muted);
+	background: var(--wp--custom--surface--sunken);
+}
+
+.wp-block-table.is-style-hperkins-ledger tbody th,
+.hp-fit-table tbody th,
+.hp-evidence-table tbody th,
+.hp-keyword-table tbody th,
+.hp-state-table tbody th,
+.hp-market-table tbody th {
+	font-weight: var(--wp--custom--weight--semibold);
+	color: var(--wp--custom--text--strong);
+}
+
+.wp-block-table.is-style-hperkins-ledger tbody tr:last-child > *,
+.hp-fit-table tbody tr:last-child > *,
+.hp-evidence-table tbody tr:last-child > *,
+.hp-keyword-table tbody tr:last-child > *,
+.hp-state-table tbody tr:last-child > *,
+.hp-market-table tbody tr:last-child > * {
+	border-block-end: 0;
+}
+
+.wp-block-table.is-style-hperkins-ledger a,
+.hp-fit-table a,
+.hp-evidence-table a,
+.hp-keyword-table a,
+.hp-state-table a,
+.hp-market-table a {
+	overflow-wrap: anywhere;
+	word-break: break-word;
 }
 
 .hp-signal-strip {
@@ -1692,14 +2040,14 @@ h3,
 }
 
 /* Openable references read in Bruinen river-blue, distinct from evergreen nav. */
-.hp-proof-bar .hp-chip a,
+.hp-chip a,
 .hp-artifact__link a,
 .hp-shot .wp-element-caption a,
 .hp-shot .wp-block-image__caption a {
 	color: var(--hp-artifact);
 	border-bottom-color: color-mix(in srgb, var(--hp-artifact) 35%, transparent);
 }
-.hp-proof-bar .hp-chip a:hover,
+.hp-chip a:hover,
 .hp-artifact__link a:hover,
 .hp-shot .wp-element-caption a:hover,
 .hp-shot .wp-block-image__caption a:hover {
@@ -3643,6 +3991,11 @@ samp {
 	box-sizing: border-box;
 }
 
+/* This is the state contract for the header: [hidden] here, plus aria-expanded
+   on the trigger. header-controller.js also mirrors the open panel onto the
+   root as data-hp-header-state, but that attribute is a probe for
+   scripts/verify-header.js and is intentionally never styled — don't reach for
+   it when adding header rules. */
 .hp-council-header [data-hp-header-panel][hidden] {
 	display: none;
 }
@@ -4206,8 +4559,8 @@ samp {
 	.hp-council-drawer-trigger__control {
 		display: grid;
 		place-items: center;
-		inline-size: 38px;
-		block-size: 38px;
+		inline-size: var(--hp-touch-min);
+		block-size: var(--hp-touch-min);
 		border: 1px solid var(--wp--custom--border--hair);
 		border-radius: var(--wp--custom--radius--md);
 	}
@@ -4259,7 +4612,7 @@ samp {
 	.hp-council-drawer__legend {
 		margin: 0 0 8px;
 		font-family: var(--wp--preset--font-family--mono);
-		font-size: 10px;
+		font-size: var(--wp--preset--font-size--xs);
 		letter-spacing: 0.15em;
 		text-transform: uppercase;
 		color: var(--wp--custom--text--faint);

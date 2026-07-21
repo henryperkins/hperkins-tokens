@@ -51,6 +51,11 @@
 			var panelKey = panels[ j ].getAttribute( 'data-hp-header-panel' );
 			panels[ j ].hidden = panelKey !== next;
 		}
+		// Deliberately not a styling hook. Panel visibility is driven by
+		// [hidden] and aria-expanded, so no CSS reads this; it is the state
+		// probe scripts/verify-header.js asserts against. Removing it as dead
+		// code blinds that suite to the closure's state — and trips its own
+		// assertion that this line exists.
 		node.setAttribute( 'data-hp-header-state', next );
 		state = next;
 		if ( next === 'closed' && restore && origin && document.contains( origin ) ) {

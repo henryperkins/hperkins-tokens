@@ -49,7 +49,7 @@ $hperkins_about_portrait_src  = file_exists( $hperkins_about_portrait_file )
 <!-- /wp:button -->
 
 <!-- wp:button {"className":"is-style-secondary"} -->
-<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/wp-content/uploads/2026/06/henry-perkins-wordpress-ai-open-source-resume-2026-06-30.pdf">View r&eacute;sum&eacute;</a></div>
+<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="<?php echo esc_url( hperkins_tokens_asset_url( 'assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf' ) ); ?>">View one-page Support Engineer r&eacute;sum&eacute;</a></div>
 <!-- /wp:button --></div>
 <!-- /wp:buttons --></div>
 <!-- /wp:group -->
@@ -400,7 +400,7 @@ $hperkins_about_portrait_src  = file_exists( $hperkins_about_portrait_file )
 <!-- /wp:group -->
 
 <!-- wp:paragraph {"className":"hp-work__footer"} -->
-<p class="hp-work__footer">Full chronology, including earlier roles, is in the <a href="/wp-content/uploads/2026/06/henry-perkins-wordpress-ai-open-source-resume-2026-06-30.pdf">PDF r&eacute;sum&eacute;</a>.</p>
+<p class="hp-work__footer">The primary recruiter document is the <a href="<?php echo esc_url( hperkins_tokens_asset_url( 'assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf' ) ); ?>">one-page Support Engineer r&eacute;sum&eacute;</a>.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 

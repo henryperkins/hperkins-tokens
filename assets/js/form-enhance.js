@@ -52,6 +52,11 @@
 			input.setAttribute( 'aria-describedby', described.join( ' ' ) );
 		}
 		input.setAttribute( 'aria-invalid', 'true' );
+		// Dormant while both forms live in <body>: if either is ever inlined
+		// into the header, this focus move closes whichever panel is open —
+		// header-controller.js shuts a panel as soon as focus lands outside it.
+		// A field inside the open panel is safe; one elsewhere in the header
+		// (the bar, or a second panel) closes it.
 		input.focus();
 	}
 

@@ -1,0 +1,122 @@
+name: Verify
+
+# What this gate can and cannot do.
+#
+# The theme ships fourteen verifiers (see CLAUDE.md). Most of them need
+# something GitHub Actions does not have: a Chrome instance pointed at a
+# rendered site, or a WordPress database reachable over WP-CLI. Running those
+# here would mean standing up a throwaway WordPress install whose content is
+# not the content under test, which would report a green tick for a check that
+# never examined production.
+#
+# So this workflow runs only the checks that are true without a site: PHP
+# syntax, the script unit tests, the `--source-only` halves of the header and
+# typography contracts, the docs-ownership contract, and release-version
+# agreement across style.css and readme.txt.
+#
+# Content-ownership verification (live page body vs tracked snapshot) is
+# deliberately NOT here. It requires WP-CLI against the WordPress database and
+# must be run against the real install:
+#
+#   node scripts/verify-content-ownership.js
+
+# Pushing to `main` deploys this theme, so verification has to run on the
+# branch before the merge, not only after it. Every branch push is checked.
+on:
+  push:
+    branches: [ '**' ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Source contracts
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: PHP syntax check
+        run: |
+          fail=0
+          count=0
+          while IFS= read -r file; do
+            count=$((count + 1))
+            if ! php -l "$file" > /dev/null; then
+              echo "::error file=$file::PHP syntax error"
+              php -l "$file" || true
+              fail=1
+            fi
+          done < <(git ls-files '*.php')
+          echo "Checked $count PHP files."
+          exit $fail
+
+      - name: Script library unit tests
+        run: |
+          node --test \
+            scripts/lib/wp-cli.test.js \
+            scripts/lib/site-url.test.js \
+            scripts/lib/navigation-content-contract.test.js \
+            scripts/lib/placement-artifact-links.test.js \
+            scripts/lib/zip-archive.test.js
+
+      - name: Placement artifact contracts
+        run: node scripts/verify-placement-artifacts.js
+
+      - name: Council header source contract
+        run: node scripts/verify-header.js --source-only
+
+      - name: Typography source contract
+        run: node scripts/verify-typography.js --source-only
+
+      - name: Content-ownership docs contract
+        run: node scripts/verify-content-ownership-docs.js
+
+      - name: Release version agreement
+        run: |
+          style_version="$(sed -n 's/^[[:space:]]*Version:[[:space:]]*\(.*\)$/\1/p' style.css | head -1 | tr -d '\r')"
+          readme_version="$(sed -n 's/^[[:space:]]*Stable tag:[[:space:]]*\(.*\)$/\1/p' readme.txt | head -1 | tr -d '\r')"
+
+          echo "style.css Version:    ${style_version:-<none>}"
+          echo "readme.txt Stable tag: ${readme_version:-<none>}"
+
+          if [ -z "$style_version" ]; then
+            echo "::error::style.css declares no Version header."
+            exit 1
+          fi
+
+          if [ "$style_version" != "$readme_version" ]; then
+            echo "::error::style.css Version ($style_version) and readme.txt Stable tag ($readme_version) disagree."
+            exit 1
+          fi
+
+          if ! grep -qF "= $style_version =" readme.txt; then
+            echo "::error::readme.txt has no changelog entry for $style_version."
+            exit 1
+          fi
+
+          # On a tag push, the tag must name the version the source declares.
+          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+            tag_version="${GITHUB_REF_NAME#v}"
+            echo "tag:                   ${GITHUB_REF_NAME}"
+            if [ "$tag_version" != "$style_version" ]; then
+              echo "::error::Tag ${GITHUB_REF_NAME} does not match declared version $style_version."
+              exit 1
+            fi
+          fi
+
+          echo "Version $style_version agrees across style.css, readme.txt, and the changelog."

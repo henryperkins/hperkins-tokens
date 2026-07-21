@@ -28,6 +28,7 @@ if ( ! defined( 'HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION' ) ) {
 }
 
 require_once get_stylesheet_directory() . '/inc/council-header.php';
+require_once get_stylesheet_directory() . '/inc/content-integrity.php';
 
 if ( ! function_exists( 'hperkins_tokens_asset_url' ) ) {
 	/**
@@ -235,6 +236,40 @@ add_action( 'init', function () {
 			'label' => __( 'Imladris', 'hperkins-tokens' ),
 		)
 	);
+
+	/* Stable authoring controls for the recruiter case and research appendix.
+	 * The database body keeps its semantic hp-* classes for portability; these
+	 * registered styles expose the same versioned components in the editor so
+	 * authors do not have to recreate them as raw HTML. */
+	$component_styles = array(
+		'core/column'  => array(
+			'hperkins-proof-card' => __( 'Evidence card', 'hperkins-tokens' ),
+		),
+		'core/details' => array(
+			'hperkins-disclosure' => __( 'Imladris disclosure', 'hperkins-tokens' ),
+		),
+		'core/group'   => array(
+			'hperkins-proof-card'    => __( 'Evidence card', 'hperkins-tokens' ),
+			'hperkins-incident-card' => __( 'Incident card', 'hperkins-tokens' ),
+			'hperkins-numbered-rule' => __( 'Numbered rule', 'hperkins-tokens' ),
+			'hperkins-research-note' => __( 'Research note', 'hperkins-tokens' ),
+		),
+		'core/table'   => array(
+			'hperkins-ledger' => __( 'Evidence ledger', 'hperkins-tokens' ),
+		),
+	);
+
+	foreach ( $component_styles as $block_name => $styles ) {
+		foreach ( $styles as $name => $label ) {
+			register_block_style(
+				$block_name,
+				array(
+					'name'  => $name,
+					'label' => $label,
+				)
+			);
+		}
+	}
 }, 9 );
 
 /**
