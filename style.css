@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.50
+Version: 0.3.51
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -4196,7 +4196,12 @@ samp {
 		stroke-linecap: round;
 	}
 
-	.hp-council-drawer-trigger__close,
+	/* Scoped to the trigger so this reaches (0,2,0) and outranks the blanket
+	   `.hp-council-header svg { display: block }` at (0,1,1). Unscoped, the
+	   close icon stayed block and stacked on the hamburger in the shared
+	   `grid-area: 1 / 1` — visible only while closed, because the expanded
+	   rules below are already (0,2,1) and did win. */
+	.hp-council-drawer-trigger .hp-council-drawer-trigger__close,
 	.hp-council-drawer-trigger[aria-expanded="true"] .hp-council-drawer-trigger__open {
 		display: none;
 	}

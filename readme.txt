@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.50
+Stable tag: 0.3.51
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -311,6 +311,17 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.51 =
+* Fix: the mobile menu button no longer draws its close glyph on top of the
+  hamburger while the menu is shut. Both icons share one grid cell so exactly
+  one may be visible, but the blanket `.hp-council-header svg { display: block }`
+  rule (0,1,1) out-specified the unscoped hide rule (0,1,0), so the close icon
+  stayed visible. Scoping the hide rule to the trigger raises it to (0,2,0).
+  Only the closed state was affected — the expanded rules were already (0,2,1).
+* Verification: verify-header.js now asserts that exactly one drawer-trigger
+  icon is visible in each state, at every mobile width. The whole icon swap
+  previously had no coverage, which is why a purely visual regression shipped.
 
 = 0.3.50 =
 * Design: ship the selected Condensed Council header with a calm, genuinely

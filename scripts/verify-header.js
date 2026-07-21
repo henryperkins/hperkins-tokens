@@ -868,6 +868,13 @@ async function verifyMobileGeometry( cdp, sessionId, viewport, captureDir ) {
 			drawerDisplay: getComputedStyle(root.querySelector('.hp-council-drawer-trigger')).display,
 			drawerTrigger: rect(root.querySelector('.hp-council-drawer-trigger')),
 			drawerControl: rect(root.querySelector('.hp-council-drawer-trigger__control')),
+			// Both icons share grid-area 1/1, so "visible" must mean exactly one.
+			// A blanket rule elsewhere can out-specify the hide rule and stack the
+			// close glyph on the hamburger without changing any geometry.
+			drawerIcons: {
+				open: getComputedStyle(root.querySelector('.hp-council-drawer-trigger__open')).display,
+				close: getComputedStyle(root.querySelector('.hp-council-drawer-trigger__close')).display,
+			},
 			brand: (() => { const value = root.querySelector('.hp-council-brand').getBoundingClientRect(); return { left: value.left, right: value.right }; })(),
 			drawerPosition: (() => { const value = root.querySelector('.hp-council-drawer-trigger').getBoundingClientRect(); return { left: value.left, right: value.right }; })(),
 		};
@@ -880,9 +887,25 @@ async function verifyMobileGeometry( cdp, sessionId, viewport, captureDir ) {
 	assert( initial.drawerTrigger.width >= 44 && initial.drawerTrigger.height >= 44, `${ viewport.name } drawer trigger is smaller than 44px.` );
 	assert( approximately( initial.drawerControl.width, 38 ) && approximately( initial.drawerControl.height, 38 ), `${ viewport.name } drawer control is not 38px.` );
 	assert( initial.brand.right <= initial.drawerPosition.left + 1, `${ viewport.name } brand overlaps the drawer trigger.` );
+	assert(
+		initial.drawerIcons.open !== 'none' && initial.drawerIcons.close === 'none',
+		`${ viewport.name } closed drawer trigger shows open=${ initial.drawerIcons.open } close=${ initial.drawerIcons.close }; ` +
+			'expected the hamburger alone. Both icons occupy grid-area 1/1, so showing both stacks the close glyph on top of it.'
+	);
 
 	await clickTrigger( cdp, sessionId, 'drawer' );
 	await assertState( cdp, sessionId, 'drawer', `${ viewport.name } drawer` );
+	const openedIcons = await evaluate( cdp, sessionId, `(() => {
+		const root = document.querySelector('[data-hp-header-root]');
+		return {
+			open: getComputedStyle(root.querySelector('.hp-council-drawer-trigger__open')).display,
+			close: getComputedStyle(root.querySelector('.hp-council-drawer-trigger__close')).display,
+		};
+	})()` );
+	assert(
+		openedIcons.close !== 'none' && openedIcons.open === 'none',
+		`${ viewport.name } open drawer trigger shows open=${ openedIcons.open } close=${ openedIcons.close }; expected the close glyph alone.`
+	);
 	await wait( 190 );
 	const drawer = await evaluate( cdp, sessionId, `(() => {
 		const panel = document.querySelector('[data-hp-header-panel="drawer"]');
