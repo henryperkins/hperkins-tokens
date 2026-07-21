@@ -347,6 +347,12 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 * Fix: the shortcode block re-renders in both branches, so stored header markup
   can never freeze the site name, the menu-237 model, or the URLs. A
   protocol-relative destination no longer collapses into an on-host 404.
+* Fix: the two Council search fields keep the site's 3px gold-700 focus ring.
+  The parent theme styles search inputs through an attribute selector, which
+  outranked the site-wide rule and left them with a 1px parent outline.
+* Fix: a long site name truncates instead of running into the centred nav. The
+  brand name already had an ellipsis, but a flex item cannot shrink below its
+  longest word without `min-width: 0`, so the ellipsis never engaged.
 * Verification: the header root now reports `data-hp-header-source`, so a silent
   detach from menu 237 onto the identical-looking fallback is detectable. The
   suite also asserts the noscript navigation, the four Work status words and

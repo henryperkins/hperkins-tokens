@@ -3634,6 +3634,7 @@ samp {
 	align-items: center;
 	gap: 11px;
 	min-width: 0;
+	max-inline-size: 100%;
 	white-space: nowrap;
 	text-decoration: none;
 }
@@ -3652,6 +3653,10 @@ samp {
 }
 
 .hp-council-brand__name {
+	/* Without min-width:0 a flex item's floor is its longest word, so the
+	   ellipsis below never engages: a long site name overflows the grid cell
+	   and runs into the centred nav instead of truncating. */
+	min-width: 0;
 	overflow: hidden;
 	font-family: var(--wp--preset--font-family--label);
 	font-size: 18px;
@@ -4035,6 +4040,16 @@ samp {
 	font-size: 14px;
 	background: transparent;
 	border: 0 !important;
+}
+
+/* Assembler styles its search inputs through an attribute selector, which
+   outranks the site-wide `input:focus-visible` ring and leaves these two fields
+   with a 1px parent outline. Match that specificity so the Council fields keep
+   the same 3px gold-700 ring as every other control. */
+.hp-council-search-form input:focus-visible,
+.hp-council-drawer__search input:focus-visible {
+	outline: 3px solid var(--wp--preset--color--gold-700);
+	outline-offset: 2px;
 }
 
 .hp-council-search-form kbd {

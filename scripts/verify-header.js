@@ -483,6 +483,17 @@ async function dispatchMouseClick( cdp, sessionId, x, y, options = {} ) {
 	await wait( 30 );
 }
 
+// Panels drop in over 160ms from translateY(-6px). Measuring geometry inside
+// that window reads a position the visitor never settles on — and reads a
+// different one on every run. Let the element's own animations finish first.
+async function waitForAnimations( cdp, sessionId, selector ) {
+	await evaluate( cdp, sessionId, `(() => {
+		const target = document.querySelector(${ JSON.stringify( selector ) });
+		if (!target || !target.getAnimations) return Promise.resolve();
+		return Promise.all(target.getAnimations().map((animation) => animation.finished.catch(() => {})));
+	})()` );
+}
+
 async function waitForPageCondition( cdp, sessionId, expression, label, timeout = 5000 ) {
 	const started = Date.now();
 	while ( Date.now() - started < timeout ) {
@@ -507,7 +518,10 @@ async function assertFocusVisible( cdp, sessionId, selector, label ) {
 		// sides fall outside its box. Inflate the target by the ring's reach and
 		// compare against every clipping ancestor.
 		const rect = target.getBoundingClientRect();
-		const reach = width + Math.max( offset, 0 );
+		// The ring's outer edge sits offset+width from the border box. A negative
+		// offset draws it inside, so it cannot be clipped however tight the
+		// ancestor is — clamp at 0 rather than treating the width as reach.
+		const reach = Math.max( offset + width, 0 );
 		const ring = {
 			top: rect.top - reach, left: rect.left - reach,
 			bottom: rect.bottom + reach, right: rect.right + reach,
@@ -659,8 +673,16 @@ async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
 	assert( approximately( initial.bar.height, 68 ), `${ viewport.name } bar is ${ initial.bar.height }px; expected 68px (${ JSON.stringify( initial.bar ) }).` );
 	assert( initial.navDisplay !== 'none', `${ viewport.name } desktop nav is hidden.` );
 	assert( approximately( navCenter, initial.clientWidth / 2 ), `${ viewport.name } nav centre is ${ navCenter }; expected ${ initial.clientWidth / 2 }.` );
-	assert( initial.brand.right <= initial.nav.left + 1, `${ viewport.name } brand overlaps the centered nav.` );
-	assert( initial.nav.right <= initial.actions.left + 1, `${ viewport.name } nav overlaps desktop actions.` );
+	assert(
+		initial.brand.right <= initial.nav.left + 1,
+		`${ viewport.name } brand overlaps the centered nav by ${ ( initial.brand.right - initial.nav.left ).toFixed( 1 ) }px ` +
+			`(brand ends ${ initial.brand.right.toFixed( 1 ) }, nav starts ${ initial.nav.left.toFixed( 1 ) }).`
+	);
+	assert(
+		initial.nav.right <= initial.actions.left + 1,
+		`${ viewport.name } nav overlaps desktop actions by ${ ( initial.nav.right - initial.actions.left ).toFixed( 1 ) }px ` +
+			`(nav ends ${ initial.nav.right.toFixed( 1 ) }, actions start ${ initial.actions.left.toFixed( 1 ) }).`
+	);
 	// Without these counts the two loops below pass vacuously: rename either
 	// selector and every size, clipping and height check silently stops running.
 	assert(
@@ -757,8 +779,18 @@ async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
 	}
 	assert( work.left >= -1 && work.right <= initial.clientWidth + 1, `${ viewport.name } Work panel exceeds the viewport.` );
 	if ( viewport.name === 'desktop-edge' ) {
-		assert( approximately( work.left, 95, 1 ), `${ viewport.name } Work left gutter is ${ work.left }px; expected 95px.` );
-		assert( approximately( initial.clientWidth - work.right, 95, 1 ), `${ viewport.name } Work right gutter is ${ initial.clientWidth - work.right }px; expected 95px.` );
+		// Derive the gutter from the client width rather than the viewport: at
+		// this width the vertical scrollbar takes ~15px, so a hardcoded 95px
+		// (782 minus the 592px panel, halved) is short by half the scrollbar.
+		const gutter = ( initial.clientWidth - work.width ) / 2;
+		assert(
+			approximately( work.left, gutter, 1 ),
+			`${ viewport.name } Work left gutter is ${ work.left }px; expected ${ gutter.toFixed( 1 ) }px (client ${ initial.clientWidth }px).`
+		);
+		assert(
+			approximately( initial.clientWidth - work.right, gutter, 1 ),
+			`${ viewport.name } Work right gutter is ${ initial.clientWidth - work.right }px; expected ${ gutter.toFixed( 1 ) }px.`
+		);
 	}
 	if ( viewport.name === 'desktop-1440' ) {
 		await capture( cdp, sessionId, captureDir, 'desktop-1440-work-open', viewport );
@@ -1233,6 +1265,7 @@ async function verifyHoverCorridor( cdp, sessionId, next ) {
 	}, sessionId );
 	await wait( 40 );
 	await assertState( cdp, sessionId, next, `${ next } pointerover` );
+	await waitForAnimations( cdp, sessionId, `[data-hp-header-panel="${ next }"]` );
 	const panel = await evaluate( cdp, sessionId, `(() => {
 		const value = document.querySelector('[data-hp-header-panel="${ next }"]').getBoundingClientRect();
 		return { x: (value.left + value.right) / 2, top: value.top };
@@ -1318,6 +1351,12 @@ async function inspectViewport( cdp, viewport, captureDir ) {
 			`!!document.querySelector('[data-hp-header-root][data-hp-header-state="closed"]')`,
 			'the initialized Council header'
 		);
+		// settle() re-closes at load, next frame, and again 60ms later, because
+		// the Interactivity Router's render/pushState order varies. Interacting
+		// inside that window lets a late settle close the panel a click just
+		// opened, which no real visitor could reproduce but which makes this
+		// suite flaky. Let the window drain first.
+		await wait( 150 );
 
 		const loadedState = await evaluate( cdp, sessionId, `({
 			href: location.href,
