@@ -13,9 +13,9 @@ const NAVIGATION_SNAPSHOT_PATH = path.join(
 
 const EXPECTED_COUNCIL_SHAPE = [
 	{ key: 'work', blockName: 'core/navigation-link', label: 'Work', url: '/work/', className: 'hp-nav-work' },
-	{ key: 'writing', blockName: 'core/navigation-submenu', label: 'Writing', className: 'hp-nav-writing' },
-	{ key: 'about', blockName: 'core/navigation-link', label: 'About', url: '/about/' },
-	{ key: 'search', blockName: 'core/search', className: 'hp-drawer-search' },
+	{ key: 'writing', blockName: 'core/navigation-submenu', label: 'Writing', url: null, className: 'hp-nav-writing' },
+	{ key: 'about', blockName: 'core/navigation-link', label: 'About', url: '/about/', className: null },
+	{ key: 'search', blockName: 'core/search', label: 'Search', url: null, className: 'hp-drawer-search' },
 	{ key: 'subscribe', blockName: 'core/navigation-link', label: 'Subscribe', url: '/contact/#subscribe', className: 'hp-nav-subscribe' },
 ];
 

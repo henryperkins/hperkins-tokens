@@ -15,6 +15,18 @@ const {
 	getTrackedPageTargetsPhp,
 	normalizeContent,
 } = require( './lib/page-content-contract' );
+const {
+	NAVIGATION_POST_ID,
+	NAVIGATION_SNAPSHOT_PATH,
+	EXPECTED_COUNCIL_SHAPE,
+	normalizeNavigationContent,
+} = require( './lib/navigation-content-contract' );
+
+const EXPECTED_WRITING_CHILDREN = [
+	{ blockName: 'core/navigation-link', label: 'AI Enablement', url: '/ai-enablement/', className: 'hp-nav-ai' },
+	{ blockName: 'core/navigation-link', label: 'Essays', url: '/essays/', className: 'hp-nav-essays' },
+	{ blockName: 'core/navigation-link', label: 'Job Placement Digest', url: '/job-placement-digest/', className: 'hp-nav-digest' },
+];
 
 function assert( condition, message ) {
 	if ( ! condition ) {
@@ -38,6 +50,76 @@ function getOwnershipState() {
 				'frontPage' => null,
 				'pages' => array(),
 				'retiredPages' => array(),
+				'navigation' => null,
+			);
+
+			$navigation_post = get_post( ${ NAVIGATION_POST_ID } );
+			$navigation_home = home_url();
+			$navigation_home_parts = wp_parse_url( $navigation_home );
+			$navigation_home_scheme = isset( $navigation_home_parts['scheme'] ) ? strtolower( $navigation_home_parts['scheme'] ) : '';
+			$navigation_home_host = isset( $navigation_home_parts['host'] ) ? strtolower( $navigation_home_parts['host'] ) : '';
+			$navigation_home_port = isset( $navigation_home_parts['port'] )
+				? (int) $navigation_home_parts['port']
+				: ( 'https' === $navigation_home_scheme ? 443 : ( 'http' === $navigation_home_scheme ? 80 : null ) );
+			$navigation_relative_url = static function ( $url ) use ( $navigation_home_scheme, $navigation_home_host, $navigation_home_port ) {
+				if ( ! is_string( $url ) || '' === $url ) {
+					return null;
+				}
+
+				$parts = wp_parse_url( $url );
+				if ( false === $parts ) {
+					return $url;
+				}
+
+				if ( isset( $parts['host'] ) ) {
+					$url_scheme = isset( $parts['scheme'] ) ? strtolower( $parts['scheme'] ) : '';
+					$url_host = strtolower( $parts['host'] );
+					$url_port = isset( $parts['port'] )
+						? (int) $parts['port']
+						: ( 'https' === $url_scheme ? 443 : ( 'http' === $url_scheme ? 80 : null ) );
+					if ( $navigation_home_scheme !== $url_scheme || $navigation_home_host !== $url_host || $navigation_home_port !== $url_port ) {
+						return $url;
+					}
+				} elseif ( isset( $parts['scheme'] ) ) {
+					return $url;
+				}
+
+				$relative = isset( $parts['path'] ) ? $parts['path'] : '/';
+				if ( isset( $parts['query'] ) ) {
+					$relative .= '?' . $parts['query'];
+				}
+				if ( isset( $parts['fragment'] ) ) {
+					$relative .= '#' . $parts['fragment'];
+				}
+				return $relative;
+			};
+
+			$simplify_navigation_blocks = static function ( $blocks ) use ( &$simplify_navigation_blocks, $navigation_relative_url ) {
+				$items = array();
+				foreach ( $blocks as $block ) {
+					if ( empty( $block['blockName'] ) ) {
+						continue;
+					}
+
+					$attrs = isset( $block['attrs'] ) && is_array( $block['attrs'] ) ? $block['attrs'] : array();
+					$items[] = array(
+						'blockName' => (string) $block['blockName'],
+						'label' => isset( $attrs['label'] ) ? wp_strip_all_tags( (string) $attrs['label'] ) : null,
+						'url' => isset( $attrs['url'] ) ? $navigation_relative_url( (string) $attrs['url'] ) : null,
+						'className' => isset( $attrs['className'] ) ? (string) $attrs['className'] : null,
+						'children' => $simplify_navigation_blocks( isset( $block['innerBlocks'] ) ? $block['innerBlocks'] : array() ),
+					);
+				}
+				return $items;
+			};
+
+			$result['navigation'] = array(
+				'id' => $navigation_post ? (int) $navigation_post->ID : 0,
+				'type' => $navigation_post ? $navigation_post->post_type : null,
+				'status' => $navigation_post ? $navigation_post->post_status : null,
+				'content' => $navigation_post ? (string) $navigation_post->post_content : '',
+				'home' => $navigation_home,
+				'items' => $navigation_post ? $simplify_navigation_blocks( parse_blocks( $navigation_post->post_content ) ) : array(),
 			);
 
 			$front_page = get_post( $result['frontPageId'] );
@@ -155,6 +237,64 @@ function verifyPageOwnership( state, contract ) {
 	verifySnapshot( contract, page );
 }
 
+function verifyNavigationItem( actual, expected, context ) {
+	assert( actual, `Expected ${ context } to exist.` );
+	for ( const field of [ 'blockName', 'label', 'url', 'className' ] ) {
+		assert(
+			actual[ field ] === expected[ field ],
+			`Expected ${ context } ${ field }=${ JSON.stringify( expected[ field ] ) }, got ${ JSON.stringify( actual[ field ] ) }.`
+		);
+	}
+}
+
+function verifyNavigationOwnership( state ) {
+	const navigation = state.navigation;
+	assert( navigation && navigation.id === NAVIGATION_POST_ID, 'Expected navigation post 237 to exist.' );
+	assert( navigation.type === 'wp_navigation', `Expected post 237 to be wp_navigation, got ${ navigation.type || 'none' }.` );
+	assert( navigation.status === 'publish', `Expected navigation post 237 to be published, got ${ navigation.status || 'none' }.` );
+	assert(
+		navigation.items.length === EXPECTED_COUNCIL_SHAPE.length,
+		`Expected navigation post 237 to contain ${ EXPECTED_COUNCIL_SHAPE.length } top-level Council items, got ${ navigation.items.length }.`
+	);
+
+	EXPECTED_COUNCIL_SHAPE.forEach( ( expected, index ) => {
+		verifyNavigationItem( navigation.items[ index ], expected, `navigation item ${ index + 1 } (${ expected.key })` );
+	} );
+
+	const writing = navigation.items[ 1 ];
+	assert(
+		writing.children.length === EXPECTED_WRITING_CHILDREN.length,
+		`Expected Writing to contain ${ EXPECTED_WRITING_CHILDREN.length } children, got ${ writing.children.length }.`
+	);
+	EXPECTED_WRITING_CHILDREN.forEach( ( expected, index ) => {
+		const child = writing.children[ index ];
+		verifyNavigationItem( child, expected, `Writing child ${ index + 1 } (${ expected.label })` );
+		assert( child.children.length === 0, `Expected Writing child ${ index + 1 } (${ expected.label }) to have no children.` );
+	} );
+
+	for ( const [ index, item ] of navigation.items.entries() ) {
+		if ( index !== 1 ) {
+			assert( item.children.length === 0, `Expected navigation item ${ index + 1 } (${ item.label || item.blockName }) to have no children.` );
+		}
+	}
+
+	assert(
+		fs.existsSync( NAVIGATION_SNAPSHOT_PATH ),
+		`Expected navigation snapshot ${ path.relative( THEME_PATH, NAVIGATION_SNAPSHOT_PATH ) }. Run node scripts/export-navigation-snapshot.js.`
+	);
+	const liveContent = normalizeNavigationContent( navigation.content, navigation.home );
+	const snapshot = normalizeNavigationContent( fs.readFileSync( NAVIGATION_SNAPSHOT_PATH, 'utf8' ), navigation.home );
+	assert(
+		liveContent === snapshot,
+		[
+			`Navigation post 237 no longer matches ${ path.relative( THEME_PATH, NAVIGATION_SNAPSHOT_PATH ) }.`,
+			`live   sha256: ${ getSha256( liveContent ) }`,
+			`stored sha256: ${ getSha256( snapshot ) }`,
+			'If the DB navigation change is intentional, re-export with node scripts/export-navigation-snapshot.js.',
+		].join( '\n' )
+	);
+}
+
 function main() {
 	const state = getOwnershipState();
 
@@ -170,6 +310,8 @@ function main() {
 			`Expected the retired ${ contract.label } at "${ contract.pagePath }" to be absent, found post ${ page?.id || 'unknown' } (${ page?.status || 'unknown status' }).`
 		);
 	}
+
+	verifyNavigationOwnership( state );
 
 	for ( const contract of PAGE_CONTRACTS ) {
 		verifyPageOwnership( state, contract );
