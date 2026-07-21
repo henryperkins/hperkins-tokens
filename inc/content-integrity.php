@@ -40,7 +40,10 @@ function hperkins_tokens_get_public_content_integrity_state() {
 	$pages   = array();
 
 	foreach ( $targets as $key => $path ) {
-		$page    = get_page_by_path( $path, OBJECT, 'page' );
+		$page = get_page_by_path( $path, OBJECT, 'page' );
+		if ( $page && 'publish' !== get_post_status( $page ) ) {
+			$page = null;
+		}
 		$content = $page ? hperkins_tokens_normalize_public_page_body( (string) $page->post_content ) : '';
 
 		$pages[ $key ] = array(
