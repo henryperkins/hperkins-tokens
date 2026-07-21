@@ -58,7 +58,9 @@ function maximumDurationSeconds( value ) {
 }
 
 function read( file ) {
-	return fs.readFileSync( path.join( ROOT, file ), 'utf8' );
+	// Normalise line endings: git's autocrlf checks these files out as CRLF on
+	// Windows, which would otherwise fail every assertion spanning a newline.
+	return fs.readFileSync( path.join( ROOT, file ), 'utf8' ).replace( /\r\n/g, '\n' );
 }
 
 function exists( file ) {
@@ -121,9 +123,32 @@ function verifySource() {
 		"'[hperkins_council_header]' === $inner_html",
 		"0 === strpos( $inner_html, '<div class=\"hp-council-header alignwide\" data-hp-header-root>' )",
 		"1 === substr_count( $inner_html, 'data-hp-header-root' )",
-		'return $is_rendered_header ? $inner_html : hperkins_tokens_render_council_header();',
 		"add_filter( 'pre_render_block', 'hperkins_tokens_pre_render_council_header_block', 10, 2 );",
+		// Current-page indication: the retired core Navigation block emitted this
+		// for free, so the renderer has to say where the visitor is.
+		'function hperkins_tokens_council_current_path()',
+		'function hperkins_tokens_council_current_attr( $url, $current_path )',
+		'function hperkins_tokens_council_in_section( $url, $current_path )',
+		' aria-current="page"',
+		'aria-labelledby="hp-council-drawer-legend"',
+		'id="hp-council-drawer-legend"',
+		// A protocol-relative value names a host and must reach the host compare.
+		"if ( 0 === strpos( $value, '/' ) && 0 !== strpos( $value, '//' ) )",
 	] );
+	const renderer = read( 'inc/council-header.php' );
+	// The already-rendered branch is a recognition signal only. Echoing stored
+	// markup back would freeze the site name, the menu-237 model, and every URL,
+	// and no edit to the renderer would reach the page.
+	assert(
+		! /return \$is_rendered_header \? \$inner_html/.test( renderer ),
+		'pre_render_block must re-render in both branches, never echo stored header markup.'
+	);
+	// Ten destinations carry aria-current: the three desktop nav links, the three
+	// Writing panel links, and the four drawer rows.
+	assert(
+		( renderer.match( /hperkins_tokens_council_current_attr\(/g ) || [] ).length === 11,
+		'Every Council destination must carry an aria-current attribute (1 definition + 10 call sites).'
+	);
 	assertIncludes( 'style.css', [
 		'--hp-header-h: 68px;',
 		'--hp-header-h-compact: 62px;',
@@ -222,6 +247,11 @@ function verifySource() {
 	assert(
 		/var stranded = ! active \|\| active === document\.body \|\| drawerLink === active;/.test( controller ),
 		'The drawer close must rescue focus only when it was stranded, so it cannot steal a router-scroll hash target.'
+	);
+	// Tabbing past an open panel closes it, the way a disclosure does.
+	assert(
+		/document\.addEventListener\( 'focusin'/.test( controller ),
+		'header-controller.js must close an open panel when focus leaves it.'
 	);
 	assertIncludes( 'functions.php', [
 		"$header_controller_rel  = '/assets/js/header-controller.js';",

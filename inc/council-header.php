@@ -220,7 +220,10 @@ function hperkins_tokens_council_url( $value ) {
 		return home_url( '/' );
 	}
 
-	if ( 0 === strpos( $value, '/' ) ) {
+	// A protocol-relative value names a host, so it must reach the host
+	// comparison below. home_url() would strip the leading slashes and turn
+	// //cdn.example.com/x into an on-host 404.
+	if ( 0 === strpos( $value, '/' ) && 0 !== strpos( $value, '//' ) ) {
 		return home_url( $value );
 	}
 
@@ -239,6 +242,63 @@ function hperkins_tokens_council_url( $value ) {
 	}
 
 	return $value;
+}
+
+/**
+ * Return the current request path, normalised with a trailing slash.
+ *
+ * The retired core Navigation block emitted aria-current and its current-menu
+ * classes for free. This renderer owns its own markup, so it has to say where
+ * the visitor is.
+ *
+ * @return string
+ */
+function hperkins_tokens_council_current_path() {
+	$request = isset( $_SERVER['REQUEST_URI'] )
+		? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) )
+		: '/';
+	$path    = (string) wp_parse_url( $request, PHP_URL_PATH );
+
+	return '' === $path ? '/' : trailingslashit( $path );
+}
+
+/**
+ * Return a model destination as a normalised path.
+ *
+ * @param string $url Stored URL.
+ * @return string
+ */
+function hperkins_tokens_council_path( $url ) {
+	$path = (string) wp_parse_url( hperkins_tokens_council_url( $url ), PHP_URL_PATH );
+
+	return '' === $path ? '/' : trailingslashit( $path );
+}
+
+/**
+ * Return the aria-current attribute for a destination the visitor is on.
+ *
+ * @param string $url          Stored URL.
+ * @param string $current_path Normalised current request path.
+ * @return string Literal attribute markup, or an empty string.
+ */
+function hperkins_tokens_council_current_attr( $url, $current_path ) {
+	return hperkins_tokens_council_path( $url ) === $current_path ? ' aria-current="page"' : '';
+}
+
+/**
+ * Test whether the visitor is on a destination or anywhere beneath it.
+ *
+ * @param string $url          Stored section URL.
+ * @param string $current_path Normalised current request path.
+ * @return bool
+ */
+function hperkins_tokens_council_in_section( $url, $current_path ) {
+	$path = hperkins_tokens_council_path( $url );
+	if ( '/' === $path ) {
+		return '/' === $current_path;
+	}
+
+	return 0 === strpos( $current_path, $path );
 }
 
 /**
@@ -271,6 +331,15 @@ function hperkins_tokens_render_council_header() {
 	$digest     = hperkins_tokens_council_writing_item( $model, 'digest' );
 	$site_name  = get_bloginfo( 'name' );
 
+	$here            = hperkins_tokens_council_current_path();
+	$in_work         = hperkins_tokens_council_in_section( $model['work']['url'], $here );
+	$in_writing      =
+		hperkins_tokens_council_in_section( $ai['url'], $here ) ||
+		hperkins_tokens_council_in_section( $essays['url'], $here ) ||
+		hperkins_tokens_council_in_section( $digest['url'], $here );
+	$work_item_class = $in_work ? ' is-current' : '';
+	$writing_class   = $in_writing ? ' is-current' : '';
+
 	ob_start();
 	?>
 	<div class="hp-council-header alignwide" data-hp-header-root>
@@ -282,7 +351,7 @@ function hperkins_tokens_render_council_header() {
 
 			<nav class="hp-council-nav" aria-label="<?php echo esc_attr__( 'Primary', 'hperkins-tokens' ); ?>">
 				<ul class="hp-council-nav__list">
-					<li class="hp-council-nav__item" data-hp-header-hover="work">
+					<li class="hp-council-nav__item<?php echo esc_attr( $work_item_class ); ?>" data-hp-header-hover="work">
 						<button id="hp-council-work-trigger" class="hp-council-nav__trigger" type="button" data-hp-header-trigger="work" aria-controls="hp-council-work-panel" aria-expanded="false">
 							<span class="hp-council-nav__label"><?php echo esc_html( $model['work']['label'] ); ?></span>
 							<svg class="hp-council-nav__chevron" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="m1.5 4 4.5 4 4.5-4"></path></svg>
@@ -297,7 +366,7 @@ function hperkins_tokens_render_council_header() {
 										<span class="hp-council-work-row__status"><?php echo esc_html( $item['status'] ); ?></span>
 									</a>
 								<?php endforeach; ?>
-								<a class="hp-council-work-panel__all" href="<?php echo esc_url( hperkins_tokens_council_url( $model['work']['url'] ) ); ?>"><?php echo esc_html__( 'View all work', 'hperkins-tokens' ); ?> <span aria-hidden="true">&rarr;</span></a>
+								<a class="hp-council-work-panel__all" href="<?php echo esc_url( hperkins_tokens_council_url( $model['work']['url'] ) ); ?>"<?php echo hperkins_tokens_council_current_attr( $model['work']['url'], $here ); ?>><?php echo esc_html__( 'View all work', 'hperkins-tokens' ); ?> <span aria-hidden="true">&rarr;</span></a>
 							</div>
 							<div class="hp-council-work-panel__evidence">
 								<p class="hp-council-work-panel__eyebrow"><?php echo esc_html__( 'Featured evidence', 'hperkins-tokens' ); ?></p>
@@ -308,21 +377,21 @@ function hperkins_tokens_render_council_header() {
 						</div>
 					</li>
 
-					<li class="hp-council-nav__item hp-council-nav__item--writing" data-hp-header-hover="writing">
+					<li class="hp-council-nav__item hp-council-nav__item--writing<?php echo esc_attr( $writing_class ); ?>" data-hp-header-hover="writing">
 						<button id="hp-council-writing-trigger" class="hp-council-nav__trigger" type="button" data-hp-header-trigger="writing" aria-controls="hp-council-writing-panel" aria-expanded="false" aria-label="<?php echo esc_attr( $model['writing']['label'] ); ?>">
 							<span class="hp-council-nav__label"><?php echo esc_html( $model['writing']['label'] ); ?></span>
 							<svg class="hp-council-nav__chevron" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="m1.5 4 4.5 4 4.5-4"></path></svg>
 						</button>
 						<span class="hp-council-digest-cue" aria-hidden="true"><?php echo esc_html__( 'Digest', 'hperkins-tokens' ); ?></span>
 						<div id="hp-council-writing-panel" class="hp-council-writing-panel" data-hp-header-panel="writing" aria-labelledby="hp-council-writing-trigger" hidden>
-							<a class="hp-council-writing-panel__link" href="<?php echo esc_url( hperkins_tokens_council_url( $ai['url'] ) ); ?>"><?php echo esc_html( $ai['label'] ); ?></a>
-							<a class="hp-council-writing-panel__link" href="<?php echo esc_url( hperkins_tokens_council_url( $essays['url'] ) ); ?>"><?php echo esc_html( $essays['label'] ); ?></a>
-							<a class="hp-council-writing-panel__link hp-council-writing-panel__link--digest" href="<?php echo esc_url( hperkins_tokens_council_url( $digest['url'] ) ); ?>"><span><?php echo esc_html( $digest['label'] ); ?></span></a>
+							<a class="hp-council-writing-panel__link" href="<?php echo esc_url( hperkins_tokens_council_url( $ai['url'] ) ); ?>"<?php echo hperkins_tokens_council_current_attr( $ai['url'], $here ); ?>><?php echo esc_html( $ai['label'] ); ?></a>
+							<a class="hp-council-writing-panel__link" href="<?php echo esc_url( hperkins_tokens_council_url( $essays['url'] ) ); ?>"<?php echo hperkins_tokens_council_current_attr( $essays['url'], $here ); ?>><?php echo esc_html( $essays['label'] ); ?></a>
+							<a class="hp-council-writing-panel__link hp-council-writing-panel__link--digest" href="<?php echo esc_url( hperkins_tokens_council_url( $digest['url'] ) ); ?>"<?php echo hperkins_tokens_council_current_attr( $digest['url'], $here ); ?>><span><?php echo esc_html( $digest['label'] ); ?></span></a>
 						</div>
 					</li>
 
 					<li class="hp-council-nav__item">
-						<a class="hp-council-nav__link" href="<?php echo esc_url( hperkins_tokens_council_url( $model['about']['url'] ) ); ?>"><span class="hp-council-nav__label"><?php echo esc_html( $model['about']['label'] ); ?></span></a>
+						<a class="hp-council-nav__link" href="<?php echo esc_url( hperkins_tokens_council_url( $model['about']['url'] ) ); ?>"<?php echo hperkins_tokens_council_current_attr( $model['about']['url'], $here ); ?>><span class="hp-council-nav__label"><?php echo esc_html( $model['about']['label'] ); ?></span></a>
 					</li>
 				</ul>
 			</nav>
@@ -349,16 +418,16 @@ function hperkins_tokens_render_council_header() {
 			</div>
 		</div>
 
-		<div id="hp-council-drawer" class="hp-council-drawer" data-hp-header-panel="drawer" hidden>
+		<div id="hp-council-drawer" class="hp-council-drawer" data-hp-header-panel="drawer" aria-labelledby="hp-council-drawer-legend" hidden>
 			<div class="hp-council-drawer__body">
-				<p class="hp-council-drawer__legend"><?php echo esc_html__( 'Sections', 'hperkins-tokens' ); ?></p>
+				<p id="hp-council-drawer-legend" class="hp-council-drawer__legend"><?php echo esc_html__( 'Sections', 'hperkins-tokens' ); ?></p>
 				<nav aria-label="<?php echo esc_attr__( 'Mobile', 'hperkins-tokens' ); ?>">
 					<ul class="hp-council-drawer__list">
-						<li><a href="<?php echo esc_url( hperkins_tokens_council_url( $model['work']['url'] ) ); ?>"><?php echo esc_html( $model['work']['label'] ); ?></a></li>
-						<li><a href="<?php echo esc_url( hperkins_tokens_council_url( $essays['url'] ) ); ?>"><?php echo esc_html( $essays['label'] ); ?></a></li>
-						<li><a href="<?php echo esc_url( hperkins_tokens_council_url( $ai['url'] ) ); ?>"><?php echo esc_html( $ai['label'] ); ?></a></li>
-						<li><a href="<?php echo esc_url( hperkins_tokens_council_url( $model['about']['url'] ) ); ?>"><?php echo esc_html( $model['about']['label'] ); ?></a></li>
-						<li class="hp-council-drawer__digest"><a href="<?php echo esc_url( hperkins_tokens_council_url( $digest['url'] ) ); ?>"><span><?php echo esc_html( $digest['label'] ); ?></span></a></li>
+						<li><a href="<?php echo esc_url( hperkins_tokens_council_url( $model['work']['url'] ) ); ?>"<?php echo hperkins_tokens_council_current_attr( $model['work']['url'], $here ); ?>><?php echo esc_html( $model['work']['label'] ); ?></a></li>
+						<li><a href="<?php echo esc_url( hperkins_tokens_council_url( $essays['url'] ) ); ?>"<?php echo hperkins_tokens_council_current_attr( $essays['url'], $here ); ?>><?php echo esc_html( $essays['label'] ); ?></a></li>
+						<li><a href="<?php echo esc_url( hperkins_tokens_council_url( $ai['url'] ) ); ?>"<?php echo hperkins_tokens_council_current_attr( $ai['url'], $here ); ?>><?php echo esc_html( $ai['label'] ); ?></a></li>
+						<li><a href="<?php echo esc_url( hperkins_tokens_council_url( $model['about']['url'] ) ); ?>"<?php echo hperkins_tokens_council_current_attr( $model['about']['url'], $here ); ?>><?php echo esc_html( $model['about']['label'] ); ?></a></li>
+						<li class="hp-council-drawer__digest"><a href="<?php echo esc_url( hperkins_tokens_council_url( $digest['url'] ) ); ?>"<?php echo hperkins_tokens_council_current_attr( $digest['url'], $here ); ?>><span><?php echo esc_html( $digest['label'] ); ?></span></a></li>
 					</ul>
 				</nav>
 				<form class="hp-council-drawer__search" role="search" method="get" action="<?php echo esc_url( home_url( '/' ) ); ?>">
@@ -423,6 +492,10 @@ function hperkins_tokens_pre_render_council_header_block( $pre_render, $parsed_b
 		return $pre_render;
 	}
 
-	return $is_rendered_header ? $inner_html : hperkins_tokens_render_council_header();
+	// Both branches re-render. A block that already holds rendered header HTML
+	// is only a signal that the block is ours — echoing it back would serve a
+	// frozen site name, a frozen menu-237 model, and frozen URLs, and no edit to
+	// this file would reach the page.
+	return hperkins_tokens_render_council_header();
 }
 add_filter( 'pre_render_block', 'hperkins_tokens_pre_render_council_header_block', 10, 2 );

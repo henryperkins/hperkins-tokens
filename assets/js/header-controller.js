@@ -228,6 +228,25 @@
 		}
 	} );
 
+	// Tabbing past the end of an open panel should close it, the way a
+	// disclosure does — the drawer especially, which otherwise leaves the
+	// visitor tabbing through a menu that is no longer where they are.
+	document.addEventListener( 'focusin', function ( event ) {
+		var node = root();
+		if ( ! node || state === 'closed' ) {
+			return;
+		}
+		var panel = panelFor( state );
+		var trigger = triggerFor( state );
+		if (
+			( panel && panel.contains( event.target ) ) ||
+			( trigger && trigger === event.target )
+		) {
+			return;
+		}
+		applyState( 'closed' );
+	} );
+
 	document.addEventListener( 'pointerover', function ( event ) {
 		if ( ! desktopPointer() || ! event.target.closest ) {
 			return;
