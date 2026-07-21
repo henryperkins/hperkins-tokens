@@ -124,14 +124,14 @@ add_action( 'wp_enqueue_scripts', function () {
 		)
 	);
 
-	$nav_close_rel  = '/assets/js/nav-close-delight.js';
-	$nav_close_file = get_stylesheet_directory() . $nav_close_rel;
-	if ( file_exists( $nav_close_file ) ) {
+	$header_controller_rel  = '/assets/js/header-controller.js';
+	$header_controller_file = get_stylesheet_directory() . $header_controller_rel;
+	if ( file_exists( $header_controller_file ) ) {
 		wp_enqueue_script(
-			'hperkins-nav-close-delight',
-			get_stylesheet_directory_uri() . $nav_close_rel,
+			'hperkins-header-controller',
+			get_stylesheet_directory_uri() . $header_controller_rel,
 			array(),
-			filemtime( $nav_close_file ),
+			filemtime( $header_controller_file ),
 			array(
 				'in_footer' => true,
 				'strategy'  => 'defer',
@@ -151,24 +151,6 @@ add_action( 'wp_enqueue_scripts', function () {
 			get_stylesheet_directory_uri() . $form_enhance_rel,
 			array(),
 			filemtime( $form_enhance_file ),
-			array(
-				'in_footer' => true,
-				'strategy'  => 'defer',
-			)
-		);
-	}
-
-	// Progressive enhancement for the Council masthead search: collapse the inline
-	// expanding field on Escape or an outside click. The core/search "button only"
-	// toggle (open/close on click) is the no-JS fallback this only refines.
-	$header_search_rel  = '/assets/js/header-search.js';
-	$header_search_file = get_stylesheet_directory() . $header_search_rel;
-	if ( file_exists( $header_search_file ) ) {
-		wp_enqueue_script(
-			'hperkins-header-search',
-			get_stylesheet_directory_uri() . $header_search_rel,
-			array(),
-			filemtime( $header_search_file ),
 			array(
 				'in_footer' => true,
 				'strategy'  => 'defer',

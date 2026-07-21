@@ -1,30 +1,81 @@
 #!/usr/bin/env node
 
+const { spawn } = require( 'node:child_process' );
 const fs = require( 'node:fs' );
+const fsPromises = require( 'node:fs/promises' );
+const os = require( 'node:os' );
 const path = require( 'node:path' );
 
+const { getOrigin } = require( './lib/site-url' );
+
 const ROOT = path.join( __dirname, '..' );
+const ORIGIN = getOrigin();
 const SOURCE_ONLY = process.argv.includes( '--source-only' );
+
+const VIEWPORTS = [
+	{ name: 'desktop-1440', width: 1440, height: 1000 },
+	{ name: 'desktop-1280', width: 1280, height: 900 },
+	{ name: 'desktop-1024', width: 1024, height: 900 },
+	{ name: 'desktop-960', width: 960, height: 900 },
+	{ name: 'desktop-edge', width: 782, height: 900 },
+	{ name: 'mobile-edge', width: 781, height: 900 },
+	{ name: 'mobile-390', width: 390, height: 844 },
+	{ name: 'mobile-320', width: 320, height: 800 },
+];
+
+const WORK_LABELS = [
+	'Flavor Agent',
+	'WordPress AI Stack Contributions',
+	'AI Provider for Codex',
+	'DJ Lee & Voices of Judah',
+];
+const WRITING_LABELS = [ 'AI Enablement', 'Essays', 'Job Placement Digest' ];
+const DRAWER_LABELS = [
+	'Work',
+	'Essays',
+	'AI Enablement',
+	'About',
+	'Job Placement Digest',
+	'Search the journal',
+	'Subscribe',
+];
+
+function assert( condition, message ) {
+	if ( ! condition ) {
+		throw new Error( message );
+	}
+}
+
+function approximately( value, expected, tolerance = 1 ) {
+	return Math.abs( value - expected ) <= tolerance;
+}
+
+function maximumDurationSeconds( value ) {
+	return Math.max( ...value.split( ',' ).map( ( part ) => {
+		const duration = Number.parseFloat( part ) || 0;
+		return part.trim().endsWith( 'ms' ) ? duration / 1000 : duration;
+	} ) );
+}
 
 function read( file ) {
 	return fs.readFileSync( path.join( ROOT, file ), 'utf8' );
 }
 
+function exists( file ) {
+	return fs.existsSync( path.join( ROOT, file ) );
+}
+
 function assertIncludes( file, needles ) {
 	const value = read( file );
 	for ( const needle of needles ) {
-		if ( ! value.includes( needle ) ) {
-			throw new Error( file + ' is missing: ' + needle );
-		}
+		assert( value.includes( needle ), `${ file } is missing: ${ needle }` );
 	}
 }
 
 function assertNotIncludes( file, needles ) {
 	const value = read( file );
 	for ( const needle of needles ) {
-		if ( value.includes( needle ) ) {
-			throw new Error( file + ' still contains retired source: ' + needle );
-		}
+		assert( ! value.includes( needle ), `${ file } still contains retired source: ${ needle }` );
 	}
 }
 
@@ -39,6 +90,7 @@ function verifySource() {
 		'data-hp-header-panel="work"',
 		'data-hp-header-hover="work"',
 		'data-hp-header-trigger="writing"',
+		"aria-label=\"<?php echo esc_attr( $model['writing']['label'] ); ?>\"",
 		'data-hp-header-panel="writing"',
 		'data-hp-header-hover="writing"',
 		'data-hp-header-trigger="search"',
@@ -61,6 +113,16 @@ function verifySource() {
 		"'state'  => 'done'",
 		'is-state-review',
 		'is-state-done',
+		"preg_replace( '/>\\s+</', '><', $html )",
+		'null === $compact_html ? $html : $compact_html',
+		'hperkins_tokens_pre_render_council_header_block',
+		'if ( null !== $pre_render )',
+		"'core/shortcode' !== $parsed_block['blockName']",
+		"'[hperkins_council_header]' === $inner_html",
+		"0 === strpos( $inner_html, '<div class=\"hp-council-header alignwide\" data-hp-header-root>' )",
+		"1 === substr_count( $inner_html, 'data-hp-header-root' )",
+		'return $is_rendered_header ? $inner_html : hperkins_tokens_render_council_header();',
+		"add_filter( 'pre_render_block', 'hperkins_tokens_pre_render_council_header_block', 10, 2 );",
 	] );
 	assertIncludes( 'style.css', [
 		'--hp-header-h: 68px;',
@@ -72,6 +134,10 @@ function verifySource() {
 		'.hp-council-writing-panel',
 		'.hp-council-search-panel',
 		'.hp-council-drawer',
+		'.hp-council-header [data-hp-header-panel][hidden]',
+		'@keyframes hp-council-drawer-collapse',
+		'.hp-council-header.is-hp-closing .hp-council-drawer:not([hidden])',
+		'.hp-council-drawer a.is-hp-chosen',
 	] );
 	assertNotIncludes( 'inc/council-header.php', [ 'aria-haspopup=' ] );
 	assertNotIncludes( 'style.css', [
@@ -86,10 +152,1000 @@ function verifySource() {
 	] );
 	assertIncludes( 'parts/footer.html', [ '<a href="/contact/">Contact</a>' ] );
 	assertIncludes( 'theme.json', [ '"slug": "gold-800"', '"color": "#6E531B"' ] );
+
+	assert( exists( 'assets/js/header-controller.js' ), 'assets/js/header-controller.js is missing.' );
+	assertIncludes( 'assets/js/header-controller.js', [
+		"var REGISTRY = '__hpCouncilHeaderController';",
+		"if ( existing && typeof existing.settle === 'function' )",
+		'registry.settle = settle;',
+		"var STATES = [ 'closed', 'work', 'writing', 'search', 'drawer' ];",
+		"node.setAttribute( 'data-hp-header-state', next );",
+		"applyState( 'closed', { restoreFocus: true } );",
+		"window.matchMedia( '(min-width: 782px)' )",
+		"wrapHistory( 'pushState' );",
+		"wrapHistory( 'replaceState' );",
+		"window.addEventListener( 'popstate', settle );",
+		"window.addEventListener( 'pageshow', settle );",
+		"node.classList.add( 'is-hp-closing' );",
+		"drawerLink.classList.add( 'is-hp-chosen' );",
+		'event.defaultPrevented ||',
+		'event.button !== 0 ||',
+		'event.metaKey ||',
+		'event.ctrlKey ||',
+		'event.shiftKey ||',
+		'event.altKey ||',
+		"drawerLink.target === '_blank' ||",
+		"drawerLink.hasAttribute( 'download' )",
+		'var input = searchPanel',
+		"var first = panel ? panel.querySelector( 'a[href]' ) : null;",
+		'! node.contains( trigger )',
+		'! node.contains( group )',
+	] );
+	const controller = read( 'assets/js/header-controller.js' );
+	assert(
+		( controller.match( /\.hidden\s*=/g ) || [] ).length === 1,
+		'header-controller.js must assign panel.hidden only inside applyState().'
+	);
+	assert(
+		( controller.match( /setAttribute\( 'aria-expanded'/g ) || [] ).length === 1,
+		'header-controller.js must assign aria-expanded only inside applyState().'
+	);
+	assertIncludes( 'functions.php', [
+		"$header_controller_rel  = '/assets/js/header-controller.js';",
+		"'hperkins-header-controller'",
+		'filemtime( $header_controller_file )',
+	] );
+	assertNotIncludes( 'functions.php', [
+		'nav-close-delight.js',
+		'hperkins-nav-close-delight',
+		'header-search.js',
+		'hperkins-header-search',
+	] );
+	assert( ! exists( 'assets/js/header-search.js' ), 'assets/js/header-search.js must be removed.' );
+	assert( ! exists( 'assets/js/nav-close-delight.js' ), 'assets/js/nav-close-delight.js must be removed.' );
+	assertIncludes( 'scripts/verify-header.js', [
+		'history.back();',
+		"verifyHoverCorridor( cdp, sessionId, 'work' );",
+		"verifyHoverCorridor( cdp, sessionId, 'writing' );",
+		"type: 'mousePressed', x: 10, y: 300",
+		'fs.statSync( candidate ).isFile()',
+		"fsPromises.mkdtemp( path.join( captureRoot, 'hperkins-header-' ) )",
+	] );
 	console.log( 'verified Council header source contract' );
 }
 
-verifySource();
-if ( ! SOURCE_ONLY ) {
-	throw new Error( 'Rendered checks are not implemented yet.' );
+function wait( milliseconds ) {
+	return new Promise( ( resolve ) => setTimeout( resolve, milliseconds ) );
 }
+
+async function rmRetry( target ) {
+	let lastError;
+	for ( let attempt = 0; attempt < 8; attempt++ ) {
+		try {
+			await fsPromises.rm( target, { recursive: true, force: true } );
+			return;
+		} catch ( error ) {
+			lastError = error;
+			await wait( 250 );
+		}
+	}
+	throw lastError;
+}
+
+async function waitForDevToolsUrl( chrome, chromePath ) {
+	let buffer = '';
+	return new Promise( ( resolve, reject ) => {
+		const timer = setTimeout(
+			() => reject( new Error( 'Timed out waiting for Chrome DevTools URL.' ) ),
+			10000
+		);
+		chrome.on( 'error', ( error ) => {
+			clearTimeout( timer );
+			reject( new Error( `Chrome failed to launch (${ chromePath }): ${ error.message }` ) );
+		} );
+		chrome.stderr.on( 'data', ( chunk ) => {
+			buffer += chunk.toString();
+			const match = buffer.match( /(ws:\/\/127\.0\.0\.1:\d+\/devtools\/browser\/[^\s]+)/ );
+			if ( match ) {
+				clearTimeout( timer );
+				resolve( match[1] );
+			}
+		} );
+		chrome.on( 'exit', ( code ) => {
+			clearTimeout( timer );
+			reject( new Error( `Chrome exited before DevTools was ready (code ${ code }).` ) );
+		} );
+	} );
+}
+
+function createCdpClient( wsUrl ) {
+	assert( typeof WebSocket !== 'undefined', 'This verifier needs Node.js v22+ for global WebSocket.' );
+	const ws = new WebSocket( wsUrl );
+	let nextId = 1;
+	const pending = new Map();
+	const listeners = new Map();
+
+	ws.addEventListener( 'message', ( event ) => {
+		const message = JSON.parse( event.data );
+		if ( message.id && pending.has( message.id ) ) {
+			const handlers = pending.get( message.id );
+			pending.delete( message.id );
+			if ( message.error ) {
+				handlers.reject( new Error( message.error.message ) );
+			} else {
+				handlers.resolve( message.result || {} );
+			}
+			return;
+		}
+		if ( message.method ) {
+			const key = `${ message.sessionId || '' }:${ message.method }`;
+			const callbacks = listeners.get( key ) || [];
+			listeners.delete( key );
+			callbacks.forEach( ( callback ) => callback( message.params || {} ) );
+		}
+	} );
+
+	function send( method, params = {}, sessionId, timeout = 15000 ) {
+		const id = nextId++;
+		ws.send( JSON.stringify( { id, method, params, sessionId } ) );
+		return new Promise( ( resolve, reject ) => {
+			const timer = setTimeout( () => {
+				pending.delete( id );
+				reject( new Error( `Timed out waiting for ${ method } response.` ) );
+			}, timeout );
+			pending.set( id, {
+				resolve: ( value ) => {
+					clearTimeout( timer );
+					resolve( value );
+				},
+				reject: ( error ) => {
+					clearTimeout( timer );
+					reject( error );
+				},
+			} );
+		} );
+	}
+
+	function once( method, sessionId, timeout = 10000 ) {
+		const key = `${ sessionId || '' }:${ method }`;
+		return new Promise( ( resolve, reject ) => {
+			const timer = setTimeout(
+				() => reject( new Error( `Timed out waiting for ${ method }.` ) ),
+				timeout
+			);
+			const callback = ( params ) => {
+				clearTimeout( timer );
+				resolve( params );
+			};
+			listeners.set( key, [ ...( listeners.get( key ) || [] ), callback ] );
+		} );
+	}
+
+	return new Promise( ( resolve, reject ) => {
+		ws.addEventListener( 'open', () => resolve( { send, once, close: () => ws.close() } ) );
+		ws.addEventListener( 'error', reject );
+	} );
+}
+
+async function evaluate( cdp, sessionId, expression ) {
+	const result = await cdp.send( 'Runtime.evaluate', {
+		expression,
+		awaitPromise: true,
+		returnByValue: true,
+	}, sessionId );
+	if ( result.exceptionDetails ) {
+		throw new Error( result.exceptionDetails.exception?.description || 'Runtime evaluation failed.' );
+	}
+	return result.result.value;
+}
+
+async function pressKey( cdp, sessionId, key ) {
+	const keys = {
+		Enter: { key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, nativeVirtualKeyCode: 13, text: '\r', unmodifiedText: '\r' },
+		Space: { key: ' ', code: 'Space', windowsVirtualKeyCode: 32, text: ' ' },
+		ArrowDown: { key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 },
+		Escape: { key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 },
+		Tab: { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 },
+	};
+	const value = keys[ key ];
+	assert( value, `Unsupported verifier key ${ key }.` );
+	await cdp.send( 'Input.dispatchKeyEvent', {
+		type: 'keyDown',
+		...value,
+	}, sessionId );
+	await cdp.send( 'Input.dispatchKeyEvent', {
+		type: 'keyUp',
+		key: value.key,
+		code: value.code,
+		windowsVirtualKeyCode: value.windowsVirtualKeyCode,
+	}, sessionId );
+	await wait( 30 );
+}
+
+async function dispatchMouseClick( cdp, sessionId, x, y, options = {} ) {
+	const button = options.button || 'left';
+	const buttons = { left: 1, right: 2, middle: 4 }[ button ] || 0;
+	const modifiers = options.modifiers || 0;
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mouseMoved', x, y, button: 'none', buttons: 0, modifiers, pointerType: 'mouse',
+	}, sessionId );
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mousePressed', x, y, button, buttons, modifiers, clickCount: 1, pointerType: 'mouse',
+	}, sessionId );
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mouseReleased', x, y, button, buttons: 0, modifiers, clickCount: 1, pointerType: 'mouse',
+	}, sessionId );
+	await wait( 30 );
+}
+
+async function waitForPageCondition( cdp, sessionId, expression, label, timeout = 5000 ) {
+	const started = Date.now();
+	while ( Date.now() - started < timeout ) {
+		if ( await evaluate( cdp, sessionId, expression ) ) {
+			return;
+		}
+		await wait( 50 );
+	}
+	throw new Error( `Timed out waiting for ${ label }.` );
+}
+
+async function assertFocusVisible( cdp, sessionId, selector, label ) {
+	const focus = await evaluate( cdp, sessionId, `(() => {
+		const target = document.querySelector(${ JSON.stringify( selector ) });
+		if (!target) return null;
+		target.focus();
+		const style = getComputedStyle(target);
+		return {
+			matches: target.matches(':focus-visible'),
+			outlineStyle: style.outlineStyle,
+			outlineWidth: parseFloat(style.outlineWidth) || 0,
+		};
+	})()` );
+	assert( focus, `${ label } focus target is missing.` );
+	assert(
+		focus.matches && focus.outlineStyle !== 'none' && focus.outlineWidth >= 3,
+		`${ label } focus-visible outline is ${ focus.outlineStyle } ${ focus.outlineWidth }px.`
+	);
+}
+
+async function stateSnapshot( cdp, sessionId ) {
+	return evaluate( cdp, sessionId, `(() => {
+		const root = document.querySelector('[data-hp-header-root]');
+		const panels = root ? Array.from(root.querySelectorAll('[data-hp-header-panel]')) : [];
+		return {
+			state: root && root.getAttribute('data-hp-header-state'),
+			unhidden: panels.filter((panel) => !panel.hidden).map((panel) => panel.dataset.hpHeaderPanel),
+			expanded: root ? Array.from(root.querySelectorAll('[data-hp-header-trigger]')).filter((trigger) => trigger.getAttribute('aria-expanded') === 'true').map((trigger) => trigger.dataset.hpHeaderTrigger) : [],
+			leakingHidden: panels.filter((panel) => {
+				const rect = panel.getBoundingClientRect();
+				return panel.hidden && getComputedStyle(panel).display !== 'none' && rect.width > 0 && rect.height > 0;
+			}).map((panel) => panel.dataset.hpHeaderPanel),
+		};
+	})()` );
+}
+
+async function assertState( cdp, sessionId, expected, context ) {
+	const snapshot = await stateSnapshot( cdp, sessionId );
+	const expectedOpen = expected === 'closed' ? [] : [ expected ];
+	assert( snapshot.state === expected, `${ context }: state is ${ snapshot.state }; expected ${ expected }.` );
+	assert(
+		JSON.stringify( snapshot.unhidden ) === JSON.stringify( expectedOpen ),
+		`${ context }: unhidden panels are ${ snapshot.unhidden.join( ', ' ) || 'none' }.`
+	);
+	assert(
+		JSON.stringify( snapshot.expanded ) === JSON.stringify( expectedOpen ),
+		`${ context }: expanded triggers are ${ snapshot.expanded.join( ', ' ) || 'none' }.`
+	);
+	assert(
+		snapshot.leakingHidden.length === 0,
+		`${ context }: hidden panels remain visually rendered: ${ snapshot.leakingHidden.join( ', ' ) }.`
+	);
+}
+
+async function clickTrigger( cdp, sessionId, state ) {
+	await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-trigger="${ state }"]').click()` );
+	await wait( 30 );
+}
+
+async function closeCurrent( cdp, sessionId ) {
+	await evaluate( cdp, sessionId, `(() => {
+		const trigger = document.querySelector('[data-hp-header-trigger][aria-expanded="true"]');
+		if (trigger) trigger.click();
+	})()` );
+	await wait( 30 );
+}
+
+async function accessibleName( cdp, sessionId, selector ) {
+	const target = await cdp.send( 'Runtime.evaluate', {
+		expression: `document.querySelector(${ JSON.stringify( selector ) })`,
+	}, sessionId );
+	assert( target.result.objectId, `Could not resolve accessibility target ${ selector }.` );
+	const described = await cdp.send( 'DOM.describeNode', {
+		objectId: target.result.objectId,
+	}, sessionId );
+	const tree = await cdp.send( 'Accessibility.getPartialAXTree', {
+		backendNodeId: described.node.backendNodeId,
+		fetchRelatives: false,
+	}, sessionId );
+	await cdp.send( 'Runtime.releaseObject', { objectId: target.result.objectId }, sessionId );
+	const node = tree.nodes.find( ( item ) => item.role?.value === 'button' ) || tree.nodes[0];
+	return node?.name?.value || '';
+}
+
+async function capture( cdp, sessionId, captureDir, name, viewport ) {
+	await wait( 180 );
+	const screenshot = await cdp.send( 'Page.captureScreenshot', {
+		format: 'png',
+		fromSurface: true,
+		clip: { x: 0, y: 0, width: viewport.width, height: viewport.height, scale: 1 },
+	}, sessionId, 30000 );
+	const destination = path.join( captureDir, `${ name }.png` );
+	await fsPromises.writeFile( destination, Buffer.from( screenshot.data, 'base64' ) );
+	return destination;
+}
+
+async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
+	const initial = await evaluate( cdp, sessionId, `(() => {
+		const rect = (element) => {
+			const value = element.getBoundingClientRect();
+			return { left: value.left, right: value.right, width: value.width, height: value.height };
+		};
+		const root = document.querySelector('[data-hp-header-root]');
+		const nav = root.querySelector('.hp-council-nav');
+		const search = root.querySelector('.hp-council-search-trigger');
+		const brand = root.querySelector('.hp-council-brand');
+		const actions = root.querySelector('.hp-council-actions');
+		return {
+			clientWidth: document.documentElement.clientWidth,
+			scrollWidth: document.documentElement.scrollWidth,
+			bar: (() => {
+				const element = root.querySelector('.hp-council-header__bar');
+				const style = getComputedStyle(element);
+				return {
+					...rect(element), display: style.display, minHeight: style.minHeight,
+					paddingTop: style.paddingTop, paddingBottom: style.paddingBottom,
+					children: Array.from(element.children).map((child) => ({ tag: child.tagName, className: child.className, ...rect(child) })),
+				};
+			})(),
+			nav: rect(nav),
+			brand: rect(brand),
+			actions: rect(actions),
+			navDisplay: getComputedStyle(nav).display,
+			labels: Array.from(nav.querySelectorAll('.hp-council-nav__label')).filter((label) => getComputedStyle(label).display !== 'none').map((label) => ({ text: label.textContent.trim(), size: parseFloat(getComputedStyle(label).fontSize), clientWidth: label.clientWidth, scrollWidth: label.scrollWidth })),
+			disclosureHeights: Array.from(nav.querySelectorAll('.hp-council-nav__trigger')).map((trigger) => trigger.getBoundingClientRect().height),
+			search: rect(search),
+			disc: rect(root.querySelector('.hp-council-search-trigger__disc')),
+			subscribe: rect(root.querySelector('.hp-council-subscribe')),
+			drawerDisplay: getComputedStyle(root.querySelector('.hp-council-drawer-trigger')).display,
+		};
+	})()` );
+	const navCenter = ( initial.nav.left + initial.nav.right ) / 2;
+	assert( initial.scrollWidth <= initial.clientWidth + 1, `${ viewport.name } horizontally overflows.` );
+	assert( approximately( initial.bar.height, 68 ), `${ viewport.name } bar is ${ initial.bar.height }px; expected 68px (${ JSON.stringify( initial.bar ) }).` );
+	assert( initial.navDisplay !== 'none', `${ viewport.name } desktop nav is hidden.` );
+	assert( approximately( navCenter, initial.clientWidth / 2 ), `${ viewport.name } nav centre is ${ navCenter }; expected ${ initial.clientWidth / 2 }.` );
+	assert( initial.brand.right <= initial.nav.left + 1, `${ viewport.name } brand overlaps the centered nav.` );
+	assert( initial.nav.right <= initial.actions.left + 1, `${ viewport.name } nav overlaps desktop actions.` );
+	for ( const label of initial.labels ) {
+		assert( approximately( label.size, 15, 0.1 ), `${ viewport.name } ${ label.text } is ${ label.size }px; expected 15px.` );
+		assert( label.scrollWidth <= label.clientWidth + 1, `${ viewport.name } ${ label.text } is clipped.` );
+	}
+	for ( const height of initial.disclosureHeights ) {
+		assert( approximately( height, 40 ), `${ viewport.name } disclosure trigger is ${ height }px; expected selected 40px exception.` );
+	}
+	assert( initial.search.width >= 44 && initial.search.height >= 44, `${ viewport.name } search target is smaller than 44px.` );
+	assert( approximately( initial.disc.width, 38 ) && approximately( initial.disc.height, 38 ), `${ viewport.name } search disc is not 38px.` );
+	assert( approximately( initial.subscribe.width, 116 ) && approximately( initial.subscribe.height, 42 ), `${ viewport.name } Subscribe is not 116×42px.` );
+	assert( initial.drawerDisplay === 'none', `${ viewport.name } exposes the drawer trigger.` );
+
+	await clickTrigger( cdp, sessionId, 'work' );
+	await assertState( cdp, sessionId, 'work', `${ viewport.name } Work` );
+	await wait( 180 );
+	const work = await evaluate( cdp, sessionId, `(() => {
+		const panel = document.querySelector('[data-hp-header-panel="work"]');
+		const value = panel.getBoundingClientRect();
+		const nav = document.querySelector('.hp-council-nav').getBoundingClientRect();
+		return {
+			left: value.left, right: value.right, width: value.width,
+			navCenter: (nav.left + nav.right) / 2,
+			rows: Array.from(panel.querySelectorAll('.hp-council-work-row__label')).map((label) => label.textContent.trim()),
+		};
+	})()` );
+	assert( approximately( work.navCenter, navCenter ), `${ viewport.name } Work opening moved the nav centre.` );
+	assert( approximately( work.width, 592 ), `${ viewport.name } Work panel is ${ work.width }px; expected 592px.` );
+	assert( JSON.stringify( work.rows ) === JSON.stringify( WORK_LABELS ), `${ viewport.name } Work evidence rows are stale or out of order.` );
+	assert( work.left >= -1 && work.right <= initial.clientWidth + 1, `${ viewport.name } Work panel exceeds the viewport.` );
+	if ( viewport.name === 'desktop-edge' ) {
+		assert( approximately( work.left, 95, 1 ), `${ viewport.name } Work left gutter is ${ work.left }px; expected 95px.` );
+		assert( approximately( initial.clientWidth - work.right, 95, 1 ), `${ viewport.name } Work right gutter is ${ initial.clientWidth - work.right }px; expected 95px.` );
+	}
+	if ( viewport.name === 'desktop-1440' ) {
+		await capture( cdp, sessionId, captureDir, 'desktop-1440-work-open', viewport );
+	}
+
+	await clickTrigger( cdp, sessionId, 'writing' );
+	await assertState( cdp, sessionId, 'writing', `${ viewport.name } Writing` );
+	await wait( 180 );
+	const writing = await evaluate( cdp, sessionId, `(() => {
+		const panel = document.querySelector('[data-hp-header-panel="writing"]');
+		const value = panel.getBoundingClientRect();
+		return {
+			left: value.left, right: value.right, width: value.width,
+			links: Array.from(panel.querySelectorAll('a[href]')).map((link) => link.textContent.trim()),
+		};
+	})()` );
+	assert( approximately( writing.width, 262 ), `${ viewport.name } Writing panel is ${ writing.width }px; expected 262px.` );
+	assert( JSON.stringify( writing.links ) === JSON.stringify( WRITING_LABELS ), `${ viewport.name } Writing destinations are stale or out of order.` );
+	assert( writing.left >= -1 && writing.right <= initial.clientWidth + 1, `${ viewport.name } Writing panel exceeds the viewport.` );
+	if ( viewport.name === 'desktop-1440' ) {
+		await capture( cdp, sessionId, captureDir, 'desktop-1440-writing-open', viewport );
+	}
+
+	await clickTrigger( cdp, sessionId, 'search' );
+	await assertState( cdp, sessionId, 'search', `${ viewport.name } search` );
+	await wait( 180 );
+	const search = await evaluate( cdp, sessionId, `(() => {
+		const panel = document.querySelector('[data-hp-header-panel="search"]');
+		const value = panel.getBoundingClientRect();
+		const actions = document.querySelector('.hp-council-actions').getBoundingClientRect();
+		return {
+			left: value.left, right: value.right, width: value.width,
+			actionsRight: actions.right,
+			focused: document.activeElement === panel.querySelector('input[type="search"]'),
+		};
+	})()` );
+	assert( approximately( search.width, 278 ), `${ viewport.name } search panel is ${ search.width }px; expected 278px.` );
+	assert( approximately( search.right, search.actionsRight ), `${ viewport.name } search panel is not right-anchored.` );
+	assert( search.focused, `${ viewport.name } search input did not receive focus.` );
+	assert( search.left >= -1 && search.right <= initial.clientWidth + 1, `${ viewport.name } search panel exceeds the viewport.` );
+	if ( viewport.name === 'desktop-1440' ) {
+		await capture( cdp, sessionId, captureDir, 'desktop-1440-search-open', viewport );
+	}
+	await closeCurrent( cdp, sessionId );
+	await assertState( cdp, sessionId, 'closed', `${ viewport.name } cleanup` );
+}
+
+async function verifyMobileGeometry( cdp, sessionId, viewport, captureDir ) {
+	const initial = await evaluate( cdp, sessionId, `(() => {
+		const rect = (element) => {
+			const value = element.getBoundingClientRect();
+			return { width: value.width, height: value.height };
+		};
+		const root = document.querySelector('[data-hp-header-root]');
+		return {
+			clientWidth: document.documentElement.clientWidth,
+			scrollWidth: document.documentElement.scrollWidth,
+			bar: rect(root.querySelector('.hp-council-header__bar')),
+			navDisplay: getComputedStyle(root.querySelector('.hp-council-nav')).display,
+			searchDisplay: getComputedStyle(root.querySelector('.hp-council-search-trigger')).display,
+			subscribeDisplay: getComputedStyle(root.querySelector('.hp-council-subscribe')).display,
+			drawerDisplay: getComputedStyle(root.querySelector('.hp-council-drawer-trigger')).display,
+			drawerTrigger: rect(root.querySelector('.hp-council-drawer-trigger')),
+			drawerControl: rect(root.querySelector('.hp-council-drawer-trigger__control')),
+			brand: (() => { const value = root.querySelector('.hp-council-brand').getBoundingClientRect(); return { left: value.left, right: value.right }; })(),
+			drawerPosition: (() => { const value = root.querySelector('.hp-council-drawer-trigger').getBoundingClientRect(); return { left: value.left, right: value.right }; })(),
+		};
+	})()` );
+	assert( initial.scrollWidth <= initial.clientWidth + 1, `${ viewport.name } horizontally overflows.` );
+	assert( approximately( initial.bar.height, 62 ), `${ viewport.name } bar is ${ initial.bar.height }px; expected 62px.` );
+	assert( initial.navDisplay === 'none', `${ viewport.name } desktop nav remains visible.` );
+	assert( initial.searchDisplay === 'none' && initial.subscribeDisplay === 'none', `${ viewport.name } desktop actions remain visible.` );
+	assert( initial.drawerDisplay !== 'none', `${ viewport.name } drawer trigger is hidden.` );
+	assert( initial.drawerTrigger.width >= 44 && initial.drawerTrigger.height >= 44, `${ viewport.name } drawer trigger is smaller than 44px.` );
+	assert( approximately( initial.drawerControl.width, 38 ) && approximately( initial.drawerControl.height, 38 ), `${ viewport.name } drawer control is not 38px.` );
+	assert( initial.brand.right <= initial.drawerPosition.left + 1, `${ viewport.name } brand overlaps the drawer trigger.` );
+
+	await clickTrigger( cdp, sessionId, 'drawer' );
+	await assertState( cdp, sessionId, 'drawer', `${ viewport.name } drawer` );
+	await wait( 190 );
+	const drawer = await evaluate( cdp, sessionId, `(() => {
+		const panel = document.querySelector('[data-hp-header-panel="drawer"]');
+		const value = panel.getBoundingClientRect();
+		const listLinks = Array.from(panel.querySelectorAll('.hp-council-drawer__list a'));
+		const search = panel.querySelector('.hp-council-drawer__search');
+		const subscribe = panel.querySelector('.hp-council-drawer__subscribe');
+		return {
+			clientWidth: document.documentElement.clientWidth,
+			scrollWidth: document.documentElement.scrollWidth,
+			left: value.left, top: value.top, right: value.right, bottom: value.bottom, width: value.width,
+			labels: [ ...listLinks.map((link) => link.textContent.trim()), search.querySelector('input').placeholder, subscribe.textContent.trim() ],
+			rowHeights: listLinks.map((link) => link.getBoundingClientRect().height),
+			digestHeight: panel.querySelector('.hp-council-drawer__digest a').getBoundingClientRect().height,
+			searchHeight: search.getBoundingClientRect().height,
+			subscribeHeight: subscribe.getBoundingClientRect().height,
+			digestSize: parseFloat(getComputedStyle(panel.querySelector('.hp-council-drawer__digest span')).fontSize),
+		};
+	})()` );
+	assert( drawer.scrollWidth <= drawer.clientWidth + 1, `${ viewport.name } open drawer causes horizontal overflow.` );
+	assert( JSON.stringify( drawer.labels ) === JSON.stringify( DRAWER_LABELS ), `${ viewport.name } drawer labels are wrong: ${ drawer.labels.join( ' | ' ) }.` );
+	for ( const height of drawer.rowHeights ) {
+		assert( height >= 49.99, `${ viewport.name } drawer link row is ${ height }px; expected at least 50px.` );
+	}
+	assert( drawer.digestHeight >= 51.99, `${ viewport.name } Digest row is ${ drawer.digestHeight }px; expected at least 52px.` );
+	assert( approximately( drawer.searchHeight, 46 ), `${ viewport.name } search is ${ drawer.searchHeight }px; expected 46px.` );
+	assert( approximately( drawer.subscribeHeight, 48 ), `${ viewport.name } Subscribe is ${ drawer.subscribeHeight }px; expected 48px.` );
+	assert( drawer.digestSize >= 12, `${ viewport.name } Digest is ${ drawer.digestSize }px; expected at least 12px.` );
+	assert( drawer.width <= drawer.clientWidth + 1 && drawer.left >= -1 && drawer.right <= drawer.clientWidth + 1, `${ viewport.name } drawer exceeds the viewport horizontally.` );
+	assert( drawer.top >= -1 && drawer.bottom <= viewport.height + 1, `${ viewport.name } drawer exceeds the available viewport height.` );
+	if ( viewport.name === 'mobile-390' || viewport.name === 'mobile-320' ) {
+		await capture( cdp, sessionId, captureDir, `${ viewport.name }-drawer-open`, viewport );
+	}
+	await closeCurrent( cdp, sessionId );
+	await assertState( cdp, sessionId, 'closed', `${ viewport.name } cleanup` );
+}
+
+async function verifyDesktopInteractions( cdp, sessionId ) {
+	const writingName = await accessibleName( cdp, sessionId, '[data-hp-header-trigger="writing"]' );
+	assert( writingName === 'Writing', `Writing accessible name is "${ writingName }"; expected exactly "Writing".` );
+	await pressKey( cdp, sessionId, 'Tab' );
+	await assertFocusVisible( cdp, sessionId, '[data-hp-header-trigger="work"]', 'Work trigger' );
+
+	for ( const next of [ 'work', 'writing', 'search' ] ) {
+		for ( const key of [ 'Enter', 'Space' ] ) {
+			await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-trigger="${ next }"]').focus()` );
+			await pressKey( cdp, sessionId, key );
+			await assertState( cdp, sessionId, next, `${ next } ${ key } activation` );
+			await closeCurrent( cdp, sessionId );
+		}
+	}
+
+	for ( const next of [ 'work', 'writing' ] ) {
+		await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-trigger="${ next }"]').focus()` );
+		await pressKey( cdp, sessionId, 'ArrowDown' );
+		await assertState( cdp, sessionId, next, `${ next } ArrowDown` );
+		const firstFocused = await evaluate( cdp, sessionId, `document.activeElement === document.querySelector('[data-hp-header-panel="${ next }"] a[href]')` );
+		assert( firstFocused, `${ next } ArrowDown did not focus the first link.` );
+		await pressKey( cdp, sessionId, 'Escape' );
+		await assertState( cdp, sessionId, 'closed', `${ next } Escape` );
+		const restored = await evaluate( cdp, sessionId, `document.activeElement === document.querySelector('[data-hp-header-trigger="${ next }"]')` );
+		assert( restored, `${ next } Escape did not restore trigger focus.` );
+	}
+
+	await clickTrigger( cdp, sessionId, 'search' );
+	await assertState( cdp, sessionId, 'search', 'search Escape setup' );
+	const searchInputFocused = await evaluate( cdp, sessionId, `document.activeElement === document.querySelector('[data-hp-header-panel="search"] input[type="search"]')` );
+	assert( searchInputFocused, 'Search did not place focus in its input before Escape.' );
+	await pressKey( cdp, sessionId, 'Escape' );
+	await assertState( cdp, sessionId, 'closed', 'search Escape' );
+	assert(
+		await evaluate( cdp, sessionId, `document.activeElement === document.querySelector('[data-hp-header-trigger="search"]')` ),
+		'Search Escape did not restore its trigger.'
+	);
+
+	await clickTrigger( cdp, sessionId, 'work' );
+	await clickTrigger( cdp, sessionId, 'writing' );
+	await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-panel="writing"] a[href]').focus()` );
+	await pressKey( cdp, sessionId, 'Escape' );
+	await assertState( cdp, sessionId, 'closed', 'second-surface Escape' );
+	assert(
+		await evaluate( cdp, sessionId, `document.activeElement === document.querySelector('[data-hp-header-trigger="writing"]')` ),
+		'Opening Writing after Work did not transfer the Escape focus origin.'
+	);
+
+	await clickTrigger( cdp, sessionId, 'work' );
+	await assertFocusVisible( cdp, sessionId, '[data-hp-header-panel="work"] a[href]', 'Work panel link' );
+	await closeCurrent( cdp, sessionId );
+	await clickTrigger( cdp, sessionId, 'search' );
+	await assertFocusVisible( cdp, sessionId, '[data-hp-header-panel="search"] input[type="search"]', 'Search input' );
+	await pressKey( cdp, sessionId, 'Escape' );
+	await assertFocusVisible( cdp, sessionId, '.hp-council-subscribe', 'Desktop Subscribe' );
+
+	await clickTrigger( cdp, sessionId, 'work' );
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mousePressed', x: 10, y: 300, button: 'left', buttons: 1, clickCount: 1,
+	}, sessionId );
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mouseReleased', x: 10, y: 300, button: 'left', buttons: 0, clickCount: 1,
+	}, sessionId );
+	await wait( 30 );
+	await assertState( cdp, sessionId, 'closed', 'real outside click' );
+	assert(
+		! await evaluate( cdp, sessionId, `document.activeElement === document.querySelector('[data-hp-header-trigger="work"]')` ),
+		'Outside click incorrectly restored focus to the Work trigger.'
+	);
+
+	for ( const next of [ 'work', 'writing', 'search', 'drawer' ] ) {
+		await clickTrigger( cdp, sessionId, next );
+		await assertState( cdp, sessionId, next, `single-open transition to ${ next }` );
+	}
+	await closeCurrent( cdp, sessionId );
+
+	for ( const method of [ 'pushState', 'replaceState' ] ) {
+		await clickTrigger( cdp, sessionId, 'work' );
+		await evaluate( cdp, sessionId, `history.${ method }({}, '', location.pathname + location.search + '#hp-${ method }')` );
+		await wait( 90 );
+		await assertState( cdp, sessionId, 'closed', `${ method } settle` );
+	}
+	await evaluate( cdp, sessionId, `history.pushState({}, '', location.pathname + location.search + '#hp-real-popstate')` );
+	await wait( 90 );
+	await clickTrigger( cdp, sessionId, 'writing' );
+	const poppedUrl = await evaluate( cdp, sessionId, `new Promise((resolve) => {
+		const timer = setTimeout(() => resolve(null), 2000);
+		window.addEventListener('popstate', () => {
+			clearTimeout(timer);
+			resolve(location.href);
+		}, { once: true });
+		history.back();
+	})` );
+	assert( poppedUrl, 'history.back() did not dispatch a real popstate event.' );
+	await wait( 90 );
+	await assertState( cdp, sessionId, 'closed', 'real history.back popstate settle' );
+	await clickTrigger( cdp, sessionId, 'writing' );
+	await evaluate( cdp, sessionId, `window.dispatchEvent(new PageTransitionEvent('pageshow'))` );
+	await wait( 90 );
+	await assertState( cdp, sessionId, 'closed', 'pageshow settle' );
+
+	await evaluate( cdp, sessionId, `(() => {
+		window.__hpHeaderPushBeforeReevaluation = history.pushState;
+		window.__hpHeaderReplaceBeforeReevaluation = history.replaceState;
+		window.__hpHeaderAddedDuringReevaluation = 0;
+		window.__hpHeaderOriginalAddEventListener = EventTarget.prototype.addEventListener;
+		EventTarget.prototype.addEventListener = function () {
+			window.__hpHeaderAddedDuringReevaluation++;
+			return window.__hpHeaderOriginalAddEventListener.apply(this, arguments);
+		};
+	})()` );
+	const controllerSource = read( 'assets/js/header-controller.js' );
+	await evaluate( cdp, sessionId, controllerSource );
+	await wait( 90 );
+	const reevaluation = await evaluate( cdp, sessionId, `(() => {
+		EventTarget.prototype.addEventListener = window.__hpHeaderOriginalAddEventListener;
+		return {
+			samePushWrapper: history.pushState === window.__hpHeaderPushBeforeReevaluation,
+			sameReplaceWrapper: history.replaceState === window.__hpHeaderReplaceBeforeReevaluation,
+			hasRouterScroll: history.pushState.__hpRouterScroll === true,
+			hasRegistry: !!(window.__hpCouncilHeaderController && window.__hpCouncilHeaderController.settle),
+			addedListeners: window.__hpHeaderAddedDuringReevaluation,
+		};
+	})()` );
+	assert(
+		reevaluation.samePushWrapper && reevaluation.sameReplaceWrapper && reevaluation.hasRouterScroll && reevaluation.hasRegistry && reevaluation.addedListeners === 0,
+		`Controller reevaluation duplicated initialization or broke wrapper composition: ${ JSON.stringify( reevaluation ) }.`
+	);
+	await clickTrigger( cdp, sessionId, 'work' );
+	await assertState( cdp, sessionId, 'work', 'single listener after controller reevaluation' );
+	await closeCurrent( cdp, sessionId );
+
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		media: 'screen',
+		features: [ { name: 'prefers-reduced-motion', value: 'reduce' } ],
+	}, sessionId );
+	assert(
+		await evaluate( cdp, sessionId, `matchMedia('(prefers-reduced-motion: reduce)').matches` ),
+		'Reduced-motion emulation did not match in the page.'
+	);
+	for ( const next of [ 'work', 'writing', 'search' ] ) {
+		await clickTrigger( cdp, sessionId, next );
+		const sample = async () => evaluate( cdp, sessionId, `(() => {
+			const panel = document.querySelector('[data-hp-header-panel="${ next }"]');
+			const style = getComputedStyle(panel);
+			const rect = panel.getBoundingClientRect();
+			return {
+				animation: style.animationName, transition: style.transitionDuration,
+				transform: style.transform, opacity: parseFloat(style.opacity),
+				left: rect.left, top: rect.top, width: rect.width, height: rect.height,
+			};
+		})()` );
+		const motionStart = await sample();
+		await wait( 80 );
+		const motionEnd = await sample();
+		assert( motionStart.animation === 'none' && motionEnd.animation === 'none', `Reduced motion still runs ${ next } animation.` );
+		assert( maximumDurationSeconds( motionStart.transition ) <= 0.001, `Reduced-motion ${ next } transition is ${ motionStart.transition }.` );
+		assert(
+			motionStart.transform === motionEnd.transform &&
+			approximately( motionStart.opacity, motionEnd.opacity, 0.001 ) &&
+			approximately( motionStart.left, motionEnd.left, 0.1 ) &&
+			approximately( motionStart.top, motionEnd.top, 0.1 ) &&
+			approximately( motionStart.width, motionEnd.width, 0.1 ) &&
+			approximately( motionStart.height, motionEnd.height, 0.1 ),
+			`Reduced motion changes ${ next } geometry, opacity, or transform across frames.`
+		);
+		await closeCurrent( cdp, sessionId );
+	}
+	await cdp.send( 'Emulation.setEmulatedMedia', { media: 'screen', features: [] }, sessionId );
+}
+
+async function verifyMobileInteractions( cdp, sessionId ) {
+	for ( const key of [ 'Enter', 'Space' ] ) {
+		await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-trigger="drawer"]').focus()` );
+		await pressKey( cdp, sessionId, key );
+		await assertState( cdp, sessionId, 'drawer', `drawer ${ key } activation` );
+		await closeCurrent( cdp, sessionId );
+	}
+
+	await clickTrigger( cdp, sessionId, 'drawer' );
+	const guardedClicks = await evaluate( cdp, sessionId, `(() => {
+		const root = document.querySelector('[data-hp-header-root]');
+		const panel = root.querySelector('[data-hp-header-panel="drawer"]');
+		const link = document.createElement('a');
+		link.href = '#hp-controller-guard-test';
+		link.textContent = 'Guard test';
+		panel.appendChild(link);
+		const cases = [
+			{ event: { button: 1 } },
+			{ event: { ctrlKey: true } },
+			{ event: { metaKey: true } },
+			{ event: { shiftKey: true } },
+			{ event: { altKey: true } },
+			{ event: {}, target: '_blank' },
+			{ event: {}, download: true },
+		];
+		const results = cases.map((testCase) => {
+			link.removeAttribute('target');
+			link.removeAttribute('download');
+			if (testCase.target) link.target = testCase.target;
+			if (testCase.download) link.setAttribute('download', 'guard-test.txt');
+			const preventDefault = (event) => event.preventDefault();
+			window.addEventListener('click', preventDefault, { once: true });
+			const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...testCase.event });
+			link.dispatchEvent(event);
+			return {
+				state: root.getAttribute('data-hp-header-state'),
+				closing: root.classList.contains('is-hp-closing'),
+				chosen: link.classList.contains('is-hp-chosen'),
+			};
+		});
+		const prevented = new MouseEvent('click', { bubbles: true, cancelable: true });
+		prevented.preventDefault();
+		link.dispatchEvent(prevented);
+		results.push({
+			state: root.getAttribute('data-hp-header-state'),
+			closing: root.classList.contains('is-hp-closing'),
+			chosen: link.classList.contains('is-hp-chosen'),
+		});
+		link.remove();
+		return results;
+	})()` );
+	assert(
+		guardedClicks.every( ( result ) => result.state === 'drawer' && ! result.closing && ! result.chosen ),
+		`Modified, non-primary, or prevented drawer clicks started the close treatment: ${ JSON.stringify( guardedClicks ) }.`
+	);
+
+	const clickResult = await evaluate( cdp, sessionId, `(() => {
+		const root = document.querySelector('[data-hp-header-root]');
+		const panel = root.querySelector('[data-hp-header-panel="drawer"]');
+		const link = document.createElement('a');
+		link.href = '#hp-controller-link-test';
+		link.textContent = 'Controller test link';
+		panel.appendChild(link);
+		const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+		const allowed = link.dispatchEvent(event);
+		return {
+			allowed,
+			defaultPrevented: event.defaultPrevented,
+			closing: root.classList.contains('is-hp-closing'),
+			chosen: link.classList.contains('is-hp-chosen'),
+		};
+	})()` );
+	assert( clickResult.allowed && ! clickResult.defaultPrevented, 'Normal drawer link navigation was prevented.' );
+	assert( clickResult.closing && clickResult.chosen, 'Normal drawer link did not begin the close treatment.' );
+	await wait( 180 );
+	await assertState( cdp, sessionId, 'closed', 'drawer internal-link close' );
+	const cleaned = await evaluate( cdp, sessionId, `(() => {
+		const root = document.querySelector('[data-hp-header-root]');
+		const link = root.querySelector('[href="#hp-controller-link-test"]');
+		const clean = !root.classList.contains('is-hp-closing') && link && !link.classList.contains('is-hp-chosen');
+		if (link) link.remove();
+		return clean;
+	})()` );
+	assert( cleaned, 'Drawer close treatment was not cleaned up.' );
+}
+
+async function verifyHoverCorridor( cdp, sessionId, next ) {
+	await assertState( cdp, sessionId, 'closed', `${ next } hover corridor initial state` );
+	const finePointer = await evaluate( cdp, sessionId, `matchMedia('(min-width: 782px) and (hover: hover) and (pointer: fine)').matches` );
+	assert( finePointer, 'Desktop hover-corridor checks require a matching fine-pointer media query.' );
+	const trigger = await evaluate( cdp, sessionId, `(() => {
+		const value = document.querySelector('[data-hp-header-trigger="${ next }"]').getBoundingClientRect();
+		return { x: (value.left + value.right) / 2, y: (value.top + value.bottom) / 2, bottom: value.bottom };
+	})()` );
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mouseMoved', x: trigger.x, y: trigger.y, button: 'none', pointerType: 'mouse',
+	}, sessionId );
+	await wait( 40 );
+	await assertState( cdp, sessionId, next, `${ next } pointerover` );
+	const panel = await evaluate( cdp, sessionId, `(() => {
+		const value = document.querySelector('[data-hp-header-panel="${ next }"]').getBoundingClientRect();
+		return { x: (value.left + value.right) / 2, top: value.top };
+	})()` );
+	const gap = panel.top - trigger.bottom;
+	assert( approximately( gap, 12, 1 ), `${ next } trigger-to-panel gap is ${ gap }px; expected 12px.` );
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mouseMoved', x: trigger.x, y: trigger.bottom + ( gap / 2 ), button: 'none', pointerType: 'mouse',
+	}, sessionId );
+	await wait( 50 );
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mouseMoved', x: panel.x, y: panel.top + 4, button: 'none', pointerType: 'mouse',
+	}, sessionId );
+	await wait( 170 );
+	await assertState( cdp, sessionId, next, `${ next } hover corridor` );
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mouseMoved', x: 10, y: 300, button: 'none', buttons: 0, pointerType: 'mouse',
+	}, sessionId );
+	await wait( 170 );
+	await assertState( cdp, sessionId, 'closed', `${ next } pointer exit` );
+}
+
+async function verifyBoundarySettlement( cdp, sessionId, originalViewport ) {
+	await cdp.send( 'Emulation.setDeviceMetricsOverride', {
+		width: 782, height: 900, deviceScaleFactor: 1, mobile: false,
+	}, sessionId );
+	await wait( 80 );
+	await clickTrigger( cdp, sessionId, 'work' );
+	await assertState( cdp, sessionId, 'work', '782px boundary Work open' );
+	await cdp.send( 'Emulation.setDeviceMetricsOverride', {
+		width: 781, height: 900, deviceScaleFactor: 1, mobile: false,
+	}, sessionId );
+	await wait( 100 );
+	await assertState( cdp, sessionId, 'closed', '782→781 boundary settle' );
+	await clickTrigger( cdp, sessionId, 'drawer' );
+	await assertState( cdp, sessionId, 'drawer', '781px boundary drawer open' );
+	await cdp.send( 'Emulation.setDeviceMetricsOverride', {
+		width: 782, height: 900, deviceScaleFactor: 1, mobile: false,
+	}, sessionId );
+	await wait( 100 );
+	await assertState( cdp, sessionId, 'closed', '781→782 boundary settle' );
+	await cdp.send( 'Emulation.setDeviceMetricsOverride', {
+		width: originalViewport.width,
+		height: originalViewport.height,
+		deviceScaleFactor: 1,
+		mobile: false,
+	}, sessionId );
+	await wait( 80 );
+}
+
+async function inspectViewport( cdp, viewport, captureDir ) {
+	const target = await cdp.send( 'Target.createTarget', { url: 'about:blank' } );
+	const attached = await cdp.send( 'Target.attachToTarget', {
+		targetId: target.targetId,
+		flatten: true,
+	} );
+	const sessionId = attached.sessionId;
+
+	try {
+		await cdp.send( 'Page.enable', {}, sessionId );
+		await cdp.send( 'Runtime.enable', {}, sessionId );
+		await cdp.send( 'DOM.enable', {}, sessionId );
+		await cdp.send( 'Accessibility.enable', {}, sessionId );
+		await cdp.send( 'Emulation.setDeviceMetricsOverride', {
+			width: viewport.width,
+			height: viewport.height,
+			deviceScaleFactor: 1,
+			mobile: viewport.width <= 781,
+		}, sessionId );
+		await cdp.send( 'Emulation.setEmulatedMedia', { media: 'screen', features: [] }, sessionId );
+
+		const loaded = cdp.once( 'Page.loadEventFired', sessionId );
+		const url = new URL( '/', ORIGIN ).href;
+		await cdp.send( 'Page.navigate', { url }, sessionId );
+		await loaded;
+		await cdp.send( 'Runtime.evaluate', {
+			expression: 'document.fonts && document.fonts.ready',
+			awaitPromise: true,
+		}, sessionId );
+		await waitForPageCondition(
+			cdp,
+			sessionId,
+			`!!document.querySelector('[data-hp-header-root][data-hp-header-state="closed"]')`,
+			'the initialized Council header'
+		);
+
+		const loadedState = await evaluate( cdp, sessionId, `({
+			href: location.href,
+			hasRoot: !!document.querySelector('[data-hp-header-root]'),
+			hasController: !!document.querySelector('[data-hp-header-root][data-hp-header-state="closed"]'),
+			breakCount: document.querySelectorAll('[data-hp-header-root] br').length,
+			strayParagraphCount: document.querySelectorAll('[data-hp-header-root] p > .hp-council-brand, [data-hp-header-root] p > button, [data-hp-header-root] p > nav, [data-hp-header-root] p > div, [data-hp-header-root] p > ul, [data-hp-header-root] p > form').length,
+		})` );
+		assert( loadedState.hasRoot, `${ url } did not render the Council header (loaded ${ loadedState.href }).` );
+		assert( loadedState.hasController, `${ url } rendered the header without the controller's closed state.` );
+		assert( loadedState.breakCount === 0, `${ url } contains ${ loadedState.breakCount } wpautop-injected Council header BR elements.` );
+		assert( loadedState.strayParagraphCount === 0, `${ url } contains ${ loadedState.strayParagraphCount } stray Council header paragraph wrappers.` );
+		await assertState( cdp, sessionId, 'closed', `${ viewport.name } initial state` );
+
+		if ( viewport.width >= 782 ) {
+			await verifyDesktopGeometry( cdp, sessionId, viewport, captureDir );
+			if ( viewport.name === 'desktop-1440' ) {
+				await verifyDesktopInteractions( cdp, sessionId );
+				await verifyHoverCorridor( cdp, sessionId, 'work' );
+				await verifyHoverCorridor( cdp, sessionId, 'writing' );
+				await verifyBoundarySettlement( cdp, sessionId, viewport );
+			}
+		} else {
+			await verifyMobileGeometry( cdp, sessionId, viewport, captureDir );
+			if ( viewport.name === 'mobile-390' ) {
+				await verifyMobileInteractions( cdp, sessionId );
+			}
+		}
+		console.log( `verified ${ viewport.name } (${ viewport.width }×${ viewport.height })` );
+	} finally {
+		await cdp.send( 'Target.closeTarget', { targetId: target.targetId } );
+	}
+}
+
+function resolveChrome() {
+	let candidate;
+	if ( process.env.CHROME_BIN ) {
+		candidate = path.resolve( process.env.CHROME_BIN );
+	} else if ( process.platform !== 'win32' ) {
+		candidate = '/usr/bin/google-chrome';
+	} else {
+		const candidates = [
+			process.env.PROGRAMFILES && path.join( process.env.PROGRAMFILES, 'Google', 'Chrome', 'Application', 'chrome.exe' ),
+			process.env[ 'PROGRAMFILES(X86)' ] && path.join( process.env[ 'PROGRAMFILES(X86)' ], 'Google', 'Chrome', 'Application', 'chrome.exe' ),
+			process.env.LOCALAPPDATA && path.join( process.env.LOCALAPPDATA, 'Google', 'Chrome', 'Application', 'chrome.exe' ),
+		].filter( Boolean );
+		candidate = candidates.find( ( value ) => fs.existsSync( value ) );
+	}
+	assert(
+		candidate && fs.existsSync( candidate ) && fs.statSync( candidate ).isFile(),
+		'Chrome was not found. Set CHROME_BIN to a Chrome or Chromium executable.'
+	);
+	return candidate;
+}
+
+async function withChrome( callback ) {
+	const chromePath = resolveChrome();
+	const userDataDir = await fsPromises.mkdtemp( path.join( os.tmpdir(), 'hp-header-chrome-' ) );
+	const args = [
+		'--headless=new',
+		'--disable-gpu',
+		'--no-sandbox',
+		'--remote-debugging-port=0',
+		`--user-data-dir=${ userDataDir }`,
+	];
+	if ( process.env.HTTPS_PROXY ) {
+		args.push( `--proxy-server=${ process.env.HTTPS_PROXY }`, '--ssl-version-max=tls1.2' );
+	}
+	args.push( 'about:blank' );
+	const chrome = spawn( chromePath, args, { stdio: [ 'ignore', 'ignore', 'pipe' ] } );
+
+	try {
+		const wsUrl = await waitForDevToolsUrl( chrome, chromePath );
+		const cdp = await createCdpClient( wsUrl );
+		try {
+			await callback( cdp );
+		} finally {
+			cdp.close();
+		}
+	} finally {
+		if ( ! chrome.killed ) {
+			chrome.kill( 'SIGTERM' );
+			await new Promise( ( resolve ) => {
+				const timer = setTimeout( resolve, 2000 );
+				chrome.once( 'exit', () => {
+					clearTimeout( timer );
+					resolve();
+				} );
+			} );
+		}
+		await rmRetry( userDataDir );
+	}
+}
+
+async function verifyRendered() {
+	const captureRoot = process.env.HPERKINS_CAPTURE_DIR
+		? path.resolve( process.env.HPERKINS_CAPTURE_DIR )
+		: os.tmpdir();
+	await fsPromises.mkdir( captureRoot, { recursive: true } );
+	const captureDir = await fsPromises.mkdtemp( path.join( captureRoot, 'hperkins-header-' ) );
+	await withChrome( async ( cdp ) => {
+		for ( const viewport of VIEWPORTS ) {
+			await inspectViewport( cdp, viewport, captureDir );
+		}
+	} );
+	console.log( `Council header screenshots: ${ captureDir }` );
+}
+
+async function main() {
+	verifySource();
+	if ( SOURCE_ONLY ) {
+		return;
+	}
+	await verifyRendered();
+}
+
+main().catch( ( error ) => {
+	console.error( error.message );
+	process.exit( 1 );
+} );

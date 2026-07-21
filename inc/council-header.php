@@ -309,7 +309,7 @@ function hperkins_tokens_render_council_header() {
 					</li>
 
 					<li class="hp-council-nav__item hp-council-nav__item--writing" data-hp-header-hover="writing">
-						<button id="hp-council-writing-trigger" class="hp-council-nav__trigger" type="button" data-hp-header-trigger="writing" aria-controls="hp-council-writing-panel" aria-expanded="false">
+						<button id="hp-council-writing-trigger" class="hp-council-nav__trigger" type="button" data-hp-header-trigger="writing" aria-controls="hp-council-writing-panel" aria-expanded="false" aria-label="<?php echo esc_attr( $model['writing']['label'] ); ?>">
 							<span class="hp-council-nav__label"><?php echo esc_html( $model['writing']['label'] ); ?></span>
 							<svg class="hp-council-nav__chevron" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="m1.5 4 4.5 4 4.5-4"></path></svg>
 						</button>
@@ -383,7 +383,46 @@ function hperkins_tokens_render_council_header() {
 		</noscript>
 	</div>
 	<?php
-	return (string) ob_get_clean();
+	$html         = (string) ob_get_clean();
+	$compact_html = preg_replace( '/>\s+</', '><', $html );
+
+	return null === $compact_html ? $html : $compact_html;
 }
 
 add_shortcode( 'hperkins_council_header', 'hperkins_tokens_render_council_header' );
+
+/**
+ * Render the dedicated Council shortcode block before core applies wpautop().
+ *
+ * The Shortcode block wraps its inner content in paragraphs before the normal
+ * shortcode pass. Returning this one known renderer at the block boundary keeps
+ * its semantic HTML intact without changing any other shortcode block.
+ *
+ * @param string|null $pre_render   Short-circuit value from an earlier filter.
+ * @param array       $parsed_block Parsed block data.
+ * @return string|null
+ */
+function hperkins_tokens_pre_render_council_header_block( $pre_render, $parsed_block ) {
+	if ( null !== $pre_render ) {
+		return $pre_render;
+	}
+
+	if (
+		! isset( $parsed_block['blockName'], $parsed_block['innerHTML'] ) ||
+		'core/shortcode' !== $parsed_block['blockName']
+	) {
+		return $pre_render;
+	}
+
+	$inner_html          = trim( (string) $parsed_block['innerHTML'] );
+	$is_shortcode_marker = '[hperkins_council_header]' === $inner_html;
+	$is_rendered_header  =
+		0 === strpos( $inner_html, '<div class="hp-council-header alignwide" data-hp-header-root>' ) &&
+		1 === substr_count( $inner_html, 'data-hp-header-root' );
+	if ( ! $is_shortcode_marker && ! $is_rendered_header ) {
+		return $pre_render;
+	}
+
+	return $is_rendered_header ? $inner_html : hperkins_tokens_render_council_header();
+}
+add_filter( 'pre_render_block', 'hperkins_tokens_pre_render_council_header_block', 10, 2 );
