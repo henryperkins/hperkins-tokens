@@ -71,6 +71,7 @@ jobs:
             scripts/lib/wp-cli.test.js \
             scripts/lib/site-url.test.js \
             scripts/lib/navigation-content-contract.test.js \
+            scripts/lib/placement-artifact-links.test.js \
             scripts/lib/zip-archive.test.js
 
       - name: Placement artifact contracts

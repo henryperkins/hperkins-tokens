@@ -479,17 +479,31 @@ async function verifyLink( url ) {
 	return { url, status: response.status, finalUrl: finalUrl.href };
 }
 
-async function verifyLinks( urls ) {
+async function verifyLinks( urls, inspect = verifyLink, log = console.log ) {
 	const pending = [ ...urls ];
 	const results = [];
+	let hasFailures = false;
 	const workers = Array.from( { length: Math.min( 4, pending.length ) }, async () => {
 		while ( pending.length > 0 ) {
-			results.push( await verifyLink( pending.shift() ) );
+			const url = pending.shift();
+			try {
+				results.push( await inspect( url ) );
+			} catch ( error ) {
+				hasFailures = true;
+				results.push( { url, status: 'failed', error: error.message } );
+			}
 		}
 	} );
 	await Promise.all( workers );
 	for ( const result of results.sort( ( left, right ) => left.url.localeCompare( right.url ) ) ) {
-		console.log( `link ${ result.status }: ${ result.url }${ result.finalUrl && result.finalUrl !== result.url ? ` -> ${ result.finalUrl }` : '' }` );
+		if ( result.status === 'failed' ) {
+			log( `link failed: ${ result.url } - ${ result.error }` );
+		} else {
+			log( `link ${ result.status }: ${ result.url }${ result.finalUrl && result.finalUrl !== result.url ? ` -> ${ result.finalUrl }` : '' }` );
+		}
+	}
+	if ( hasFailures ) {
+		throw new Error( 'One or more links failed verification.' );
 	}
 }
 
@@ -524,7 +538,11 @@ async function main() {
 	}
 }
 
-main().catch( ( error ) => {
-	console.error( `placement artifact verification failed: ${ error.message }` );
-	process.exitCode = 1;
-} );
+if ( require.main === module ) {
+	main().catch( ( error ) => {
+		console.error( `placement artifact verification failed: ${ error.message }` );
+		process.exitCode = 1;
+	} );
+}
+
+module.exports = { verifyLinks };
