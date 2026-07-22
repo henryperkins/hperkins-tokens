@@ -46,7 +46,7 @@ function hperkins_tokens_get_council_work_items() {
 		array(
 			'label'  => 'Flavor Agent',
 			'url'    => '/work/flavor-agent/',
-			'status' => 'Release candidate · v0.1.0-rc.1',
+			'status' => 'Release candidate · v0.1.0-rc.3',
 			'state'  => 'review',
 		),
 		array(

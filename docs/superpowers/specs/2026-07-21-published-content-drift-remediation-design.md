@@ -53,4 +53,3 @@ PHP, Node unit, content-ownership, header, typography-source, and artifact
 checks run before publication. After production updates and the `main` push,
 the six affected routes are checked in the public rendered DOM at desktop and
 mobile widths, including direct verification that the PPTX returns HTTP 200.
-

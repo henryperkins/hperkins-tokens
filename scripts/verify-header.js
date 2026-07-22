@@ -32,7 +32,7 @@ const WORK_LABELS = [
 // Status is a semantic colour PLUS a redundant word — never colour alone. These
 // are the words, and they must stay in the link's accessible name.
 const WORK_STATUSES = [
-	'Release candidate · v0.1.0-rc.1',
+	'Release candidate · v0.1.0-rc.3',
 	'Merged · upstream',
 	'Shipped · v2.1',
 	'Delivered · live site',
@@ -118,7 +118,7 @@ function verifySource() {
 		'data-hp-header-panel="drawer"',
 		"'label'  => 'Flavor Agent'",
 		"'url'    => '/work/flavor-agent/'",
-		"'status' => 'Release candidate · v0.1.0-rc.1'",
+		"'status' => 'Release candidate · v0.1.0-rc.3'",
 		"'label'  => 'WordPress AI Stack Contributions'",
 		"'url'    => '/work/upstream-core-ai-stack/'",
 		"'status' => 'Merged · upstream'",

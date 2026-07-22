@@ -160,7 +160,7 @@ $hperkins_about_portrait_src  = file_exists( $hperkins_about_portrait_file )
 
 <!-- wp:group {"className":"hp-evidence-row is-status-review is-kind-review","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-evidence-row is-status-review is-kind-review"><!-- wp:paragraph {"className":"hp-evidence-row__label"} -->
-<p class="hp-evidence-row__label">Open review &middot; request logging and agent skills</p>
+<p class="hp-evidence-row__label">Current state &middot; request logging and agent skills</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-evidence-row__title"} -->
@@ -168,7 +168,7 @@ $hperkins_about_portrait_src  = file_exists( $hperkins_about_portrait_file )
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-evidence-row__meta"} -->
-<p class="hp-evidence-row__meta">Tracked the sidecar/custom-transport request-logging gap and authored WordPress 7.0+ AI Client, Connectors, canonical AI Plugin, Abilities, and MCP skill guidance now in review.</p>
+<p class="hp-evidence-row__meta">Filed the sidecar/custom-transport request-logging issue; PR #757 remains open with changes requested. Authored the WordPress 7.0+ AI Client, Connectors, canonical AI Plugin, Abilities, and MCP skill guidance in PR #49; PR #49 closed without merge on July 18, 2026.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group --></div>
@@ -277,7 +277,7 @@ $hperkins_about_portrait_src  = file_exists( $hperkins_about_portrait_file )
 
 <!-- wp:list {"className":"hp-exp__points"} -->
 <ul class="wp-block-list hp-exp__points"><!-- wp:list-item -->
-<li>Delivered the named DJ Lee &amp; Voices of Judah WordPress rebuild from discovery through launch and post-launch support, including structured content, contact routing, and public verification.</li>
+<li>Delivered the named DJ Lee &amp; Voices of Judah booking-first static site from discovery through launch and post-launch support: one Cloudflare Worker serves the front end and the <code>/api/booking</code> endpoint.</li>
 <!-- /wp:list-item -->
 
 <!-- wp:list-item -->
@@ -438,7 +438,7 @@ $hperkins_about_portrait_src  = file_exists( $hperkins_about_portrait_file )
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-tag"} -->
-<p class="hp-tag"><span aria-hidden="true">#</span>Python</p>
+<p class="hp-tag"><span aria-hidden="true">#</span>Python &middot; familiarity</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group -->
@@ -642,7 +642,7 @@ $hperkins_about_portrait_src  = file_exists( $hperkins_about_portrait_file )
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-project__impact"} -->
-<p class="hp-project__impact">Release candidate v0.1.0-rc.1. A governed agentic loop for WordPress AI actions: bounded operations, review-gated mutation, server-side attribution, and drift-safe rollback.</p>
+<p class="hp-project__impact">Release candidate v0.1.0-rc.3. A governed agentic loop for WordPress AI actions: bounded operations, review-gated mutation, server-side attribution, and drift-safe rollback.</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-artifact__link"} -->

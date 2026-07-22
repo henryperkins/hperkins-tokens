@@ -47,7 +47,7 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 				<!-- /wp:paragraph -->
 
 				<!-- wp:paragraph {"className":"hp-chip is-status-review"} -->
-				<p class="hp-chip is-status-review"><a href="/work/flavor-agent/">flavor-agent</a> — v0.1.0-rc.1 · Jun 2026</p>
+				<p class="hp-chip is-status-review"><a href="/work/flavor-agent/">flavor-agent</a> — v0.1.0-rc.3 · Jul 2026</p>
 				<!-- /wp:paragraph -->
 			</div>
 			<!-- /wp:group -->

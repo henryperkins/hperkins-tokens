@@ -129,7 +129,7 @@ This theme is the **WordPress implementation of a claude.ai/design project**, "I
 
 Status is expressed by a **semantic palette plus a redundant word** (done/review/pending — never color alone). Within any component, the **row anatomy is fixed** — padding, left-rule width, and radius are fixed named tokens **per component, never per state** (`--hp-rule-chip` 7px, `--hp-rule-entry` 3px, `--hp-rule-evidence` 5px, `--hp-rule-quote` 3px). State changes only the **rule color, surface tint, and a filled-vs-hollow dot** — never the shape. Preserve this when editing component CSS.
 
-In the Council header the redundant word is the **status line itself** (`.hp-council-work-row__status`: "Release candidate · v0.1.0-rc.1", "Merged · upstream", …). It is real text inside the link, never `aria-hidden`, so it reaches the accessible name — `verify-header.js` asserts the four strings, that none is hidden, and that padding/radius/border/min-height are identical across states.
+In the Council header the redundant word is the **status line itself** (`.hp-council-work-row__status`: "Release candidate · v0.1.0-rc.3", "Merged · upstream", …). It is real text inside the link, never `aria-hidden`, so it reaches the accessible name — `verify-header.js` asserts the four strings, that none is hidden, and that padding/radius/border/min-height are identical across states.
 
 ### The Council header's typography-floor exemption
 
