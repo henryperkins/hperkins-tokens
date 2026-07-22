@@ -2,6 +2,7 @@
 
 const path = require( 'node:path' );
 
+const { normalizeContent } = require( './content-integrity' );
 const { escapePhpString } = require( './wp-cli' );
 
 const THEME_PATH = path.resolve( __dirname, '..', '..' );
@@ -48,6 +49,14 @@ const PAGE_CONTRACTS = [
 		templateFile: 'templates/page-job-placement-digest.html',
 	},
 	{
+		key: 'placement-method-evidence',
+		label: 'Placement Method and Evidence page',
+		pagePath: 'placement-method-and-evidence',
+		snapshotFile: 'placement-method-evidence.html',
+		templateId: 'page-placement-method-and-evidence',
+		templateFile: 'templates/page-placement-method-and-evidence.html',
+	},
+	{
 		key: 'flavor-agent-demo',
 		label: 'Flavor Agent demo page',
 		pagePath: 'work/flavor-agent/demo',
@@ -62,10 +71,6 @@ const RETIRED_PAGE_PATHS = [
 		pagePath: 'plato-artifacts',
 	},
 ];
-
-function normalizeContent( value ) {
-	return value.replace( /\r\n/g, '\n' ).trimEnd();
-}
 
 function getTrackedPageTargetsPhp( { includeTemplate = false } = {} ) {
 	return PAGE_CONTRACTS.filter( ( contract ) => contract.pagePath )
@@ -98,6 +103,28 @@ function getPageRecord( state, contract ) {
 	return state.pages[ contract.key ];
 }
 
+function selectPageContracts( keys = [] ) {
+	if ( keys.length === 0 ) {
+		return PAGE_CONTRACTS;
+	}
+
+	const selected = [];
+	const seen = new Set();
+	for ( const key of keys ) {
+		if ( seen.has( key ) ) {
+			throw new Error( `Duplicate page contract: ${ key }.` );
+		}
+		const contract = PAGE_CONTRACTS.find( ( candidate ) => candidate.key === key );
+		if ( ! contract ) {
+			throw new Error( `Unknown page contract: ${ key }.` );
+		}
+		seen.add( key );
+		selected.push( contract );
+	}
+
+	return selected;
+}
+
 module.exports = {
 	THEME_PATH,
 	SNAPSHOT_DIR,
@@ -107,4 +134,5 @@ module.exports = {
 	getRetiredPageTargetsPhp,
 	getTrackedPageTargetsPhp,
 	normalizeContent,
+	selectPageContracts,
 };

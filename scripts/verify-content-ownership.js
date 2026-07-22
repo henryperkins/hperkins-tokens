@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-const crypto = require( 'node:crypto' );
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 const { runWpEval } = require( './lib/wp-cli' );
+const { createLineDiff, getSha256 } = require( './lib/content-integrity' );
 
 const {
 	THEME_PATH,
@@ -167,10 +167,6 @@ function getOwnershipState() {
 	);
 }
 
-function getSha256( value ) {
-	return crypto.createHash( 'sha256' ).update( value ).digest( 'hex' );
-}
-
 function verifySnapshot( contract, page ) {
 	const snapshotPath = path.join( SNAPSHOT_DIR, contract.snapshotFile );
 	assert(
@@ -187,6 +183,10 @@ function verifySnapshot( contract, page ) {
 			`${ contract.label } no longer matches its versioned snapshot ${ path.relative( THEME_PATH, snapshotPath ) }.`,
 			`live   sha256: ${ getSha256( liveContent ) }`,
 			`stored sha256: ${ getSha256( snapshot ) }`,
+			createLineDiff( liveContent, snapshot, {
+				actualLabel: `${ contract.key } live database body`,
+				expectedLabel: `${ contract.key } committed snapshot`,
+			} ),
 			'If the DB body change is intentional, re-export with node scripts/export-page-snapshots.js.',
 		].join( '\n' )
 	);

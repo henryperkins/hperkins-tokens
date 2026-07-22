@@ -15,6 +15,7 @@ const { openZip } = require( './lib/zip-archive' );
 
 const themeRoot = join( __dirname, '..' );
 const artifactDir = join( themeRoot, 'assets', 'documents' );
+const appendixDraftPath = join( themeRoot, 'content', 'page-drafts', 'placement-method-evidence.html' );
 const artifactNames = [
 	'henry-perkins-wordpress-support-engineer-resume.docx',
 	'henry-perkins-wordpress-support-engineer-resume.pdf',
@@ -77,6 +78,10 @@ function xmlText( source ) {
 
 function compactText( value ) {
 	return value.replace( /\s+/g, ' ' ).trim();
+}
+
+function stripHtml( value ) {
+	return compactText( decodeXml( value.replace( /<!--([\s\S]*?)-->/g, '' ).replace( /<[^>]+>/g, '' ) ) );
 }
 
 function sha256( path ) {
@@ -381,9 +386,172 @@ function worksheetRows( source, sharedStrings ) {
 	return rows;
 }
 
+function excelSerialToIsoDate( value ) {
+	const serial = Number( value );
+	assert( Number.isInteger( serial ) && serial > 0, `Spreadsheet Last checked value is not an Excel date serial: ${ value }.` );
+	return new Date( Date.UTC( 1899, 11, 30 ) + serial * 86400000 ).toISOString().slice( 0, 10 );
+}
+
+function tableSourceByClass( appendixHtml, className ) {
+	const escapedClass = className.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
+	const figurePattern = new RegExp(
+		`<figure\\b[^>]*class="[^"]*\\b${ escapedClass }\\b[^"]*"[^>]*>`,
+		'i'
+	);
+	const figureMatch = figurePattern.exec( appendixHtml );
+	assert( figureMatch, `Appendix is missing the ${ className } table.` );
+	const tableStart = appendixHtml.indexOf( '<table', figureMatch.index + figureMatch[0].length );
+	const tableEnd = appendixHtml.indexOf( '</table>', tableStart );
+	assert( tableStart !== -1 && tableEnd !== -1, `Appendix ${ className } figure has no complete table.` );
+	return appendixHtml.slice( tableStart, tableEnd + '</table>'.length );
+}
+
+function htmlTableRows( tableSource, urlColumn = -1 ) {
+	const sections = [];
+	for ( const sectionName of [ 'thead', 'tbody' ] ) {
+		const section = tableSource.match( new RegExp( `<${ sectionName }\\b[^>]*>([\\s\\S]*?)<\\/${ sectionName }>`, 'i' ) );
+		assert( section, `Appendix table is missing ${ sectionName }.` );
+		sections.push( ...[ ...section[1].matchAll( /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi ) ].map( ( rowMatch ) => {
+			const cells = [];
+			for ( const cellMatch of rowMatch[1].matchAll( /<(th|td)\b[^>]*>([\s\S]*?)<\/\1>/gi ) ) {
+				const body = cellMatch[2];
+				if ( cells.length === urlColumn ) {
+					const link = body.match( /<a\b([^>]*)>/i );
+					if ( link ) {
+						const attributes = xmlAttributes( link[1] );
+						assert( attributes.href, 'Appendix market-table link is missing href.' );
+						cells.push( attributes.href );
+						continue;
+					}
+				}
+				cells.push( stripHtml( body ) );
+			}
+			return cells;
+		} ) );
+	}
+	return sections;
+}
+
+function assertTableValues( expectedRows, actualRows, label, columns ) {
+	assert(
+		actualRows.length === expectedRows.length,
+		`${ label } has ${ actualRows.length - 1 } data rows; workbook has ${ expectedRows.length - 1 }.`
+	);
+	for ( let rowIndex = 0; rowIndex < expectedRows.length; rowIndex += 1 ) {
+		assert(
+			actualRows[rowIndex].length === expectedRows[rowIndex].length,
+			`${ label } row ${ rowIndex } has ${ actualRows[rowIndex].length } cells; expected ${ expectedRows[rowIndex].length }.`
+		);
+		for ( let columnIndex = 0; columnIndex < expectedRows[rowIndex].length; columnIndex += 1 ) {
+			const expected = expectedRows[rowIndex][columnIndex];
+			const actual = actualRows[rowIndex][columnIndex];
+			assert(
+				actual === expected,
+				`${ label } row ${ rowIndex }, ${ columns[columnIndex] } differs. Workbook: "${ expected }"; appendix: "${ actual }".`
+			);
+		}
+	}
+}
+
+function funnelSummaryRows( workbookRows ) {
+	const dataRows = workbookRows.slice( 1 );
+	const buckets = [
+		{
+			label: 'Current live passes',
+			rule: 'Current state “Live”; verdict “Pass” or “Pass — manual review”',
+			matches: ( row ) => row[4] === 'Live' && [ 'Pass', 'Pass — manual review' ].includes( row[5] ),
+		},
+		{
+			label: 'Verification unresolved',
+			rule: 'Current state “Verification pending” or “Unverified”; verdict “Needs verification”',
+			matches: ( row ) => [ 'Verification pending', 'Unverified' ].includes( row[4] ) && row[5] === 'Needs verification',
+		},
+		{
+			label: 'Historical, not-current passes',
+			rule: 'Screen verdict “Pass — historical”',
+			matches: ( row ) => row[5] === 'Pass — historical',
+		},
+		{
+			label: 'Replaced postings',
+			rule: 'Current state “Replaced”; verdict “Needs new screen”',
+			matches: ( row ) => row[4] === 'Replaced' && row[5] === 'Needs new screen',
+		},
+		{
+			label: 'Expired before screening',
+			rule: 'Current state begins “Expired”; verdict “Not screened — expired”',
+			matches: ( row ) => row[4].startsWith( 'Expired' ) && row[5] === 'Not screened — expired',
+		},
+		{
+			label: 'Human failures',
+			rule: 'Screen verdict “Fail” or “Fail — overturned”',
+			matches: ( row ) => [ 'Fail', 'Fail — overturned' ].includes( row[5] ),
+		},
+	];
+	for ( const row of dataRows ) {
+		const matches = buckets.filter( ( bucket ) => bucket.matches( row ) );
+		assert(
+			matches.length === 1,
+			`Workbook row "${ row[0] }" belongs to ${ matches.length } funnel buckets; expected exactly one. ` +
+			`State/verdict: ${ JSON.stringify( [ row[4], row[5] ] ) }.`
+		);
+	}
+	return [
+		[ 'Measure', 'Count', 'Workbook rule' ],
+		[ 'Rows in public ledger', String( dataRows.length ), 'Every row after the seven-column header' ],
+		...buckets.map( ( bucket ) => [
+			bucket.label,
+			String( dataRows.filter( ( row ) => bucket.matches( row ) ).length ),
+			bucket.rule,
+		] ),
+	];
+}
+
+function lastCheckedSummary( workbookRows ) {
+	const counts = new Map();
+	let missing = 0;
+	for ( const row of workbookRows.slice( 1 ) ) {
+		if ( row[3] === '' ) {
+			missing += 1;
+			continue;
+		}
+		counts.set( row[3], ( counts.get( row[3] ) || 0 ) + 1 );
+	}
+	const dated = [ ...counts.entries() ]
+		.sort( ( left, right ) => right[0].localeCompare( left[0] ) )
+		.map( ( [ date, count ] ) => `${ date } — ${ count } ${ count === 1 ? 'row' : 'rows' }` );
+	return `Last checked distribution: ${ [ ...dated, `not recorded — ${ missing } ${ missing === 1 ? 'row' : 'rows' }` ].join( '; ' ) }.`;
+}
+
+function verifyAppendixWorkbookParity( workbookRows, appendixHtml ) {
+	assert(
+		workbookRows.length > 1 && approvedColumns.every( ( column, index ) => workbookRows[0][index] === column ),
+		'Workbook rows supplied to appendix parity must begin with the seven approved columns.'
+	);
+	const marketRows = htmlTableRows( tableSourceByClass( appendixHtml, 'hp-market-table' ), 2 );
+	assertTableValues( workbookRows, marketRows, 'Appendix market table', approvedColumns );
+
+	const summaryRows = funnelSummaryRows( workbookRows );
+	const appendixSummaryRows = htmlTableRows( tableSourceByClass( appendixHtml, 'hp-state-table' ) );
+	assertTableValues( summaryRows, appendixSummaryRows, 'Appendix funnel table', summaryRows[0] );
+
+	const dateSummaryMatch = appendixHtml.match(
+		/<p\b[^>]*class="[^"]*\bhp-market-date-summary\b[^"]*"[^>]*>([\s\S]*?)<\/p>/i
+	);
+	assert( dateSummaryMatch, 'Appendix is missing the derived last-checked summary.' );
+	const expectedDateSummary = lastCheckedSummary( workbookRows );
+	const actualDateSummary = stripHtml( dateSummaryMatch[1] );
+	assert(
+		actualDateSummary === expectedDateSummary,
+		`Appendix Last checked summary differs. Workbook: "${ expectedDateSummary }"; appendix: "${ actualDateSummary }".`
+	);
+}
+
 function verifyWorkbook( path ) {
 	const archive = openZip( path );
-	for ( const entry of [ 'xl/workbook.xml', 'xl/worksheets/sheet1.xml', 'xl/sharedStrings.xml', 'xl/tables/table1.xml' ] ) {
+	// OOXML permits either package-level shared strings or inline strings in
+	// cells. Google Sheets currently exports this public workbook with inline
+	// strings, which worksheetRows() already supports.
+	for ( const entry of [ 'xl/workbook.xml', 'xl/worksheets/sheet1.xml' ] ) {
 		assert( archive.has( entry ), `${ basename( path ) } is missing ${ entry }.` );
 	}
 	const worksheets = archive.list().filter( ( entry ) => /^xl\/worksheets\/sheet\d+\.xml$/.test( entry ) );
@@ -405,7 +573,8 @@ function verifyWorkbook( path ) {
 
 	const sharedStrings = spreadsheetStrings( archive );
 	const worksheetXml = archive.text( 'xl/worksheets/sheet1.xml' );
-	assert( /<dimension\b[^>]*\bref="A1:G21"/.test( worksheetXml ), 'Public workbook used range must be exactly A1:G21.' );
+	const dimension = worksheetXml.match( /<dimension\b[^>]*\bref="([^"]+)"/ );
+	assert( ! dimension || dimension[1] === 'A1:G21', `Public workbook used range must be exactly A1:G21 when declared; found ${ dimension ? dimension[1] : '<omitted>' }.` );
 	const rows = worksheetRows( worksheetXml, sharedStrings );
 	assert( rows.length === 21, `Public workbook has ${ rows.length } rows; expected 21 including the header.` );
 	for ( let index = 0; index < rows.length; index += 1 ) {
@@ -421,12 +590,14 @@ function verifyWorkbook( path ) {
 		approvedColumns.every( ( column, index ) => values[0][index] === column ),
 		`Public workbook columns must be exactly: ${ approvedColumns.join( ' | ' ) }.`
 	);
-	const tableXml = archive.text( 'xl/tables/table1.xml' );
-	assert( /<table\b[^>]*\bref="A1:G21"/.test( tableXml ), 'Public workbook table must be exactly A1:G21.' );
-	assert(
-		approvedColumns.every( ( column ) => tableXml.includes( `name="${ column.replace( /&/g, '&amp;' ) }"` ) ),
-		'Public workbook table metadata does not match the seven approved columns.'
-	);
+	if ( archive.has( 'xl/tables/table1.xml' ) ) {
+		const tableXml = archive.text( 'xl/tables/table1.xml' );
+		assert( /<table\b[^>]*\bref="A1:G21"/.test( tableXml ), 'Public workbook table must be exactly A1:G21.' );
+		assert(
+			approvedColumns.every( ( column ) => tableXml.includes( `name="${ column.replace( /&/g, '&amp;' ) }"` ) ),
+			'Public workbook table metadata does not match the seven approved columns.'
+		);
+	}
 
 	const supportRow = values.find( ( row ) => row[0] === 'Support Engineer, VIP' );
 	assert( supportRow, 'Public workbook is missing the Support Engineer, VIP row.' );
@@ -446,6 +617,16 @@ function verifyWorkbook( path ) {
 	for ( const [ pattern, label ] of privatePatterns ) {
 		assert( ! pattern.test( searchableContent ), `Public workbook contains private ${ label } data.` );
 	}
+
+	return values.map( ( row, rowIndex ) => row.map( ( value, columnIndex ) => {
+		if ( rowIndex > 0 && columnIndex === 3 && value !== '' ) {
+			if ( /^\d{4}-\d{2}-\d{2}$/.test( value ) ) {
+				return value;
+			}
+			return excelSerialToIsoDate( value );
+		}
+		return value;
+	} ) );
 }
 
 async function verifyLink( url ) {
@@ -527,7 +708,8 @@ async function main() {
 	const themeVersion = currentThemeVersion();
 	const docxUrls = verifyDocx( paths[ artifactNames[0] ], themeVersion );
 	const pdfUrls = verifyPdf( paths[ artifactNames[1] ], docxUrls );
-	verifyWorkbook( paths[ artifactNames[2] ] );
+	const workbookRows = verifyWorkbook( paths[ artifactNames[2] ] );
+	verifyAppendixWorkbookParity( workbookRows, readFileSync( appendixDraftPath, 'utf8' ) );
 	if ( checkLinks ) {
 		await verifyLinks( pdfUrls );
 	}
@@ -545,4 +727,4 @@ if ( require.main === module ) {
 	} );
 }
 
-module.exports = { verifyLinks };
+module.exports = { verifyAppendixWorkbookParity, verifyLinks };

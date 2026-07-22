@@ -1,5 +1,14 @@
 # Imladris DS ⇄ hperkins-tokens — alignment plan & ready-to-run prompt
 
+> **Superseded route-ownership instructions (2026-07-21).** This document is a
+> historical design-project sync plan and must not be executed verbatim. The
+> WordPress database bodies for Job Placement Digest and Placement Method and
+> Evidence are canonical; their files under `content/page-snapshots/` are
+> automatically verified mirrors. The former
+> `patterns/job-placement-digest.php` full-page seed is retired and must remain
+> absent. A design-project sync may mirror the snapshots and slug templates, but
+> must not recreate a third full-page copy.
+
 > **Purpose.** Bring the canonical claude.ai/design **Imladris Design System** project into
 > alignment with the source of truth it claims to mirror: the `hperkins-tokens` theme
 > (this repo, GitHub `henryperkins/hperkins-tokens`) and the live surfaces on
@@ -87,10 +96,15 @@ The mirror is a **curated subset** of the theme (it carries `style.css`, `theme.
 - `_source/theme/content/page-snapshots/front-page.html` — missing the 0.3.42 closing panel.
 - (All other mirrored files re-pushed as harmless no-ops for byte-exactness.)
 
-**Missing (new since the mirror) — add:**
+**Missing route evidence — add only after live export and verification:**
 
-- `_source/theme/patterns/job-placement-digest.php` — the theme pattern for the DS `templates/digest` design.
-- `_source/theme/content/page-snapshots/job-placement-digest.html` — its DB-body source copy.
+- `_source/theme/content/page-snapshots/job-placement-digest.html` — verified
+  mirror of the canonical WordPress database body.
+- `_source/theme/content/page-snapshots/placement-method-evidence.html` —
+  verified mirror of the canonical research-appendix database body.
+
+Do not add `_source/theme/patterns/job-placement-digest.php`; that stale
+full-page seed was retired on 2026-07-21.
 
 **Provenance falsehoods in `readme.md` — edit:**
 
@@ -108,7 +122,7 @@ recreations faithful rather than merely truthful; each carries one decision (§4
 ### Tier 1 — required (truthful provenance + shipped routes)
 
 1. **Refresh the existing mirror file-set** from the current working tree (overwrite; §5 table A).
-2. **Add the two Job Placement Digest files** to the mirror (§5 table B).
+2. **Add the two verified database-body snapshots** to the mirror (§5 table B).
 3. **Edit `readme.md`** — version 0.3.40 → 0.3.42, live surfaces, template count (§6).
 4. **Re-verify the token round-trip as a no-op** (theme.json unchanged; §7).
 
@@ -206,12 +220,12 @@ independent. **No deletes** — the mirror only gains files.
 | `patterns/work-entry.php` | `_source/theme/patterns/work-entry.php` |
 | `patterns/work-index.php` | `_source/theme/patterns/work-index.php` |
 
-### Table B — add the shipped Digest route to the mirror (Tier 1)
+### Table B — add verified route mirrors (Tier 1)
 
 | localPath (repo) | path (project) |
 |---|---|
-| `patterns/job-placement-digest.php` | `_source/theme/patterns/job-placement-digest.php` |
 | `content/page-snapshots/job-placement-digest.html` | `_source/theme/content/page-snapshots/job-placement-digest.html` |
+| `content/page-snapshots/placement-method-evidence.html` | `_source/theme/content/page-snapshots/placement-method-evidence.html` |
 
 ### Table C — complete the mirror (Tier 2, decision A = "complete")
 
@@ -334,8 +348,10 @@ first (so it is reviewable and version-controlled), then `write_files` it to the
 
 After the push succeeds:
 
-1. Spot-check via `get_file`: `_source/theme/style.css` header reads `Version: 0.3.45`;
-   `_source/theme/patterns/job-placement-digest.php` exists; `readme.md` shows v0.3.45.
+1. Spot-check via `get_file`: `_source/theme/style.css` has the intended release
+   version; both route snapshots exist;
+   `_source/theme/patterns/job-placement-digest.php` is absent; and `readme.md`
+   shows the same release version.
 2. Add a dated entry to `docs/design-system/INDEX.md` recording the sync (project mirror refreshed
    to v0.3.45, colors/spacing/effects round-trip re-verified 1:1 with the font-family-name
    divergence recorded, digest route + prominent-action composition now represented). Convert the
@@ -383,8 +399,9 @@ design project, never the theme. Follow docs/design-system/ALIGNMENT-PLAN.md.
    0.3.44/0.3.45 (font family internal names → HPerkins …): the pushed _source/theme/theme.json
    carries that rename, and per ALIGNMENT-PLAN §1 decide whether to also mirror it into
    tokens/typography.css — spot-check tokens/colors.css against theme.json.
-7. Spot-check via get_file that _source/theme/style.css reads Version: 0.3.45 and
-   _source/theme/patterns/job-placement-digest.php now exists.
+7. Spot-check via get_file that _source/theme/style.css has the intended release
+   version, both route snapshots exist, and
+   _source/theme/patterns/job-placement-digest.php remains absent.
 8. Report exactly what was written/edited and the token-round-trip result. Do NOT modify any
    theme file. Afterward, record the completed sync in docs/design-system/INDEX.md.
 ```
@@ -393,8 +410,9 @@ design project, never the theme. Follow docs/design-system/ALIGNMENT-PLAN.md.
 
 ### One-line summary
 
-Push the current theme (v0.3.45) into the design project's `_source/theme/` mirror, add the
-Job Placement Digest files, correct `readme.md`'s stale v0.3.40 provenance, optionally document the
+Push the intended release into the design project's `_source/theme/` mirror, add
+the two verified route snapshots without recreating the retired digest pattern,
+correct `readme.md`'s stale provenance, optionally document the
 0.3.42 prominent-action composition as a guideline card — and change **nothing** in the theme.
 Its palette/spacing/effects/type-scale tokens still round-trip the project 1:1; only the
 self-hosted font *family names* diverged at 0.3.44/0.3.45 (recorded in INDEX.md, not a token
