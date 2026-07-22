@@ -31,10 +31,11 @@ updated through the WordPress.com content API so the newer production page 599
 and other production-only state are not overwritten by the Studio clone.
 
 Tracked page mirrors and seed patterns stay aligned with the production edits:
-Home, About, Work, and AI Enablement snapshots remain exact mirrors of their
-database bodies; About, Work, and AI Enablement patterns remain reusable seed
-copies. The local Studio records receive the same bounded replacements so local
-WP-CLI verification remains meaningful.
+About, Work, and AI Enablement snapshots remain exact mirrors of their database
+bodies; the Home snapshot keeps its existing action-panel source contract while
+the scoped database edit corrects only the status classes. About, Work, and AI
+Enablement patterns remain reusable seed copies. The local Studio records receive
+the same bounded claim replacements so local WP-CLI verification remains meaningful.
 
 ## Scope
 
