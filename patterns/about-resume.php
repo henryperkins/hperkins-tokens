@@ -277,15 +277,15 @@ $hperkins_about_portrait_src  = file_exists( $hperkins_about_portrait_file )
 
 <!-- wp:list {"className":"hp-exp__points"} -->
 <ul class="wp-block-list hp-exp__points"><!-- wp:list-item -->
-<li>Delivered customer-facing implementation projects across WordPress builds, API integrations, documentation, and AI-assisted workflow prototypes from discovery through launch and post-launch support.</li>
+<li>Delivered the named DJ Lee &amp; Voices of Judah WordPress rebuild from discovery through launch and post-launch support, including structured content, contact routing, and public verification.</li>
 <!-- /wp:list-item -->
 
 <!-- wp:list-item -->
-<li>Built reusable documentation and API-connected automation that reduced manual handoffs and improved maintainability across client engagements.</li>
+<li>Built reusable documentation and API-connected automation for that delivery, reducing manual handoffs and making future maintenance inspectable.</li>
 <!-- /wp:list-item -->
 
 <!-- wp:list-item -->
-<li>Shipped WordPress, WooCommerce, and Cloudflare-backed web experiences with structured content models, smoke-check automation, and deployment workflows.</li>
+<li>Maintains WordPress open-source artifacts with structured release notes, smoke-check automation, and deployment verification.</li>
 <!-- /wp:list-item --></ul>
 <!-- /wp:list -->
 

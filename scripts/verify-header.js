@@ -38,15 +38,15 @@ const WORK_STATUSES = [
 	'Delivered · live site',
 ];
 const WRITING_LABELS = [ 'AI Enablement', 'Essays', 'Job Placement Digest' ];
-// Four Council values sit below the site-wide 12px type floor by deliberate,
+// Three Council values sit below the site-wide 12px type floor by deliberate,
 // documented exemption (see CLAUDE.md). They are pinned here so the exemption
 // stays a decision rather than drift.
 const SUB_FLOOR_TYPE = {
 	'.hp-council-work-row__status': 9,
 	'.hp-council-work-panel__eyebrow': 9,
-	'.hp-council-drawer__legend': 10,
 	'.hp-council-digest-cue': 8,
 };
+const DRAWER_LEGEND_SIZE = 13;
 const DRAWER_LABELS = [
 	'Work',
 	'Essays',
@@ -624,6 +624,9 @@ async function stateSnapshot( cdp, sessionId ) {
 		const root = document.querySelector('[data-hp-header-root]');
 		const panels = root ? Array.from(root.querySelectorAll('[data-hp-header-panel]')) : [];
 		return {
+			href: location.href,
+			readyState: document.readyState,
+			rootPresent: !!root,
 			state: root && root.getAttribute('data-hp-header-state'),
 			unhidden: panels.filter((panel) => !panel.hidden).map((panel) => panel.dataset.hpHeaderPanel),
 			expanded: root ? Array.from(root.querySelectorAll('[data-hp-header-trigger]')).filter((trigger) => trigger.getAttribute('aria-expanded') === 'true').map((trigger) => trigger.dataset.hpHeaderTrigger) : [],
@@ -638,7 +641,11 @@ async function stateSnapshot( cdp, sessionId ) {
 async function assertState( cdp, sessionId, expected, context ) {
 	const snapshot = await stateSnapshot( cdp, sessionId );
 	const expectedOpen = expected === 'closed' ? [] : [ expected ];
-	assert( snapshot.state === expected, `${ context }: state is ${ snapshot.state }; expected ${ expected }.` );
+	assert(
+		snapshot.state === expected,
+		`${ context }: state is ${ snapshot.state }; expected ${ expected }; ` +
+		`root=${ snapshot.rootPresent }, readyState=${ snapshot.readyState }, href=${ snapshot.href }.`
+	);
 	assert(
 		JSON.stringify( snapshot.unhidden ) === JSON.stringify( expectedOpen ),
 		`${ context }: unhidden panels are ${ snapshot.unhidden.join( ', ' ) || 'none' }.`
@@ -934,7 +941,7 @@ async function verifyMobileGeometry( cdp, sessionId, viewport, captureDir ) {
 	assert( initial.searchDisplay === 'none' && initial.subscribeDisplay === 'none', `${ viewport.name } desktop actions remain visible.` );
 	assert( initial.drawerDisplay !== 'none', `${ viewport.name } drawer trigger is hidden.` );
 	assert( initial.drawerTrigger.width >= 44 && initial.drawerTrigger.height >= 44, `${ viewport.name } drawer trigger is smaller than 44px.` );
-	assert( approximately( initial.drawerControl.width, 38 ) && approximately( initial.drawerControl.height, 38 ), `${ viewport.name } drawer control is not 38px.` );
+	assert( approximately( initial.drawerControl.width, 44 ) && approximately( initial.drawerControl.height, 44 ), `${ viewport.name } drawer control is not 44px.` );
 	assert( initial.brand.right <= initial.drawerPosition.left + 1, `${ viewport.name } brand overlaps the drawer trigger.` );
 	assert(
 		initial.drawerIcons.open !== 'none' && initial.drawerIcons.close === 'none',
@@ -1087,7 +1094,12 @@ async function verifyDesktopInteractions( cdp, sessionId ) {
 		history.back();
 	})` );
 	assert( poppedUrl, 'history.back() did not dispatch a real popstate event.' );
-	await wait( 90 );
+	await waitForPageCondition(
+		cdp,
+		sessionId,
+		`document.querySelector('[data-hp-header-root]')?.getAttribute('data-hp-header-state') === 'closed'`,
+		'the Council header to settle after history.back()'
+	);
 	await assertState( cdp, sessionId, 'closed', 'real history.back popstate settle' );
 	await clickTrigger( cdp, sessionId, 'writing' );
 	await evaluate( cdp, sessionId, `window.dispatchEvent(new PageTransitionEvent('pageshow'))` );
@@ -1324,8 +1336,8 @@ async function verifyMobileInteractions( cdp, sessionId ) {
 		};
 	})()` );
 	assert(
-		approximately( drawerType.legend, SUB_FLOOR_TYPE[ '.hp-council-drawer__legend' ], 0.1 ),
-		`Drawer legend is ${ drawerType.legend }px; pinned at ${ SUB_FLOOR_TYPE[ '.hp-council-drawer__legend' ] }px.`
+		approximately( drawerType.legend, DRAWER_LEGEND_SIZE, 0.1 ),
+		`Drawer legend is ${ drawerType.legend }px; expected the ${ DRAWER_LEGEND_SIZE }px functional-text token.`
 	);
 	assert(
 		approximately( drawerType.cue, SUB_FLOOR_TYPE[ '.hp-council-digest-cue' ], 0.1 ),

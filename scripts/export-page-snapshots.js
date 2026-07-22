@@ -6,10 +6,10 @@ const { runWpEval } = require( './lib/wp-cli' );
 
 const {
 	SNAPSHOT_DIR,
-	PAGE_CONTRACTS,
 	getPageRecord,
 	getTrackedPageTargetsPhp,
 	normalizeContent,
+	selectPageContracts,
 } = require( './lib/page-content-contract' );
 
 function getLiveState() {
@@ -49,6 +49,10 @@ function getLiveState() {
 
 function main() {
 	const state = getLiveState();
+	const requestedKeys = process.argv
+		.filter( ( argument ) => argument.startsWith( '--page=' ) )
+		.map( ( argument ) => argument.slice( '--page='.length ) );
+	const contracts = selectPageContracts( requestedKeys );
 
 	if ( state.frontPageMode !== 'page' ) {
 		throw new Error( `Expected show_on_front=page, got ${ state.frontPageMode || 'none' }.` );
@@ -56,7 +60,7 @@ function main() {
 
 	fs.mkdirSync( SNAPSHOT_DIR, { recursive: true } );
 
-	for ( const contract of PAGE_CONTRACTS ) {
+	for ( const contract of contracts ) {
 		const record = getPageRecord( state, contract );
 		if ( ! record || record.id <= 0 ) {
 			throw new Error( `Expected a live ${ contract.label } before exporting snapshots.` );

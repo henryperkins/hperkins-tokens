@@ -48,13 +48,17 @@ component CSS to refresh either — the theme's `style.css` is a superset.
 | `templates/contact` | `patterns/contact.php`, `templates/page-contact.html` | Published **Contact** page (slug `contact`, ID 233) |
 | `templates/ai-enablement` | `content/page-snapshots/ai-enablement.html`, `templates/page-ai-enablement.html` | Published **AI Enablement** page (slug `ai-enablement`, ID 175) in DB-owned page-body mode; `patterns/ai-enablement.php` remains a reusable seed/reference copy |
 | `templates/work-index` | `content/page-snapshots/work.html`, `templates/page-work.html` | Published **Work** page (slug `work`, ID 13) in DB-owned page-body mode; `patterns/work-index.php` remains a reusable seed/reference copy |
+| `templates/digest` | `content/page-snapshots/job-placement-digest.html`, `templates/page-job-placement-digest.html` | Published **Job Placement Digest** (slug `job-placement-digest`, ID 433) in DB-owned page-body mode; the former full-page pattern is retired |
+| Site-owned research appendix | `content/page-snapshots/placement-method-evidence.html`, `templates/page-placement-method-and-evidence.html` | Published **Placement Method and Evidence** page (slug `placement-method-and-evidence`, ID 599) in DB-owned page-body mode |
 | `ui_kits/blog` (HomeView) | `templates/home.html` | Blog posts index (`is_home`) |
 | `ui_kits/blog` (ReaderView) | `templates/single.html` | Single post reader |
 | page-layout CSS | `assets/imladris-pages.css` | Enqueued (`hperkins-pages`) + editor style, via `functions.php` |
 
-The DB-owned page bodies for `page-about`, `page-ai-enablement`, and `page-work`,
-plus the tracked middle section for `front-page`, are versioned in
-`content/page-snapshots/*.html` and refreshed from the live site with
+The WordPress database body is canonical for the visitor-facing `page-about`,
+`page-ai-enablement`, `page-work`, `page-job-placement-digest`, and
+`page-placement-method-and-evidence` routes. Their automatically verified mirrors,
+plus the tracked middle section for `front-page`, live in
+`content/page-snapshots/*.html` and are refreshed from the live site with
 `node scripts/export-page-snapshots.js`; `node scripts/verify-content-ownership.js`
 guards against template/DB drift. The Flavor Agent demo child page
 (`/work/flavor-agent/demo/`, page `11`) also keeps its embed + explainer in DB
@@ -380,10 +384,10 @@ tokens round-trip `theme.json` v0.3.40*, and it mirrors this theme's source unde
   `/job-placement-digest/`, page 433). The route existed as a raw h1 + three paragraphs through the
   generic Assembler shell; the design recasts that same copy into the evidence register. Theme artifacts
   (v0.3.41): **`templates/page-job-placement-digest.html`** (slug-matched 44/72rem reading shell, same
-  contract as page-about/-work/-ai-enablement), **`patterns/job-placement-digest.php`** (reusable
-  seed/reference copy), **`content/page-snapshots/job-placement-digest.html`** (the versioned DB-body
-  source, wired into `scripts/lib/page-content-contract.js` so the ownership verifier + snapshot export
-  cover it), and a small digest section in `assets/imladris-pages.css` (hero flows into the pitch with no
+  contract as page-about/-work/-ai-enablement), the subsequently retired
+  **`patterns/job-placement-digest.php`** seed, **`content/page-snapshots/job-placement-digest.html`**
+  (the verified mirror wired into `scripts/lib/page-content-contract.js` so the ownership verifier +
+  snapshot export cover it), and a small digest section in `assets/imladris-pages.css` (hero flows into the pitch with no
   hairline; gold-200 `<mark>` on `radius.xs` in the eyebrow; mono dateline).
 - **Composition** — everything below the hero is existing component anatomy, kind- and status-mapped per
   the design: ProofBar chips `target:` (review) / `aim:` (pending) / `proof:` (merged, linked to the
@@ -400,9 +404,21 @@ tokens round-trip `theme.json` v0.3.40*, and it mirrors this theme's source unde
   lead to the site's default `md` (19px) — the same values under the theme's names; and the dateline
   keeps the design's verbatim copy ("13 Jul 2026 · WordPress since 2012 · Chicago" — the handoff marks
   copy final).
-- **Deploy contract:** the DB body of page 433 must be replaced with the seed/snapshot markup (then
-  `node scripts/export-page-snapshots.js` + `node scripts/verify-content-ownership.js` confirm), and the
+- **Deploy contract:** the reviewed DB body of page 433 is applied first; only after the live render is
+  accepted is its committed mirror refreshed (`node scripts/export-page-snapshots.js` +
+  `node scripts/verify-content-ownership.js` confirm). The
   page must carry no explicit `_wp_page_template` so the slug-matched shell applies.
+
+## 2026-07-21 — recruiter page and research appendix ownership
+
+The WordPress database bodies of `/job-placement-digest/` and
+`/placement-method-and-evidence/` are the visitor-facing canonical sources.
+`content/page-snapshots/job-placement-digest.html` and
+`content/page-snapshots/placement-method-evidence.html` are automatically
+verified mirrors exported only after their live renders are accepted. The old
+`patterns/job-placement-digest.php` full-page seed is retired rather than
+maintained as a third copy. `templates/page-placement-method-and-evidence.html`
+provides the appendix's slug-matched post-content shell.
 
 ## 2026-07-14 — prominent action composition (`core/button` → action rail)
 
@@ -419,7 +435,7 @@ component. `scripts/verify-prominent-actions.js` guards source opt-in,
 compact-control exclusions, rendered counts, 44px targets, focus visibility,
 mobile stacking, overflow, and desktop/mobile screenshots.
 
-## 2026-07-15 — DS project alignment plan authored (design-sync **pending**)
+## 2026-07-15 — DS project alignment plan authored (historical; route instructions superseded)
 
 The canonical project (`b844cbab…`) was declared canonical against `theme.json`
 **v0.3.40**; the theme has since shipped **0.3.41** (Job Placement Digest) and
@@ -434,11 +450,11 @@ the fix:
   (`136ee78`), *before* the mirror was captured, so `tokens/*.css` and
   `_source/theme/theme.json` still round-trip. The only token-related falsehood is
   the version string in the project `readme.md`, corrected by the plan.
-- **Mirror refresh.** Re-push the whole `_source/theme/` file-set from the current
-  tree (absorbs the 0.3.41 `overflow-wrap`/digest CSS and every 0.3.42
-  `hp-action-rail`/`hp-action-panel` edit), **add** `job-placement-digest.php` +
-  its snapshot, and — recommended — complete the mirror (the four content patterns,
-  the `page-*` shells, the flavor-agent-demo snapshot, `readme.txt`).
+- **Mirror refresh (superseded route detail).** A future design-project sync may
+  re-push the theme file-set and the two verified route snapshots, but it must
+  not recreate `job-placement-digest.php`. The WordPress database bodies are
+  canonical, the snapshots are verified mirrors, and the retired full-page
+  pattern is not a third source.
 - **`readme.md` edits.** v0.3.40 → v0.3.42 (twice), add `/job-placement-digest/` +
   `/contact/` to live surfaces, and correct "seven"→"eight" template folders
   (`digest` was already present but unnamed).
@@ -446,9 +462,10 @@ the fix:
   specimen documenting the 0.3.42 composition as a *guideline over Button*, **not**
   a `components/` entry (the theme's stance holds).
 
-**Status: plan + prompt only — nothing has been pushed to the project, and no theme
-file changed.** Execution is a separate `/design-sync` run (DesignSync MCP, auth via
-`/design-login`); this entry becomes the completed record once that runs.
+**Status: historical plan + prompt only — nothing was pushed to the project, and
+no theme file changed.** Its route-ownership instructions were superseded on
+2026-07-21; any future `/design-sync` run must follow the ownership contract
+recorded above instead of recreating the retired pattern.
 
 ## 2026-07-18 — self-hosted font isolation (0.3.44 body, 0.3.45 display/label/mono)
 

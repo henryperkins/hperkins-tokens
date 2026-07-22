@@ -20,6 +20,7 @@ const PAGES = [
 	'/work/',
 	'/ai-enablement/',
 	'/job-placement-digest/',
+	'/placement-method-and-evidence/',
 	'/how-this-was-built/',
 	'/contact/',
 	'/privacy-policy/',

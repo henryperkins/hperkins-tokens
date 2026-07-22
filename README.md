@@ -5,8 +5,8 @@
 A WordPress block theme whose design decisions are enforced by the theme rather than by review — the "Imladris" design system, implemented as a child theme of [Assembler](https://wordpress.com/theme/assembler).
 
 **Live site:** [hperkins.blog](https://hperkins.blog)
-**Current release:** [v0.3.52](https://github.com/henryperkins/hperkins-tokens/releases/tag/v0.3.52)
-**Deployed commit:** [`c5dc3a1`](https://github.com/henryperkins/hperkins-tokens/commit/c5dc3a1e5dea0d6fd922f15542ee2b2a799f4a29)
+**Current release:** [v0.3.53](https://github.com/henryperkins/hperkins-tokens/releases/tag/v0.3.53)
+**Deployed commit:** [`43d9ef6`](https://github.com/henryperkins/hperkins-tokens/commit/43d9ef603a6715b23af0b4fdce6076010e4b824a)
 **Last verified:** 21 Jul 2026
 
 Pushing to `main` deploys; there is no build step and no bundler. Everything is hand-authored HTML, CSS, PHP, and `theme.json`.
@@ -25,14 +25,14 @@ node scripts/verify-style-token-usage.js
 This governs the standard block-editor controls. Custom code and database-owned page bodies are governed by review and the snapshot contract below, not by the token system.
 
 **2. Page bodies live in the database, and drift from the tracked copy fails a check.**
-Six page bodies are owned by the database rather than by this repo — the front page, `/about/`, `/work/`, `/ai-enablement/`, `/job-placement-digest/`, and the Flavor Agent demo. Their source copies are tracked in [`content/page-snapshots/`](content/page-snapshots), and the live body is compared against them:
+Seven page bodies are owned by the database rather than by this repo — the front page, `/about/`, `/work/`, `/ai-enablement/`, `/job-placement-digest/`, `/placement-method-and-evidence/`, and the Flavor Agent demo. Their source copies are tracked in [`content/page-snapshots/`](content/page-snapshots), and the live body is compared against them:
 
 ```bash
 node scripts/verify-content-ownership.js
 ```
 
 **3. The header's accessibility contract is pinned, not assumed.**
-[`scripts/verify-header.js`](scripts/verify-header.js) drives Chrome against the rendered site and asserts `aria-current` on all ten destinations, focus restoration after Escape, reduced-motion behaviour, and that the four deliberately sub-12px Council labels still compute to exactly the sizes they were signed off at — so shrinking one further fails the run instead of passing quietly.
+[`scripts/verify-header.js`](scripts/verify-header.js) drives Chrome against the rendered site and asserts `aria-current` on all ten destinations, focus restoration after Escape, reduced-motion behaviour, 44px mobile controls, a 13px drawer legend, and the three deliberately sub-12px Council labels at their signed-off sizes — so shrinking one further fails the run instead of passing quietly.
 
 ## A production bug this repo actually caught
 
@@ -49,17 +49,21 @@ The fix lifts the two selectors to (0,2,1) so they win on specificity in either 
 ```bash
 # No site or database required.
 php -l functions.php
-node --test scripts/lib/wp-cli.test.js scripts/lib/site-url.test.js scripts/lib/navigation-content-contract.test.js
+node --test scripts/lib/content-integrity.test.js scripts/lib/navigation-content-contract.test.js scripts/lib/page-content-contract.test.js scripts/lib/page-markup-contract.test.js scripts/lib/placement-artifact-links.test.js scripts/lib/site-url.test.js scripts/lib/wp-cli.test.js scripts/lib/zip-archive.test.js
+node scripts/verify-placement-artifacts.js
+node scripts/verify-job-placement-digest-source.js
+node scripts/verify-deployed-content-ownership.js --source-only
 node scripts/verify-header.js --source-only
 node scripts/verify-typography.js --source-only
 node scripts/verify-content-ownership-docs.js
 ```
 
-These five run in CI on every push (the badge above). The remaining verifiers need a browser or a WordPress database and are run against a real install:
+These source contracts run in CI on every push (the badge above). Main and release-tag pushes also compare the two allowlisted production bodies with their committed snapshots through the public integrity endpoint. The remaining verifiers need a browser or a WordPress database and are run against a real install:
 
 ```bash
 export HPERKINS_ORIGIN=https://hperkins.blog
 node scripts/verify-header.js              # drives Chrome against the rendered site
+node scripts/verify-deployed-content-ownership.js # production digest + appendix vs committed mirrors
 
 export HPERKINS_WP_PATH=/absolute/path/to/wordpress
 node scripts/verify-content-ownership.js   # WP-CLI: live page bodies vs tracked snapshots

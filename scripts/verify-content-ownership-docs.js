@@ -3,6 +3,8 @@
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 
+const { PAGE_CONTRACTS } = require( './lib/page-content-contract' );
+
 const themeRoot = path.join( __dirname, '..' );
 
 function assert( condition, message ) {
@@ -20,6 +22,7 @@ const checks = [
 			'content/page-snapshots/work.html',
 			'content/page-snapshots/ai-enablement.html',
 			'content/page-snapshots/job-placement-digest.html',
+			'content/page-snapshots/placement-method-evidence.html',
 			'content/page-snapshots/work-flavor-agent-demo.html',
 			'theme-owned Wapuu',
 			'hp-action-rail',
@@ -41,6 +44,7 @@ const checks = [
 		include: [
 			'content/page-snapshots/',
 			'content/page-snapshots/job-placement-digest.html',
+			'content/page-snapshots/placement-method-evidence.html',
 			'content/page-snapshots/work-flavor-agent-demo.html',
 			'theme-owned `wapuu-home-hero` pattern',
 			'verify-prominent-actions.js',
@@ -59,6 +63,7 @@ const checks = [
 			'content/page-snapshots/ai-enablement.html',
 			'content/page-snapshots/work.html',
 			'content/page-snapshots/job-placement-digest.html',
+			'content/page-snapshots/placement-method-evidence.html',
 			'content/page-snapshots/work-flavor-agent-demo.html',
 			'hybrid mode: theme-owned Wapuu hero + Three Rings shell',
 			'`hp-action-rail`',
@@ -72,6 +77,21 @@ const checks = [
 		exclude: [
 			/\*\*Shadow template\*\* over live page 175/i,
 			/appended to live \*\*Work\*\* page 13/i,
+			/\*\*add\*\* `job-placement-digest\.php`/i,
+		],
+	},
+	{
+		file: 'docs/design-system/ALIGNMENT-PLAN.md',
+		include: [
+			'Superseded route-ownership instructions (2026-07-21)',
+			'content/page-snapshots/job-placement-digest.html',
+			'content/page-snapshots/placement-method-evidence.html',
+			'must not recreate a third full-page copy',
+		],
+		exclude: [
+			/\*\*Add the two Job Placement Digest files\*\*/i,
+			/\| `patterns\/job-placement-digest\.php` \| `_source\/theme\/patterns\/job-placement-digest\.php` \|/i,
+			/job-placement-digest\.php now exists/i,
 		],
 	},
 ];
@@ -94,6 +114,25 @@ const readmeCurrentContract = fs.readFileSync( path.join( themeRoot, 'readme.txt
 assert(
 	! /plato[- ]artifacts/i.test( readmeCurrentContract ),
 	'readme.txt still advertises the retired Plato Artifacts page in its current theme contract.'
+);
+assert(
+	! readmeCurrentContract.includes( '`job-placement-digest`) remain reusable seeds/reference copies' ),
+	'readme.txt still presents the retired Job Placement Digest pattern as a maintained page copy.'
+);
+
+const appendixContract = PAGE_CONTRACTS.find( ( contract ) => contract.key === 'placement-method-evidence' );
+assert( appendixContract, 'Page ownership contracts do not track Placement Method and Evidence.' );
+assert(
+	appendixContract.pagePath === 'placement-method-and-evidence' &&
+	appendixContract.snapshotFile === 'placement-method-evidence.html' &&
+	appendixContract.templateFile === 'templates/page-placement-method-and-evidence.html',
+	'Placement Method and Evidence must use the database-body, snapshot, and slug-template contract.'
+);
+
+const retiredDigestPattern = path.join( themeRoot, 'patterns', 'job-placement-digest.php' );
+assert(
+	! fs.existsSync( retiredDigestPattern ),
+	'patterns/job-placement-digest.php must be retired instead of maintained as a third full-page copy.'
 );
 
 console.log( 'verified content-ownership docs contract' );

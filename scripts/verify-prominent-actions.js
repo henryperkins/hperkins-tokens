@@ -12,23 +12,25 @@ const THEME_ROOT = path.join( __dirname, '..' );
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
 const ORIGIN = getOrigin();
 const SOURCE_ONLY = process.argv.includes( '--source-only' );
+const USE_DRAFTS = process.argv.includes( '--drafts' );
 const CAPTURE_DIR = process.env.HPERKINS_CAPTURE_DIR ||
 	path.join( os.tmpdir(), 'hperkins-prominent-actions' );
+const DIGEST_SOURCE = USE_DRAFTS
+	? 'content/page-drafts/job-placement-digest.html'
+	: 'content/page-snapshots/job-placement-digest.html';
 
 const RAIL_FILES = [
 	'patterns/wapuu-home-hero.php',
 	'patterns/about-resume.php',
 	'content/page-snapshots/about.html',
 	'content/page-snapshots/front-page.html',
-	'patterns/job-placement-digest.php',
-	'content/page-snapshots/job-placement-digest.html',
+	DIGEST_SOURCE,
 	'content/page-snapshots/work-flavor-agent-demo.html',
 ];
 
 const PANEL_FILES = [
 	'content/page-snapshots/front-page.html',
-	'patterns/job-placement-digest.php',
-	'content/page-snapshots/job-placement-digest.html',
+	DIGEST_SOURCE,
 	'content/page-snapshots/work-flavor-agent-demo.html',
 ];
 
@@ -40,15 +42,16 @@ const EXCLUDED_FILES = [
 const DIGEST_COPY = [
 	'A next step, stated plainly',
 	'Bring me the problem behind the ticket.',
-	'If you need WordPress systems thinking that can survive inspection, let’s compare notes.',
+	'I want Support Engineer work where the symptom matters, the root cause can be documented, and the next occurrence can be prevented. If that is the problem in front of your team, let’s compare notes.',
 	'href="/contact/"',
-	'href="/work/"',
+	'href="/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf"',
+	'href="#evidence-register"',
 ];
 
 const LIVE_PAGES = [
 	{ route: '/', railCount: 2, panelCount: 1 },
 	{ route: '/about/', railCount: 1, panelCount: 0 },
-	{ route: '/job-placement-digest/', railCount: 1, panelCount: 1, digest: true },
+	{ route: '/job-placement-digest/', railCount: 2, panelCount: 1, digest: true },
 	{ route: '/work/flavor-agent/demo/', railCount: 1, panelCount: 1 },
 ];
 
@@ -112,10 +115,7 @@ function verifySourceContracts() {
 		assert( ! contents.includes( 'hp-action-panel' ), `${ file } must remain outside hp-action-panel.` );
 	}
 
-	for ( const file of [
-		'patterns/job-placement-digest.php',
-		'content/page-snapshots/job-placement-digest.html',
-	] ) {
+	for ( const file of [ DIGEST_SOURCE ] ) {
 		const contents = read( file );
 		for ( const expected of DIGEST_COPY ) {
 			assert( contents.includes( expected ), `${ file } is missing approved Digest content: ${ expected }` );

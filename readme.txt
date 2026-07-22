@@ -336,9 +336,19 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   ledger with package-level privacy, page-count, searchable-text, version, and
   link contracts.
 * Accessibility: register versioned proof-card, incident, ledger, disclosure,
-  numbered-rule, and research-note block styles; give disclosures a 48px
+  numbered-rule, and research-note block styles; give disclosures a 44px
   keyboard target; raise mobile Council controls to 44px; preserve long labels
   without page-level overflow down to 320px.
+* Deployment record (verified 21 Jul 2026): theme v0.3.53 at deployed commit
+  `43d9ef603a6715b23af0b4fdce6076010e4b824a`; Job Placement Digest snapshot
+  SHA-256 `2b44c39ef580f9ff65bad3605cf4a82fdcb4b5b812a654c47be819c5d710caf1`;
+  Placement Method and Evidence snapshot SHA-256
+  `e807165705153e7561fc51fc258c8c7ac1b008822533983507674a790c431327`;
+  About snapshot SHA-256
+  `e0cab001e4dca5c8ace12ce7e5fa327275d0212fe3574eed86fe8146be7ee325`;
+  primary résumé SHA-256
+  `6b02d9d8dfed65656c5d4597e7d3cd17c7160c5958c899a25b542289585d086d`;
+  deployed content-ownership result: pass.
 
 = 0.3.52 =
 * Accessibility: restore the keyboard focus ring on every button in production.

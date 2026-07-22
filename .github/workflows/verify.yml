@@ -2,21 +2,20 @@ name: Verify
 
 # What this gate can and cannot do.
 #
-# The theme ships fourteen verifiers (see CLAUDE.md). Most of them need
-# something GitHub Actions does not have: a Chrome instance pointed at a
-# rendered site, or a WordPress database reachable over WP-CLI. Running those
-# here would mean standing up a throwaway WordPress install whose content is
-# not the content under test, which would report a green tick for a check that
-# never examined production.
+# Some verifiers need a WordPress database reachable over WP-CLI. Standing up
+# a throwaway install would report a green tick for content that was never
+# examined in production, so those checks remain local/operational.
 #
-# So this workflow runs only the checks that are true without a site: PHP
-# syntax, the script unit tests, the `--source-only` halves of the header and
-# typography contracts, the docs-ownership contract, and release-version
-# agreement across style.css and readme.txt.
+# The source job runs only checks that are true without a site: PHP syntax,
+# script unit tests, the `--source-only` halves of the header and typography
+# contracts, the docs-ownership contract, and release-version agreement across
+# style.css and readme.txt.
 #
-# Content-ownership verification (live page body vs tracked snapshot) is
-# deliberately NOT here. It requires WP-CLI against the WordPress database and
-# must be run against the real install:
+# The source job stays database-independent. After a main or release-tag push,
+# and on the daily schedule, the second job calls the read-only production
+# endpoint, verifies SEO/share metadata, and runs the browser contracts against
+# the real public render. WP-CLI remains the deeper local/operations check for
+# every tracked DB body:
 #
 #   node scripts/verify-content-ownership.js
 
@@ -27,6 +26,8 @@ on:
     branches: [ '**' ]
     tags: [ 'v*' ]
   workflow_dispatch:
+  schedule:
+    - cron: '17 12 * * *'
 
 permissions:
   contents: read
@@ -68,10 +69,16 @@ jobs:
       - name: Script library unit tests
         run: |
           node --test \
-            scripts/lib/wp-cli.test.js \
-            scripts/lib/site-url.test.js \
+            scripts/lib/content-integrity.test.js \
+            scripts/lib/job-placement-metadata-contract.test.js \
+            scripts/lib/market-screen-parity.test.js \
             scripts/lib/navigation-content-contract.test.js \
+            scripts/lib/page-content-contract.test.js \
+            scripts/lib/page-markup-contract.test.js \
             scripts/lib/placement-artifact-links.test.js \
+            scripts/lib/production-gates-workflow.test.js \
+            scripts/lib/site-url.test.js \
+            scripts/lib/wp-cli.test.js \
             scripts/lib/zip-archive.test.js
 
       - name: Placement artifact contracts
@@ -82,6 +89,18 @@ jobs:
 
       - name: Typography source contract
         run: node scripts/verify-typography.js --source-only
+
+      - name: Performance asset contract
+        run: node scripts/verify-performance-assets.js
+
+      - name: Recruiter page source contract
+        run: node scripts/verify-job-placement-digest-source.js
+
+      - name: Recruiter rendered-page source contract
+        run: node scripts/verify-job-placement-pages.js --source-only
+
+      - name: Deployment-integrity endpoint source contract
+        run: node scripts/verify-deployed-content-ownership.js --source-only
 
       - name: Content-ownership docs contract
         run: node scripts/verify-content-ownership-docs.js
@@ -120,3 +139,74 @@ jobs:
           fi
 
           echo "Version $style_version agrees across style.css, readme.txt, and the changelog."
+
+  deployed-content:
+    name: Deployed production gates
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Compare production bodies with committed snapshots
+        env:
+          HPERKINS_ORIGIN: https://hperkins.blog
+        run: |
+          for attempt in $(seq 1 12); do
+            echo "Content-ownership attempt ${attempt}/12"
+            if node scripts/verify-deployed-content-ownership.js; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 12 ]; then
+              sleep 10
+            fi
+          done
+          echo "::error::Production database bodies never converged with the committed snapshots."
+          exit 1
+
+      - name: Verify production SEO and sharing metadata
+        env:
+          HPERKINS_ORIGIN: https://hperkins.blog
+        run: |
+          for attempt in $(seq 1 12); do
+            echo "SEO/share metadata attempt ${attempt}/12"
+            if node scripts/verify-job-placement-digest-metadata.js; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 12 ]; then
+              sleep 10
+            fi
+          done
+          echo "::error::Production SEO/share metadata never converged with the recruiter-page contract."
+          exit 1
+
+      - name: Verify production browser contracts
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          HPERKINS_CAPTURE_DIR: ${{ runner.temp }}/production-browser-evidence
+          HPERKINS_ORIGIN: https://hperkins.blog
+        run: |
+          fail=0
+          if ! node scripts/verify-header.js; then
+            echo "::error::verify-header.js failed against production."
+            fail=1
+          fi
+          if ! node scripts/verify-typography.js; then
+            echo "::error::verify-typography.js failed against production."
+            fail=1
+          fi
+          if ! node scripts/verify-prominent-actions.js; then
+            echo "::error::verify-prominent-actions.js failed against production."
+            fail=1
+          fi
+          if ! node scripts/verify-job-placement-pages.js; then
+            echo "::error::verify-job-placement-pages.js failed against production."
+            fail=1
+          fi
+          exit $fail
