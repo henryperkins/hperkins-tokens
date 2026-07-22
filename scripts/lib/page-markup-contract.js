@@ -27,7 +27,7 @@ function findHeadingOutlineJumps( levels ) {
 function getClassCount( markup, className ) {
 	let count = 0;
 
-	for ( const match of markup.matchAll( /\bclass=(['"])(.*?)\1/gi ) ) {
+	for ( const match of markup.matchAll( /(?<![\w-])class=(['"])(.*?)\1/gi ) ) {
 		if ( match[ 2 ].split( /\s+/ ).includes( className ) ) {
 			count++;
 		}
@@ -39,7 +39,7 @@ function getClassCount( markup, className ) {
 function hasMeaningfulFragmentTarget( markup, id ) {
 	const escapedId = escapeRegExp( id );
 	const target = new RegExp(
-		`<([a-z][a-z0-9:-]*)\\b([^>]*\\bid=(['"])${ escapedId }\\3[^>]*)>([\\s\\S]*?)<\\/\\1>`,
+		`<([a-z][a-z0-9:-]*)\\b([^>]*(?<![\\w-])id=(['"])${ escapedId }\\3[^>]*)>([\\s\\S]*?)<\\/\\1>`,
 		'i'
 	).exec( markup );
 

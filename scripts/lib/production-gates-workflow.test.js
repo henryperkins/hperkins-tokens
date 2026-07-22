@@ -31,6 +31,11 @@ test( 'runs the recruiter rendered-page source half on every branch', () => {
 	assert.match( sourceJob, /node scripts\/verify-job-placement-pages\.js --source-only/ );
 } );
 
+test( 'runs the prominent-actions source contract on every branch', () => {
+	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
+	assert.match( sourceJob, /node scripts\/verify-prominent-actions\.js --source-only/ );
+} );
+
 test( 'runs metadata, market parity, and production workflow contract tests in CI', () => {
 	for ( const testFile of [
 		'scripts/lib/job-placement-metadata-contract.test.js',

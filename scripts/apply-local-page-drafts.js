@@ -31,14 +31,21 @@ const result = runWpEval(`
 			'file' => 'content/page-drafts/placement-method-evidence.html',
 		),
 	);
-	$result = array();
-
-	foreach ( $drafts as $draft ) {
+	// Read and validate every reviewed draft before mutating any page, so a
+	// missing or unreadable file cannot leave the site half-applied.
+	foreach ( $drafts as $index => $draft ) {
 		$file = get_theme_file_path( $draft['file'] );
 		$content = file_get_contents( $file );
 		if ( false === $content || '' === trim( $content ) ) {
 			throw new RuntimeException( 'Missing reviewed draft: ' . $file );
 		}
+		$drafts[ $index ]['content'] = $content;
+	}
+
+	$result = array();
+
+	foreach ( $drafts as $draft ) {
+		$content = $draft['content'];
 
 		$page = get_page_by_path( $draft['path'], OBJECT, 'page' );
 		if ( ! $page && ! empty( $draft['legacy_path'] ) ) {

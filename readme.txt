@@ -345,7 +345,7 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   Placement Method and Evidence snapshot SHA-256
   `e807165705153e7561fc51fc258c8c7ac1b008822533983507674a790c431327`;
   About snapshot SHA-256
-  `e0cab001e4dca5c8ace12ce7e5fa327275d0212fe3574eed86fe8146be7ee325`;
+  `a43af8fd352bab041835231150f07df9199f6a426a560bde4e04211e2ac61edf`;
   primary résumé SHA-256
   `6b02d9d8dfed65656c5d4597e7d3cd17c7160c5958c899a25b542289585d086d`;
   deployed content-ownership result: pass.

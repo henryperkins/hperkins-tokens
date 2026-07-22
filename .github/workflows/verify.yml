@@ -39,6 +39,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
@@ -99,6 +101,9 @@ jobs:
       - name: Recruiter rendered-page source contract
         run: node scripts/verify-job-placement-pages.js --source-only
 
+      - name: Prominent actions source contract
+        run: node scripts/verify-prominent-actions.js --source-only
+
       - name: Deployment-integrity endpoint source contract
         run: node scripts/verify-deployed-content-ownership.js --source-only
 
@@ -146,9 +151,14 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    concurrency:
+      group: deployed-content
+      cancel-in-progress: false
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:

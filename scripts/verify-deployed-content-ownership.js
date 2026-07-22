@@ -62,6 +62,7 @@ async function verifyRemote() {
 			accept: 'application/json',
 			'cache-control': 'no-cache',
 		},
+		signal: AbortSignal.timeout( 20000 ),
 	} );
 	assert( response.ok, `Content-integrity endpoint returned HTTP ${ response.status }: ${ endpointUrl }` );
 	const payload = await response.json();

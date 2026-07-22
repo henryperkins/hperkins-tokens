@@ -177,6 +177,9 @@ function getDigestPageUrl( args = process.argv.slice( 2 ), env = process.env ) {
 				throw new Error( '--url may only be provided once.' );
 			}
 			override = argument.slice( '--url='.length );
+			if ( ! override ) {
+				throw new Error( '--url requires an absolute http(s) URL.' );
+			}
 			hasOverride = true;
 		} else {
 			throw new Error( `Unknown argument: ${ argument }` );

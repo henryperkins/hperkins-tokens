@@ -168,6 +168,9 @@ async function waitForDevToolsUrl( chrome ) {
 }
 
 function createCdpClient( wsUrl ) {
+	if ( typeof WebSocket === 'undefined' ) {
+		throw new Error( 'Global WebSocket is unavailable; run these browser contracts on Node 22 or newer.' );
+	}
 	const ws = new WebSocket( wsUrl );
 	let nextId = 1;
 	const pending = new Map();
@@ -520,11 +523,17 @@ async function inspectPage( cdp, page, viewport ) {
 		if ( page.name === 'appendix' ) {
 			await evaluate( cdp, sessionId, `location.hash = 'resume-keyword-bank'` );
 			await wait( 50 );
-			metrics.fragment.isTarget = await evaluate(
-				cdp,
-				sessionId,
-				`document.querySelector(':target') === document.getElementById('resume-keyword-bank')`
-			);
+			// metrics.fragment is null when the #resume-keyword-bank anchor is
+			// absent — exactly the regression this check guards. Leave it null so
+			// the downstream `assert( result.fragment, ... )` reports it cleanly
+			// instead of throwing a TypeError here.
+			if ( metrics.fragment ) {
+				metrics.fragment.isTarget = await evaluate(
+					cdp,
+					sessionId,
+					`document.querySelector(':target') === document.getElementById('resume-keyword-bank')`
+				);
+			}
 		}
 
 		await cdp.send( 'Emulation.setEmulatedMedia', {

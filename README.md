@@ -49,7 +49,7 @@ The fix lifts the two selectors to (0,2,1) so they win on specificity in either 
 ```bash
 # No site or database required.
 php -l functions.php
-node --test scripts/lib/content-integrity.test.js scripts/lib/navigation-content-contract.test.js scripts/lib/page-content-contract.test.js scripts/lib/page-markup-contract.test.js scripts/lib/placement-artifact-links.test.js scripts/lib/site-url.test.js scripts/lib/wp-cli.test.js scripts/lib/zip-archive.test.js
+node --test scripts/lib/content-integrity.test.js scripts/lib/job-placement-metadata-contract.test.js scripts/lib/market-screen-parity.test.js scripts/lib/navigation-content-contract.test.js scripts/lib/page-content-contract.test.js scripts/lib/page-markup-contract.test.js scripts/lib/placement-artifact-links.test.js scripts/lib/production-gates-workflow.test.js scripts/lib/site-url.test.js scripts/lib/wp-cli.test.js scripts/lib/zip-archive.test.js
 node scripts/verify-placement-artifacts.js
 node scripts/verify-job-placement-digest-source.js
 node scripts/verify-deployed-content-ownership.js --source-only

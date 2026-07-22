@@ -3,7 +3,11 @@
 const crypto = require( 'node:crypto' );
 
 function normalizeContent( value ) {
-	return value.replace( /\r\n/g, '\n' ).trimEnd();
+	// Strip a leading UTF-8 BOM (U+FEFF) so a Windows-authored snapshot still
+	// matches a BOM-less live body, then normalize line endings and trailing
+	// whitespace. Matched by numeric code point to avoid a fragile literal.
+	const withoutBom = value.charCodeAt( 0 ) === 0xfeff ? value.slice( 1 ) : value;
+	return withoutBom.replace( /\r\n/g, '\n' ).trimEnd();
 }
 
 function getSha256( value ) {
@@ -43,4 +47,3 @@ module.exports = {
 	getSha256,
 	normalizeContent,
 };
-
