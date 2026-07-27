@@ -6,6 +6,7 @@ const fsPromises = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
+const { getHeaderMediaFeatures } = require( './lib/header-media-features' );
 const { getOrigin } = require( './lib/site-url' );
 
 const ROOT = path.join( __dirname, '..' );
@@ -999,7 +1000,7 @@ async function verifyMobileGeometry( cdp, sessionId, viewport, captureDir ) {
 	await assertState( cdp, sessionId, 'closed', `${ viewport.name } cleanup` );
 }
 
-async function verifyDesktopInteractions( cdp, sessionId ) {
+async function verifyDesktopInteractions( cdp, sessionId, viewport ) {
 	const writingName = await accessibleName( cdp, sessionId, '[data-hp-header-trigger="writing"]' );
 	assert( writingName === 'Writing', `Writing accessible name is "${ writingName }"; expected exactly "Writing".` );
 	await pressKey( cdp, sessionId, 'Tab' );
@@ -1139,7 +1140,7 @@ async function verifyDesktopInteractions( cdp, sessionId ) {
 
 	await cdp.send( 'Emulation.setEmulatedMedia', {
 		media: 'screen',
-		features: [ { name: 'prefers-reduced-motion', value: 'reduce' } ],
+		features: getHeaderMediaFeatures( viewport, { reducedMotion: true } ),
 	}, sessionId );
 	assert(
 		await evaluate( cdp, sessionId, `matchMedia('(prefers-reduced-motion: reduce)').matches` ),
@@ -1173,10 +1174,13 @@ async function verifyDesktopInteractions( cdp, sessionId ) {
 		);
 		await closeCurrent( cdp, sessionId );
 	}
-	await cdp.send( 'Emulation.setEmulatedMedia', { media: 'screen', features: [] }, sessionId );
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		media: 'screen',
+		features: getHeaderMediaFeatures( viewport ),
+	}, sessionId );
 }
 
-async function verifyMobileInteractions( cdp, sessionId ) {
+async function verifyMobileInteractions( cdp, sessionId, viewport ) {
 	for ( const key of [ 'Enter', 'Space' ] ) {
 		await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-trigger="drawer"]').focus()` );
 		await pressKey( cdp, sessionId, key );
@@ -1280,7 +1284,7 @@ async function verifyMobileInteractions( cdp, sessionId ) {
 	// than assumed from the desktop panels.
 	await cdp.send( 'Emulation.setEmulatedMedia', {
 		media: 'screen',
-		features: [ { name: 'prefers-reduced-motion', value: 'reduce' } ],
+		features: getHeaderMediaFeatures( viewport, { reducedMotion: true } ),
 	}, sessionId );
 	assert(
 		await evaluate( cdp, sessionId, `matchMedia('(prefers-reduced-motion: reduce)').matches` ),
@@ -1319,7 +1323,10 @@ async function verifyMobileInteractions( cdp, sessionId ) {
 		`Reduced-motion drawer transitions are ${ drawerMotion.panelTransition } / ${ drawerMotion.linkTransition }.`
 	);
 	await closeCurrent( cdp, sessionId );
-	await cdp.send( 'Emulation.setEmulatedMedia', { media: 'screen', features: [] }, sessionId );
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		media: 'screen',
+		features: getHeaderMediaFeatures( viewport ),
+	}, sessionId );
 
 	// The drawer legend and the Digest cue carry the two remaining pinned
 	// sub-floor type exemptions.
@@ -1433,7 +1440,10 @@ async function inspectViewport( cdp, viewport, captureDir ) {
 			deviceScaleFactor: 1,
 			mobile: viewport.width <= 781,
 		}, sessionId );
-		await cdp.send( 'Emulation.setEmulatedMedia', { media: 'screen', features: [] }, sessionId );
+		await cdp.send( 'Emulation.setEmulatedMedia', {
+			media: 'screen',
+			features: getHeaderMediaFeatures( viewport ),
+		}, sessionId );
 
 		const loaded = cdp.once( 'Page.loadEventFired', sessionId );
 		const url = new URL( '/', ORIGIN ).href;
@@ -1502,7 +1512,7 @@ async function inspectViewport( cdp, viewport, captureDir ) {
 		if ( viewport.width >= 782 ) {
 			await verifyDesktopGeometry( cdp, sessionId, viewport, captureDir );
 			if ( viewport.name === 'desktop-1440' ) {
-				await verifyDesktopInteractions( cdp, sessionId );
+				await verifyDesktopInteractions( cdp, sessionId, viewport );
 				await verifyHoverCorridor( cdp, sessionId, 'work' );
 				await verifyHoverCorridor( cdp, sessionId, 'writing' );
 				await verifyBoundarySettlement( cdp, sessionId, viewport );
@@ -1510,7 +1520,7 @@ async function inspectViewport( cdp, viewport, captureDir ) {
 		} else {
 			await verifyMobileGeometry( cdp, sessionId, viewport, captureDir );
 			if ( viewport.name === 'mobile-390' ) {
-				await verifyMobileInteractions( cdp, sessionId );
+				await verifyMobileInteractions( cdp, sessionId, viewport );
 			}
 		}
 		console.log( `verified ${ viewport.name } (${ viewport.width }×${ viewport.height })` );

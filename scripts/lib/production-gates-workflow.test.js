@@ -5,6 +5,7 @@ const path = require( 'node:path' );
 
 const themeRoot = path.join( __dirname, '..', '..' );
 const workflow = fs.readFileSync( path.join( themeRoot, '.github', 'workflows', 'verify.yml' ), 'utf8' );
+const headerVerifier = fs.readFileSync( path.join( themeRoot, 'scripts', 'verify-header.js' ), 'utf8' );
 const typography = fs.readFileSync( path.join( themeRoot, 'scripts', 'verify-typography.js' ), 'utf8' );
 
 test( 'runs the production gates on a daily schedule', () => {
@@ -34,6 +35,23 @@ test( 'runs the recruiter rendered-page source half on every branch', () => {
 test( 'runs the prominent-actions source contract on every branch', () => {
 	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
 	assert.match( sourceJob, /node scripts\/verify-prominent-actions\.js --source-only/ );
+} );
+
+test( 'normalizes pointer media for the production header gate', () => {
+	const { getHeaderMediaFeatures } = require( './header-media-features' );
+
+	assert.deepEqual( getHeaderMediaFeatures( { width: 1440 } ), [
+		{ name: 'hover', value: 'hover' },
+		{ name: 'pointer', value: 'fine' },
+	] );
+	assert.deepEqual( getHeaderMediaFeatures( { width: 390 } ), [] );
+	assert.deepEqual( getHeaderMediaFeatures( { width: 1440 }, { reducedMotion: true } ), [
+		{ name: 'hover', value: 'hover' },
+		{ name: 'pointer', value: 'fine' },
+		{ name: 'prefers-reduced-motion', value: 'reduce' },
+	] );
+	assert.match( headerVerifier, /getHeaderMediaFeatures\( viewport \)/ );
+	assert.match( headerVerifier, /getHeaderMediaFeatures\( viewport, \{ reducedMotion: true \} \)/ );
 } );
 
 test( 'runs metadata, market parity, and production workflow contract tests in CI', () => {
