@@ -2,6 +2,7 @@ const test = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
+const vm = require( 'node:vm' );
 
 const themeRoot = path.join( __dirname, '..', '..' );
 const workflow = fs.readFileSync( path.join( themeRoot, '.github', 'workflows', 'verify.yml' ), 'utf8' );
@@ -38,20 +39,43 @@ test( 'runs the prominent-actions source contract on every branch', () => {
 } );
 
 test( 'normalizes pointer media for the production header gate', () => {
-	const { getHeaderMediaFeatures } = require( './header-media-features' );
+	const {
+		getFinePointerOverrideSource,
+		getHeaderMediaFeatures,
+	} = require( './header-media-features' );
 
-	assert.deepEqual( getHeaderMediaFeatures( { width: 1440 } ), [
-		{ name: 'hover', value: 'hover' },
-		{ name: 'pointer', value: 'fine' },
-	] );
-	assert.deepEqual( getHeaderMediaFeatures( { width: 390 } ), [] );
-	assert.deepEqual( getHeaderMediaFeatures( { width: 1440 }, { reducedMotion: true } ), [
-		{ name: 'hover', value: 'hover' },
-		{ name: 'pointer', value: 'fine' },
+	assert.deepEqual( getHeaderMediaFeatures(), [] );
+	assert.deepEqual( getHeaderMediaFeatures( { reducedMotion: true } ), [
 		{ name: 'prefers-reduced-motion', value: 'reduce' },
 	] );
-	assert.match( headerVerifier, /getHeaderMediaFeatures\( viewport \)/ );
-	assert.match( headerVerifier, /getHeaderMediaFeatures\( viewport, \{ reducedMotion: true \} \)/ );
+	assert.equal( getFinePointerOverrideSource( { width: 781 } ), null );
+
+	const viewport = { width: 782 };
+	const sandbox = {
+		window: {
+			matchMedia( query ) {
+				return {
+					addEventListener() {},
+					matches: query === '(min-width: 782px)' ? viewport.width >= 782 : false,
+					media: query,
+				};
+			},
+		},
+	};
+	vm.runInNewContext( getFinePointerOverrideSource( viewport ), sandbox );
+	assert.equal(
+		sandbox.window.matchMedia( '(min-width: 782px) and (hover: hover) and (pointer: fine)' ).matches,
+		true
+	);
+	viewport.width = 781;
+	assert.equal(
+		sandbox.window.matchMedia( '(min-width: 782px) and (hover: hover) and (pointer: fine)' ).matches,
+		false
+	);
+	assert.equal( sandbox.window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches, false );
+	assert.match( headerVerifier, /getHeaderMediaFeatures\(\)/ );
+	assert.match( headerVerifier, /getHeaderMediaFeatures\( \{ reducedMotion: true \} \)/ );
+	assert.match( headerVerifier, /Page\.addScriptToEvaluateOnNewDocument/ );
 } );
 
 test( 'runs metadata, market parity, and production workflow contract tests in CI', () => {

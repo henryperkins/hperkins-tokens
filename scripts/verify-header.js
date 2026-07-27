@@ -6,7 +6,10 @@ const fsPromises = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
-const { getHeaderMediaFeatures } = require( './lib/header-media-features' );
+const {
+	getFinePointerOverrideSource,
+	getHeaderMediaFeatures,
+} = require( './lib/header-media-features' );
 const { getOrigin } = require( './lib/site-url' );
 
 const ROOT = path.join( __dirname, '..' );
@@ -1140,7 +1143,7 @@ async function verifyDesktopInteractions( cdp, sessionId, viewport ) {
 
 	await cdp.send( 'Emulation.setEmulatedMedia', {
 		media: 'screen',
-		features: getHeaderMediaFeatures( viewport, { reducedMotion: true } ),
+		features: getHeaderMediaFeatures( { reducedMotion: true } ),
 	}, sessionId );
 	assert(
 		await evaluate( cdp, sessionId, `matchMedia('(prefers-reduced-motion: reduce)').matches` ),
@@ -1176,7 +1179,7 @@ async function verifyDesktopInteractions( cdp, sessionId, viewport ) {
 	}
 	await cdp.send( 'Emulation.setEmulatedMedia', {
 		media: 'screen',
-		features: getHeaderMediaFeatures( viewport ),
+		features: getHeaderMediaFeatures(),
 	}, sessionId );
 }
 
@@ -1284,7 +1287,7 @@ async function verifyMobileInteractions( cdp, sessionId, viewport ) {
 	// than assumed from the desktop panels.
 	await cdp.send( 'Emulation.setEmulatedMedia', {
 		media: 'screen',
-		features: getHeaderMediaFeatures( viewport, { reducedMotion: true } ),
+		features: getHeaderMediaFeatures( { reducedMotion: true } ),
 	}, sessionId );
 	assert(
 		await evaluate( cdp, sessionId, `matchMedia('(prefers-reduced-motion: reduce)').matches` ),
@@ -1325,7 +1328,7 @@ async function verifyMobileInteractions( cdp, sessionId, viewport ) {
 	await closeCurrent( cdp, sessionId );
 	await cdp.send( 'Emulation.setEmulatedMedia', {
 		media: 'screen',
-		features: getHeaderMediaFeatures( viewport ),
+		features: getHeaderMediaFeatures(),
 	}, sessionId );
 
 	// The drawer legend and the Digest cue carry the two remaining pinned
@@ -1434,6 +1437,12 @@ async function inspectViewport( cdp, viewport, captureDir ) {
 		await cdp.send( 'Runtime.enable', {}, sessionId );
 		await cdp.send( 'DOM.enable', {}, sessionId );
 		await cdp.send( 'Accessibility.enable', {}, sessionId );
+		const finePointerOverrideSource = getFinePointerOverrideSource( viewport );
+		if ( finePointerOverrideSource ) {
+			await cdp.send( 'Page.addScriptToEvaluateOnNewDocument', {
+				source: finePointerOverrideSource,
+			}, sessionId );
+		}
 		await cdp.send( 'Emulation.setDeviceMetricsOverride', {
 			width: viewport.width,
 			height: viewport.height,
@@ -1442,7 +1451,7 @@ async function inspectViewport( cdp, viewport, captureDir ) {
 		}, sessionId );
 		await cdp.send( 'Emulation.setEmulatedMedia', {
 			media: 'screen',
-			features: getHeaderMediaFeatures( viewport ),
+			features: getHeaderMediaFeatures(),
 		}, sessionId );
 
 		const loaded = cdp.once( 'Page.loadEventFired', sessionId );
