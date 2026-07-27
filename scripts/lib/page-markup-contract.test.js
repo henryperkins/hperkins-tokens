@@ -4,6 +4,7 @@ const assert = require( 'node:assert/strict' );
 const {
 	findHeadingLevels,
 	findHeadingOutlineJumps,
+	findScopedHeadingOutlineJumps,
 	getClassCount,
 	hasMeaningfulFragmentTarget,
 } = require( './page-markup-contract' );
@@ -19,6 +20,12 @@ test( 'findHeadingOutlineJumps reports skipped levels', () => {
 	assert.deepEqual( findHeadingOutlineJumps( [ 1, 3, 2, 4 ] ), [
 		{ from: 1, to: 3, index: 1 },
 		{ from: 2, to: 4, index: 3 },
+	] );
+} );
+
+test( 'findScopedHeadingOutlineJumps treats modal outlines independently', () => {
+	assert.deepEqual( findScopedHeadingOutlineJumps( [ [ 1 ], [ 3, 3 ], [ 2, 4 ] ] ), [
+		{ scopeIndex: 2, from: 2, to: 4, index: 1 },
 	] );
 } );
 

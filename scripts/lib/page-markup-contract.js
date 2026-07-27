@@ -24,6 +24,18 @@ function findHeadingOutlineJumps( levels ) {
 	return jumps;
 }
 
+function findScopedHeadingOutlineJumps( outlines ) {
+	const jumps = [];
+
+	for ( let scopeIndex = 0; scopeIndex < outlines.length; scopeIndex++ ) {
+		for ( const jump of findHeadingOutlineJumps( outlines[ scopeIndex ] ) ) {
+			jumps.push( { scopeIndex, ...jump } );
+		}
+	}
+
+	return jumps;
+}
+
 function getClassCount( markup, className ) {
 	let count = 0;
 
@@ -53,6 +65,7 @@ function hasMeaningfulFragmentTarget( markup, id ) {
 module.exports = {
 	findHeadingLevels,
 	findHeadingOutlineJumps,
+	findScopedHeadingOutlineJumps,
 	getClassCount,
 	hasMeaningfulFragmentTarget,
 };

@@ -4,6 +4,10 @@ const fs = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
+const {
+	findHeadingOutlineJumps,
+	findScopedHeadingOutlineJumps,
+} = require( './lib/page-markup-contract' );
 const { getOrigin } = require( './lib/site-url' );
 
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
@@ -294,6 +298,8 @@ async function verifyStaticContract() {
 function buildExpression( opts ) {
 	return `(() => {
 		const OPTS = ${ JSON.stringify( opts ) };
+		const findHeadingOutlineJumps = ${ findHeadingOutlineJumps.toString() };
+		const findScopedHeadingOutlineJumps = ${ findScopedHeadingOutlineJumps.toString() };
 		const out = {
 			violations: { overflow: [] },
 			counts: { textElements: 0, headings: 0 },
@@ -365,17 +371,24 @@ function buildExpression( opts ) {
 		out.violations.h1 = h1Violations;
 
 		// b. no heading-level skips in document order.
-		const headingViolations = [];
 		const headings = Array.from(document.querySelectorAll('h1,h2,h3,h4,h5,h6')).filter(isVisible);
 		out.counts.headings = headings.length;
-		for (let index = 1; index < headings.length; index++) {
-			const prev = Number.parseInt(headings[index - 1].tagName.slice(1), 10);
-			const next = Number.parseInt(headings[index].tagName.slice(1), 10);
-			if (next > prev + 1) {
-				headingViolations.push('h' + prev + ' "' + truncate(headings[index - 1].textContent, 40) +
-					'" skips to h' + next + ' "' + truncate(headings[index].textContent, 40) + '"');
-			}
+		// A modal dialog is a separate interaction context. Jetpack Search appends
+		// its result dialog after the page and starts its own outline at h3; joining
+		// those headings to the underlying page creates a false h1 -> h3 skip.
+		const headingScopes = new Map();
+		for (const heading of headings) {
+			const scope = heading.closest('[role="dialog"][aria-modal="true"]') || document;
+			headingScopes.set(scope, [ ...(headingScopes.get(scope) || []), heading ]);
 		}
+		const scopedHeadings = Array.from(headingScopes.values());
+		const headingViolations = findScopedHeadingOutlineJumps(
+			scopedHeadings.map((scope) => scope.map((heading) => Number.parseInt(heading.tagName.slice(1), 10)))
+		).map((jump) => {
+			const scope = scopedHeadings[jump.scopeIndex];
+			return 'h' + jump.from + ' "' + truncate(scope[jump.index - 1].textContent, 40) +
+				'" skips to h' + jump.to + ' "' + truncate(scope[jump.index].textContent, 40) + '"';
+		});
 		out.violations.headings = headingViolations;
 
 		// c. the four theme faces should report as loaded. Cheap sanity signal,
