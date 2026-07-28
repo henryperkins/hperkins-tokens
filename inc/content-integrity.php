@@ -2,10 +2,12 @@
 /**
  * Public deployment-integrity endpoint for database-owned portfolio pages.
  *
- * The two returned bodies are already public, versioned artifacts. Exposing
+ * The returned bodies are already public, versioned artifacts. Exposing
  * their raw block markup lets the post-deploy gate compare the canonical
  * WordPress records with their committed mirrors without storing production
- * database credentials in GitHub.
+ * database credentials in GitHub. The target list mirrors the
+ * deployedIntegrity contracts in scripts/lib/page-content-contract.js; the
+ * Node verifiers derive their expectations from that shared metadata.
  *
  * @package HPerkins_Tokens
  */
@@ -34,7 +36,8 @@ function hperkins_tokens_normalize_public_page_body( $content ) {
  */
 function hperkins_tokens_get_public_content_integrity_state() {
 	$targets = array(
-		'job-placement-digest'     => 'job-placement-digest',
+		'about'                     => 'about',
+		'job-placement-digest'      => 'job-placement-digest',
 		'placement-method-evidence' => 'placement-method-and-evidence',
 	);
 	$pages   = array();
