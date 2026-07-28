@@ -93,6 +93,9 @@ jobs:
       - name: Typography source contract
         run: node scripts/verify-typography.js --source-only
 
+      - name: Journal template source contract
+        run: node scripts/verify-journal-templates.js
+
       - name: Performance asset contract
         run: node scripts/verify-performance-assets.js
 

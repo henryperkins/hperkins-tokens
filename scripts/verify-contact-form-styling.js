@@ -300,6 +300,8 @@ async function inspectSubscribeStatusPage( cdp, status ) {
 			statusClass: statusNode() ? statusNode().className : '',
 			statusRole: statusNode() ? statusNode().getAttribute('role') || '' : '',
 			statusAriaLive: statusNode() ? statusNode().getAttribute('aria-live') || '' : '',
+			statusTabIndex: statusNode() ? statusNode().getAttribute('tabindex') || '' : '',
+			statusFocused: !! ( statusNode() && document.activeElement === statusNode() ),
 			errorText: errorNode() ? errorNode().textContent.trim() : '',
 			errorClass: errorNode() ? errorNode().className : '',
 			hasErrorClass: form ? form.classList.contains('has-error') : false,
@@ -504,6 +506,14 @@ function validate( result ) {
 		failures,
 			`success subscribe status has class="${ result.subscribeStatus.before.statusClass }", role="${ result.subscribeStatus.before.statusRole }", aria-live="${ result.subscribeStatus.before.statusAriaLive }"; expected hp-subscribe__status + role=status with no explicit aria-live.`
 	);
+	// The status is in the markup at first paint, so a live region announces
+	// nothing: focus is what carries the answer to the visitor's own submission.
+	failUnless(
+		result.subscribeStatus.before.statusTabIndex === '-1' &&
+			result.subscribeStatus.before.statusFocused,
+		failures,
+		`success subscribe status has tabindex="${ result.subscribeStatus.before.statusTabIndex }" and focused=${ result.subscribeStatus.before.statusFocused }; the redirected-to status must take focus.`
+	);
 	failUnless(
 		result.subscribeStatus.canceled &&
 			result.subscribeStatus.afterInvalid.statusText === SUBSCRIBE_RECEIVED &&
@@ -527,7 +537,9 @@ function validate( result ) {
 		result.subscribeInvalidStatus.before.statusText === SUBSCRIBE_EMAIL_ERROR &&
 			result.subscribeInvalidStatus.before.statusClass === 'hp-subscribe__status' &&
 			result.subscribeInvalidStatus.before.statusRole === 'alert' &&
-			result.subscribeInvalidStatus.before.statusAriaLive === '',
+			result.subscribeInvalidStatus.before.statusAriaLive === '' &&
+			result.subscribeInvalidStatus.before.statusTabIndex === '-1' &&
+			result.subscribeInvalidStatus.before.statusFocused,
 		failures,
 		`invalid subscribe status has ${ JSON.stringify( result.subscribeInvalidStatus.before ) }, expected hp-subscribe__status + role=alert with no explicit aria-live.`
 	);

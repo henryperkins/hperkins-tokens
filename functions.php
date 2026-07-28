@@ -293,16 +293,15 @@ function hperkins_tokens_redirect_flavor_agent_demo_seed() {
 add_action( 'template_redirect', 'hperkins_tokens_redirect_flavor_agent_demo_seed' );
 
 /**
- * Preload the above-the-fold display font (Cormorant Garamond) on the front page
- * so the hero headline paints without a fallback-serif swap. Scoped to the front
- * page and matched to the theme.json @font-face URL (no cache-bust query) so the
- * browser dedupes the preload against the actual font fetch.
+ * Preload the above-the-fold display font (Cormorant Garamond) so the first
+ * headline paints without a fallback-serif swap. theme.json sets every heading
+ * in this family, and every front-end route opens on one — the front-page hero,
+ * the /essays/ masthead, a post's reader hero, an archive title — so the face is
+ * in the critical path everywhere, not only on the front page. Matched to the
+ * theme.json @font-face URL (no cache-bust query) so the browser dedupes the
+ * preload against the actual font fetch.
  */
 function hperkins_tokens_preload_display_font() {
-	if ( ! is_front_page() ) {
-		return;
-	}
-
 	$font_rel  = '/assets/fonts/cormorant-garamond.woff2';
 	$font_file = get_stylesheet_directory() . $font_rel;
 	if ( ! file_exists( $font_file ) ) {
@@ -445,6 +444,29 @@ add_filter( 'comments_open', 'hperkins_tokens_close_comments' );
 add_filter( 'pings_open', 'hperkins_tokens_close_comments' );
 
 /**
+ * The address the theme tells visitors to write to when a form cannot deliver.
+ *
+ * The subscribe notification recipient was already filterable while the
+ * save-error copy beside it repeated the same address as a literal, so a site
+ * that moved the address still sent visitors to the old one. Both read this.
+ *
+ * @return string A valid email address; the theme default when a filter returns
+ *                something that is not one.
+ */
+function hperkins_tokens_contact_email() {
+	$default = 'htperkins@gmail.com';
+
+	/**
+	 * Filters the public contact address surfaced in theme copy.
+	 *
+	 * @param string $default The theme's own address.
+	 */
+	$email = sanitize_email( (string) apply_filters( 'hperkins_tokens_contact_email', $default ) );
+
+	return is_email( $email ) ? $email : $default;
+}
+
+/**
  * Store newsletter subscription requests even when mail delivery is unavailable.
  *
  * @param string $email   Subscriber email address.
@@ -575,8 +597,8 @@ function hperkins_tokens_handle_subscribe_request() {
 			);
 
 			// Filterable so the recipient is not hardcoded; defaults to the
-			// existing address to preserve delivery behavior.
-			$recipient = apply_filters( 'hperkins_tokens_subscribe_notify_email', 'htperkins@gmail.com' );
+			// public contact address the failure copy also names.
+			$recipient = apply_filters( 'hperkins_tokens_subscribe_notify_email', hperkins_tokens_contact_email() );
 			$mail_sent = wp_mail(
 				$recipient,
 				'Occasional dispatch subscription',

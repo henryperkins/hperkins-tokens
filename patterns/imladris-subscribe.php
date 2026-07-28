@@ -27,7 +27,10 @@ if ( 'success' === $subscribe_status ) {
 	$subscribe_message = 'Too many attempts just now. Wait a few minutes and try again.';
 	$subscribe_role    = 'alert';
 } elseif ( 'save-error' === $subscribe_status ) {
-	$subscribe_message = 'Something went wrong recording the request. Email htperkins@gmail.com directly and I will add you manually.';
+	$subscribe_message = sprintf(
+		'Something went wrong recording the request. Email %s directly and I will add you manually.',
+		hperkins_tokens_contact_email()
+	);
 	$subscribe_role    = 'alert';
 }
 ?>
@@ -43,7 +46,7 @@ if ( 'success' === $subscribe_status ) {
 		<input id="<?php echo esc_attr( $subscribe_email_id ); ?>" type="email" name="email" placeholder="you@domain.com" required>
 		<button type="submit">Subscribe</button>
 		<?php if ( $subscribe_message ) : ?>
-			<p class="hp-subscribe__status" role="<?php echo esc_attr( $subscribe_role ); ?>"><?php echo esc_html( $subscribe_message ); ?></p>
+			<p class="hp-subscribe__status" role="<?php echo esc_attr( $subscribe_role ); ?>" tabindex="-1"><?php echo esc_html( $subscribe_message ); ?></p>
 		<?php endif; ?>
 	</form>
 </section>

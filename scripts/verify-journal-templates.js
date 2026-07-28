@@ -191,6 +191,57 @@ if ( cover ) {
 	);
 }
 
+// --- Empty states ---------------------------------------------------------
+// A Query Loop with no wp:query-no-results renders nothing at all when it has
+// no posts — including under a heading that promises results, and inside the
+// pagination chrome a stale ?query-N-page=… still draws. Every loop owns its
+// own empty state; the block is invisible until the day it is needed, which is
+// exactly why it goes missing.
+for ( const [ file, markup ] of [
+	[ 'templates/home.html', home ],
+	[ 'templates/single.html', single ],
+	[ 'templates/archive.html', archive ],
+	[ 'templates/search.html', search ],
+] ) {
+	// wp:query-pagination and wp:query-title share the prefix; the lookahead
+	// keeps this counting the loop wrapper only.
+	const loops = [ ...markup.matchAll( /<!--\s*wp:query(?=[\s{])/g ) ].length;
+	const emptyStates = [ ...markup.matchAll( /<!--\s*wp:query-no-results\b/g ) ].length;
+	check(
+		emptyStates === loops,
+		`${ file } declares ${ loops } Query Loop(s) but ${ emptyStates } wp:query-no-results block(s); every loop needs its own empty state.`
+	);
+}
+
+// --- Pagination arrows ----------------------------------------------------
+// An arrow typed into the label is part of the link's accessible name, so a
+// screen reader reads "left arrow Newer". core's paginationArrow renders the
+// same glyph in its own aria-hidden span, which is the idiom the Council header
+// already follows for every decorative mark.
+for ( const [ file, markup ] of [
+	[ 'templates/home.html', home ],
+	[ 'templates/archive.html', archive ],
+	[ 'templates/search.html', search ],
+] ) {
+	for ( const label of markup.matchAll( /wp:query-pagination-(?:previous|next)\s+(\{.*?\})\s*\/-->/g ) ) {
+		let attrs = {};
+		try {
+			attrs = JSON.parse( label[ 1 ] );
+		} catch ( error ) {
+			violations.push( `${ file } has an unparseable pagination label: ${ label[ 1 ] }.` );
+			continue;
+		}
+		check(
+			! /[\u2190\u2192\u00ab\u00bb]/.test( attrs.label || '' ),
+			`${ file } keeps an arrow inside the pagination label "${ attrs.label }"; it belongs in core's aria-hidden paginationArrow span.`
+		);
+	}
+	check(
+		! /"paginationArrow"\s*:\s*"none"/.test( markup ),
+		`${ file } disables core's aria-hidden pagination arrow; the glyph then has to be typed into an accessible name.`
+	);
+}
+
 // --- Token discipline -----------------------------------------------------
 // verify-style-token-usage.js reads style.css only, so nothing else looks at
 // the literals in this sheet. Colours inside a data: URI cannot be var()s, so
@@ -222,5 +273,5 @@ if ( violations.length > 0 ) {
 }
 
 console.log(
-	'verified journal template contract: query identity + filter coupling, sticky mode, seed offset, postcard link shape, reader-hero dim ratio, data-URI palette hexes, pagination touch token'
+	'verified journal template contract: query identity + filter coupling, sticky mode, seed offset, postcard link shape, per-loop empty states, arrow-free pagination labels, reader-hero dim ratio, data-URI palette hexes, pagination touch token'
 );

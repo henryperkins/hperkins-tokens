@@ -385,6 +385,37 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 * Move the heading wrap guard into style.css so it also covers the front page,
   give the featured loop an explicit grid layout, and size pagination controls
   from the shared 44px touch token.
+* Accessibility: take the arrows out of the pagination links' accessible names
+  on /essays/, term archives, and search. They were typed into the labels, so a
+  screen reader read "left arrow Newer"; core's paginationArrow renders the same
+  glyph in its own aria-hidden span, which is the idiom the Council header
+  already follows for every decorative mark. The reader's "All essays" arrow is
+  hidden the same way.
+* Accessibility: move focus to the newsletter status the endpoint redirects back
+  with. It is in the markup at first paint, and a live region only announces
+  what changes after it exists, so the answer to the visitor's own submission
+  was neither announced nor reachable without hunting for it.
+* Give every Query Loop its own empty state. The journal grid and the reader's
+  "Continue reading" loop had none, so each rendered nothing at all when empty —
+  under a heading that promised results, and inside the pagination chrome a
+  stale ?query-11-page=N still draws.
+* Term archives carry the same topic-filter row as /essays/ and keep the
+  archive-type prefix. A term archive is the only route where core marks the
+  current topic, so the filter's active state could never appear where it was
+  styled to; and a category and a tag of the same name rendered as the same
+  title.
+* Preload the Cormorant display face on every route, not only the front page.
+  theme.json sets every heading in that family and every route opens on one, so
+  the /essays/ masthead, every reader hero, and every archive title were left to
+  swap from a fallback serif.
+* The address the save-error copy tells visitors to write to now comes from the
+  filterable hperkins_tokens_contact_email(), like the notification recipient
+  beside it, instead of repeating the literal.
+* Check the résumé's HPerkins Tokens entry against README.md's release record
+  too, not style.css. It names a shipped version and links a release tag that
+  --check-links actually fetches, so an in-flight bump demanded it advertise a
+  tag nobody had cut — the same defect already fixed for the digest, now sharing
+  one parser in scripts/lib/release-record.js.
 
 = 0.3.53 =
 * Rebuild the Job Placement Digest as a concise Support Engineer case with
