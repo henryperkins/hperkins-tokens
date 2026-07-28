@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.55
+Stable tag: 0.3.56
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -184,7 +184,8 @@ WordPress template hierarchy):
   control, styled through the shared archive-hero and content-search classes.
 * page-about.html — wraps the stored About page content in the narrow/wide About
   composition shell. The current live content is versioned at
-  `content/page-snapshots/about.html`.
+  `content/page-snapshots/about.html`; the About page-layout CSS lives in
+  `assets/imladris-pages.css` (moved out of style.css at 0.3.56).
 * page-ai-enablement.html — the AI-enablement essay shell; renders the stored
   page body in the 44/72rem reading column. The current live content is
   versioned at `content/page-snapshots/ai-enablement.html`.
@@ -231,11 +232,22 @@ than a theme-owned wrapper template. Keep the verified mirrors in sync at
 `content/page-snapshots/work-flavor-agent-demo.html`. After an intentional
 page-body edit, refresh the files with `node scripts/export-page-snapshots.js`
 and verify with `node scripts/verify-content-ownership.js`. The older
-filesystem patterns (`about-resume`, `work-index`, and `ai-enablement`) remain
-reusable seeds/reference copies rather than the live route owners for those
-pages. The former full-page `job-placement-digest` pattern is retired so it
-cannot drift into a third maintained body. `wapuu-home-hero` remains the live
-front-page hero.
+filesystem patterns `work-index` and `ai-enablement` remain reusable
+seeds/reference copies rather than the live route owners for those pages.
+`about-resume` is different: it is a thin inserter adapter that reads the
+accepted `content/page-snapshots/about.html`, substitutes the
+filemtime()-derived portrait and résumé asset URLs, and fails closed on any
+mismatch — it carries no About page markup of its own, so the About body
+cannot acquire a third maintained copy. The About redesign flow keeps exactly
+one human-authored candidate at `content/page-drafts/about.html`; it reaches a
+local database only through the explicit, guarded
+`node scripts/apply-local-page-drafts.js --confirm-local --page=about`
+(never by default), and the accepted snapshot is refreshed only through the
+parity-checked `node scripts/export-page-snapshots.js --page=about
+--expect-draft`. The public `/about/` body also participates in the read-only
+deployment-integrity endpoint alongside the two recruiter pages. The former
+full-page `job-placement-digest` pattern is retired so it cannot drift into a
+third maintained body. `wapuu-home-hero` remains the live front-page hero.
 
 = Condensed Council header =
 
@@ -325,6 +337,53 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.56 =
+* About proof-first plumbing (Phase A of the 2026-07-28 About redesign spec;
+  no visitor-facing About body change). Moved the entire About page layer —
+  the .hp-about-template composition, snapshot-fidelity polish, and wide
+  breakout — from style.css to assets/imladris-pages.css, resolving the
+  legacy exception so About-specific page layout lives in the page-layout
+  sheet like every other pulled page design. Shared primitives (EvidenceBoard,
+  signals, Buttons, action rail/panel, ledger rows, tags, focus rules) stay in
+  style.css. Added the proof-first redesign selectors (hero strapline,
+  hp-about-nav jump row, 2×2 Selected Work cards, capability intro, exact
+  2fr/1fr Skills and Foundations split, closing invitation) ahead of the
+  content promotion while retaining the current selectors for the rollback
+  window. verify-style-token-usage.js now validates both authored sheets.
+* Content ownership: /about/ joins the guarded draft flow and the public
+  deployment-integrity endpoint. content/page-drafts/about.html is the only
+  human-authored About candidate (seeded from the accepted snapshot);
+  apply-local-page-drafts.js gains shared explicit --page selection with an
+  assertMatchingSiteUrl guard and a Node+PHP double-read SHA-256 preflight
+  (draft bodies never enter the WP-CLI command line); About applies only via
+  an explicit --page=about, only to an existing page, and only its
+  post_content. export-page-snapshots.js gains --expect-draft parity and
+  --check, and writes snapshots atomically. patterns/about-resume.php is now
+  a thin adapter that emits the accepted snapshot with filemtime()-derived
+  portrait and résumé URLs and fails closed on any substitution-count
+  mismatch — the pattern can no longer drift into a third maintained body.
+* Review remediation. Selected Work cards are border-box, so height:100% plus
+  their padding no longer overflows the grid row and stacks row two under row
+  one. The closing action rail no longer wraps between 601px and ~637px, where
+  its two labels stopped fitting while the shared rule still had it in row
+  direction. The rendered word count now runs only in Node against the text the
+  page returns: counting in Chrome as well and comparing the two reported 884
+  words for an 881-word body, because the runtimes segment "WordPress.com" and
+  "A.S." differently and only Node's ICU is pinned. The About body contract now
+  requires the body to be its top-level blocks plus whitespace, closing a hole
+  where markup between blocks belonged to no section and moved no word cap. The
+  hover probe scrolls its card into view first, the sticky-header clearance
+  check fails when the masthead is missing instead of measuring zero, and the
+  workflow pins are anchored so a commented-out production gate breaks them.
+  The adapter counts the résumé actions the snapshot actually carries instead
+  of inferring 2-or-3 from a marker class, and both URL matchers tolerate an
+  absolute host and an existing ?v= so its own output survives a round trip.
+  export-page-snapshots.js gains the applicator's site-identity guard, and all
+  three --page entry points reject unrecognised flags rather than silently
+  falling back to their broad default. The deployed rendered About gate applies
+  from the promotion onward, so it no longer reds every main push while
+  production still serves the previous body.
 
 = 0.3.55 =
 * Make the placement-method ledgers readable on a phone. The keyword bank, the

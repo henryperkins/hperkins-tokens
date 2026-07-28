@@ -48,10 +48,13 @@ jobs:
           php-version: '8.2'
           coverage: none
 
+      # Node 22.x is the normative runtime for the deterministic About word
+      # count; both this job and the deployed-production job pin the same
+      # major so their ICU data cannot drift by job.
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: PHP syntax check
         run: |
@@ -71,6 +74,7 @@ jobs:
       - name: Script library unit tests
         run: |
           node --test \
+            scripts/lib/about-page-contract.test.js \
             scripts/lib/content-integrity.test.js \
             scripts/lib/job-placement-metadata-contract.test.js \
             scripts/lib/market-screen-parity.test.js \
@@ -101,6 +105,12 @@ jobs:
 
       - name: Recruiter page source contract
         run: node scripts/verify-job-placement-digest-source.js
+
+      # Validates the reviewed candidate (content/page-drafts/about.html).
+      # Accepted-snapshot mode (no --drafts) belongs to the local acceptance
+      # and post-promotion flows, where candidate ↔ snapshot parity holds.
+      - name: About page source contract
+        run: node scripts/verify-about-page-source.js --drafts
 
       - name: Recruiter rendered-page source contract
         run: node scripts/verify-job-placement-pages.js --source-only
@@ -221,6 +231,10 @@ jobs:
           fi
           if ! node scripts/verify-job-placement-pages.js; then
             echo "::error::verify-job-placement-pages.js failed against production."
+            fail=1
+          fi
+          if ! node scripts/verify-about-page-rendered.js; then
+            echo "::error::verify-about-page-rendered.js failed against production."
             fail=1
           fi
           exit $fail

@@ -74,11 +74,12 @@ add_action( 'wp_enqueue_scripts', function () {
 	);
 
 	// Page-layout CSS for the designs pulled from the Imladris Design System
-	// (ai-enablement essay, contact, work index, job-placement digest) plus the
-	// whole blog surface: the postcard vocabulary shared by home/single/archive/
-	// search (.hp-postcard__*, .hp-journal-*, .hp-pagination) and the reader hero
-	// (.hp-reader-*). Kept out of style.css so the hand-authored sheet stays
-	// untouched; depends on it so the cascade is right.
+	// (about, ai-enablement essay, contact, work index, job-placement digest)
+	// plus the whole blog surface: the postcard vocabulary shared by home/
+	// single/archive/search (.hp-postcard__*, .hp-journal-*, .hp-pagination)
+	// and the reader hero (.hp-reader-*). Kept out of style.css so the
+	// hand-authored sheet stays untouched; depends on it so the cascade is
+	// right.
 	//
 	// The front-page skip is safe for the blog rules because no blog route is the
 	// front page — front-page.html outranks home.html at '/'. Anything those

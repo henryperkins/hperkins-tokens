@@ -1,79 +1,44 @@
 #!/usr/bin/env node
 
-const { runWpEval } = require( './lib/wp-cli' );
+const { assertMatchingSiteUrl, getOrigin } = require( './lib/site-url' );
+const { runWp, runWpEval } = require( './lib/wp-cli' );
+const {
+	assertKnownFlags,
+	buildApplyLocalDraftsPhp,
+	prepareDraftPayloads,
+	selectDraftContracts,
+} = require( './lib/page-content-contract' );
 
 if ( ! process.argv.includes( '--confirm-local' ) ) {
 	console.error( 'Refusing to write. Re-run with --confirm-local after checking HPERKINS_WP_PATH.' );
 	process.exit( 1 );
 }
 
-const result = runWpEval(`
-	$host = strtolower( (string) wp_parse_url( home_url(), PHP_URL_HOST ) );
-	$local_hosts = array( 'localhost', '127.0.0.1', '::1' );
-	$is_local = in_array( $host, $local_hosts, true ) || str_ends_with( $host, '.local' );
-	if ( ! $is_local ) {
-		throw new RuntimeException( 'Refusing to apply review drafts to non-local host: ' . $host );
-	}
-	if ( 'hperkins-tokens' !== get_stylesheet() ) {
-		throw new RuntimeException( 'Expected hperkins-tokens to be active, got: ' . get_stylesheet() );
-	}
+try {
+	// Selection first: with no --page this is exactly the two recruiter
+	// drafts; --page=about is the only way to select the About candidate, and
+	// an explicit list never unions with the defaults. Bad keys fail here,
+	// before any WP-CLI process starts.
+	assertKnownFlags( process.argv.slice( 2 ), [ '--confirm-local' ] );
+	const requestedKeys = process.argv
+		.filter( ( argument ) => argument === '--page' || argument.startsWith( '--page=' ) )
+		.map( ( argument ) => argument.slice( '--page='.length ) );
+	const contracts = selectDraftContracts( requestedKeys );
 
-	$drafts = array(
-		array(
-			'path' => 'job-placement-digest',
-			'title' => 'Job Placement Digest',
-			'file' => 'content/page-drafts/job-placement-digest.html',
-		),
-		array(
-			'path' => 'placement-method-and-evidence',
-			'legacy_path' => 'placement-method-evidence',
-			'title' => 'Placement Method and Evidence',
-			'file' => 'content/page-drafts/placement-method-evidence.html',
-		),
-	);
-	// Read and validate every reviewed draft before mutating any page, so a
-	// missing or unreadable file cannot leave the site half-applied.
-	foreach ( $drafts as $index => $draft ) {
-		$file = get_theme_file_path( $draft['file'] );
-		$content = file_get_contents( $file );
-		if ( false === $content || '' === trim( $content ) ) {
-			throw new RuntimeException( 'Missing reviewed draft: ' . $file );
-		}
-		$drafts[ $index ]['content'] = $content;
-	}
+	// Refuse to touch a site other than the one HPERKINS_ORIGIN names — before
+	// any draft-file read or database mutation. Combined with the PHP-side
+	// local-host guard this keeps the applicator localhost-only by identity,
+	// not just by convention.
+	assertMatchingSiteUrl( getOrigin(), runWp( [ 'option', 'get', 'home' ] ).trim() );
 
-	$result = array();
+	// Node preflight: containment, nonempty, SHA-256 for every selected draft.
+	// Only the relative paths and hashes travel to WP-CLI; PHP re-reads and
+	// re-hashes each file before the first mutation.
+	const payloads = prepareDraftPayloads( contracts );
+	const result = runWpEval( buildApplyLocalDraftsPhp( payloads ) );
 
-	foreach ( $drafts as $draft ) {
-		$content = $draft['content'];
-
-		$page = get_page_by_path( $draft['path'], OBJECT, 'page' );
-		if ( ! $page && ! empty( $draft['legacy_path'] ) ) {
-			$page = get_page_by_path( $draft['legacy_path'], OBJECT, 'page' );
-		}
-		$postarr = array(
-			'post_type' => 'page',
-			'post_status' => 'publish',
-			'post_name' => $draft['path'],
-			'post_title' => $draft['title'],
-			'post_content' => wp_slash( $content ),
-		);
-		if ( $page ) {
-			$postarr['ID'] = $page->ID;
-		}
-
-		$post_id = wp_insert_post( $postarr, true );
-		if ( is_wp_error( $post_id ) ) {
-			throw new RuntimeException( $post_id->get_error_message() );
-		}
-		$result[ $draft['path'] ] = array(
-			'id' => $post_id,
-			'url' => get_permalink( $post_id ),
-			'bytes' => strlen( $content ),
-		);
-	}
-
-	echo wp_json_encode( $result );
-` );
-
-console.log( result );
+	console.log( result );
+} catch ( error ) {
+	console.error( error.message );
+	process.exit( 1 );
+}

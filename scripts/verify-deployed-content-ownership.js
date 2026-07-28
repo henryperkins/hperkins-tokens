@@ -5,22 +5,24 @@ const path = require( 'node:path' );
 
 const { createLineDiff, getSha256, normalizeContent } = require( './lib/content-integrity' );
 const { getOrigin, resolveSiteUrl } = require( './lib/site-url' );
+const { assertKnownFlags, selectDeployedIntegrityContracts } = require( './lib/page-content-contract' );
 
 const themeRoot = path.join( __dirname, '..' );
 const endpointSourcePath = path.join( themeRoot, 'inc', 'content-integrity.php' );
 const functionsPath = path.join( themeRoot, 'functions.php' );
-const contracts = [
-	{
-		key: 'job-placement-digest',
-		snapshot: 'content/page-snapshots/job-placement-digest.html',
-		draft: 'content/page-drafts/job-placement-digest.html',
-	},
-	{
-		key: 'placement-method-evidence',
-		snapshot: 'content/page-snapshots/placement-method-evidence.html',
-		draft: 'content/page-drafts/placement-method-evidence.html',
-	},
-];
+
+// Targets derive from the shared deployedIntegrity page metadata — this
+// verifier keeps no allowlist of its own. --page=<key> narrows the run with
+// the same selector rejection rules as the draft applicator and exporter.
+const requestedKeys = process.argv
+	.filter( ( argument ) => argument === '--page' || argument.startsWith( '--page=' ) )
+	.map( ( argument ) => argument.slice( '--page='.length ) );
+const contracts = selectDeployedIntegrityContracts( requestedKeys ).map( ( contract ) => ( {
+	key: contract.key,
+	pagePath: contract.pagePath,
+	snapshot: `content/page-snapshots/${ contract.snapshotFile }`,
+	draft: contract.draft ? contract.draft.file : null,
+} ) );
 
 function assert( condition, message ) {
 	if ( ! condition ) {
@@ -39,13 +41,22 @@ function verifySource() {
 		'WP_REST_Server::READABLE',
 		"'permission_callback'",
 		"'__return_true'",
-		"'job-placement-digest'",
-		"'placement-method-evidence'",
 		"'publish' !== get_post_status( $page )",
 		"hash( 'sha256'",
 	] ) {
 		assert( endpointSource.includes( required ), `Content-integrity endpoint source is missing: ${ required }` );
 	}
+
+	// Every deployed-integrity contract must be served by the endpoint with
+	// its exact key → path mapping. The endpoint has no other source of truth.
+	for ( const contract of selectDeployedIntegrityContracts() ) {
+		const mapping = new RegExp( `'${ contract.key }'\\s*=>\\s*'${ contract.pagePath }'` );
+		assert(
+			mapping.test( endpointSource ),
+			`Content-integrity endpoint source is missing the ${ contract.key } => ${ contract.pagePath } target.`
+		);
+	}
+
 	assert(
 		functionsSource.includes( "require_once get_stylesheet_directory() . '/inc/content-integrity.php';" ),
 		'functions.php must load the content-integrity endpoint.'
@@ -69,6 +80,7 @@ async function verifyRemote() {
 
 	for ( const contract of contracts ) {
 		const expectedRelativePath = compareDrafts ? contract.draft : contract.snapshot;
+		assert( expectedRelativePath, `${ contract.key } has no reviewed draft to compare with --drafts.` );
 		const expectedPath = path.join( themeRoot, expectedRelativePath );
 		assert( fs.existsSync( expectedPath ), `Missing ${ expectedRelativePath }.` );
 		const expected = normalizeContent( fs.readFileSync( expectedPath, 'utf8' ) );
@@ -102,6 +114,7 @@ async function verifyRemote() {
 }
 
 async function main() {
+	assertKnownFlags( process.argv.slice( 2 ), [ '--drafts', '--source-only' ] );
 	verifySource();
 	if ( process.argv.includes( '--source-only' ) ) {
 		return;

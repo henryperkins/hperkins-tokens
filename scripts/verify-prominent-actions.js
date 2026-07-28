@@ -18,11 +18,28 @@ const CAPTURE_DIR = process.env.HPERKINS_CAPTURE_DIR ||
 const DIGEST_SOURCE = USE_DRAFTS
 	? 'content/page-drafts/job-placement-digest.html'
 	: 'content/page-snapshots/job-placement-digest.html';
+// About body copy lives in the selected candidate or accepted snapshot;
+// patterns/about-resume.php is a thin adapter over the snapshot and carries
+// no rail/panel markup of its own (it is asserted clean below).
+const ABOUT_SOURCE = USE_DRAFTS
+	? 'content/page-drafts/about.html'
+	: 'content/page-snapshots/about.html';
+// The proof-first About body (marked by its hp-about-nav landmark) carries a
+// hero rail plus a closing invitation; the previous body has one rail and no
+// panel. Deriving the expectation from the selected source keeps every phase
+// of the promotion green without a flag: old snapshot -> 1/0, reviewed
+// candidate and exported redesign snapshot -> 2/1.
+const ABOUT_REDESIGNED = ( () => {
+	try {
+		return fs.readFileSync( path.join( THEME_ROOT, ABOUT_SOURCE ), 'utf8' ).includes( 'hp-about-nav' );
+	} catch ( cause ) {
+		throw new Error( `About source ${ ABOUT_SOURCE } is missing; the prominent-action contract derives its /about/ expectation from it.`, { cause } );
+	}
+} )();
 
 const RAIL_FILES = [
 	'patterns/wapuu-home-hero.php',
-	'patterns/about-resume.php',
-	'content/page-snapshots/about.html',
+	ABOUT_SOURCE,
 	'content/page-snapshots/front-page.html',
 	DIGEST_SOURCE,
 	'content/page-snapshots/work-flavor-agent-demo.html',
@@ -32,11 +49,13 @@ const PANEL_FILES = [
 	'content/page-snapshots/front-page.html',
 	DIGEST_SOURCE,
 	'content/page-snapshots/work-flavor-agent-demo.html',
+	...( ABOUT_REDESIGNED ? [ ABOUT_SOURCE ] : [] ),
 ];
 
 const EXCLUDED_FILES = [
 	'parts/header.html',
 	'patterns/imladris-button.php',
+	'patterns/about-resume.php',
 ];
 
 const DIGEST_COPY = [
@@ -50,7 +69,11 @@ const DIGEST_COPY = [
 
 const LIVE_PAGES = [
 	{ route: '/', railCount: 2, panelCount: 1 },
-	{ route: '/about/', railCount: 1, panelCount: 0 },
+	{
+		route: '/about/',
+		railCount: ABOUT_REDESIGNED ? 2 : 1,
+		panelCount: ABOUT_REDESIGNED ? 1 : 0,
+	},
 	{ route: '/job-placement-digest/', railCount: 2, panelCount: 1, digest: true },
 	{ route: '/work/flavor-agent/demo/', railCount: 1, panelCount: 1 },
 ];
@@ -330,17 +353,26 @@ async function inspectPage( cdp, page, viewport ) {
 				};
 			});
 
-			const focusTarget = document.querySelector('.hp-action-rail .wp-block-button__link');
-			let focus = null;
-			if (focusTarget) {
-				focusTarget.focus();
-				const style = getComputedStyle(focusTarget);
-				focus = {
-					matchesFocusVisible: focusTarget.matches(':focus-visible'),
-					outlineStyle: style.outlineStyle,
-					outlineWidth: number(style.outlineWidth),
-				};
-			}
+			// Focus pass runs after every rect above is captured, and with
+			// preventScroll, so focusing cannot shift the measured geometry.
+			// Every link in every rail must expose the keyboard ring — on the
+			// About page that iterates both the hero and closing rails.
+			const railElements = Array.from(document.querySelectorAll('.hp-action-rail'));
+			railElements.forEach((railElement, railIndex) => {
+				Array.from(railElement.querySelectorAll('.wp-block-button__link')).forEach((link, linkIndex) => {
+					try {
+						link.focus({ preventScroll: true });
+					} catch (error) {
+						link.focus();
+					}
+					const style = getComputedStyle(link);
+					rails[railIndex].links[linkIndex].focus = {
+						matchesFocusVisible: link.matches(':focus-visible'),
+						outlineStyle: style.outlineStyle,
+						outlineWidth: number(style.outlineWidth),
+					};
+				});
+			});
 
 			const digestHeading = document.querySelector('.hp-digest-cta h2');
 			return {
@@ -348,7 +380,6 @@ async function inspectPage( cdp, page, viewport ) {
 				scrollWidth: document.documentElement.scrollWidth,
 				rails,
 				panels,
-				focus,
 				compactLeakCount: document.querySelectorAll(
 					'.hp-site-subscribe.hp-action-rail, .hp-site-subscribe.hp-action-panel'
 				).length,
@@ -490,13 +521,17 @@ async function verifyLiveContracts() {
 					assert( panel.boxShadow !== 'none', `${ result.url } closing panel lost its owned shadow.` );
 				}
 
-				assert( result.focus, `${ result.url } exposes no focusable prominent action.` );
-				assert(
-					result.focus.matchesFocusVisible &&
-					result.focus.outlineStyle !== 'none' &&
-					result.focus.outlineWidth >= 3,
-					`${ result.url } prominent action does not expose the 3px keyboard focus ring.`
-				);
+				const focusedLinks = result.rails.flatMap( ( rail ) => rail.links );
+				assert( focusedLinks.length >= 1, `${ result.url } exposes no focusable prominent action.` );
+				for ( const link of focusedLinks ) {
+					assert(
+						link.focus &&
+						link.focus.matchesFocusVisible &&
+						link.focus.outlineStyle !== 'none' &&
+						link.focus.outlineWidth >= 3,
+						`${ result.url } "${ link.text }" does not expose the 3px keyboard focus ring.`
+					);
+				}
 
 				if ( page.digest ) {
 					assert(

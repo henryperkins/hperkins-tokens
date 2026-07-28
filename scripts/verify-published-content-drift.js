@@ -22,11 +22,14 @@ function count( value, needle ) {
 	return value.split( needle ).length - 1;
 }
 
+// patterns/about-resume.php is a thin adapter over the accepted snapshot and
+// carries no page copy of its own; the About claims are asserted against the
+// snapshot and the reviewed candidate instead.
 const currentReleaseFiles = [
 	'inc/council-header.php',
 	'patterns/wapuu-home-hero.php',
-	'patterns/about-resume.php',
 	'content/page-snapshots/about.html',
+	'content/page-drafts/about.html',
 	'patterns/work-index.php',
 	'content/page-snapshots/work.html',
 ];
@@ -37,17 +40,28 @@ for ( const file of currentReleaseFiles ) {
 	assert( ! contents.includes( HISTORICAL_RELEASE ), `${ file } still presents ${ HISTORICAL_RELEASE } as current.` );
 }
 
-const aboutFiles = [ 'patterns/about-resume.php', 'content/page-snapshots/about.html' ];
+// The proof-first About body (marked by its hp-about-nav landmark) states the
+// same facts with its own approved copy; the previous body keeps its original
+// exact claims. Either way, retired or inflated claims must stay out.
+const aboutFiles = [ 'content/page-snapshots/about.html', 'content/page-drafts/about.html' ];
 for ( const file of aboutFiles ) {
 	const contents = read( file );
+	const redesigned = contents.includes( 'hp-about-nav' );
 	assert( ! contents.includes( 'WordPress rebuild' ), `${ file } still calls DJ Lee a WordPress rebuild.` );
 	assert(
-		contents.includes( 'booking-first static site' ) && contents.includes( 'one Cloudflare Worker' ),
+		contents.includes( redesigned ? 'booking-first client site' : 'booking-first static site' ) &&
+			contents.includes( 'one Cloudflare Worker' ),
 		`${ file } must describe the shipped DJ Lee architecture.`
 	);
 	assert( /Python (?:&middot;|·) familiarity/.test( contents ), `${ file } must qualify Python as familiarity.` );
-	assert( contents.includes( 'PR #757 remains open with changes requested' ), `${ file } must state PR #757's review status.` );
-	assert( contents.includes( 'PR #49 closed without merge on July 18, 2026' ), `${ file } must state PR #49's closed state.` );
+	assert(
+		contents.includes( redesigned ? 'PR #757 remains open and unmerged' : 'PR #757 remains open with changes requested' ),
+		`${ file } must state PR #757's review status.`
+	);
+	assert(
+		contents.includes( redesigned ? 'in PR #49; it closed without merge on July 18, 2026' : 'PR #49 closed without merge on July 18, 2026' ),
+		`${ file } must state PR #49's closed state.`
+	);
 	assert( ! contents.includes( 'PR #49</a> — in review' ), `${ file } still presents PR #49 as in review.` );
 }
 

@@ -32,11 +32,22 @@ const checks = [
 			'scripts/apply-council-navigation.js',
 			'header-controller.js',
 			'verify-header.js',
+			// About proof-first ownership model (Phase A): one candidate, an
+			// export-only snapshot, a thin pattern adapter, and page-layout CSS
+			// in the pages sheet.
+			'one human-authored candidate at `content/page-drafts/about.html`',
+			'thin inserter adapter that reads the',
+			'--confirm-local --page=about',
+			'--expect-draft',
+			'assets/imladris-pages.css',
 		],
 		exclude: [
 			/then appends the Three Rings \(Vilya \/ Narya \/ Nenya\) framework section\./,
 			/renders the\s+"ai-enablement" pattern/i,
 			/wraps the "work-index" pattern/i,
+			// Retired: about-resume presented as one more reusable full-page
+			// seed. It is a thin adapter over the accepted snapshot now.
+			/filesystem patterns \(`about-resume`/,
 		],
 	},
 	{
@@ -54,8 +65,22 @@ const checks = [
 			'content/nav-snapshots/nav-237.html',
 			'closed|work|writing|search|drawer',
 			'verify-header.js',
+			// About proof-first ownership model (Phase A).
+			'content/page-drafts/about.html',
+			'thin adapter over the accepted snapshot',
+			'--page=about',
+			'verify-about-page-source.js',
+			'verify-about-page-rendered.js',
+			'.hp-about-template` selector anymore',
 		],
-		exclude: [ /page-ai-enablement\.html is a \*\*shadow template\*\*/i ],
+		exclude: [
+			/page-ai-enablement\.html is a \*\*shadow template\*\*/i,
+			// Retired: about-resume listed among the reusable full-page seeds.
+			/`\/about\/`, `\/work\/`, and `\/ai-enablement\/` content patterns/,
+			// Retired: the pages-sheet scope list without About — the About
+			// page layer lives in assets/imladris-pages.css now.
+			/design system \(ai-enablement essay, contact, work index, job-placement digest\)/,
+		],
 	},
 	{
 		file: 'docs/design-system/INDEX.md',
@@ -73,11 +98,20 @@ const checks = [
 			'gold-800',
 			'hp-drawer-search',
 			'header-controller.js',
+			// About proof-first ownership model (Phase A): the candidate is
+			// mapped but never presented as deployed.
+			'content/page-drafts/about.html',
+			'thin accepted-snapshot adapter',
+			'About page layer in `assets/imladris-pages.css`',
+			'not the deployed body until it passes review and controlled promotion',
 		],
 		exclude: [
 			/\*\*Shadow template\*\* over live page 175/i,
 			/appended to live \*\*Work\*\* page 13/i,
 			/\*\*add\*\* `job-placement-digest\.php`/i,
+			// Retired: the two-artifact About row without the candidate,
+			// adapter, and page-layout CSS mapping.
+			/\| `templates\/about` \| `content\/page-snapshots\/about\.html`, `templates\/page-about\.html` \|/,
 		],
 	},
 	{
