@@ -58,7 +58,7 @@ node scripts/verify-content-ownership-docs.js   # readme / CLAUDE / design-syste
 node scripts/verify-journal-templates.js        # blog template source contract: query IDs vs functions.php filters, sticky mode, seed offset, postcard link shape, reader-hero dim ratio, data-URI palette hexes, pagination touch token (pure file reads)
 node scripts/verify-job-placement-digest-source.js # recruiter main/appendix copy, outline, evidence, row counts, fragment target, immutable links, and retired-pattern contract. The digest's theme row is a claim about what is *released and deployed*, so it is checked against README.md's "Current release" + "Deployed commit" record, not against style.css — an in-flight version bump must not demand the page advertise a release tag nobody has cut. style.css may run ahead of that record, never behind it.
 node scripts/verify-job-placement-digest-metadata.js # read-only public SEO/share gate: exact title, description, canonical, OG title/description, and absolute OG image (`HPERKINS_ORIGIN` base; `--url` exact override)
-node scripts/verify-placement-artifacts.js      # one-page/searchable résumé, public/private workbook boundary, version/link consistency (--check-links performs the public HTTP pass)
+node scripts/verify-placement-artifacts.js      # one-page/searchable résumé, public/private workbook boundary, version/link consistency (--check-links performs the public HTTP pass). The résumé's HPerkins Tokens entry names a *shipped* version and links a release tag `--check-links` actually fetches, so — like the digest's theme row, and through the same `scripts/lib/release-record.js` parser — it is checked against README.md's release record rather than style.css.
 node scripts/verify-performance-assets.js       # image budgets, fontDisplay, eager LCP hero (fetchpriority=high, never loading=lazy), front-page CSS skip
 node scripts/verify-style-token-usage.js        # every var() in style.css resolves against theme.json-generated variables (wp-cli)
 node scripts/verify-design-system-specimen.js   # post 79 specimen references live patterns; rendered checks auto-skip while the page is draft (wp-cli + HTTP)
@@ -75,7 +75,7 @@ wp --path="$HPERKINS_WP_PATH" cache flush                # after theme.json / gl
 
 # Unit tests for the shared script libraries. Name every file explicitly — the
 # directory form of `node --test` is unreliable on Windows.
-node --test scripts/lib/content-integrity.test.js scripts/lib/job-placement-metadata-contract.test.js scripts/lib/market-screen-parity.test.js scripts/lib/navigation-content-contract.test.js scripts/lib/page-content-contract.test.js scripts/lib/page-markup-contract.test.js scripts/lib/placement-artifact-links.test.js scripts/lib/production-gates-workflow.test.js scripts/lib/site-url.test.js scripts/lib/wp-cli.test.js scripts/lib/zip-archive.test.js
+node --test scripts/lib/content-integrity.test.js scripts/lib/job-placement-metadata-contract.test.js scripts/lib/market-screen-parity.test.js scripts/lib/navigation-content-contract.test.js scripts/lib/page-content-contract.test.js scripts/lib/page-markup-contract.test.js scripts/lib/placement-artifact-links.test.js scripts/lib/production-gates-workflow.test.js scripts/lib/release-record.test.js scripts/lib/site-url.test.js scripts/lib/wp-cli.test.js scripts/lib/zip-archive.test.js
 
 # Re-classify this repo after structural changes with the wp-project-triage skill.
 ```

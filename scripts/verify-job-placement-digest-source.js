@@ -9,13 +9,12 @@ const {
 	getClassCount,
 	hasMeaningfulFragmentTarget,
 } = require( './lib/page-markup-contract' );
+const { readReleaseRecord } = require( './lib/release-record' );
 
 const themeRoot = path.join( __dirname, '..' );
 const mainPath = path.join( themeRoot, 'content', 'page-drafts', 'job-placement-digest.html' );
 const appendixPath = path.join( themeRoot, 'content', 'page-drafts', 'placement-method-evidence.html' );
 const retiredPatternPath = path.join( themeRoot, 'patterns', 'job-placement-digest.php' );
-const stylePath = path.join( themeRoot, 'style.css' );
-const readmePath = path.join( themeRoot, 'README.md' );
 
 function assert( condition, message ) {
 	if ( ! condition ) {
@@ -184,11 +183,6 @@ function verifyForbiddenCopy( combinedMarkup ) {
 function main() {
 	const main = readRequiredFile( mainPath );
 	const appendix = readRequiredFile( appendixPath );
-	const style = readRequiredFile( stylePath );
-	const readme = readRequiredFile( readmePath );
-	const versionMatch = style.match( /^Version:\s*(\S+)/m );
-	assert( versionMatch, 'style.css must declare the current theme Version.' );
-	const workingVersion = versionMatch[ 1 ];
 
 	// The digest's theme row is a public claim about what is RELEASED and
 	// DEPLOYED ("Shipped · deployed theme commit verified …"), and it links a
@@ -200,43 +194,9 @@ function main() {
 	// cut, which is precisely the unverifiable claim this file exists to stop.
 	// The bump still forces a digest update, just at release time, when the
 	// deployment record below is what moves.
-	const releaseMatch = readme.match(
-		/\*\*Current release:\*\*\s+\[v(\d+\.\d+\.\d+)\]\(https:\/\/github\.com\/henryperkins\/hperkins-tokens\/releases\/tag\/v(\d+\.\d+\.\d+)\)/i
-	);
-	assert( releaseMatch, 'README.md must declare the current release with a pinned release-tag URL.' );
-	assert(
-		releaseMatch[ 1 ] === releaseMatch[ 2 ],
-		'README.md current-release label and release-tag URL disagree.'
-	);
-	const themeVersion = releaseMatch[ 1 ];
+	const release = readReleaseRecord( themeRoot );
 
-	// Development may run ahead of the last release, never behind it: a working
-	// tree older than what README advertises as shipped means the deployment
-	// record is describing code this checkout does not contain.
-	const asParts = ( value ) => value.split( '.' ).map( ( part ) => Number.parseInt( part, 10 ) || 0 );
-	const [ workingParts, releasedParts ] = [ asParts( workingVersion ), asParts( themeVersion ) ];
-	for ( let i = 0; i < Math.max( workingParts.length, releasedParts.length ); i++ ) {
-		const working = workingParts[ i ] || 0;
-		const released = releasedParts[ i ] || 0;
-		if ( working !== released ) {
-			assert(
-				working > released,
-				`style.css Version ${ workingVersion } is behind the release README.md declares (v${ themeVersion }).`
-			);
-			break;
-		}
-	}
-
-	const deployedCommitMatch = readme.match(
-		/\*\*Deployed commit:\*\*\s+\[`([0-9a-f]{7})`\]\(https:\/\/github\.com\/henryperkins\/hperkins-tokens\/commit\/([0-9a-f]{40})\)/i
-	);
-	assert( deployedCommitMatch, 'README.md must declare the deployed commit with a pinned 40-character URL.' );
-	assert(
-		deployedCommitMatch[ 2 ].startsWith( deployedCommitMatch[ 1 ] ),
-		'README.md deployed-commit label and URL disagree.'
-	);
-
-	verifyMain( main, themeVersion, deployedCommitMatch[ 2 ].toLowerCase() );
+	verifyMain( main, release.version, release.deployedCommit );
 	verifyAppendix( appendix );
 	verifyForbiddenCopy( `${ main }\n${ appendix }` );
 	assert( ! fs.existsSync( retiredPatternPath ), 'patterns/job-placement-digest.php must be retired, not maintained as a third full-page source.' );
