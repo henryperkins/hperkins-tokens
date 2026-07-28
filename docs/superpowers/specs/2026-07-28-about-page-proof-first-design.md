@@ -143,9 +143,11 @@ this page, not the total number of public projects in the wider portfolio.
 ## In-page navigation
 
 A compact navigation landmark labeled `On this page` follows the proof signals.
-It is authored as a core Group block with `tagName:"nav"` and
-`ariaLabel:"On this page"`. It contains one list of exactly six ordinary
-same-page links in this DOM and visual order:
+It is authored as one core Custom HTML block (`core/html`, serialized between
+`<!-- wp:html -->` and `<!-- /wp:html -->` comments). The block has exactly one
+root element: `<nav class="hp-about-nav" aria-label="On this page">`. Inside
+that root, a visible non-heading `On this page` label precedes one list of
+exactly six ordinary same-page links in this DOM and visual order:
 
 1. `Work` → `#selected-work`
 2. `Contributions` → `#core-ai-contributions`
@@ -155,9 +157,16 @@ same-page links in this DOM and visual order:
 6. `Contact` → `#contact`
 
 The navigation does not use the core Navigation block, create a navigation
-entity, or add a new block type. Each fragment identifier is unique. Each
-target is the core Group section containing the corresponding H2 and has an
-accessible name equal to that H2.
+entity, or add a new block type. Custom HTML is already an established
+repository precedent and keeps the navigation landmark editor-stable without
+serializing an unsupported Group attribute.
+
+Each fragment identifier is unique. Each target is a core Group block with
+`tagName:"section"` and the corresponding H2 as its first heading. The target
+sections do not receive `aria-label` or `aria-labelledby`; fragment targets do
+not need accessible names, and six extra named regions would add landmark
+noise. `router-scroll.js` focuses the section itself, after which its H2 is the
+first heading in reading order.
 
 Links remain in document flow and may wrap to multiple rows without
 reordering. Every link renders at least 24px wide and 24px high, exposes the
@@ -416,6 +425,12 @@ header, footer, or template shell. It:
    `Intl.Segmenter("en", { granularity: "word" })`; and
 7. counts only segments where `isWordLike` is true.
 
+Normative About word-count acceptance runs under Node 22.x. Both the source
+and deployed-production CI jobs pin `node-version: '22'`, and the workflow
+contract test asserts that agreement so their ICU data cannot drift by job. A
+word count produced under another Node major is diagnostic only, not
+acceptance evidence.
+
 Visible headings, paragraphs, list items, signal copy, dates, statuses,
 technology tags, navigation labels, and action labels count. HTML attributes,
 URLs, alt text, ARIA labels, block metadata, comments, decorative
@@ -427,8 +442,12 @@ source extractor removes `aria-hidden="true"` subtrees before stripping tags.
 The rendered verifier clones
 `.hp-about-template .wp-block-post-content`, removes `[hidden]` and
 `[aria-hidden="true"]` descendants, and counts its `innerText` with the same
-segmenter. Source and rendered totals must match and fall within the inclusive
-range.
+segmenter. Its canonical reported measurement uses a 1440 × 1000 CSS-pixel
+viewport with `deviceScaleFactor: 1`. It repeats the extraction at the other
+four primary viewports so responsive CSS cannot silently remove counted text;
+every rendered total must equal the source total and fall within the inclusive
+range. The boundary-only geometry probes do not produce additional word-count
+records.
 
 ## Visual treatment and responsive boundaries
 
@@ -493,6 +512,28 @@ advances, `readme.txt` receives the same Stable tag and a truthful changelog
 entry, and existing release-version checks remain green. File modification
 times continue to provide asset cache keys.
 
+### Documentation synchronization
+
+Phase A updates the repository's current-state documentation in the same
+commit as the ownership and CSS migration:
+
+- `CLAUDE.md` adds About to the `assets/imladris-pages.css` page-layout list,
+  describes `patterns/about-resume.php` as a thin adapter over the accepted
+  snapshot, documents the explicit-only About draft command, and lists the new
+  About source/rendered checks.
+- `readme.txt` records the same About draft/snapshot/pattern ownership model
+  and CSS location, alongside the Stable tag and changelog update.
+- `docs/design-system/INDEX.md` maps the About candidate, accepted snapshot,
+  thin pattern adapter, database-owned route, and page-layout stylesheet
+  without presenting the candidate as deployed.
+- `scripts/verify-content-ownership-docs.js` pins those three current-state
+  descriptions and rejects the retired full-pattern-copy and
+  About-in-`style.css` claims.
+
+The Phase A wording describes the unchanged production body with its new
+plumbing. It does not claim that the redesigned candidate is live before Phase
+B promotion.
+
 ## Content ownership
 
 The visitor-facing `/about/` body is database-owned. The repository keeps one
@@ -551,9 +592,26 @@ Selector behavior is exact:
   it does not rewrite title, slug, status, parent, or template assignment.
 
 The implementation adds the repository's existing `assertMatchingSiteUrl()`
-helper before any draft-file read or database mutation. It retains the current
-`--confirm-local`, local-host, and active-child-theme checks. No production
-mode is added to `scripts/apply-local-page-drafts.js`.
+helper before any draft-file read or database mutation. Node then performs the
+selection, path-containment, nonempty, and SHA-256 preflight for every draft.
+It passes only bounded metadata—the contract key, theme-relative file path,
+and expected hash—to `runWpEval`; draft bodies are never serialized into the
+PHP source argv element or sent through stdin.
+
+PHP retains responsibility for reading the bodies, as it does today. Before
+the first mutation, the PHP evaluation resolves every validated relative path
+with `get_theme_file_path()`, reads every file with `file_get_contents()`,
+checks it is nonempty, verifies its SHA-256 against Node's expected hash, and
+keeps the validated bodies in PHP memory. Only after every selected body
+passes does the mutation loop begin. This second read closes the
+Node-to-WP-CLI time-of-check/time-of-use gap while keeping the roughly 40 KB
+About body off the Windows command line.
+
+The applicator retains the current `--confirm-local`, local-host, and
+active-child-theme checks. A greater-than-40-KB unit fixture proves that
+generated WP-CLI arguments contain the relative path and expected hash but
+not the draft body. No production mode is added to
+`scripts/apply-local-page-drafts.js`.
 
 ## Pre-export parity and atomic snapshot writes
 
@@ -610,7 +668,12 @@ deployment uses three phases:
    panel. Do not activate the final About source contract, `2/1` action
    expectation, dedicated About production-browser gate, or redesigned
    candidate/snapshot parity in this phase.
-8. Deploy and prove that the existing production About body still matches its
+8. Update `CLAUDE.md`, `readme.txt`, `docs/design-system/INDEX.md`, and
+   `scripts/verify-content-ownership-docs.js` with the Phase A ownership, thin
+   pattern-adapter, CSS-location, draft-command, and verifier contracts. Apply
+   the required `style.css`/`readme.txt` version and changelog update in this
+   step.
+9. Deploy and prove that the existing production About body still matches its
    unchanged snapshot and renders without regression.
 
 ### Phase B: reviewed content release
@@ -673,6 +736,9 @@ About joins the existing public database-body integrity contract:
 
 - The exact heading inventory and section ancestry above is normative.
 - The on-page navigation is a named landmark containing an actual list.
+- The six fragment targets are semantic sections whose H2 is their first
+  heading, not named region landmarks; they carry neither `aria-label` nor
+  `aria-labelledby`.
 - Actual project links, not surrounding cards, own hover and focus
   affordances.
 - Existing global focus-visible outlines remain unsuppressed.
@@ -718,9 +784,10 @@ without `--drafts`, it validates the accepted snapshot. It asserts:
 - the complete heading inventory, order, levels, section ancestry, one-H1
   rule, and absence of any additional page-body headings;
 - exactly three proof signals with the approved claims;
-- exactly one `nav[aria-label="On this page"]`, one six-item link list in the
-  approved order, six approved hrefs, and six unique matching named section
-  targets;
+- exactly one `core/html` block containing one root
+  `nav[aria-label="On this page"]`, one visible label, one six-item link list
+  in the approved order, six approved hrefs, and six unique matching
+  `section` targets without `aria-label` or `aria-labelledby`;
 - Selected Work before Core AI Contributions before Capabilities;
 - exactly four project cards in the approved order;
 - each exact project status, impact, technology-tag sequence, and ordered
@@ -756,7 +823,8 @@ It covers primary widths 1440, 1024, 768, 390, and 320px plus geometry probes
 at 895/896px, 781/782px, and 600/601px. It asserts:
 
 - the exact heading inventory, order, and ancestry;
-- one named six-link navigation and six unique matching targets;
+- one named six-link navigation and six unique matching unnamed section
+  targets;
 - keyboard focus visibility and Enter activation for every jump link;
 - existing router-scroll target focus and sticky-header clearance;
 - at least 24px rendered width and height for every navigation and project
@@ -778,7 +846,8 @@ at 895/896px, 781/782px, and 600/601px. It asserts:
 - at least 44px height for all four prominent action links;
 - horizontal rails at 601px and above and full-width stacked rails at 600px
   and below;
-- matching deterministic source/rendered word counts;
+- a canonical source/rendered word-count match at 1440 × 1000 CSS pixels and
+  the same match at the other four primary viewports;
 - the portrait alt text and redundant textual status labels; and
 - screenshots for the five primary widths as review artifacts.
 
@@ -796,9 +865,10 @@ iterate through every link in both About rails.
 
 Also in Phase B, the source CI job adds the About unit/source contracts, the
 production browser job adds `verify-about-page-rendered.js`, and
-`scripts/lib/production-gates-workflow.test.js` pins both additions. Phase A
-retains the old one-rail/no-panel browser contract and does not invoke the
-final About source or rendered verifier.
+both jobs pin Node 22.x. `scripts/lib/production-gates-workflow.test.js` pins
+the two verifier additions and the matching Node majors. Phase A retains the
+old one-rail/no-panel browser contract and does not invoke the final About
+source or rendered verifier.
 
 ## Verification commands
 
