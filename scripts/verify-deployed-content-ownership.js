@@ -5,7 +5,7 @@ const path = require( 'node:path' );
 
 const { createLineDiff, getSha256, normalizeContent } = require( './lib/content-integrity' );
 const { getOrigin, resolveSiteUrl } = require( './lib/site-url' );
-const { selectDeployedIntegrityContracts } = require( './lib/page-content-contract' );
+const { assertKnownFlags, selectDeployedIntegrityContracts } = require( './lib/page-content-contract' );
 
 const themeRoot = path.join( __dirname, '..' );
 const endpointSourcePath = path.join( themeRoot, 'inc', 'content-integrity.php' );
@@ -114,6 +114,7 @@ async function verifyRemote() {
 }
 
 async function main() {
+	assertKnownFlags( process.argv.slice( 2 ), [ '--drafts', '--source-only' ] );
 	verifySource();
 	if ( process.argv.includes( '--source-only' ) ) {
 		return;

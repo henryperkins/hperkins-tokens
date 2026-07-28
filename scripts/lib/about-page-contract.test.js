@@ -8,12 +8,12 @@ const {
 	ABOUT_WORD_RANGE,
 	EXPECTED_HEADINGS,
 	assertNoForbiddenMarkup,
+	countRenderedText,
 	countVisibleWords,
 	countWords,
 	decodeCharacterReferences,
 	extractExactText,
 	extractVisibleText,
-	getRenderedWordCountFunctionSource,
 	parseTopLevelBlocks,
 	removeAriaHiddenSubtrees,
 	verifyAboutBody,
@@ -92,16 +92,29 @@ test( 'exact-text extraction keeps punctuation attached across nested inline lin
 	assert.equal( countVisibleWords( '<p>in the <a href="/x.pdf">PDF résumé</a>.</p>' ), 4 );
 } );
 
-test( 'the rendered word-count function source mirrors the Node algorithm', () => {
-	const fn = new Function( `return ${ getRenderedWordCountFunctionSource() }` )();
-	for ( const sample of [
-		'View résumé (PDF)',
-		'systems—and workflows',
-		'Release candidate · v0.1.0-rc.3',
-		'a b   c',
+test( 'rendered text is counted by the same segmenter as the source', () => {
+	// countRenderedText normalizes the browser's innerText the way
+	// extractVisibleText normalizes source markup, so both reach one countWords
+	// and a rendered/source comparison never spans two ICU builds.
+	for ( const [ rendered, source ] of [
+		[ 'View résumé (PDF)', '<p>View résumé (PDF)</p>' ],
+		[ 'systems—and workflows', '<p>systems—and workflows</p>' ],
+		[ 'Release candidate · v0.1.0-rc.3', '<p>Release candidate · v0.1.0-rc.3</p>' ],
+		[ 'a b   c', '<p>a b   c</p>' ],
+		[ 'two words', '<p>two&nbsp;words</p>' ],
+		[ 'stacked\nlines', '<p>stacked<br>lines</p>' ],
 	] ) {
-		assert.equal( fn( sample ), countWords( sample ), sample );
+		assert.equal( countRenderedText( rendered ), countVisibleWords( source ), rendered );
 	}
+} );
+
+// Why the count may only ever run in one runtime: Node reads each of these as a
+// single word-like segment and Chrome splits both, so counting in the page and
+// comparing against a Node count reported 884 words on an 881-word body.
+test( 'dotted tokens stay one word', () => {
+	assert.equal( countRenderedText( 'WordPress.com' ), 1 );
+	assert.equal( countWords( 'WordPress.com' ), 1 );
+	assert.equal( countRenderedText( 'A.S., Business Administration' ), 3 );
 } );
 
 // ---------------------------------------------------------------------------
@@ -143,6 +156,17 @@ function mutated( from, to ) {
 	assert.notEqual( output, candidate, `fixture mutation ${ String( from ) } must apply` );
 	return output;
 }
+
+test( 'fails when markup is added outside the top-level blocks', () => {
+	// Content between blocks belongs to no section, so no word cap and no
+	// heading inventory moves; only the coverage assertion sees it.
+	const anchor = candidate.lastIndexOf( '<!-- wp:', candidate.indexOf( 'hp-signal-strip hp-about-impact' ) );
+	const smuggled =
+		candidate.slice( 0, anchor ) +
+		'<div class="promo"><p>sponsored filler copy</p><a href="https://evil.example/">Sponsored link</a></div>\n' +
+		candidate.slice( anchor );
+	assert.throws( () => verifyAboutBody( smuggled ), /outside its top-level blocks/ );
+} );
 
 test( 'fails when the hero copy drifts', () => {
 	assert.throws(

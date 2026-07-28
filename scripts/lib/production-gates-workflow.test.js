@@ -17,11 +17,23 @@ test( 'keeps all production browser gates in the deployed job on Node 22', () =>
 	const deployedJob = workflow.slice( workflow.indexOf( '\n  deployed-content:' ) );
 
 	assert.match( deployedJob, /node-version: '22'/ );
-	assert.match( deployedJob, /node scripts\/verify-header\.js(?:;|\s|$)/ );
-	assert.match( deployedJob, /node scripts\/verify-typography\.js(?:;|\s|$)/ );
-	assert.match( deployedJob, /node scripts\/verify-prominent-actions\.js(?:;|\s|$)/ );
-	assert.match( deployedJob, /node scripts\/verify-job-placement-pages\.js(?:;|\s|$)/ );
-	assert.match( deployedJob, /node scripts\/verify-about-page-rendered\.js(?:;|\s|$)/ );
+	// Anchored to a whole line so a commented-out invocation cannot satisfy the
+	// pin. These run inside a `run: |` block, where a leading # is shell
+	// comment text the YAML parser keeps verbatim — an unanchored search would
+	// still match it and report a gate that no longer runs.
+	for ( const gate of [
+		'verify-header',
+		'verify-typography',
+		'verify-prominent-actions',
+		'verify-job-placement-pages',
+		'verify-about-page-rendered',
+	] ) {
+		assert.match(
+			deployedJob,
+			new RegExp( `^\\s*if ! node scripts/${ gate.replace( /[.*+?^\${}()|[\]\\]/g, '\\$&' ) }\\.js; then$`, 'm' ),
+			`${ gate } is not an active line in the deployed job.`
+		);
+	}
 	assert.doesNotMatch( deployedJob, /verify-(?:header|typography|prominent-actions|job-placement-pages)\.js --source-only/ );
 } );
 

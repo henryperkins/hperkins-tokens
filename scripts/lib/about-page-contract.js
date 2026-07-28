@@ -447,19 +447,19 @@ function countVisibleWords( html, options ) {
 	return countWords( extractVisibleText( html, options ) );
 }
 
-// The browser half of the same algorithm, injected by the rendered verifier.
-// Kept here so source and rendered counting can never drift apart silently.
-function getRenderedWordCountFunctionSource() {
-	return `(function (text) {
-		var normalized = text.normalize('NFC').replace(/\\u00a0/g, ' ').replace(/\\s+/gu, ' ').trim();
-		var segmenter = new Intl.Segmenter('en', { granularity: 'word' });
-		var count = 0;
-		var iterator = segmenter.segment(normalized)[Symbol.iterator]();
-		for (var step = iterator.next(); !step.done; step = iterator.next()) {
-			if (step.value.isWordLike) { count++; }
-		}
-		return count;
-	})`;
+// Counts the text the browser rendered. The rendered verifier ships the page's
+// innerText back to Node and calls this, so exactly one Intl.Segmenter — this
+// process's — ever segments the About page.
+//
+// Counting in both runtimes and comparing the two numbers was the earlier
+// design, and it could not hold: pinning Node in CI leaves Chrome's ICU
+// unpinned, and the two already disagree on this page. Node segments
+// "WordPress.com" and "A.S." as one word-like segment each; Chrome splits both,
+// so an unchanged, correct page reported 884 rendered against 881 source. The
+// count is a content assertion, not a browser assertion — one segmenter is the
+// only way it stays one.
+function countRenderedText( text ) {
+	return countWords( normalizeExtractedText( text ) );
 }
 
 // ---------------------------------------------------------------------------
@@ -487,6 +487,8 @@ function parseTopLevelBlocks( html ) {
 					name: open.name,
 					attrs: open.attrs,
 					outer: html.slice( open.start, match.index + full.length ),
+					start: open.start,
+					end: match.index + full.length,
 				} );
 				open = null;
 			}
@@ -499,6 +501,8 @@ function parseTopLevelBlocks( html ) {
 					name,
 					attrs: attrsRaw ? JSON.parse( attrsRaw ) : {},
 					outer: full,
+					start: match.index,
+					end: match.index + full.length,
 				} );
 			}
 			continue;
@@ -519,6 +523,32 @@ function parseTopLevelBlocks( html ) {
 	}
 
 	return blocks;
+}
+
+// Proves the parsed top-level blocks account for the whole body: everything
+// before the first block, between consecutive blocks, and after the last one
+// must be whitespace.
+function assertBlockCoverage( html, blocks, label = 'About body' ) {
+	let cursor = 0;
+	const residue = [];
+	for ( const block of blocks ) {
+		const gap = html.slice( cursor, block.start );
+		if ( gap.trim() !== '' ) {
+			residue.push( gap.trim() );
+		}
+		cursor = block.end;
+	}
+	const tail = html.slice( cursor );
+	if ( tail.trim() !== '' ) {
+		residue.push( tail.trim() );
+	}
+
+	if ( residue.length ) {
+		const sample = residue[ 0 ].replace( /\s+/g, ' ' ).slice( 0, 120 );
+		throw new Error(
+			`${ label } carries markup outside its top-level blocks (${ residue.length } run(s)); first: ${ sample }`
+		);
+	}
 }
 
 function findHeadings( html, label ) {
@@ -648,6 +678,13 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 		shape.length === expectedShape.length && expectedShape.every( ( entry, index ) => shape[ index ] === entry ),
 		`${ label } top-level composition must be [${ expectedShape.join( ', ' ) }], got [${ shape.join( ', ' ) }].`
 	);
+
+	// The shape check reads only what sits inside block delimiters, so on its
+	// own it says nothing about markup between or around the blocks. Without
+	// this, a stray <div> — extra copy, an unreviewed outbound link — passes
+	// the entire contract: no section owns it, so no cap moves and no heading
+	// inventory changes. Require the body to be its blocks plus whitespace.
+	assertBlockCoverage( html, blocks, label );
 
 	const [ hero, signals, navBlock ] = blocks;
 
@@ -934,6 +971,12 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	const schools = findByClass( secondColumn, 'hp-edu-card__school', label );
 	const periods = findByClass( secondColumn, 'hp-edu-card__period', label );
 	assert( degrees.length === 2, `Education must contain exactly two records, got ${ degrees.length }.` );
+	// Without this the loop below dereferences undefined and the verifier
+	// reports a TypeError instead of the labelled failure it exists to give.
+	assert(
+		schools.length === 2 && periods.length === 2,
+		`Education must carry two school and period lines, got ${ schools.length } / ${ periods.length }.`
+	);
 	EXPECTED_EDUCATION.forEach( ( record, index ) => {
 		assertExact( degrees[ index ].text, record.degree, `Education record ${ index + 1 } degree` );
 		assertExact( schools[ index ].text, record.school, `Education record ${ index + 1 } school` );
@@ -1041,7 +1084,16 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 function verifyPatternAdapter( source ) {
 	for ( const required of [
 		"get_theme_file_path( 'content/page-snapshots/about.html' )",
-		"str_contains( $hperkins_about_markup, 'hp-about-nav' ) ? 3 : 2",
+		// The substitution expectation is counted off the snapshot the adapter
+		// actually read, not inferred from a marker class — a rename or a
+		// different action count must not silently register an empty pattern.
+		'$hperkins_about_resume_found   = preg_match_all(',
+		'$hperkins_about_resume_found < 1',
+		'$hperkins_about_resume_found !== $hperkins_about_resume_count',
+		// Both matchers tolerate an absolute host and an existing ?v=, so the
+		// adapter's own output survives a round trip through the database.
+		'(?:https?://[^"/]+)?',
+		'(?:\\?v=\\d+)?',
 		'/wp-content/uploads/2026/06/henry-perkins.png',
 		'assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf',
 		'hperkins_tokens_asset_url',
@@ -1116,6 +1168,7 @@ module.exports = {
 	EXPECTED_SKILL_GROUPS,
 	RESUME_HREF,
 	assertNoForbiddenMarkup,
+	countRenderedText,
 	countVisibleWords,
 	countWords,
 	decodeCharacterReferences,
@@ -1123,7 +1176,6 @@ module.exports = {
 	extractVisibleText,
 	findHeadings,
 	findLinks,
-	getRenderedWordCountFunctionSource,
 	parseTopLevelBlocks,
 	removeAriaHiddenSubtrees,
 	verifyAboutBody,

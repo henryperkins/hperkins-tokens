@@ -3,6 +3,7 @@
 const { assertMatchingSiteUrl, getOrigin } = require( './lib/site-url' );
 const { runWp, runWpEval } = require( './lib/wp-cli' );
 const {
+	assertKnownFlags,
 	buildApplyLocalDraftsPhp,
 	prepareDraftPayloads,
 	selectDraftContracts,
@@ -18,6 +19,7 @@ try {
 	// drafts; --page=about is the only way to select the About candidate, and
 	// an explicit list never unions with the defaults. Bad keys fail here,
 	// before any WP-CLI process starts.
+	assertKnownFlags( process.argv.slice( 2 ), [ '--confirm-local' ] );
 	const requestedKeys = process.argv
 		.filter( ( argument ) => argument === '--page' || argument.startsWith( '--page=' ) )
 		.map( ( argument ) => argument.slice( '--page='.length ) );

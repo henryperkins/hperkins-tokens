@@ -363,6 +363,27 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   a thin adapter that emits the accepted snapshot with filemtime()-derived
   portrait and résumé URLs and fails closed on any substitution-count
   mismatch — the pattern can no longer drift into a third maintained body.
+* Review remediation. Selected Work cards are border-box, so height:100% plus
+  their padding no longer overflows the grid row and stacks row two under row
+  one. The closing action rail no longer wraps between 601px and ~637px, where
+  its two labels stopped fitting while the shared rule still had it in row
+  direction. The rendered word count now runs only in Node against the text the
+  page returns: counting in Chrome as well and comparing the two reported 884
+  words for an 881-word body, because the runtimes segment "WordPress.com" and
+  "A.S." differently and only Node's ICU is pinned. The About body contract now
+  requires the body to be its top-level blocks plus whitespace, closing a hole
+  where markup between blocks belonged to no section and moved no word cap. The
+  hover probe scrolls its card into view first, the sticky-header clearance
+  check fails when the masthead is missing instead of measuring zero, and the
+  workflow pins are anchored so a commented-out production gate breaks them.
+  The adapter counts the résumé actions the snapshot actually carries instead
+  of inferring 2-or-3 from a marker class, and both URL matchers tolerate an
+  absolute host and an existing ?v= so its own output survives a round trip.
+  export-page-snapshots.js gains the applicator's site-identity guard, and all
+  three --page entry points reject unrecognised flags rather than silently
+  falling back to their broad default. The deployed rendered About gate applies
+  from the promotion onward, so it no longer reds every main push while
+  production still serves the previous body.
 
 = 0.3.55 =
 * Make the placement-method ledgers readable on a phone. The keyword bank, the

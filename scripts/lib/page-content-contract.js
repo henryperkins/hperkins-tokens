@@ -136,6 +136,23 @@ function getPageRecord( state, contract ) {
 	return state.pages[ contract.key ];
 }
 
+// Every --page surface either mutates the database or mints a committed
+// mirror, and each one falls back to a broad default when no key is selected.
+// A silently-ignored argument therefore turns a typo into a wider operation
+// than the operator asked for: `--pages=about` selected nothing, fell back to
+// the default, and wrote two unrelated pages. Reject anything unrecognised
+// before selection resolves.
+function assertKnownFlags( argv, knownFlags ) {
+	for ( const argument of argv ) {
+		if ( argument === '--page' || argument.startsWith( '--page=' ) || knownFlags.includes( argument ) ) {
+			continue;
+		}
+		throw new Error(
+			`Unknown option: ${ argument }. Accepted: --page=<key>, ${ knownFlags.join( ', ' ) }.`
+		);
+	}
+}
+
 // One selector implementation backs every explicit --page=<key> surface, so
 // empty, malformed, unknown, duplicate, and wrong-kind keys all fail the same
 // way before any WP-CLI process starts.
@@ -330,6 +347,7 @@ module.exports = {
 	SNAPSHOT_DIR,
 	PAGE_CONTRACTS,
 	RETIRED_PAGE_PATHS,
+	assertKnownFlags,
 	buildApplyLocalDraftsPhp,
 	getPageRecord,
 	getRetiredPageTargetsPhp,

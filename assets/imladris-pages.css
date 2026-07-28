@@ -2617,6 +2617,11 @@ p.hp-contact-form__hint {
 .hp-about-template .hp-work-card {
   display: flex;
   flex-direction: column;
+  /* height:100% resolves against the row track, so the padding and border have
+     to sit inside that height or the card overflows its own grid row and the
+     second row rides up underneath the first. .wp-block-column carries no
+     box-sizing of its own (core sets it on .wp-block-columns only). */
+  box-sizing: border-box;
   height: 100%;
   padding: var(--wp--preset--spacing--5);
   border: 1px solid var(--wp--custom--border--hair);
@@ -2777,6 +2782,25 @@ p.hp-contact-form__hint {
 .hp-about-template .hp-about-closing {
   margin-top: var(--wp--preset--spacing--8);
   margin-bottom: var(--wp--preset--spacing--8);
+}
+
+/* "Start a conversation" + "View résumé (PDF)" is the longest action pair on
+   the page, and the closing panel's padding and entry rule take ~52px off the
+   rail. Between 601px and roughly 637px the two labels no longer fit side by
+   side, and wp:buttons defaults to flex-wrap: wrap, so the rail silently broke
+   into two rows while the shared rule still had it in row direction — against
+   the responsive contract, which is horizontal from 601px up and stacked at
+   600px and below. Above the boundary the labels shrink and wrap their own
+   text instead; the shared 600px rule still owns the stacked form below it. */
+@media (min-width: 601px) {
+  .hp-about-template .hp-about-closing > .hp-action-rail {
+    flex-wrap: nowrap;
+  }
+
+  .hp-about-template .hp-about-closing > .hp-action-rail .wp-block-button,
+  .hp-about-template .hp-about-closing > .hp-action-rail .wp-block-button__link {
+    min-width: 0;
+  }
 }
 
 /* ---- RESPONSIVE boundaries --------------------------------------------- */

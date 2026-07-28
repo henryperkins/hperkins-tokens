@@ -2,12 +2,14 @@
 
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
-const { runWpEval } = require( './lib/wp-cli' );
+const { runWp, runWpEval } = require( './lib/wp-cli' );
 const { getSha256 } = require( './lib/content-integrity' );
+const { assertMatchingSiteUrl, getOrigin } = require( './lib/site-url' );
 
 const {
 	SNAPSHOT_DIR,
 	THEME_PATH,
+	assertKnownFlags,
 	getPageRecord,
 	getTrackedPageTargetsPhp,
 	normalizeContent,
@@ -76,6 +78,7 @@ function writeSnapshotAtomically( snapshotPath, content ) {
 
 function main() {
 	// Selector validation happens before any WordPress query.
+	assertKnownFlags( process.argv.slice( 2 ), [ '--expect-draft', '--check' ] );
 	const requestedKeys = process.argv
 		.filter( ( argument ) => argument === '--page' || argument.startsWith( '--page=' ) )
 		.map( ( argument ) => argument.slice( '--page='.length ) );
@@ -88,6 +91,13 @@ function main() {
 			}
 		}
 	}
+
+	// These files are the accepted mirror the deployed integrity gate compares
+	// production against, so they may only ever be minted from the install
+	// HPERKINS_ORIGIN names — the same identity guard the draft applicator
+	// runs. Without it a bare run against a drifted dev install silently
+	// rewrites every committed snapshot.
+	assertMatchingSiteUrl( getOrigin(), runWp( [ 'option', 'get', 'home' ] ).trim() );
 
 	const state = getLiveState();
 

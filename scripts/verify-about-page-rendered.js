@@ -35,7 +35,7 @@ const {
 	EXPECTED_NAV_LINKS,
 	EXPECTED_PROJECTS,
 	countVisibleWords,
-	getRenderedWordCountFunctionSource,
+	countRenderedText,
 } = require( './lib/about-page-contract' );
 
 const THEME_ROOT = path.join( __dirname, '..' );
@@ -248,7 +248,6 @@ function buildInspectionExpression( opts ) {
 	// One self-contained battery. Only the OPTS literal is interpolated.
 	return `(async () => {
 		const OPTS = ${ JSON.stringify( opts ) };
-		const countRenderedWords = ${ getRenderedWordCountFunctionSource() };
 		const out = { violations: [] };
 		const rect = (el) => {
 			const value = el.getBoundingClientRect();
@@ -372,7 +371,9 @@ function buildInspectionExpression( opts ) {
 		if (document.activeElement && document.activeElement.blur) { document.activeElement.blur(); }
 
 		// --- canonical word count (skipped on boundary probes) --------------
-		out.wordCount = null;
+		// The page hands its rendered text back verbatim; Node segments it, so
+		// Chrome's ICU version can never move the count on its own.
+		out.renderedText = null;
 		if (OPTS.countWords) {
 			const clone = content.cloneNode(true);
 			clone.querySelectorAll('[hidden], [aria-hidden="true"]').forEach((node) => node.remove());
@@ -390,7 +391,7 @@ function buildInspectionExpression( opts ) {
 			shellMain.appendChild(shellContent);
 			shellContent.appendChild(clone);
 			document.body.appendChild(shellMain);
-			out.wordCount = countRenderedWords(clone.innerText);
+			out.renderedText = clone.innerText;
 			shellMain.remove();
 		}
 
@@ -661,12 +662,17 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 		verifyContent( result, viewport, expectations );
 
 		assert(
-			result.wordCount === expectations.sourceWordCount,
-			`${ viewport.width }px: rendered word count ${ result.wordCount } does not equal the source count ${ expectations.sourceWordCount }.`
+			typeof result.renderedText === 'string' && result.renderedText.trim() !== '',
+			`${ viewport.width }px: the page returned no rendered text to count.`
+		);
+		const wordCount = countRenderedText( result.renderedText );
+		assert(
+			wordCount === expectations.sourceWordCount,
+			`${ viewport.width }px: rendered word count ${ wordCount } does not equal the source count ${ expectations.sourceWordCount }.`
 		);
 		assert(
-			result.wordCount >= ABOUT_WORD_RANGE.min && result.wordCount <= ABOUT_WORD_RANGE.max,
-			`${ viewport.width }px: rendered word count ${ result.wordCount } outside ${ ABOUT_WORD_RANGE.min }–${ ABOUT_WORD_RANGE.max }.`
+			wordCount >= ABOUT_WORD_RANGE.min && wordCount <= ABOUT_WORD_RANGE.max,
+			`${ viewport.width }px: rendered word count ${ wordCount } outside ${ ABOUT_WORD_RANGE.min }–${ ABOUT_WORD_RANGE.max }.`
 		);
 	}
 
@@ -684,6 +690,10 @@ async function verifyCardHoverInertia( cdp, sessionId ) {
 			if (!card || !impact) {
 				return { error: 'hover probe found no .hp-work-card with an impact paragraph' };
 			}
+			// Selected Work sits far below the fold, so the card has to be
+			// scrolled into view before its rect can name a point the browser
+			// will hit-test — CDP dispatches at viewport coordinates.
+			card.scrollIntoView({ block: 'center' });
 			const style = getComputedStyle(card);
 			const snapshot = {
 				border: style.borderColor + '|' + style.borderWidth,
@@ -692,12 +702,22 @@ async function verifyCardHoverInertia( cdp, sessionId ) {
 				transform: style.transform,
 			};
 			const rect = impact.getBoundingClientRect();
-			return { snapshot, x: rect.right - 8, y: rect.top + 4 };
+			return {
+				snapshot,
+				x: rect.right - 8,
+				y: rect.top + 4,
+				viewport: { width: document.documentElement.clientWidth, height: document.documentElement.clientHeight },
+			};
 		})()`,
 		returnByValue: true,
 	}, sessionId );
 	assert( ! probe.result.value.error, probe.result.value.error );
-	const { snapshot, x, y } = probe.result.value;
+	const { snapshot, x, y, viewport } = probe.result.value;
+	// Fail on the real cause rather than on the hover that could not land.
+	assert(
+		x >= 0 && y >= 0 && x < viewport.width && y < viewport.height,
+		`Hover probe point (${ Math.round( x ) }, ${ Math.round( y ) }) falls outside the ${ viewport.width }x${ viewport.height } viewport.`
+	);
 	await cdp.send( 'Input.dispatchMouseEvent', { type: 'mouseMoved', x, y }, sessionId );
 	await wait( 250 );
 	const after = await cdp.send( 'Runtime.evaluate', {
@@ -756,12 +776,20 @@ async function verifyKeyboardFragments( cdp, sessionId ) {
 					tabindex: target ? target.getAttribute('tabindex') : null,
 					inTabOrder: target ? target.tabIndex >= 0 : true,
 					targetTop: target ? target.getBoundingClientRect().top : null,
+					headerFound: !! header,
 					headerBottom: header ? header.getBoundingClientRect().bottom : 0,
 				};
 			})()`,
 			returnByValue: true,
 		}, sessionId );
 		const state = landed.result.value;
+		// Without this the clearance check below degrades to `targetTop >= -1`,
+		// which no post-scroll layout can violate — a renamed masthead would
+		// turn the scroll-margin regression this probe exists to catch green.
+		assert(
+			state.headerFound,
+			`Jump link ${ link.text }: no header.wp-block-template-part to measure sticky clearance against.`
+		);
 		assert( state.hash === `#${ fragment }`, `Jump link ${ link.text }: hash is ${ state.hash }.` );
 		assert(
 			state.focusedId === fragment && state.isSection,
@@ -835,6 +863,23 @@ async function main() {
 		assertMatchingSiteUrl( origin, runWp( [ 'option', 'get', 'home' ] ).trim() );
 		// Local acceptance renders the applied candidate.
 		sourceRelative = 'content/page-drafts/about.html';
+	} else {
+		// Deployed mode. This whole contract describes the proof-first body, so
+		// it only applies once that body is the accepted one — the same
+		// phase-derivation verify-prominent-actions.js and
+		// verify-published-content-drift.js use, for the same reason. Asserting
+		// the redesign against a site still serving the previous body would red
+		// the deployed job on every push until an out-of-band promotion, and a
+		// permanently red step hides the regressions the other gates in it are
+		// there to catch. Exporting the promoted snapshot arms this gate.
+		const accepted = fs.readFileSync( path.join( THEME_ROOT, sourceRelative ), 'utf8' );
+		if ( ! accepted.includes( 'hp-about-nav' ) ) {
+			console.log(
+				`${ sourceRelative } is still the pre-redesign body; the rendered About contract ` +
+				'applies from the promotion onward. Skipping.'
+			);
+			return;
+		}
 	}
 
 	const sourceHtml = fs.readFileSync( path.join( THEME_ROOT, sourceRelative ), 'utf8' );
