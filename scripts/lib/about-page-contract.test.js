@@ -93,7 +93,7 @@ test( 'exact-text extraction keeps punctuation attached across nested inline lin
 } );
 
 test( 'the rendered word-count function source mirrors the Node algorithm', () => {
-	const fn = eval( getRenderedWordCountFunctionSource() ); // eslint-disable-line no-eval
+	const fn = new Function( `return ${ getRenderedWordCountFunctionSource() }` )();
 	for ( const sample of [
 		'View résumé (PDF)',
 		'systems—and workflows',
@@ -195,6 +195,15 @@ test( 'fails when a fragment target section loses its id or gains an aria-label'
 			mutated(
 				'<section class="wp-block-group alignwide hp-about-work" id="selected-work">',
 				'<section class="wp-block-group alignwide hp-about-work" id="selected-work" aria-label="Selected Work">'
+			)
+		),
+		/aria-label/
+	);
+	assert.throws(
+		() => verifyAboutBody(
+			mutated(
+				'<section class="wp-block-group hp-about-closing hp-action-panel is-closing" id="contact">',
+				'<section class="wp-block-group hp-about-closing hp-action-panel is-closing" id="contact" aria-labelledby="contact-title">'
 			)
 		),
 		/aria-label/

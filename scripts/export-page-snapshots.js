@@ -58,6 +58,9 @@ function getLiveState() {
 // file, so no partial write can ever masquerade as an accepted snapshot.
 function writeSnapshotAtomically( snapshotPath, content ) {
 	const temporaryPath = `${ snapshotPath }.tmp-${ process.pid }`;
+	// A killed earlier run can orphan our pid-suffixed temp file; clear it so
+	// 'wx' exclusivity only ever refuses files owned by a concurrent writer.
+	fs.rmSync( temporaryPath, { force: true } );
 	fs.writeFileSync( temporaryPath, content, { encoding: 'utf8', flag: 'wx' } );
 	try {
 		const written = fs.readFileSync( temporaryPath, 'utf8' );

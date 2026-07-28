@@ -107,10 +107,21 @@ async function waitForDevToolsUrl( chrome ) {
 			clearTimeout( timer );
 			reject( new Error( `Chrome exited before DevTools was ready (code ${ code }).` ) );
 		} );
+		// A missing or non-executable CHROME_BIN surfaces as a spawn 'error'
+		// event, never 'exit'; without this listener Node crashes unhandled.
+		chrome.on( 'error', ( error ) => {
+			clearTimeout( timer );
+			reject( new Error( `Chrome failed to start (${ CHROME }): ${ error.message }` ) );
+		} );
 	} );
 }
 
 function createCdpClient( wsUrl ) {
+	// The dependency-free CDP client rides on Node's global WebSocket; fail
+	// with a version message instead of a bare ReferenceError on older Node.
+	if ( typeof WebSocket === 'undefined' ) {
+		throw new Error( 'Global WebSocket is unavailable; the rendered About contract requires Node 22 or newer.' );
+	}
 	const ws = new WebSocket( wsUrl );
 	let nextId = 1;
 	const pending = new Map();
@@ -417,6 +428,13 @@ function verifyGeometry( result, viewport ) {
 		`${ label }: horizontal overflow (client=${ result.clientWidth }, scroll=${ result.scrollWidth }).`
 	);
 
+	// Boundary probes skip verifyContent, so the card and capability counts
+	// must hold here too before any positional indexing below.
+	assert( result.cards.length === 4, `${ label }: expected four project cards, got ${ result.cards.length }.` );
+	assert(
+		result.capabilityColumns.length === 3,
+		`${ label }: expected three capability units, got ${ result.capabilityColumns.length }.`
+	);
 	const cardRects = result.cards.map( ( card ) => card.rect );
 	const capabilityRects = result.capabilityColumns;
 	if ( width >= 896 ) {
@@ -662,7 +680,10 @@ async function verifyCardHoverInertia( cdp, sessionId ) {
 	const probe = await cdp.send( 'Runtime.evaluate', {
 		expression: `(() => {
 			const card = document.querySelector('.hp-work-card');
-			const impact = card.querySelector('.hp-work-card__impact');
+			const impact = card && card.querySelector('.hp-work-card__impact');
+			if (!card || !impact) {
+				return { error: 'hover probe found no .hp-work-card with an impact paragraph' };
+			}
 			const style = getComputedStyle(card);
 			const snapshot = {
 				border: style.borderColor + '|' + style.borderWidth,
@@ -675,6 +696,7 @@ async function verifyCardHoverInertia( cdp, sessionId ) {
 		})()`,
 		returnByValue: true,
 	}, sessionId );
+	assert( ! probe.result.value.error, probe.result.value.error );
 	const { snapshot, x, y } = probe.result.value;
 	await cdp.send( 'Input.dispatchMouseEvent', { type: 'mouseMoved', x, y }, sessionId );
 	await wait( 250 );

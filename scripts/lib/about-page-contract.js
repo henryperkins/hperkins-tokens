@@ -385,10 +385,13 @@ function decodeCharacterReferences( text, label = 'About body' ) {
 		if ( body[ 0 ] === '#' ) {
 			const isHex = body[ 1 ] === 'x' || body[ 1 ] === 'X';
 			const code = Number.parseInt( body.slice( isHex ? 2 : 1 ), isHex ? 16 : 10 );
-			if ( ! Number.isFinite( code ) ) {
-				throw new Error( `${ label } contains an undecodable numeric reference: ${ match }` );
+			try {
+				// String.fromCodePoint throws a bare RangeError past U+10FFFF;
+				// keep the failure labelled with the offending reference.
+				return String.fromCodePoint( code );
+			} catch ( cause ) {
+				throw new Error( `${ label } contains an undecodable numeric reference: ${ match }`, { cause } );
 			}
-			return String.fromCodePoint( code );
 		}
 		if ( ! Object.hasOwn( NAMED_REFERENCES, body ) ) {
 			throw new Error( `${ label } contains an unknown named character reference: ${ match }` );
@@ -863,6 +866,8 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	const dates = findByClass( experience.outer, 'hp-exp__dates', label );
 	const orgs = findByClass( experience.outer, 'hp-exp__org', label );
 	assert( roles.length === 4, `Selected Experience must retain four roles, got ${ roles.length }.` );
+	assert( dates.length === 4, `Selected Experience must carry four date lines, got ${ dates.length }.` );
+	assert( orgs.length === 4, `Selected Experience must carry four organization lines, got ${ orgs.length }.` );
 	EXPECTED_EXPERIENCE.entries.forEach( ( entry, index ) => {
 		assertExact( roles[ index ].text, entry.role, `Experience role ${ index + 1 }` );
 		assertExact( dates[ index ].text, entry.dates, `Experience dates ${ index + 1 }` );

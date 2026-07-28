@@ -144,7 +144,9 @@ function resolveSelection( keys, { pool, kind } ) {
 	const seen = new Set();
 	for ( const key of keys ) {
 		if ( typeof key !== 'string' || key.length === 0 ) {
-			throw new Error( `Empty --page selector; expected one of: ${ pool.map( ( c ) => c.key ).join( ', ' ) }.` );
+			throw new Error(
+				`Empty --page selector; use --page=<key> with one of: ${ pool.map( ( c ) => c.key ).join( ', ' ) }.`
+			);
 		}
 		if ( ! /^[a-z0-9][a-z0-9-]*$/.test( key ) ) {
 			throw new Error( `Malformed page selector: ${ JSON.stringify( key ) }.` );

@@ -2458,6 +2458,10 @@ p.hp-contact-form__hint {
    inside page-about.html's explicitly-constrained post-content. Pulling the
    wrapper (not just the inner grid) keeps each section's eyebrow + h2
    left-aligned with its cards, as in the snapshot. */
+/* .hp-about-work and .hp-about-foundations are the proof-first redesign's
+   dashboard sections (defined below); they share this one breakout recipe so
+   the rollback-window cleanup only edits this list. skills-edu and projects
+   belong to the previous body and leave in Phase C. */
 @media (min-width: 56rem) {
   .hp-about-template
     :is(
@@ -2466,7 +2470,9 @@ p.hp-contact-form__hint {
       .hp-about-capabilities,
       .hp-about-experience,
       .hp-about-skills-edu,
-      .hp-about-projects
+      .hp-about-projects,
+      .hp-about-work,
+      .hp-about-foundations
     ) {
     --hp-about-wide: min(
       var(--wp--custom--container--wide, 72rem),
@@ -2780,20 +2786,8 @@ p.hp-contact-form__hint {
   }
 }
 
-@media (min-width: 56rem) {
-  /* The redesigned dashboard sections join the wide breakout so eyebrow,
-     heading, and grid pull out together, like the sections above. */
-  .hp-about-template :is(.hp-about-work, .hp-about-foundations) {
-    --hp-about-wide: min(
-      var(--wp--custom--container--wide, 72rem),
-      100vw - 2 * var(--wp--preset--spacing--6, 2rem)
-    );
-    width: var(--hp-about-wide);
-    max-width: none;
-    margin-inline: calc(50% - var(--hp-about-wide) / 2) !important;
-    box-sizing: border-box;
-  }
-}
+/* The redesigned dashboard sections join the shared wide breakout in the
+   About layer's single :is() recipe above — no second copy here. */
 
 @media (max-width: 781px) {
   .hp-about-template .hp-about-foundations-grid.wp-block-columns {

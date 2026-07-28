@@ -59,7 +59,7 @@ for ( const file of aboutFiles ) {
 		`${ file } must state PR #757's review status.`
 	);
 	assert(
-		contents.includes( redesigned ? 'it closed without merge on July 18, 2026' : 'PR #49 closed without merge on July 18, 2026' ),
+		contents.includes( redesigned ? 'in PR #49; it closed without merge on July 18, 2026' : 'PR #49 closed without merge on July 18, 2026' ),
 		`${ file } must state PR #49's closed state.`
 	);
 	assert( ! contents.includes( 'PR #49</a> — in review' ), `${ file } still presents PR #49 as in review.` );

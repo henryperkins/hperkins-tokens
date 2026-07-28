@@ -29,9 +29,13 @@ const ABOUT_SOURCE = USE_DRAFTS
 // panel. Deriving the expectation from the selected source keeps every phase
 // of the promotion green without a flag: old snapshot -> 1/0, reviewed
 // candidate and exported redesign snapshot -> 2/1.
-const ABOUT_REDESIGNED = fs
-	.readFileSync( path.join( THEME_ROOT, ABOUT_SOURCE ), 'utf8' )
-	.includes( 'hp-about-nav' );
+const ABOUT_REDESIGNED = ( () => {
+	try {
+		return fs.readFileSync( path.join( THEME_ROOT, ABOUT_SOURCE ), 'utf8' ).includes( 'hp-about-nav' );
+	} catch ( cause ) {
+		throw new Error( `About source ${ ABOUT_SOURCE } is missing; the prominent-action contract derives its /about/ expectation from it.`, { cause } );
+	}
+} )();
 
 const RAIL_FILES = [
 	'patterns/wapuu-home-hero.php',
