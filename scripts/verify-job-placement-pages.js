@@ -98,7 +98,90 @@ function verifySourceContracts() {
 		assert( pageCss.includes( expected ), `assets/imladris-pages.css is missing recruiter-page contract: ${ expected }` );
 	}
 
+	verifyStackedLedgerLabels( pageCss );
+
 	console.log( 'recruiter rendered-page source contracts verified' );
+}
+
+/** Column headers of every `<figure>` carrying `className`, in document order. */
+function ledgerHeaders( html, className ) {
+	const figures = [];
+	const figure = new RegExp( `<figure[^>]*\\b${ className }\\b[^>]*>([\\s\\S]*?)</figure>`, 'g' );
+	let match;
+	while ( ( match = figure.exec( html ) ) !== null ) {
+		const thead = /<thead>([\s\S]*?)<\/thead>/.exec( match[1] );
+		figures.push(
+			thead
+				? Array.from( thead[1].matchAll( /<th[^>]*>([\s\S]*?)<\/th>/g ) ).map( ( cell ) =>
+						cell[1].replace( /<[^>]+>/g, '' ).replace( /\s+/g, ' ' ).trim()
+				  )
+				: []
+		);
+	}
+	return figures;
+}
+
+/**
+ * Below 782px each ledger row stacks and every column header is reproduced
+ * inside its own cell as a `::before` label, addressed by the cell's position.
+ * Neither file can show that coupling on its own: rename or reorder a column in
+ * the page body and the stylesheet keeps announcing the old name over the new
+ * value, on the one layout where the header row is not on screen to contradict
+ * it. So the labels are checked against the headers they claim to repeat.
+ *
+ * Only labelled columns are listed. The market screen deliberately leaves
+ * company, posting link and reasoning unlabelled — those values name
+ * themselves — and a column added to this table must either be labelled here
+ * or be as self-evident.
+ */
+function verifyStackedLedgerLabels( pageCss ) {
+	const appendix = read( 'content/page-snapshots/placement-method-evidence.html' );
+	const digest = read( 'content/page-snapshots/job-placement-digest.html' );
+
+	const keyword = ledgerHeaders( appendix, 'hp-keyword-table' );
+	const state = ledgerHeaders( appendix, 'hp-state-table' );
+	const market = ledgerHeaders( appendix, 'hp-market-table' );
+	const evidence = ledgerHeaders( digest, 'hp-evidence-table' );
+
+	// `instances` are the header rows a single label speaks for; more than one
+	// means every table sharing that unscoped rule must still agree on the name.
+	const contract = [
+		{ table: 'hp-keyword-table', cell: 1, column: 1, scope: '', instances: keyword },
+		// The three disclosures bound their claims in different words, so each
+		// owns its own third-column label.
+		{ table: 'hp-keyword-table', cell: 2, column: 2, scope: '.hp-keyword-disclosure:nth-of-type(1) ', instances: [ keyword[0] ] },
+		{ table: 'hp-keyword-table', cell: 2, column: 2, scope: '.hp-keyword-disclosure:nth-of-type(2) ', instances: [ keyword[1] ] },
+		{ table: 'hp-keyword-table', cell: 2, column: 2, scope: '.hp-keyword-disclosure:nth-of-type(3) ', instances: [ keyword[2] ] },
+		{ table: 'hp-state-table', cell: 1, column: 1, scope: '', instances: state },
+		{ table: 'hp-state-table', cell: 2, column: 2, scope: '', instances: state },
+		{ table: 'hp-market-table', cell: 3, column: 3, scope: '', instances: market },
+		{ table: 'hp-market-table', cell: 4, column: 4, scope: '', instances: market },
+		{ table: 'hp-market-table', cell: 5, column: 5, scope: '', instances: market },
+		{ table: 'hp-evidence-table', cell: 1, column: 1, scope: '', instances: evidence },
+		{ table: 'hp-evidence-table', cell: 2, column: 2, scope: '', instances: evidence },
+	];
+
+	for ( const { table, cell, column, scope, instances } of contract ) {
+		assert(
+			instances.length > 0 && instances.every( ( headers ) => headers && headers[ column ] ),
+			`${ table } has no column ${ column } in the tracked page snapshot; its stacked label addresses a column that is gone.`
+		);
+		const names = new Set( instances.map( ( headers ) => headers[ column ] ) );
+		assert(
+			names.size === 1,
+			`one stacked label speaks for every ${ table }, but their column ${ column } headers disagree: ${ JSON.stringify( [ ...names ] ) }.`
+		);
+		const [ expected ] = [ ...names ];
+		const selector = `${ scope }.wp-block-table.${ table } tbody td:nth-of-type(${ cell })::before`;
+		const rule = new RegExp(
+			`${ selector.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ) }\\s*\\{\\s*content:\\s*"([^"]*)"`
+		).exec( pageCss );
+		assert( rule, `assets/imladris-pages.css declares no stacked label for ${ selector }` );
+		assert(
+			rule[1] === expected,
+			`the stacked label for ${ table } column ${ column } says "${ rule[1] }" but the page snapshot's header says "${ expected }".`
+		);
+	}
 }
 
 function wait( milliseconds ) {

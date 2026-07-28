@@ -580,6 +580,216 @@ p.hp-contact-form__hint {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Wide ledgers on a phone.
+
+   Every ledger below declares a min-inline-size wider than a phone, so the
+   figure becomes a horizontal scroller and most of the table sits off-screen:
+   at 390px the market screen showed the job title and a clipped company and
+   hid the remaining 1116px — every posting URL, date, state, verdict and
+   reason. The funnel was worse for being plausible, reading as a complete
+   two-column table with no cue that a third column existed. A scroller also
+   cannot be driven from the keyboard, and a row stretched by text nobody can
+   see leaves a blank band where its visible cells ran out.
+
+   So below the tablet boundary each row becomes one stacked ledger entry: the
+   row header leads, the column name moves into its own cell as a label, and
+   nothing is hidden. Row anatomy stays fixed per component — one padding, one
+   separator, no state-dependent shape.
+
+   Specificity note: the column-width rules above are (0,2,1); the `tbody` in
+   these selectors makes them (0,2,2) so they win wherever they are placed.
+   ------------------------------------------------------------------------ */
+@media (max-width: 781px) {
+  /* Each column header is reproduced inside its cell below, so the header row
+     would only repeat itself. Keep it in the accessibility tree. */
+  .wp-block-table.hp-keyword-table thead,
+  .wp-block-table.hp-state-table thead,
+  .wp-block-table.hp-market-table thead,
+  .wp-block-table.hp-evidence-table thead {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* Stacked rows fit, so there is nothing left to scroll. */
+  .wp-block-table.hp-keyword-table,
+  .wp-block-table.hp-state-table,
+  .wp-block-table.hp-market-table,
+  .wp-block-table.hp-evidence-table {
+    overflow-x: visible;
+  }
+
+  .wp-block-table.hp-keyword-table table,
+  .wp-block-table.hp-state-table table,
+  .wp-block-table.hp-market-table table,
+  .wp-block-table.hp-evidence-table table {
+    display: block;
+    min-inline-size: 0;
+  }
+
+  .wp-block-table.hp-keyword-table tbody,
+  .wp-block-table.hp-state-table tbody,
+  .wp-block-table.hp-market-table tbody,
+  .wp-block-table.hp-evidence-table tbody {
+    display: block;
+  }
+
+  .wp-block-table.hp-keyword-table tbody :is(tr, th, td),
+  .wp-block-table.hp-state-table tbody :is(tr, th, td),
+  .wp-block-table.hp-market-table tbody :is(tr, th, td),
+  .wp-block-table.hp-evidence-table tbody :is(tr, th, td) {
+    box-sizing: border-box;
+    display: block;
+    inline-size: 100%;
+  }
+
+  .wp-block-table.hp-keyword-table tbody tr,
+  .wp-block-table.hp-state-table tbody tr,
+  .wp-block-table.hp-market-table tbody tr,
+  .wp-block-table.hp-evidence-table tbody tr {
+    padding: var(--wp--preset--spacing--4);
+    border-block-end: 1px solid var(--wp--custom--border--hair);
+  }
+
+  .wp-block-table.hp-keyword-table tbody tr:last-child,
+  .wp-block-table.hp-state-table tbody tr:last-child,
+  .wp-block-table.hp-market-table tbody tr:last-child,
+  .wp-block-table.hp-evidence-table tbody tr:last-child {
+    border-block-end: 0;
+  }
+
+  /* The row owns the padding and the separator now, not the cell. Full-width
+     cells wrap at word boundaries; `anywhere` is for narrow table columns. */
+  .wp-block-table.hp-keyword-table tbody :is(th, td),
+  .wp-block-table.hp-state-table tbody :is(th, td),
+  .wp-block-table.hp-market-table tbody :is(th, td),
+  .wp-block-table.hp-evidence-table tbody :is(th, td) {
+    padding: 0;
+    border-block-end: 0;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .wp-block-table.hp-keyword-table tbody th,
+  .wp-block-table.hp-state-table tbody th,
+  .wp-block-table.hp-market-table tbody th,
+  .wp-block-table.hp-evidence-table tbody th {
+    font-size: var(--wp--preset--font-size--md);
+    line-height: var(--wp--custom--leading--snug);
+  }
+
+  .wp-block-table.hp-keyword-table tbody td,
+  .wp-block-table.hp-state-table tbody td,
+  .wp-block-table.hp-market-table tbody td,
+  .wp-block-table.hp-evidence-table tbody td {
+    margin-block-start: var(--wp--preset--spacing--3);
+  }
+
+  /* A workbook cell that is genuinely empty must not leave a naked label. */
+  .wp-block-table.hp-keyword-table tbody td:empty,
+  .wp-block-table.hp-state-table tbody td:empty,
+  .wp-block-table.hp-market-table tbody td:empty,
+  .wp-block-table.hp-evidence-table tbody td:empty {
+    display: none;
+  }
+
+  /* The relocated column header, set exactly as the real one. */
+  .wp-block-table.hp-keyword-table tbody td::before,
+  .wp-block-table.hp-state-table tbody td::before,
+  .wp-block-table.hp-market-table tbody td::before,
+  .wp-block-table.hp-evidence-table tbody td::before {
+    display: block;
+    font-family: var(--wp--preset--font-family--label);
+    font-size: var(--wp--preset--font-size--xs);
+    font-weight: var(--wp--custom--weight--regular);
+    line-height: 1.35;
+    letter-spacing: var(--wp--custom--tracking--wide);
+    text-transform: uppercase;
+    color: var(--wp--custom--text--muted);
+  }
+
+  .wp-block-table.hp-keyword-table tbody td:nth-of-type(1)::before {
+    content: "Posting signal";
+  }
+
+  /* The three disclosures bound their claims in different words — Demonstrated
+     evidence, a Partial claim's exact scope, a Gap's current position — so each
+     carries its own column name rather than a shared approximation. */
+  .hp-keyword-disclosure:nth-of-type(1) .wp-block-table.hp-keyword-table tbody td:nth-of-type(2)::before {
+    content: "Evidence boundary";
+  }
+
+  .hp-keyword-disclosure:nth-of-type(2) .wp-block-table.hp-keyword-table tbody td:nth-of-type(2)::before {
+    content: "Exact boundary";
+  }
+
+  .hp-keyword-disclosure:nth-of-type(3) .wp-block-table.hp-keyword-table tbody td:nth-of-type(2)::before {
+    content: "Current boundary";
+  }
+
+  .wp-block-table.hp-state-table tbody td:nth-of-type(1)::before {
+    content: "Count";
+  }
+
+  .wp-block-table.hp-state-table tbody td:nth-of-type(2)::before {
+    content: "Workbook rule";
+  }
+
+  .wp-block-table.hp-market-table tbody td:nth-of-type(3)::before {
+    content: "Last checked";
+  }
+
+  .wp-block-table.hp-market-table tbody td:nth-of-type(4)::before {
+    content: "Current state";
+  }
+
+  .wp-block-table.hp-market-table tbody td:nth-of-type(5)::before {
+    content: "Screen verdict";
+  }
+
+  .wp-block-table.hp-evidence-table tbody td:nth-of-type(1)::before {
+    content: "State";
+  }
+
+  .wp-block-table.hp-evidence-table tbody td:nth-of-type(2)::before {
+    content: "Direct evidence";
+  }
+
+  /* A short value sits beside its label on one ledger line rather than under
+     it, so a twenty-row screen stays scannable. */
+  .wp-block-table.hp-state-table tbody td:nth-of-type(1):not(:empty),
+  .wp-block-table.hp-market-table tbody td:nth-of-type(n + 3):nth-of-type(-n + 5):not(:empty),
+  .wp-block-table.hp-evidence-table tbody td:nth-of-type(1):not(:empty) {
+    display: grid;
+    grid-template-columns: 8rem minmax(0, 1fr);
+    gap: var(--wp--preset--spacing--3);
+    align-items: baseline;
+    margin-block-start: var(--wp--preset--spacing--2);
+  }
+
+  .wp-block-table.hp-state-table tbody td:nth-of-type(1) {
+    font-family: var(--wp--preset--font-family--mono);
+  }
+
+  /* Company and the posting link read as the entry's own subtitle; naming
+     those columns would add nothing their values do not already say. */
+  .wp-block-table.hp-market-table tbody td:nth-of-type(1) {
+    margin-block-start: var(--wp--preset--spacing--1);
+    color: var(--wp--custom--text--muted);
+  }
+
+  .wp-block-table.hp-market-table tbody td:nth-of-type(2) {
+    margin-block-start: var(--wp--preset--spacing--2);
+  }
+}
+
 /* At the 320px verification width, two prose columns leave less than one
    readable word per line. Preserve the table semantics in the accessibility
    tree while presenting each role/proof pair as one stacked ledger row. */
