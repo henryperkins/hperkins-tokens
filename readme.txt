@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.55
+Stable tag: 0.3.56
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -185,7 +185,7 @@ WordPress template hierarchy):
 * page-about.html — wraps the stored About page content in the narrow/wide About
   composition shell. The current live content is versioned at
   `content/page-snapshots/about.html`; the About page-layout CSS lives in
-  `assets/imladris-pages.css` (moved out of style.css at 0.3.55).
+  `assets/imladris-pages.css` (moved out of style.css at 0.3.56).
 * page-ai-enablement.html — the AI-enablement essay shell; renders the stored
   page body in the 44/72rem reading column. The current live content is
   versioned at `content/page-snapshots/ai-enablement.html`.
@@ -338,7 +338,7 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
 
-= 0.3.55 =
+= 0.3.56 =
 * About proof-first plumbing (Phase A of the 2026-07-28 About redesign spec;
   no visitor-facing About body change). Moved the entire About page layer —
   the .hp-about-template composition, snapshot-fidelity polish, and wide
@@ -363,6 +363,36 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   a thin adapter that emits the accepted snapshot with filemtime()-derived
   portrait and résumé URLs and fails closed on any substitution-count
   mismatch — the pattern can no longer drift into a third maintained body.
+
+= 0.3.55 =
+* Make the placement-method ledgers readable on a phone. The keyword bank, the
+  screening funnel and the twenty-row market screen each declared a
+  min-inline-size wider than a phone, so the figure became a horizontal
+  scroller: at 390px the market screen showed a job title and a clipped company
+  and hid the other 1116px, which is every posting URL, date, current state,
+  screen verdict and reason. The funnel was worse for looking finished — a
+  plausible two-column table with no cue that its "Workbook rule" column
+  existed. Below 782px each row is now one stacked ledger entry with its column
+  name carried into the cell as a label, so nothing is off-screen; the header
+  row stays in the accessibility tree, empty workbook cells drop their label
+  rather than leaving it naked, and short values sit beside their label on a
+  single line so twenty rows stay scannable.
+* Accessibility: the same change retires a keyboard trap of sorts on those
+  routes. A horizontally scrolling region has to be focusable to be scrolled
+  from the keyboard, and none of these figures was; below 782px there is no
+  longer anything to scroll. The digest's evidence register gets the identical
+  treatment — it shares the ledger vocabulary and hid 476px of 800px at 390px.
+* Fix the closing panel's eyebrow running underneath the corner emblem at
+  exactly 390px, where the line is long enough to reach it and the panel is too
+  narrow to have wrapped already. The eyebrow now reserves the emblem's own
+  footprint.
+* verify-job-placement-pages.js checks the stacked labels against the headers
+  they repeat. The labels address cells by position, so renaming or reordering
+  a column in the page body would leave the stylesheet announcing the old name
+  over the new value — on the one layout where the header row is off-screen and
+  cannot contradict it. The three keyword disclosures already prove the risk is
+  real: they bound their claims as "Evidence boundary", "Exact boundary" and
+  "Current boundary", so one shared label would have misreported two of them.
 
 = 0.3.54 =
 * Accessibility: give the reader hero a solid twilight ground and a scrim, and

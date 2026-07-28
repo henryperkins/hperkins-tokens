@@ -103,7 +103,7 @@ must not opt into either class.
 
 The entire About page layer (`.hp-about-template…` composition, polish, wide
 breakout, and the proof-first redesign selectors) lives in
-`assets/imladris-pages.css` as of 0.3.55 — `style.css` contains no
+`assets/imladris-pages.css` as of 0.3.56 — `style.css` contains no
 `.hp-about-template` selector anymore, and the About source contract enforces
 that split. `verify-style-token-usage.js` validates var() usage across both
 authored sheets.
