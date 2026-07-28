@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.54
+Version: 0.3.55
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -2308,6 +2308,17 @@ samp {
 		inset: var(--wp--preset--spacing--3) var(--wp--preset--spacing--3) auto auto;
 		inline-size: var(--wp--preset--spacing--5);
 		block-size: var(--wp--preset--spacing--5);
+	}
+
+	/* The emblem shares the top-inline-end corner with the eyebrow. At 390px
+		 the eyebrow is exactly long enough to run under it, so reserve the
+		 emblem's own footprint — its size plus its inset — and let the line wrap
+		 instead. */
+	.hp-action-panel.is-closing > .hp-page-hero__eyebrow {
+		padding-inline-end: calc(
+			var(--wp--preset--spacing--5) + var(--wp--preset--spacing--3) +
+				var(--wp--preset--spacing--2)
+		);
 	}
 }
 
