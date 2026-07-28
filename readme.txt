@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.53
+Stable tag: 0.3.54
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -320,6 +320,32 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.54 =
+* Accessibility: give the reader hero a solid twilight ground and a scrim, and
+  set the standfirst and byline in parchment rather than evergreen. With no
+  featured image the cover emitted no image at all, so its dim overlay
+  composited onto page parchment and left the standfirst and byline at 4.15:1;
+  over a light featured image they fell to 3.85:1 and the gold topic to 4.47:1.
+  Neither is large text, so both owed 4.5:1. The scrim's 22% floor is sized to
+  the worst case — a pure-white featured image — where the lightest of those
+  tokens now clears 5.66:1.
+* Accessibility: make the whole post card a single link target. The featured
+  image was a second anchor to the same permalink, so every card carried a
+  duplicate tab stop whose accessible name was empty whenever the attachment
+  had no alt text, and the media box's overflow clipped that anchor's focus
+  ring away entirely. The image is now inert and the title link stretches over
+  the card, keeping one named tab stop and a visible focus ring.
+* Fix the newsletter panel overhanging the text spine on /essays/ and every
+  single post. The subscribe pattern emits no wp-block-* class and so inherits
+  none of core's box-sizing; left content-box, its padding fell outside the
+  44rem measure. The border-box rule moves to the shared component and the
+  /contact/-scoped override is retired.
+* Fix featured images being top-clipped instead of centre-cropped in every post
+  card. core's featured-image figure is height:auto, which broke the percentage
+  chain the card's object-fit depended on.
+* Fix the featured composition leaving a half-height empty cell at exactly two
+  published posts: the lead's two-row span is now gated on a third post.
 
 = 0.3.53 =
 * Rebuild the Job Placement Digest as a concise Support Engineer case with

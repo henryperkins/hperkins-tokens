@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.53
+Version: 0.3.54
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -2636,6 +2636,14 @@ samp {
 }
 
 .hp-subscribe {
+	/* border-box, not content-box. The pattern emits a bare <section
+	   class="hp-subscribe"> with no wp-block-* class, so it inherits none of
+	   core's per-block box-sizing. Left content-box, the spacing-7 padding lands
+	   outside whatever max-width the block wraps it in — on /essays/ and every
+	   single post that is the 44rem constrained main, so the panel painted ~40px
+	   past the text spine on each side. Folding the padding inside the inherited
+	   measure keeps it on the spine everywhere, with no magic number. */
+	box-sizing: border-box;
 	padding: var(--wp--preset--spacing--7);
 	border-radius: var(--wp--custom--radius--lg);
 	background: var(--wp--custom--surface--inverse);
