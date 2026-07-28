@@ -5131,8 +5131,8 @@ body.search .wp-block-post-date {
 @media print {
 	/* Ink economy, and no reliance on background printing being enabled. */
 	body {
-		background: #fff;
-		color: #000;
+		background: var(--wp--custom--print--paper);
+		color: var(--wp--custom--print--ink);
 	}
 
 	/* Navigation, decoration, and interactive-only affordances. The header is a
@@ -5174,7 +5174,7 @@ body.search .wp-block-post-date {
 	.hp-reader-hero__meta a,
 	.hp-reader-hero__topic,
 	.hp-reader-hero__topic a {
-		color: #000 !important;
+		color: var(--wp--custom--print--ink) !important;
 	}
 
 	/* Cards and ledger rows must not be split across a page break, and the

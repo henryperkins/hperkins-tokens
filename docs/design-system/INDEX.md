@@ -29,7 +29,8 @@ shadows, easings and durations.
 > darkened for WCAG AA — `text.accent` #7A5C1E, `feedback.warning` #855F1E, `on.review` (0.3.34);
 > the four ring/footer scrims were promoted into `custom.scrim.*` (0.3.34); and the link **hover**
 > color moved onto `text.accent` (0.3.38). `gold-800` #6E531B was added in 0.3.50 as the
-> accessible small-text color for the gold-200 Digest cue. Re-diff against the DS project before
+> accessible small-text color for the gold-200 Digest cue; `custom.print.*` names exact white
+> paper and black ink for background-free printing (0.3.54). Re-diff against the DS project before
 > asserting 1:1 today. The only DS token-CSS not represented as `theme.json` presets are
 alias/util vars (`--gutter-*`, `--focus-*`, the `--surface-*`/`--text-*` semantic aliases), which the
 theme's `style.css` already provides via the `--wp--custom--*` / `--wp--preset--*` cascade. A token

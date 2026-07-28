@@ -114,21 +114,25 @@ for ( const [ file, markup, expected ] of [
 }
 
 // --- Sticky posts ---------------------------------------------------------
-// core only sets ignore_sticky_posts for the 'only'/'ignore' modes; the block's
-// empty default falls through, and these secondary loops parse as is_home with
-// $page pinned to 1. One editor checkbox would then splice a fourth card into a
-// composition built for three, or prepend the sticky post to the offset:3 grid
-// on page 1 and on every paginated page after it.
+// WordPress 6.6 treats an unrecognised non-empty sticky mode as exclusion, so
+// the templates keep the compatible empty value and the query-ID filter sets
+// ignore_sticky_posts. That preserves sticky posts in normal chronological
+// order without letting core prepend one to either composition.
 for ( const [ label, attrs ] of [ [ 'queryId 10', FEATURED ], [ 'queryId 11', GRID ] ] ) {
 	if ( ! attrs ) {
 		continue;
 	}
 	const sticky = ( attrs.query || {} ).sticky;
 	check(
-		sticky === 'ignore',
-		`templates/home.html ${ label } must set "sticky":"ignore" (found ${ JSON.stringify( sticky ) }); the empty default lets a sticky post break the composition.`
+		sticky === '',
+		`templates/home.html ${ label } must keep the WordPress 6.6-compatible empty sticky mode (found ${ JSON.stringify( sticky ) }).`
 	);
 }
+check(
+	/in_array\(\s*\$query_id,\s*array\(\s*10,\s*11\s*\),\s*true\s*\)/.test( functions ) &&
+		/\$query\['ignore_sticky_posts'\] = true;/.test( functions ),
+	'functions.php must set ignore_sticky_posts for journal queryIds 10 and 11.'
+);
 if ( RELATED ) {
 	check(
 		( RELATED.query || {} ).sticky === 'exclude',

@@ -348,6 +348,27 @@ function hperkins_tokens_exclude_current_from_related( $query, $block ) {
 add_filter( 'query_loop_block_query_vars', 'hperkins_tokens_exclude_current_from_related', 10, 2 );
 
 /**
+ * Keep sticky posts in chronological order in both home.html journal loops.
+ *
+ * The compatible empty sticky mode in the template avoids excluding sticky
+ * posts on WordPress 6.6, where unrecognised non-empty modes take the exclusion
+ * path. Setting this query var prevents core from promoting them instead.
+ *
+ * @param array    $query The query vars built from the block.
+ * @param WP_Block $block The block instance (its context carries the queryId).
+ * @return array
+ */
+function hperkins_tokens_ignore_journal_stickies( $query, $block ) {
+	$query_id = isset( $block->context['queryId'] ) ? (int) $block->context['queryId'] : 0;
+	if ( in_array( $query_id, array( 10, 11 ), true ) ) {
+		$query['ignore_sticky_posts'] = true;
+	}
+
+	return $query;
+}
+add_filter( 'query_loop_block_query_vars', 'hperkins_tokens_ignore_journal_stickies', 10, 2 );
+
+/**
  * Tag the journal grid Query Loop (home.html, queryId 11) with its static seed
  * offset. The grid starts at offset 3 because the featured loop above it shows
  * the first three posts; core computes max_num_pages from found_posts without

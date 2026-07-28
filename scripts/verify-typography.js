@@ -306,6 +306,11 @@ function buildExpression( opts ) {
 			scrollWidth: document.documentElement.scrollWidth,
 			innerWidth: window.innerWidth,
 			is404: /404/.test(document.title || '') || document.body.classList.contains('error404'),
+			template: document.body.classList.contains('single-post') && document.querySelector('main.hp-reader')
+				? 'single'
+				: document.body.classList.contains('archive') && document.querySelector('main.hp-archive')
+					? 'archive'
+					: null,
 		};
 		if (out.scrollWidth > out.innerWidth + 1) {
 			out.violations.overflow.push('document scrollWidth ' + out.scrollWidth + 'px exceeds viewport ' + out.innerWidth + 'px');
@@ -692,7 +697,7 @@ async function discoverJournalRoutes( cdp ) {
 	const topic = toSitePath( found.topic );
 
 	if ( post ) {
-		routes.push( post );
+		routes.push( { path: post, template: 'single' } );
 	} else if ( found.cards > 0 ) {
 		// Cards are on the page but no permalink came back: the postcard title
 		// link is missing or has stopped being a link. That is a real defect in
@@ -707,13 +712,13 @@ async function discoverJournalRoutes( cdp ) {
 	}
 
 	if ( topic ) {
-		routes.push( topic );
+		routes.push( { path: topic, template: 'archive' } );
 	} else {
 		console.log( 'note: /essays/ exposed no category links, so archive.html was not audited this run' );
 	}
 
 	if ( routes.length > 0 ) {
-		console.log( `discovered journal routes: ${ routes.join( ', ' ) }` );
+		console.log( `discovered journal routes: ${ routes.map( ( route ) => route.path ).join( ', ' ) }` );
 	}
 	return routes;
 }
@@ -743,7 +748,9 @@ async function main() {
 
 	let auditedPages = 0;
 	await withChrome( async ( cdp ) => {
-		const pages = [ ...PAGES, ...( await discoverJournalRoutes( cdp ) ) ];
+		const journalRoutes = await discoverJournalRoutes( cdp );
+		const expectedTemplates = new Map( journalRoutes.map( ( route ) => [ route.path, route.template ] ) );
+		const pages = [ ...PAGES, ...journalRoutes.map( ( route ) => route.path ) ];
 		auditedPages = pages.length;
 		for ( const pagePath of pages ) {
 			for ( const viewport of FULL_VIEWPORTS ) {
@@ -767,6 +774,13 @@ async function main() {
 					handleViolations(
 						`${ pagePath } @${ viewport.width }px 404 identity`,
 						[ 'probe did not present as a 404 via title or body class' ]
+					);
+				}
+				const expectedTemplate = expectedTemplates.get( pagePath );
+				if ( expectedTemplate && viewport === FULL_VIEWPORTS[0] && result.template !== expectedTemplate ) {
+					handleViolations(
+						`${ pagePath } @${ viewport.width }px template identity`,
+						[ `discovered ${ expectedTemplate } route rendered ${ result.template || 'no matching theme template' }` ]
 					);
 				}
 				for ( const [ key, name ] of BATTERY_ORDER ) {

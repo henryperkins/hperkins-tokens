@@ -84,9 +84,9 @@ Layout: contentSize 44rem, wideSize 72rem.
 Design tokens (settings.custom — kept out of the editor controls, consumed by the
 component CSS and aliased to --hp-* names in style.css):
 
-* surface / text / border / rule — semantic neutrals (page, raised, card, sunken,
+* surface / text / border / rule / print — semantic neutrals (page, raised, card, sunken,
   cool, inverse, brand surfaces; strong→disabled text; hair/soft/strong/brand
-  borders; the gold rule)
+  borders; the gold rule; exact paper and ink for background-free printing)
 * brand / accent / feedback — interaction ramps (default/hover/press/subtle) plus
   success/warning/danger/info
 * status + on — the three status fills (done/review/pending) and their on-colors
@@ -364,10 +364,10 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   the functions.php filters, sticky mode, the seed offset, postcard link shape,
   the reader hero's dim ratio, palette-pinned hexes inside data URIs, and the
   pagination touch target.
-* Set "sticky":"ignore" on both journal loops. core only honours the
-  'only'/'ignore' modes, so the block's empty default let one editor checkbox
-  splice a fourth card into a three-card composition, or prepend a sticky post to
-  the offset-seeded grid on every page.
+* Preserve sticky posts in normal chronological order on every supported
+  WordPress release. Both journal loops keep core's compatible empty sticky mode
+  and query-ID filters set ignore_sticky_posts; on WordPress 6.6 the newer
+  "ignore" value followed the exclusion path and hid sticky posts entirely.
 * Check the digest's theme claim against README.md's release and deployment
   record instead of style.css. The page states the theme is shipped and links a
   release tag, so an in-flight version bump was demanding it advertise a release
@@ -380,7 +380,8 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   at all, but WordPress still accepted posted comments; filterable back on with
   hperkins_tokens_enable_comments.
 * Add a print stylesheet. A printed essay rendered the reader hero's light type
-  on white, because print drops the twilight ground it depends on.
+  on white, because print drops the twilight ground it depends on. Exact paper
+  and ink values are named theme.json tokens rather than stylesheet literals.
 * Move the heading wrap guard into style.css so it also covers the front page,
   give the featured loop an explicit grid layout, and size pagination controls
   from the shared 44px touch token.
