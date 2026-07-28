@@ -74,8 +74,15 @@ add_action( 'wp_enqueue_scripts', function () {
 	);
 
 	// Page-layout CSS for the designs pulled from the Imladris Design System
-	// (ai-enablement essay, contact, work index). Kept out of style.css so the
-	// hand-authored sheet stays untouched; depends on it so the cascade is right.
+	// (ai-enablement essay, contact, work index, job-placement digest) plus the
+	// whole blog surface: the postcard vocabulary shared by home/single/archive/
+	// search (.hp-postcard__*, .hp-journal-*, .hp-pagination) and the reader hero
+	// (.hp-reader-*). Kept out of style.css so the hand-authored sheet stays
+	// untouched; depends on it so the cascade is right.
+	//
+	// The front-page skip is safe for the blog rules because no blog route is the
+	// front page — front-page.html outranks home.html at '/'. Anything those
+	// rules need on every route (the heading wrap guard) lives in style.css.
 	$pages_css_rel  = '/assets/imladris-pages.css';
 	$pages_css_file = get_stylesheet_directory() . $pages_css_rel;
 	if ( ! is_front_page() && file_exists( $pages_css_file ) ) {
@@ -379,6 +386,42 @@ function hperkins_tokens_offset_found_posts( $found_posts, $query ) {
 	return $found_posts;
 }
 add_filter( 'found_posts', 'hperkins_tokens_offset_found_posts', 10, 2 );
+
+/**
+ * Close comments and pingbacks on the front end.
+ *
+ * This theme renders no comment UI at all — there is no comments template, no
+ * comment form, and no comment count anywhere in templates/, parts/, or
+ * patterns/. Left alone, WordPress still accepts POSTs to wp-comments-post.php
+ * for any post whose comment_status is open, so discussion could accumulate on
+ * a site that never displays it. Closing them here keeps the theme honest about
+ * what it presents.
+ *
+ * Deliberately a front-end filter, not a database change: nothing is written to
+ * post records, and returning true from the filter below restores the previous
+ * behaviour with one line.
+ *
+ * @param bool $open Whether the post type currently accepts comments/pings.
+ * @return bool
+ */
+function hperkins_tokens_close_comments( $open ) {
+	if ( is_admin() ) {
+		return $open;
+	}
+
+	/**
+	 * Filters whether this theme permits comments despite rendering no comment UI.
+	 *
+	 * @param bool $enabled Whether to leave the incoming comment status untouched.
+	 */
+	if ( apply_filters( 'hperkins_tokens_enable_comments', false ) ) {
+		return $open;
+	}
+
+	return false;
+}
+add_filter( 'comments_open', 'hperkins_tokens_close_comments' );
+add_filter( 'pings_open', 'hperkins_tokens_close_comments' );
 
 /**
  * Store newsletter subscription requests even when mail delivery is unavailable.

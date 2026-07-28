@@ -2010,6 +2010,18 @@ h3,
 	text-wrap: pretty;
 }
 
+/* Heading wrap safety net. The 32px root gutter narrows the mobile reading
+   column to ~256px, which is below the width of a single long word (e.g.
+   "Scriptorium") at the fixed 4rem h1 size used on default-template pages — so
+   such headings spilled a few px past the viewport at 320px. break-word only
+   acts when a word genuinely cannot fit its line; it has no effect at desktop
+   widths or on the already-fluid hero/masthead titles. Lives here rather than
+   in imladris-pages.css because that sheet is skipped on the front page, which
+   left the one route it could not reach unguarded. */
+:where(h1, h2, h3, h4, .wp-block-heading) {
+	overflow-wrap: break-word;
+}
+
 /* Brand eyebrow -> Marcellus lapidary caps (register/status labels stay mono). */
 .hp-wapuu-hero__eyebrow,
 .hp-eyebrow {
@@ -2361,7 +2373,11 @@ samp {
 	background: var(--wp--custom--brand--hover);
 }
 
-.hp-tag {
+/* The reader's post tags are this component, not a copy of it: core's
+   post-terms block emits bare anchors we cannot add a class to, so the
+   selector joins the rule instead of restating its tokens. */
+.hp-tag,
+.hp-reader-tags a {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.35em;
@@ -2377,7 +2393,8 @@ samp {
 	color: var(--wp--custom--text--accent);
 }
 
-.hp-tag:hover {
+.hp-tag:hover,
+.hp-reader-tags a:hover {
 	background: var(--wp--custom--brand--subtle);
 	border-color: var(--wp--preset--color--green-200);
 }
@@ -5098,4 +5115,92 @@ body.search .wp-block-post-date {
 	font-size: var(--wp--preset--font-size--xs);
 	letter-spacing: var(--wp--custom--tracking--wide);
 	text-transform: uppercase;
+}
+
+/* ===========================================================================
+   Print — the reading surfaces on paper
+   ===========================================================================
+   An essay printed from the reader used to come out as parchment-50 hero text
+   on white: the twilight cover keeps its light type but loses its dark ground,
+   because backgrounds are dropped by default in print. Rather than force the
+   ground to print (expensive, and off in every reader's default settings), the
+   hero is re-set as ordinary black-on-white type and the chrome that carries no
+   meaning on paper is dropped. Scoped entirely to @media print, so nothing here
+   can leak into the screen cascade.
+   ========================================================================= */
+@media print {
+	/* Ink economy, and no reliance on background printing being enabled. */
+	body {
+		background: #fff;
+		color: #000;
+	}
+
+	/* Navigation, decoration, and interactive-only affordances. The header is a
+	   disclosure system with nothing to disclose on paper; pagination and the
+	   subscribe panel are actions a sheet of paper cannot offer. */
+	.hp-site-header,
+	.hp-footer__backdrop,
+	.hp-footer__social,
+	.hp-subscribe,
+	.hp-pagination,
+	.hp-topic-filter,
+	.hp-reader__back,
+	.hp-action-rail,
+	.hp-action-panel,
+	.wp-block-search {
+		display: none !important;
+	}
+
+	/* Reader hero — same words, ordinary type. The cover's min-height and
+	   centring are screen composition; on paper the title should simply open the
+	   page. */
+	.hp-reader-hero {
+		min-height: 0 !important;
+		background: none !important;
+		padding: 0;
+	}
+	.hp-reader-hero::after,
+	.hp-reader-hero .wp-block-cover__background,
+	.hp-reader-hero .wp-block-cover__image-background {
+		display: none !important;
+	}
+	.hp-reader-hero .wp-block-cover__inner-container {
+		text-align: left;
+		max-width: none;
+	}
+	.hp-reader-hero__title,
+	.hp-reader-hero__standfirst,
+	.hp-reader-hero__meta,
+	.hp-reader-hero__meta a,
+	.hp-reader-hero__topic,
+	.hp-reader-hero__topic a {
+		color: #000 !important;
+	}
+
+	/* Cards and ledger rows must not be split across a page break, and the
+	   related grid is a screen-only browsing aid. */
+	.hp-postcards .wp-block-post-template > li,
+	.hp-ring-card,
+	.hp-work__entry {
+		break-inside: avoid;
+		box-shadow: none !important;
+	}
+	.hp-related {
+		display: none !important;
+	}
+
+	/* Give content links their destination, since a printed link is otherwise a
+	   dead end. Skipped for same-page fragments and for mailto:, whose address
+	   is already the visible text. */
+	.hp-prose a[href^="http"]::after,
+	.hp-prose a[href^="/"]::after {
+		content: " (" attr(href) ")";
+		font-size: 0.85em;
+		word-break: break-all;
+	}
+
+	/* Headings should not be orphaned from the text they introduce. */
+	:where(h1, h2, h3, h4, .wp-block-heading) {
+		break-after: avoid;
+	}
 }

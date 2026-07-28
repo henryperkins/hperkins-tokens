@@ -188,7 +188,45 @@ function main() {
 	const readme = readRequiredFile( readmePath );
 	const versionMatch = style.match( /^Version:\s*(\S+)/m );
 	assert( versionMatch, 'style.css must declare the current theme Version.' );
-	const themeVersion = versionMatch[ 1 ];
+	const workingVersion = versionMatch[ 1 ];
+
+	// The digest's theme row is a public claim about what is RELEASED and
+	// DEPLOYED ("Shipped · deployed theme commit verified …"), and it links a
+	// release tag that has to exist. So it is checked against README.md's
+	// deployment record — the same source the deployed commit comes from —
+	// rather than style.css. Reading it from style.css conflated "the version I
+	// am developing" with "the version that is live": every in-flight version
+	// bump then demanded the digest advertise a release tag that had not been
+	// cut, which is precisely the unverifiable claim this file exists to stop.
+	// The bump still forces a digest update, just at release time, when the
+	// deployment record below is what moves.
+	const releaseMatch = readme.match(
+		/\*\*Current release:\*\*\s+\[v(\d+\.\d+\.\d+)\]\(https:\/\/github\.com\/henryperkins\/hperkins-tokens\/releases\/tag\/v(\d+\.\d+\.\d+)\)/i
+	);
+	assert( releaseMatch, 'README.md must declare the current release with a pinned release-tag URL.' );
+	assert(
+		releaseMatch[ 1 ] === releaseMatch[ 2 ],
+		'README.md current-release label and release-tag URL disagree.'
+	);
+	const themeVersion = releaseMatch[ 1 ];
+
+	// Development may run ahead of the last release, never behind it: a working
+	// tree older than what README advertises as shipped means the deployment
+	// record is describing code this checkout does not contain.
+	const asParts = ( value ) => value.split( '.' ).map( ( part ) => Number.parseInt( part, 10 ) || 0 );
+	const [ workingParts, releasedParts ] = [ asParts( workingVersion ), asParts( themeVersion ) ];
+	for ( let i = 0; i < Math.max( workingParts.length, releasedParts.length ); i++ ) {
+		const working = workingParts[ i ] || 0;
+		const released = releasedParts[ i ] || 0;
+		if ( working !== released ) {
+			assert(
+				working > released,
+				`style.css Version ${ workingVersion } is behind the release README.md declares (v${ themeVersion }).`
+			);
+			break;
+		}
+	}
+
 	const deployedCommitMatch = readme.match(
 		/\*\*Deployed commit:\*\*\s+\[`([0-9a-f]{7})`\]\(https:\/\/github\.com\/henryperkins\/hperkins-tokens\/commit\/([0-9a-f]{40})\)/i
 	);

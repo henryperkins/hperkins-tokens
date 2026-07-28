@@ -1003,8 +1003,9 @@ p.hp-contact-form__hint {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 42px;
-  height: 42px;
+  /* The shared touch minimum, not a hand-typed near-miss. */
+  min-width: var(--hp-touch-min);
+  height: var(--hp-touch-min);
   padding: 0 12px;
   font-family: var(--wp--preset--font-family--mono);
   font-size: var(--wp--preset--font-size--sm);
@@ -1050,24 +1051,31 @@ p.hp-contact-form__hint {
   pointer-events: none;
 }
 
-/* Reader hero (single). Light text on a photographic cover, so the ground and
-   the scrim below are contrast infrastructure, not decoration — see the note on
-   .hp-reader-hero__standfirst for the numbers they are sized to. */
+/* Reader hero (single). Light text over a featured image the audit cannot see,
+   so the contrast guarantee has to hold for the lightest image a post could
+   ever carry: the cover's dimRatio-70 twilight-900 overlay composites to
+   rgb(92,97,102) over pure white, and every token in this hero is chosen to
+   clear 4.5:1 against *that* — gold-100 topic 5.25:1, parchment-100 standfirst
+   and byline 5.46:1, parchment-50 title 5.80:1. Nothing here leans on the scrim
+   below, which is why verify-typography.js can check the hero generically: it
+   models overlay-colour-at-its-own-opacity over white and ignores everything
+   painted between, so its measurement is always at least as strict as reality.
+   The palette steps carry the guarantee rather than a heavier dim because a
+   reader hero that dims its photograph to 20% has stopped being photographic —
+   and because core only emits dim classes in multiples of ten, so a hand-tuned
+   dimRatio silently falls back to 0.5 rather than the value written here. */
 
-/* Ground. With no featured image core emits no <img> at all, so the cover's
-   dim-70 overlay composited onto the page parchment and the hero came out a
-   mid grey — the one state where every light token in here failed AA. The
-   ground makes an image-less hero a true twilight plate; a real featured image
-   covers it and it costs nothing. */
+/* Ground. With no featured image core emits no <img> at all, so the dim overlay
+   composited onto the page parchment and the hero came out a mid grey — the one
+   state where every light token in here failed AA. The ground makes an
+   image-less hero a true twilight plate; a real featured image covers it and it
+   costs nothing. */
 .hp-reader-hero {
   background-color: var(--wp--preset--color--twilight-900);
 }
-/* Scrim — a wash between the dimmed photo and the text, same color-mix(scrim)
-   idiom as .hp-ring-card. 22% is a floor, not a nominal: the worst case is a
-   pure-white featured image, where dim-70 alone leaves rgb(92,97,102) and the
-   gold topic lands at 4.47:1. At the floor that background drops to
-   rgb(76,82,87) and the lightest-failing token clears 5.66:1, so the guarantee
-   holds even for text sitting at the very top of the gradient. */
+/* Scrim — editorial depth only, never load-bearing for contrast (see above), so
+   it is free to stay light and let the top of the photograph read. Same
+   color-mix(scrim) idiom as .hp-ring-card. */
 .hp-reader-hero::after {
   content: "";
   position: absolute;
@@ -1075,9 +1083,8 @@ p.hp-contact-form__hint {
   z-index: 1;
   background: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--wp--custom--scrim--ring) 22%, transparent) 0%,
-    color-mix(in srgb, var(--wp--custom--scrim--ring) 32%, transparent) 58%,
-    color-mix(in srgb, var(--wp--custom--scrim--ring) 42%, transparent) 100%
+    transparent 0%,
+    color-mix(in srgb, var(--wp--custom--scrim--ring) 26%, transparent) 100%
   );
   pointer-events: none;
 }
@@ -1099,17 +1106,17 @@ p.hp-contact-form__hint {
   font-size: var(--wp--preset--font-size--xs);
   letter-spacing: var(--wp--custom--tracking--caps);
   text-transform: uppercase;
-  color: var(--wp--preset--color--gold-200);
+  /* gold-100, not gold-200: at 13px this is normal text owing 4.5:1, and
+     gold-200 measured 4.47:1 against the worst-case backdrop above. */
+  color: var(--wp--preset--color--gold-100);
   text-decoration: none;
 }
 .hp-reader-hero__title { color: var(--wp--preset--color--parchment-50); margin: var(--wp--preset--spacing--4) 0 0; }
-/* parchment-200, not green-200. Neither the lg standfirst nor the 13px meta
+/* parchment-100, not green-200. Neither the lg standfirst nor the 13px meta
    qualifies as large text, so both owe 4.5:1 — and green-200 delivered 4.15:1
-   over the image-less hero and 3.85:1 over a light featured image. parchment-200
-   clears 4.94:1 on the raw dim-70 composite before the scrim is counted, and
-   6.26:1 with it. */
+   over the image-less hero and 3.85:1 over a light featured image. */
 .hp-reader-hero__standfirst {
-  color: var(--wp--preset--color--parchment-200);
+  color: var(--wp--preset--color--parchment-100);
   margin: var(--wp--preset--spacing--5) auto 0;
   max-width: var(--wp--custom--measure--narrow);
   font-size: var(--wp--preset--font-size--lg);
@@ -1122,8 +1129,35 @@ p.hp-contact-form__hint {
   /* xs, not 2xs: 13px floor for article metadata (2026-07 typography
      review). */
   font-size: var(--wp--preset--font-size--xs);
-  /* parchment-200 for the same reason as the standfirst above. */
-  color: var(--wp--preset--color--parchment-200);
+  /* parchment-100 for the same reason as the standfirst above. */
+  color: var(--wp--preset--color--parchment-100);
+}
+
+/* Reader tags. The pills themselves are the shared .hp-tag component (joined to
+   its rule in style.css); this is only the row's layout and its label, which
+   matches the uppercase treatment every other metadata cluster on the page
+   gets. Flex, so the block's whitespace separator collapses and gap owns the
+   rhythm. */
+.hp-reader-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--wp--preset--spacing--2);
+}
+.hp-reader-tags .wp-block-post-terms__prefix {
+  font-family: var(--wp--preset--font-family--label);
+  /* xs, not 2xs: 13px floor for functional metadata (2026-07 typography
+     review). */
+  font-size: var(--wp--preset--font-size--xs);
+  letter-spacing: var(--wp--custom--tracking--caps);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--faint);
+  margin-right: var(--wp--preset--spacing--1);
+}
+/* An untagged post renders an empty block; without this the spacing-8 margin
+   above leaves an unexplained gap between the prose and the subscribe panel. */
+.hp-reader-tags:not(:has(a)) {
+  display: none;
 }
 
 /* Reader body — back link + related. */
@@ -1148,16 +1182,6 @@ p.hp-contact-form__hint {
    .hp-journal-more above). */
 .hp-related:not(:has(.wp-block-post-template li)) {
   display: none;
-}
-
-/* Heading wrap safety net. The 32px root gutter narrows the mobile reading
-   column to ~256px, which is below the width of a single long word (e.g.
-   "Scriptorium") at the fixed 4rem h1 size used on default-template pages —
-   so such headings spilled a few px past the viewport at 320px. break-word
-   only acts when a word genuinely cannot fit its line; it has no effect at
-   desktop widths or on the already-fluid hero/masthead titles. */
-:where(h1, h2, h3, h4, .wp-block-heading) {
-  overflow-wrap: break-word;
 }
 
 /* =========================================================================

@@ -165,11 +165,16 @@ WordPress template hierarchy):
   hero, then the stored Home page body via `wp:post-content`, then the
   theme-owned Three Rings framework. The current live middle section is
   versioned at `content/page-snapshots/front-page.html`.
-* home.html — the journal index: masthead, category filter, a featured essay,
-  then a grid of recent essay postcards.
+* home.html — the journal index at /essays/: masthead, category filter, three
+  featured essays (query ID 10) composed as a lead beside two stacked
+  secondaries, then a grid of the rest (query ID 11, seeded at offset 3). The
+  masthead's eyebrow, H1, and lead are hardcoded here; the posts page supplies
+  only the document title, so the two have to be changed together.
 * single.html — the essay reader: a twilight cover hero (title, standfirst, meta)
   over constrained prose, post tags, the subscribe block, and a "Continue
-  reading" related-posts grid.
+  reading" related-posts grid. The standfirst is the post excerpt, which falls
+  back to the article's opening 40 words — give every post a hand-written
+  excerpt or the hero repeats the first paragraph.
 * archive.html — category, tag, author, and date archives: a hero masthead with
   a proper H1 (`wp:query-title`), then journal postcards for the matched posts
   (query ID 13, inheriting the main query).
@@ -346,6 +351,39 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   chain the card's object-fit depended on.
 * Fix the featured composition leaving a half-height empty cell at exactly two
   published posts: the lead's two-row span is now gated on a third post.
+* Audit the reader and the term archive for the first time. verify-typography.js
+  discovers a real post permalink and a real category archive from the journal
+  index rather than pinning a slug that would rot, and says out loud which
+  template went unchecked when the journal is empty. Its contrast pass no longer
+  skips cover blocks outright — the omission that let the reader hero ship below
+  AA — and instead measures the worst case: the overlay colour at its own
+  rendered opacity over white, which is always at least as strict as any real
+  featured image.
+* Add scripts/verify-journal-templates.js, a Chrome-free and WordPress-free
+  source gate for the couplings a rendered page cannot show: query IDs against
+  the functions.php filters, sticky mode, the seed offset, postcard link shape,
+  the reader hero's dim ratio, palette-pinned hexes inside data URIs, and the
+  pagination touch target.
+* Set "sticky":"ignore" on both journal loops. core only honours the
+  'only'/'ignore' modes, so the block's empty default let one editor checkbox
+  splice a fourth card into a three-card composition, or prepend a sticky post to
+  the offset-seeded grid on every page.
+* Check the digest's theme claim against README.md's release and deployment
+  record instead of style.css. The page states the theme is shipped and links a
+  release tag, so an in-flight version bump was demanding it advertise a release
+  nobody had cut; the working tree may now run ahead of the record, never behind.
+* Style the reader's post tags as the shared tag pill with a "Filed under"
+  label, instead of leaving them as serif links joined by a collapsed space.
+* Take the copyright year from the site clock via a footer-colophon pattern; a
+  template part is static HTML and the literal went stale every January.
+* Close comments and pingbacks on the front end. The theme renders no comment UI
+  at all, but WordPress still accepted posted comments; filterable back on with
+  hperkins_tokens_enable_comments.
+* Add a print stylesheet. A printed essay rendered the reader hero's light type
+  on white, because print drops the twilight ground it depends on.
+* Move the heading wrap guard into style.css so it also covers the front page,
+  give the featured loop an explicit grid layout, and size pagination controls
+  from the shared 44px touch token.
 
 = 0.3.53 =
 * Rebuild the Job Placement Digest as a concise Support Engineer case with
