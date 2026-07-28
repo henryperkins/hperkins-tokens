@@ -74,8 +74,15 @@ add_action( 'wp_enqueue_scripts', function () {
 	);
 
 	// Page-layout CSS for the designs pulled from the Imladris Design System
-	// (ai-enablement essay, contact, work index). Kept out of style.css so the
-	// hand-authored sheet stays untouched; depends on it so the cascade is right.
+	// (ai-enablement essay, contact, work index, job-placement digest) plus the
+	// whole blog surface: the postcard vocabulary shared by home/single/archive/
+	// search (.hp-postcard__*, .hp-journal-*, .hp-pagination) and the reader hero
+	// (.hp-reader-*). Kept out of style.css so the hand-authored sheet stays
+	// untouched; depends on it so the cascade is right.
+	//
+	// The front-page skip is safe for the blog rules because no blog route is the
+	// front page — front-page.html outranks home.html at '/'. Anything those
+	// rules need on every route (the heading wrap guard) lives in style.css.
 	$pages_css_rel  = '/assets/imladris-pages.css';
 	$pages_css_file = get_stylesheet_directory() . $pages_css_rel;
 	if ( ! is_front_page() && file_exists( $pages_css_file ) ) {
@@ -286,16 +293,15 @@ function hperkins_tokens_redirect_flavor_agent_demo_seed() {
 add_action( 'template_redirect', 'hperkins_tokens_redirect_flavor_agent_demo_seed' );
 
 /**
- * Preload the above-the-fold display font (Cormorant Garamond) on the front page
- * so the hero headline paints without a fallback-serif swap. Scoped to the front
- * page and matched to the theme.json @font-face URL (no cache-bust query) so the
- * browser dedupes the preload against the actual font fetch.
+ * Preload the above-the-fold display font (Cormorant Garamond) so the first
+ * headline paints without a fallback-serif swap. theme.json sets every heading
+ * in this family, and every front-end route opens on one — the front-page hero,
+ * the /essays/ masthead, a post's reader hero, an archive title — so the face is
+ * in the critical path everywhere, not only on the front page. Matched to the
+ * theme.json @font-face URL (no cache-bust query) so the browser dedupes the
+ * preload against the actual font fetch.
  */
 function hperkins_tokens_preload_display_font() {
-	if ( ! is_front_page() ) {
-		return;
-	}
-
 	$font_rel  = '/assets/fonts/cormorant-garamond.woff2';
 	$font_file = get_stylesheet_directory() . $font_rel;
 	if ( ! file_exists( $font_file ) ) {
@@ -341,6 +347,27 @@ function hperkins_tokens_exclude_current_from_related( $query, $block ) {
 add_filter( 'query_loop_block_query_vars', 'hperkins_tokens_exclude_current_from_related', 10, 2 );
 
 /**
+ * Keep sticky posts in chronological order in both home.html journal loops.
+ *
+ * The compatible empty sticky mode in the template avoids excluding sticky
+ * posts on WordPress 6.6, where unrecognised non-empty modes take the exclusion
+ * path. Setting this query var prevents core from promoting them instead.
+ *
+ * @param array    $query The query vars built from the block.
+ * @param WP_Block $block The block instance (its context carries the queryId).
+ * @return array
+ */
+function hperkins_tokens_ignore_journal_stickies( $query, $block ) {
+	$query_id = isset( $block->context['queryId'] ) ? (int) $block->context['queryId'] : 0;
+	if ( in_array( $query_id, array( 10, 11 ), true ) ) {
+		$query['ignore_sticky_posts'] = true;
+	}
+
+	return $query;
+}
+add_filter( 'query_loop_block_query_vars', 'hperkins_tokens_ignore_journal_stickies', 10, 2 );
+
+/**
  * Tag the journal grid Query Loop (home.html, queryId 11) with its static seed
  * offset. The grid starts at offset 3 because the featured loop above it shows
  * the first three posts; core computes max_num_pages from found_posts without
@@ -379,6 +406,65 @@ function hperkins_tokens_offset_found_posts( $found_posts, $query ) {
 	return $found_posts;
 }
 add_filter( 'found_posts', 'hperkins_tokens_offset_found_posts', 10, 2 );
+
+/**
+ * Close comments and pingbacks on the front end.
+ *
+ * This theme renders no comment UI at all — there is no comments template, no
+ * comment form, and no comment count anywhere in templates/, parts/, or
+ * patterns/. Left alone, WordPress still accepts POSTs to wp-comments-post.php
+ * for any post whose comment_status is open, so discussion could accumulate on
+ * a site that never displays it. Closing them here keeps the theme honest about
+ * what it presents.
+ *
+ * Deliberately a front-end filter, not a database change: nothing is written to
+ * post records, and returning true from the filter below restores the previous
+ * behaviour with one line.
+ *
+ * @param bool $open Whether the post type currently accepts comments/pings.
+ * @return bool
+ */
+function hperkins_tokens_close_comments( $open ) {
+	if ( is_admin() ) {
+		return $open;
+	}
+
+	/**
+	 * Filters whether this theme permits comments despite rendering no comment UI.
+	 *
+	 * @param bool $enabled Whether to leave the incoming comment status untouched.
+	 */
+	if ( apply_filters( 'hperkins_tokens_enable_comments', false ) ) {
+		return $open;
+	}
+
+	return false;
+}
+add_filter( 'comments_open', 'hperkins_tokens_close_comments' );
+add_filter( 'pings_open', 'hperkins_tokens_close_comments' );
+
+/**
+ * The address the theme tells visitors to write to when a form cannot deliver.
+ *
+ * The subscribe notification recipient was already filterable while the
+ * save-error copy beside it repeated the same address as a literal, so a site
+ * that moved the address still sent visitors to the old one. Both read this.
+ *
+ * @return string A valid email address; the theme default when a filter returns
+ *                something that is not one.
+ */
+function hperkins_tokens_contact_email() {
+	$default = 'htperkins@gmail.com';
+
+	/**
+	 * Filters the public contact address surfaced in theme copy.
+	 *
+	 * @param string $default The theme's own address.
+	 */
+	$email = sanitize_email( (string) apply_filters( 'hperkins_tokens_contact_email', $default ) );
+
+	return is_email( $email ) ? $email : $default;
+}
 
 /**
  * Store newsletter subscription requests even when mail delivery is unavailable.
@@ -511,8 +597,8 @@ function hperkins_tokens_handle_subscribe_request() {
 			);
 
 			// Filterable so the recipient is not hardcoded; defaults to the
-			// existing address to preserve delivery behavior.
-			$recipient = apply_filters( 'hperkins_tokens_subscribe_notify_email', 'htperkins@gmail.com' );
+			// public contact address the failure copy also names.
+			$recipient = apply_filters( 'hperkins_tokens_subscribe_notify_email', hperkins_tokens_contact_email() );
 			$mail_sent = wp_mail(
 				$recipient,
 				'Occasional dispatch subscription',

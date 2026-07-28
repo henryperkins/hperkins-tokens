@@ -306,6 +306,11 @@ function buildExpression( opts ) {
 			scrollWidth: document.documentElement.scrollWidth,
 			innerWidth: window.innerWidth,
 			is404: /404/.test(document.title || '') || document.body.classList.contains('error404'),
+			template: document.body.classList.contains('single-post') && document.querySelector('main.hp-reader')
+				? 'single'
+				: document.body.classList.contains('archive') && document.querySelector('main.hp-archive')
+					? 'archive'
+					: null,
 		};
 		if (out.scrollWidth > out.innerWidth + 1) {
 			out.violations.overflow.push('document scrollWidth ' + out.scrollWidth + 'px exceeds viewport ' + out.innerWidth + 'px');
@@ -527,25 +532,58 @@ function buildExpression( opts ) {
 			};
 			return 0.2126 * channel(color.r) + 0.7152 * channel(color.g) + 0.0722 * channel(color.b);
 		};
+		// Cover text sits over a featured image this audit cannot see. Skipping it
+		// outright — which is what this loop used to do — is how the reader hero
+		// shipped three tokens below AA. Measure the worst case instead: the
+		// overlay colour at its own effective alpha over WHITE, the lightest
+		// underlay any image can supply. Anything painted between the overlay and
+		// the text (a scrim, a gradient) only darkens the result, so a pass here
+		// is a pass for every real image. Reading opacity off the rendered overlay
+		// rather than the block's dimRatio attribute is deliberate: core only
+		// emits dim classes in multiples of ten, so a hand-written dimRatio of 75
+		// silently renders at 0.5 and only the computed style knows it.
+		// Returns undefined for ordinary text, a colour for measurable cover text,
+		// null for cover text whose backdrop cannot be established.
+		const coverBackdrop = (el) => {
+			const cover = el.closest('.wp-block-cover');
+			if (!cover) return undefined;
+			const overlay = cover.querySelector('.wp-block-cover__background, .wp-block-cover__gradient-background');
+			if (!overlay) return null;
+			const overlayStyle = getComputedStyle(overlay);
+			const parsed = parseColor(overlayStyle.backgroundColor);
+			if (!parsed) return null;
+			const alpha = parsed.a * (Number.parseFloat(overlayStyle.opacity) || 0);
+			if (!(alpha > 0)) return null;
+			const over = (channel) => channel * alpha + 255 * (1 - alpha);
+			return { r: over(parsed.r), g: over(parsed.g), b: over(parsed.b), a: 1 };
+		};
 		for (const item of textElements) {
-			if (item.el.closest('.wp-block-cover')) continue;
 			const fg = parseColor(item.style.color);
 			if (!fg || fg.a < 1) continue;
-			let node = item.el;
-			let bg = null;
-			let skip = false;
-			while (node) {
-				const style = node === item.el ? item.style : getComputedStyle(node);
-				if (style.backgroundImage && style.backgroundImage !== 'none') { skip = true; break; }
-				const parsed = parseColor(style.backgroundColor);
-				if (parsed && parsed.a > 0) {
-					if (parsed.a < 1) skip = true;
-					bg = parsed;
-					break;
+			let bg = coverBackdrop(item.el);
+			if (bg === null) {
+				if (contrastViolations.length < 10) {
+					contrastViolations.push(describe(item.el) + ' "' + truncate(item.el.textContent, 30) + '" is cover text whose overlay has no measurable colour; worst-case contrast cannot be audited');
 				}
-				node = node.parentElement;
+				continue;
 			}
-			if (skip || !bg) continue;
+			if (bg === undefined) {
+				bg = null;
+				let node = item.el;
+				let skip = false;
+				while (node) {
+					const style = node === item.el ? item.style : getComputedStyle(node);
+					if (style.backgroundImage && style.backgroundImage !== 'none') { skip = true; break; }
+					const parsed = parseColor(style.backgroundColor);
+					if (parsed && parsed.a > 0) {
+						if (parsed.a < 1) skip = true;
+						bg = parsed;
+						break;
+					}
+					node = node.parentElement;
+				}
+				if (skip || !bg) continue;
+			}
 			const lighter = Math.max(luminance(fg), luminance(bg));
 			const darker = Math.min(luminance(fg), luminance(bg));
 			const ratio = (lighter + 0.05) / (darker + 0.05);
@@ -556,7 +594,7 @@ function buildExpression( opts ) {
 			const needed = isLargeText ? 3 : 4.5;
 			if (ratio < needed && contrastViolations.length < 10) {
 				contrastViolations.push(describe(item.el) + ' "' + truncate(item.el.textContent, 30) + '" ' + item.style.color +
-					' vs rgb(' + bg.r + ', ' + bg.g + ', ' + bg.b + ') = ' + (Math.round(ratio * 100) / 100) + ' (needs ' + needed + ')');
+					' vs rgb(' + Math.round(bg.r) + ', ' + Math.round(bg.g) + ', ' + Math.round(bg.b) + ') = ' + (Math.round(ratio * 100) / 100) + ' (needs ' + needed + ')');
 			}
 		}
 		out.violations.contrast = contrastViolations;
@@ -566,6 +604,10 @@ function buildExpression( opts ) {
 }
 
 async function inspectPage( cdp, pagePath, viewport, opts ) {
+	return evaluateOnPage( cdp, pagePath, viewport, buildExpression( opts ) );
+}
+
+async function evaluateOnPage( cdp, pagePath, viewport, expression ) {
 	const target = await cdp.send( 'Target.createTarget', { url: 'about:blank' } );
 	try {
 		const attached = await cdp.send( 'Target.attachToTarget', {
@@ -594,7 +636,7 @@ async function inspectPage( cdp, pagePath, viewport, opts ) {
 		await wait( 250 );
 
 		const evaluated = await cdp.send( 'Runtime.evaluate', {
-			expression: buildExpression( opts ),
+			expression,
 			awaitPromise: true,
 			returnByValue: true,
 		}, sessionId );
@@ -606,6 +648,79 @@ async function inspectPage( cdp, pagePath, viewport, opts ) {
 	} finally {
 		await cdp.send( 'Target.closeTarget', { targetId: target.targetId } );
 	}
+}
+
+// The reader (single.html) and the term archive (archive.html) have no fixed
+// path, so they cannot be listed in PAGES like every other route. Read them off
+// the journal index instead: the first postcard's permalink is a real published
+// post, and the first topic-filter link is a real category archive. Discovering
+// them beats pinning one post slug, which would rot the first time that post is
+// unpublished or renamed.
+const DISCOVERY_EXPRESSION = `(() => {
+	const first = (selector) => {
+		const el = document.querySelector(selector);
+		return el ? el.getAttribute('href') : null;
+	};
+	return {
+		post: first('.hp-postcards .hp-postcard__title a'),
+		topic: first('.hp-topic-filter a[href]'),
+		cards: document.querySelectorAll('.hp-postcards .wp-block-post-template > li').length,
+	};
+})()`;
+
+function toSitePath( href ) {
+	if ( ! href ) {
+		return null;
+	}
+	try {
+		const url = new URL( href, ORIGIN );
+		if ( new URL( ORIGIN ).host !== url.host ) {
+			return null;
+		}
+		return url.pathname + url.search;
+	} catch ( error ) {
+		return null;
+	}
+}
+
+async function discoverJournalRoutes( cdp ) {
+	let found;
+	try {
+		found = await evaluateOnPage( cdp, '/essays/', FULL_VIEWPORTS[0], DISCOVERY_EXPRESSION );
+	} catch ( error ) {
+		handleViolations( 'journal route discovery', [ `failed to read /essays/: ${ error.message }` ] );
+		return [];
+	}
+
+	const routes = [];
+	const post = toSitePath( found.post );
+	const topic = toSitePath( found.topic );
+
+	if ( post ) {
+		routes.push( { path: post, template: 'single' } );
+	} else if ( found.cards > 0 ) {
+		// Cards are on the page but no permalink came back: the postcard title
+		// link is missing or has stopped being a link. That is a real defect in
+		// home.html, not an empty journal.
+		handleViolations( 'journal route discovery', [
+			`/essays/ rendered ${ found.cards } postcard(s) but no .hp-postcard__title anchor — the reader route cannot be audited`,
+		] );
+	} else {
+		// Loud, not silent: the audit is genuinely narrower than usual and the
+		// operator should know which template went unchecked.
+		console.log( 'note: /essays/ published no posts, so single.html was not audited this run' );
+	}
+
+	if ( topic ) {
+		routes.push( { path: topic, template: 'archive' } );
+	} else {
+		console.log( 'note: /essays/ exposed no category links, so archive.html was not audited this run' );
+	}
+
+	if ( routes.length > 0 ) {
+		console.log( `discovered journal routes: ${ routes.map( ( route ) => route.path ).join( ', ' ) }` );
+	}
+	return routes;
 }
 
 const BATTERY_ORDER = [
@@ -631,8 +746,13 @@ async function main() {
 		return;
 	}
 
+	let auditedPages = 0;
 	await withChrome( async ( cdp ) => {
-		for ( const pagePath of PAGES ) {
+		const journalRoutes = await discoverJournalRoutes( cdp );
+		const expectedTemplates = new Map( journalRoutes.map( ( route ) => [ route.path, route.template ] ) );
+		const pages = [ ...PAGES, ...journalRoutes.map( ( route ) => route.path ) ];
+		auditedPages = pages.length;
+		for ( const pagePath of pages ) {
 			for ( const viewport of FULL_VIEWPORTS ) {
 				let result;
 				try {
@@ -654,6 +774,13 @@ async function main() {
 					handleViolations(
 						`${ pagePath } @${ viewport.width }px 404 identity`,
 						[ 'probe did not present as a 404 via title or body class' ]
+					);
+				}
+				const expectedTemplate = expectedTemplates.get( pagePath );
+				if ( expectedTemplate && viewport === FULL_VIEWPORTS[0] && result.template !== expectedTemplate ) {
+					handleViolations(
+						`${ pagePath } @${ viewport.width }px template identity`,
+						[ `discovered ${ expectedTemplate } route rendered ${ result.template || 'no matching theme template' }` ]
 					);
 				}
 				for ( const [ key, name ] of BATTERY_ORDER ) {
@@ -678,7 +805,7 @@ async function main() {
 	} );
 
 	if ( REPORT ) {
-		console.log( `report complete: ${ totalViolations } violation(s) across static contract + ${ PAGES.length } pages` );
+		console.log( `report complete: ${ totalViolations } violation(s) across static contract + ${ auditedPages } pages` );
 	}
 }
 

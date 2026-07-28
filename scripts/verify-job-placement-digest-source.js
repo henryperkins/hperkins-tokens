@@ -9,13 +9,12 @@ const {
 	getClassCount,
 	hasMeaningfulFragmentTarget,
 } = require( './lib/page-markup-contract' );
+const { readReleaseRecord } = require( './lib/release-record' );
 
 const themeRoot = path.join( __dirname, '..' );
 const mainPath = path.join( themeRoot, 'content', 'page-drafts', 'job-placement-digest.html' );
 const appendixPath = path.join( themeRoot, 'content', 'page-drafts', 'placement-method-evidence.html' );
 const retiredPatternPath = path.join( themeRoot, 'patterns', 'job-placement-digest.php' );
-const stylePath = path.join( themeRoot, 'style.css' );
-const readmePath = path.join( themeRoot, 'README.md' );
 
 function assert( condition, message ) {
 	if ( ! condition ) {
@@ -184,21 +183,20 @@ function verifyForbiddenCopy( combinedMarkup ) {
 function main() {
 	const main = readRequiredFile( mainPath );
 	const appendix = readRequiredFile( appendixPath );
-	const style = readRequiredFile( stylePath );
-	const readme = readRequiredFile( readmePath );
-	const versionMatch = style.match( /^Version:\s*(\S+)/m );
-	assert( versionMatch, 'style.css must declare the current theme Version.' );
-	const themeVersion = versionMatch[ 1 ];
-	const deployedCommitMatch = readme.match(
-		/\*\*Deployed commit:\*\*\s+\[`([0-9a-f]{7})`\]\(https:\/\/github\.com\/henryperkins\/hperkins-tokens\/commit\/([0-9a-f]{40})\)/i
-	);
-	assert( deployedCommitMatch, 'README.md must declare the deployed commit with a pinned 40-character URL.' );
-	assert(
-		deployedCommitMatch[ 2 ].startsWith( deployedCommitMatch[ 1 ] ),
-		'README.md deployed-commit label and URL disagree.'
-	);
 
-	verifyMain( main, themeVersion, deployedCommitMatch[ 2 ].toLowerCase() );
+	// The digest's theme row is a public claim about what is RELEASED and
+	// DEPLOYED ("Shipped · deployed theme commit verified …"), and it links a
+	// release tag that has to exist. So it is checked against README.md's
+	// deployment record — the same source the deployed commit comes from —
+	// rather than style.css. Reading it from style.css conflated "the version I
+	// am developing" with "the version that is live": every in-flight version
+	// bump then demanded the digest advertise a release tag that had not been
+	// cut, which is precisely the unverifiable claim this file exists to stop.
+	// The bump still forces a digest update, just at release time, when the
+	// deployment record below is what moves.
+	const release = readReleaseRecord( themeRoot );
+
+	verifyMain( main, release.version, release.deployedCommit );
 	verifyAppendix( appendix );
 	verifyForbiddenCopy( `${ main }\n${ appendix }` );
 	assert( ! fs.existsSync( retiredPatternPath ), 'patterns/job-placement-digest.php must be retired, not maintained as a third full-page source.' );

@@ -12,6 +12,7 @@ const { basename, join, relative } = require( 'node:path' );
 const { inflateSync } = require( 'node:zlib' );
 
 const { openZip } = require( './lib/zip-archive' );
+const { readReleaseRecord } = require( './lib/release-record' );
 
 const themeRoot = join( __dirname, '..' );
 const artifactDir = join( themeRoot, 'assets', 'documents' );
@@ -115,11 +116,13 @@ function externalRelationships( archive ) {
 	return urls;
 }
 
-function currentThemeVersion() {
-	const style = readFileSync( join( themeRoot, 'style.css' ), 'utf8' );
-	const match = style.match( /^Version:\s*(\S+)/m );
-	assert( match, 'style.css must declare the current theme Version.' );
-	return match[1];
+function releasedThemeVersion() {
+	// The résumé's HPerkins Tokens entry is a public claim about a SHIPPED
+	// theme, and it links a release tag that --check-links actually fetches, so
+	// it is checked against README.md's release record rather than style.css.
+	// The working version may run ahead of the last release; demanding the
+	// résumé name it would have the document advertise a tag nobody had cut.
+	return readReleaseRecord( themeRoot ).version;
 }
 
 function verifyDocx( path, themeVersion ) {
@@ -177,7 +180,7 @@ function verifyDocx( path, themeVersion ) {
 		text.indexOf( 'HPerkins Tokens — Author' ),
 		text.indexOf( 'SKILLS & CAREER CONTEXT' )
 	);
-	assert( themeSection.includes( `v${ themeVersion }` ), `Résumé must name current HPerkins Tokens v${ themeVersion }.` );
+	assert( themeSection.includes( `v${ themeVersion }` ), `Résumé must name the released HPerkins Tokens v${ themeVersion }.` );
 
 	const forbiddenClaims = [
 		[ /\bSolutions Engineer\b/i, 'Solutions Engineer framing' ],
@@ -705,7 +708,7 @@ async function main() {
 	);
 
 	const paths = Object.fromEntries( artifactNames.map( ( name ) => [ name, join( artifactDir, name ) ] ) );
-	const themeVersion = currentThemeVersion();
+	const themeVersion = releasedThemeVersion();
 	const docxUrls = verifyDocx( paths[ artifactNames[0] ], themeVersion );
 	const pdfUrls = verifyPdf( paths[ artifactNames[1] ], docxUrls );
 	const workbookRows = verifyWorkbook( paths[ artifactNames[2] ] );

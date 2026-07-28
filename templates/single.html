@@ -16,12 +16,12 @@
 
 <!-- wp:group {"tagName":"main","align":"full","className":"hp-page-main hp-reader","style":{"spacing":{"margin":{"top":"0"},"padding":{"top":"var:preset|spacing|8","bottom":"var:preset|spacing|10"}}},"layout":{"type":"constrained","contentSize":"44rem","wideSize":"72rem"}} -->
 <main class="wp-block-group alignfull hp-page-main hp-reader" style="margin-top:0;padding-top:var(--wp--preset--spacing--8);padding-bottom:var(--wp--preset--spacing--10)"><!-- wp:paragraph {"className":"hp-reader__back"} -->
-<p class="hp-reader__back"><a href="/essays/">&larr; All essays</a></p>
+<p class="hp-reader__back"><a href="/essays/"><span aria-hidden="true">&larr;</span> All essays</a></p>
 <!-- /wp:paragraph -->
 
 <!-- wp:post-content {"className":"hp-prose","layout":{"type":"constrained"}} /-->
 
-<!-- wp:post-terms {"term":"post_tag","separator":"  ","prefix":"","className":"hp-reader-tags","style":{"spacing":{"margin":{"top":"var:preset|spacing|8"}}}} /-->
+<!-- wp:post-terms {"term":"post_tag","separator":"  ","prefix":"Filed under","className":"hp-reader-tags","style":{"spacing":{"margin":{"top":"var:preset|spacing|8"}}}} /-->
 
 <!-- wp:pattern {"slug":"hperkins-tokens/imladris-subscribe"} /-->
 
@@ -33,7 +33,7 @@
 <!-- wp:query {"queryId":12,"query":{"perPage":3,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date","author":"","search":"","exclude":[],"sticky":"exclude","inherit":false},"className":"hp-postcards","layout":{"type":"default"}} -->
 <div class="wp-block-query hp-postcards"><!-- wp:post-template {"layout":{"type":"grid","minimumColumnWidth":"18rem"}} -->
 <!-- wp:group {"className":"hp-postcard__media","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-postcard__media"><!-- wp:post-featured-image {"isLink":true} /--></div>
+<div class="wp-block-group hp-postcard__media"><!-- wp:post-featured-image {"isLink":false} /--></div>
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"hp-postcard__body","layout":{"type":"default"}} -->
@@ -45,7 +45,13 @@
 <div class="wp-block-group hp-postcard__meta"><!-- wp:post-date /--></div>
 <!-- /wp:group --></div>
 <!-- /wp:group -->
-<!-- /wp:post-template --></div>
+<!-- /wp:post-template -->
+
+<!-- wp:query-no-results -->
+<!-- wp:paragraph {"align":"center","className":"hp-journal-empty"} -->
+<p class="has-text-align-center hp-journal-empty">This is the only essay in the record so far.</p>
+<!-- /wp:paragraph -->
+<!-- /wp:query-no-results --></div>
 <!-- /wp:query --></div>
 <!-- /wp:group --></main>
 <!-- /wp:group -->

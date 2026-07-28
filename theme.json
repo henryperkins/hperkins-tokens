@@ -517,6 +517,10 @@
         "review": "#7A5C1E",
         "pending": "#515C52"
       },
+      "print": {
+        "paper": "#FFFFFF",
+        "ink": "#000000"
+      },
       "scrim": {
         "ring": "#141c24",
         "fire": "#1e1512",

@@ -277,16 +277,6 @@ p.hp-contact-form__hint {
   stroke-width: 1.8;
 }
 
-/* Align the shared newsletter block to the form's content measure on /contact/.
-   .hp-subscribe is content-box with spacing-7 padding, so the 44rem max-width it
-   inherits from the constrained main applies to its content and the padding adds
-   ~80px on top — rendering it wider than the form and off the hero spine.
-   border-box folds that padding inside the inherited 44rem, no magic number.
-   Scoped to /contact/; home.html and single.html keep their own composition. */
-.hp-contact-template .hp-subscribe {
-  box-sizing: border-box;
-}
-
 /* ===========================================================================
    Work — index ledger
    ========================================================================= */
@@ -750,6 +740,8 @@ p.hp-contact-form__hint {
 .hp-postcards .wp-block-post-template > li {
   display: flex;
   flex-direction: column;
+  /* Containing block for the stretched title link below. */
+  position: relative;
   background: var(--wp--custom--surface--card);
   border: 1px solid var(--wp--custom--border--hair);
   border-radius: var(--wp--custom--radius--lg);
@@ -810,6 +802,18 @@ p.hp-contact-form__hint {
   border-radius: 4px;
   pointer-events: none;
 }
+/* Terminate the percentage-height chain between the media box and the image.
+   core's figure.wp-block-post-featured-image is height:auto, so the img's
+   height:100% below resolved against an auto-height box and computed to auto —
+   object-fit had nothing to fit, and images were top-clipped by the media box's
+   overflow:hidden instead of centre-cropped. The `a` arm is insurance: it is
+   unused while every postcard loop sets isLink:false, but re-enabling the image
+   link would otherwise silently break the chain again. */
+.hp-postcard__media .wp-block-post-featured-image,
+.hp-postcard__media .wp-block-post-featured-image > a {
+  display: block;
+  height: 100%;
+}
 .hp-postcard__media img,
 .hp-postcard__media .wp-post-image {
   position: relative;
@@ -848,6 +852,28 @@ p.hp-contact-form__hint {
   text-decoration: none;
 }
 .hp-postcard__title a:hover { color: var(--wp--custom--text--link); }
+/* Whole-card target. The featured image used to be a second link to the same
+   permalink (isLink:true), which gave every card a duplicate tab stop whose
+   accessible name was empty whenever the attachment carried no alt text — and
+   .hp-postcard__media's overflow:hidden clipped that anchor's focus ring away
+   completely, so it was an invisible stop as well as an unnamed one. The image
+   is now inert (isLink:false in all four loops) and the title link stretches
+   over the card: one tab stop, one accessible name, and the focus ring stays on
+   the title text inside the body padding where it is fully visible. */
+.hp-postcard__title a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Above .hp-postcard__media img (z-index 2) so the plate stays clickable. */
+  z-index: 3;
+}
+/* The card's other real links must stay above the stretched target to remain
+   clickable — they lead somewhere else (a category, an author archive). */
+.hp-postcard__topic a,
+.hp-postcard__meta a {
+  position: relative;
+  z-index: 4;
+}
 .hp-postcard__excerpt {
   margin: 0;
   color: var(--wp--custom--text--muted);
@@ -894,8 +920,12 @@ p.hp-contact-form__hint {
     grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
     grid-auto-rows: 1fr;
   }
-  /* Lead — large vertical photo card spanning both rows of the right column (2-up only). */
-  .hp-journal-featured .wp-block-post-template:has(> li:nth-child(2)) > li:first-child {
+  /* Lead — large vertical photo card spanning both rows of the right column.
+     Gated on a *third* post, not a second: the span declares two rows, and with
+     only two posts the single secondary fills column 2 / row 1 and leaves
+     column 2 / row 2 as an equal-height patch of empty parchment. At two posts
+     the pair sits side by side in one row instead. */
+  .hp-journal-featured .wp-block-post-template:has(> li:nth-child(3)) > li:first-child {
     grid-column: 1;
     grid-row: 1 / span 2;
   }
@@ -973,8 +1003,9 @@ p.hp-contact-form__hint {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 42px;
-  height: 42px;
+  /* The shared touch minimum, not a hand-typed near-miss. */
+  min-width: var(--hp-touch-min);
+  height: var(--hp-touch-min);
   padding: 0 12px;
   font-family: var(--wp--preset--font-family--mono);
   font-size: var(--wp--preset--font-size--sm);
@@ -1020,8 +1051,49 @@ p.hp-contact-form__hint {
   pointer-events: none;
 }
 
-/* Reader hero (single). */
+/* Reader hero (single). Light text over a featured image the audit cannot see,
+   so the contrast guarantee has to hold for the lightest image a post could
+   ever carry: the cover's dimRatio-70 twilight-900 overlay composites to
+   rgb(92,97,102) over pure white, and every token in this hero is chosen to
+   clear 4.5:1 against *that* — gold-100 topic 5.25:1, parchment-100 standfirst
+   and byline 5.46:1, parchment-50 title 5.80:1. Nothing here leans on the scrim
+   below, which is why verify-typography.js can check the hero generically: it
+   models overlay-colour-at-its-own-opacity over white and ignores everything
+   painted between, so its measurement is always at least as strict as reality.
+   The palette steps carry the guarantee rather than a heavier dim because a
+   reader hero that dims its photograph to 20% has stopped being photographic —
+   and because core only emits dim classes in multiples of ten, so a hand-tuned
+   dimRatio silently falls back to 0.5 rather than the value written here. */
+
+/* Ground. With no featured image core emits no <img> at all, so the dim overlay
+   composited onto the page parchment and the hero came out a mid grey — the one
+   state where every light token in here failed AA. The ground makes an
+   image-less hero a true twilight plate; a real featured image covers it and it
+   costs nothing. */
+.hp-reader-hero {
+  background-color: var(--wp--preset--color--twilight-900);
+}
+/* Scrim — editorial depth only, never load-bearing for contrast (see above), so
+   it is free to stay light and let the top of the photograph read. Same
+   color-mix(scrim) idiom as .hp-ring-card. */
+.hp-reader-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    color-mix(in srgb, var(--wp--custom--scrim--ring) 26%, transparent) 100%
+  );
+  pointer-events: none;
+}
 .hp-reader-hero .wp-block-cover__inner-container {
+  /* Explicit z-index, not DOM order: core gives both the dim span and this
+     container z-index 1, and ::after generates after this element — without a
+     higher layer here the scrim would paint over the text. */
+  position: relative;
+  z-index: 2;
   max-width: var(--wp--custom--container--text);
   margin: 0 auto;
   text-align: center;
@@ -1034,12 +1106,17 @@ p.hp-contact-form__hint {
   font-size: var(--wp--preset--font-size--xs);
   letter-spacing: var(--wp--custom--tracking--caps);
   text-transform: uppercase;
-  color: var(--wp--preset--color--gold-200);
+  /* gold-100, not gold-200: at 13px this is normal text owing 4.5:1, and
+     gold-200 measured 4.47:1 against the worst-case backdrop above. */
+  color: var(--wp--preset--color--gold-100);
   text-decoration: none;
 }
 .hp-reader-hero__title { color: var(--wp--preset--color--parchment-50); margin: var(--wp--preset--spacing--4) 0 0; }
+/* parchment-100, not green-200. Neither the lg standfirst nor the 13px meta
+   qualifies as large text, so both owe 4.5:1 — and green-200 delivered 4.15:1
+   over the image-less hero and 3.85:1 over a light featured image. */
 .hp-reader-hero__standfirst {
-  color: var(--wp--preset--color--green-200);
+  color: var(--wp--preset--color--parchment-100);
   margin: var(--wp--preset--spacing--5) auto 0;
   max-width: var(--wp--custom--measure--narrow);
   font-size: var(--wp--preset--font-size--lg);
@@ -1052,7 +1129,35 @@ p.hp-contact-form__hint {
   /* xs, not 2xs: 13px floor for article metadata (2026-07 typography
      review). */
   font-size: var(--wp--preset--font-size--xs);
-  color: var(--wp--preset--color--green-200);
+  /* parchment-100 for the same reason as the standfirst above. */
+  color: var(--wp--preset--color--parchment-100);
+}
+
+/* Reader tags. The pills themselves are the shared .hp-tag component (joined to
+   its rule in style.css); this is only the row's layout and its label, which
+   matches the uppercase treatment every other metadata cluster on the page
+   gets. Flex, so the block's whitespace separator collapses and gap owns the
+   rhythm. */
+.hp-reader-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--wp--preset--spacing--2);
+}
+.hp-reader-tags .wp-block-post-terms__prefix {
+  font-family: var(--wp--preset--font-family--label);
+  /* xs, not 2xs: 13px floor for functional metadata (2026-07 typography
+     review). */
+  font-size: var(--wp--preset--font-size--xs);
+  letter-spacing: var(--wp--custom--tracking--caps);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--faint);
+  margin-right: var(--wp--preset--spacing--1);
+}
+/* An untagged post renders an empty block; without this the spacing-8 margin
+   above leaves an unexplained gap between the prose and the subscribe panel. */
+.hp-reader-tags:not(:has(a)) {
+  display: none;
 }
 
 /* Reader body — back link + related. */
@@ -1077,16 +1182,6 @@ p.hp-contact-form__hint {
    .hp-journal-more above). */
 .hp-related:not(:has(.wp-block-post-template li)) {
   display: none;
-}
-
-/* Heading wrap safety net. The 32px root gutter narrows the mobile reading
-   column to ~256px, which is below the width of a single long word (e.g.
-   "Scriptorium") at the fixed 4rem h1 size used on default-template pages —
-   so such headings spilled a few px past the viewport at 320px. break-word
-   only acts when a word genuinely cannot fit its line; it has no effect at
-   desktop widths or on the already-fluid hero/masthead titles. */
-:where(h1, h2, h3, h4, .wp-block-heading) {
-  overflow-wrap: break-word;
 }
 
 /* =========================================================================

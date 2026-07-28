@@ -221,7 +221,13 @@ function verifySource() {
 		'.hp-site-subscribe',
 		'.wp-block-navigation__responsive-container',
 	] );
-	assertIncludes( 'parts/footer.html', [ '<a href="/contact/">Contact</a>' ] );
+	// Contact is the one route the header deliberately omits: it is a labelled
+	// footer route instead. The link lives in the colophon pattern — a template
+	// part is static HTML and cannot compute the copyright year — so the
+	// contract now spans both files: the pattern has to carry the link, and the
+	// footer part has to embed the pattern for it to reach the page at all.
+	assertIncludes( 'patterns/footer-colophon.php', [ '<a href="/contact/">Contact</a>' ] );
+	assertIncludes( 'parts/footer.html', [ '{"slug":"hperkins-tokens/footer-colophon"}' ] );
 	assertIncludes( 'theme.json', [ '"slug": "gold-800"', '"color": "#6E531B"' ] );
 
 	assert( exists( 'assets/js/header-controller.js' ), 'assets/js/header-controller.js is missing.' );

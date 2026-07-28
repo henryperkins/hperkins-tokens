@@ -83,7 +83,7 @@ The full fourteen-script suite, the environment variables each one needs, and th
 |---|---|
 | `theme.json` | The single source of truth for every design token |
 | `style.css` | Hand-authored component CSS, aliased onto the generated token variables |
-| `assets/imladris-pages.css` | Page-layout CSS for designs pulled from the design system |
+| `assets/imladris-pages.css` | Page-layout CSS for designs pulled from the design system, plus the whole blog surface (postcards, journal grids, pagination, reader hero) |
 | `inc/council-header.php` | Server-rendered Condensed Council header |
 | `patterns/` | Design-system components (`imladris-*`) and content/section patterns |
 | `templates/`, `parts/` | Block templates and template parts |

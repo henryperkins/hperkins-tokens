@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.53
+Stable tag: 0.3.54
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -84,9 +84,9 @@ Layout: contentSize 44rem, wideSize 72rem.
 Design tokens (settings.custom — kept out of the editor controls, consumed by the
 component CSS and aliased to --hp-* names in style.css):
 
-* surface / text / border / rule — semantic neutrals (page, raised, card, sunken,
+* surface / text / border / rule / print — semantic neutrals (page, raised, card, sunken,
   cool, inverse, brand surfaces; strong→disabled text; hair/soft/strong/brand
-  borders; the gold rule)
+  borders; the gold rule; exact paper and ink for background-free printing)
 * brand / accent / feedback — interaction ramps (default/hover/press/subtle) plus
   success/warning/danger/info
 * status + on — the three status fills (done/review/pending) and their on-colors
@@ -165,11 +165,16 @@ WordPress template hierarchy):
   hero, then the stored Home page body via `wp:post-content`, then the
   theme-owned Three Rings framework. The current live middle section is
   versioned at `content/page-snapshots/front-page.html`.
-* home.html — the journal index: masthead, category filter, a featured essay,
-  then a grid of recent essay postcards.
+* home.html — the journal index at /essays/: masthead, category filter, three
+  featured essays (query ID 10) composed as a lead beside two stacked
+  secondaries, then a grid of the rest (query ID 11, seeded at offset 3). The
+  masthead's eyebrow, H1, and lead are hardcoded here; the posts page supplies
+  only the document title, so the two have to be changed together.
 * single.html — the essay reader: a twilight cover hero (title, standfirst, meta)
   over constrained prose, post tags, the subscribe block, and a "Continue
-  reading" related-posts grid.
+  reading" related-posts grid. The standfirst is the post excerpt, which falls
+  back to the article's opening 40 words — give every post a hand-written
+  excerpt or the hero repeats the first paragraph.
 * archive.html — category, tag, author, and date archives: a hero masthead with
   a proper H1 (`wp:query-title`), then journal postcards for the matched posts
   (query ID 13, inheriting the main query).
@@ -320,6 +325,97 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.54 =
+* Accessibility: give the reader hero a solid twilight ground and a scrim, and
+  set the standfirst and byline in parchment rather than evergreen. With no
+  featured image the cover emitted no image at all, so its dim overlay
+  composited onto page parchment and left the standfirst and byline at 4.15:1;
+  over a light featured image they fell to 3.85:1 and the gold topic to 4.47:1.
+  Neither is large text, so both owed 4.5:1. The scrim's 22% floor is sized to
+  the worst case — a pure-white featured image — where the lightest of those
+  tokens now clears 5.66:1.
+* Accessibility: make the whole post card a single link target. The featured
+  image was a second anchor to the same permalink, so every card carried a
+  duplicate tab stop whose accessible name was empty whenever the attachment
+  had no alt text, and the media box's overflow clipped that anchor's focus
+  ring away entirely. The image is now inert and the title link stretches over
+  the card, keeping one named tab stop and a visible focus ring.
+* Fix the newsletter panel overhanging the text spine on /essays/ and every
+  single post. The subscribe pattern emits no wp-block-* class and so inherits
+  none of core's box-sizing; left content-box, its padding fell outside the
+  44rem measure. The border-box rule moves to the shared component and the
+  /contact/-scoped override is retired.
+* Fix featured images being top-clipped instead of centre-cropped in every post
+  card. core's featured-image figure is height:auto, which broke the percentage
+  chain the card's object-fit depended on.
+* Fix the featured composition leaving a half-height empty cell at exactly two
+  published posts: the lead's two-row span is now gated on a third post.
+* Audit the reader and the term archive for the first time. verify-typography.js
+  discovers a real post permalink and a real category archive from the journal
+  index rather than pinning a slug that would rot, and says out loud which
+  template went unchecked when the journal is empty. Its contrast pass no longer
+  skips cover blocks outright — the omission that let the reader hero ship below
+  AA — and instead measures the worst case: the overlay colour at its own
+  rendered opacity over white, which is always at least as strict as any real
+  featured image.
+* Add scripts/verify-journal-templates.js, a Chrome-free and WordPress-free
+  source gate for the couplings a rendered page cannot show: query IDs against
+  the functions.php filters, sticky mode, the seed offset, postcard link shape,
+  the reader hero's dim ratio, palette-pinned hexes inside data URIs, and the
+  pagination touch target.
+* Preserve sticky posts in normal chronological order on every supported
+  WordPress release. Both journal loops keep core's compatible empty sticky mode
+  and query-ID filters set ignore_sticky_posts; on WordPress 6.6 the newer
+  "ignore" value followed the exclusion path and hid sticky posts entirely.
+* Check the digest's theme claim against README.md's release and deployment
+  record instead of style.css. The page states the theme is shipped and links a
+  release tag, so an in-flight version bump was demanding it advertise a release
+  nobody had cut; the working tree may now run ahead of the record, never behind.
+* Style the reader's post tags as the shared tag pill with a "Filed under"
+  label, instead of leaving them as serif links joined by a collapsed space.
+* Take the copyright year from the site clock via a footer-colophon pattern; a
+  template part is static HTML and the literal went stale every January.
+* Close comments and pingbacks on the front end. The theme renders no comment UI
+  at all, but WordPress still accepted posted comments; filterable back on with
+  hperkins_tokens_enable_comments.
+* Add a print stylesheet. A printed essay rendered the reader hero's light type
+  on white, because print drops the twilight ground it depends on. Exact paper
+  and ink values are named theme.json tokens rather than stylesheet literals.
+* Move the heading wrap guard into style.css so it also covers the front page,
+  give the featured loop an explicit grid layout, and size pagination controls
+  from the shared 44px touch token.
+* Accessibility: take the arrows out of the pagination links' accessible names
+  on /essays/, term archives, and search. They were typed into the labels, so a
+  screen reader read "left arrow Newer"; core's paginationArrow renders the same
+  glyph in its own aria-hidden span, which is the idiom the Council header
+  already follows for every decorative mark. The reader's "All essays" arrow is
+  hidden the same way.
+* Accessibility: move focus to the newsletter status the endpoint redirects back
+  with. It is in the markup at first paint, and a live region only announces
+  what changes after it exists, so the answer to the visitor's own submission
+  was neither announced nor reachable without hunting for it.
+* Give every Query Loop its own empty state. The journal grid and the reader's
+  "Continue reading" loop had none, so each rendered nothing at all when empty —
+  under a heading that promised results, and inside the pagination chrome a
+  stale ?query-11-page=N still draws.
+* Term archives carry the same topic-filter row as /essays/ and keep the
+  archive-type prefix. A term archive is the only route where core marks the
+  current topic, so the filter's active state could never appear where it was
+  styled to; and a category and a tag of the same name rendered as the same
+  title.
+* Preload the Cormorant display face on every route, not only the front page.
+  theme.json sets every heading in that family and every route opens on one, so
+  the /essays/ masthead, every reader hero, and every archive title were left to
+  swap from a fallback serif.
+* The address the save-error copy tells visitors to write to now comes from the
+  filterable hperkins_tokens_contact_email(), like the notification recipient
+  beside it, instead of repeating the literal.
+* Check the résumé's HPerkins Tokens entry against README.md's release record
+  too, not style.css. It names a shipped version and links a release tag that
+  --check-links actually fetches, so an in-flight bump demanded it advertise a
+  tag nobody had cut — the same defect already fixed for the digest, now sharing
+  one parser in scripts/lib/release-record.js.
 
 = 0.3.53 =
 * Rebuild the Job Placement Digest as a concise Support Engineer case with

@@ -4,7 +4,8 @@
  * No-JS fallback: the contact form still submits to `mailto:` while the
  * newsletter form posts to WordPress over HTTPS. JS adds inline email
  * validation to both forms; the contact form still swaps to a confirmation
- * state before handing off to the visitor's mail client.
+ * state before handing off to the visitor's mail client, and the status the
+ * newsletter endpoint redirects back with takes focus so it is announced.
  *
  * Every listener is delegated at the document level. This site runs the
  * full-page Interactivity Router: client navigations swap the entire <body>
@@ -221,4 +222,31 @@
 			handleSubscribeSubmit( e, form );
 		}
 	} );
+
+	// ---- Subscribe result -----------------------------------------------------
+	// The endpoint answers with a 303 to ?hperkins_subscribe=<status>#subscribe,
+	// so the status paragraph is already in the markup at first paint. A live
+	// region only announces what changes *after* it exists, and router-scroll.js
+	// deliberately leaves initial-load hash targets alone rather than fight the
+	// browser's own restoration — so the answer to the visitor's own submission
+	// was neither announced nor reachable without hunting for it. Move focus to
+	// it instead; the pattern gives it tabindex="-1" for exactly this. Scrolling
+	// stays the browser's: it has already placed #subscribe.
+	function focusSubscribeStatus() {
+		var status = document.querySelector( '.hp-subscribe__status' );
+		if ( ! status ) {
+			return;
+		}
+		try {
+			status.focus( { preventScroll: true } );
+		} catch ( e ) {
+			status.focus();
+		}
+	}
+
+	if ( document.readyState === 'loading' ) {
+		document.addEventListener( 'DOMContentLoaded', focusSubscribeStatus );
+	} else {
+		focusSubscribeStatus();
+	}
 } )();
