@@ -2,6 +2,7 @@ const test = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
+const { normalizeContent } = require( './content-integrity' );
 
 const {
 	ABOUT_SECTION_WORD_CAPS,
@@ -22,9 +23,11 @@ const {
 } = require( './about-page-contract' );
 
 const themeRoot = path.join( __dirname, '..', '..' );
-const candidate = fs.readFileSync(
-	path.join( themeRoot, 'content', 'page-drafts', 'about.html' ),
-	'utf8'
+const candidate = normalizeContent(
+	fs.readFileSync(
+		path.join( themeRoot, 'content', 'page-drafts', 'about.html' ),
+		'utf8'
+	)
 );
 
 // ---------------------------------------------------------------------------
