@@ -1781,6 +1781,26 @@ p.hp-contact-form__hint {
   padding-block: var(--wp--preset--spacing--7);
 }
 
+/* The Gravatar plugin sets a 400px card minimum and a nowrap footer. Let the
+   template-owned card shrink to its column and reflow its profile links. */
+.hp-about-template .wp-block-gravatar-block.hp-about-gravatar-card {
+  min-width: 0;
+  font-family: var(--wp--preset--font-family--body);
+}
+
+.hp-about-template .hp-about-gravatar-card .gravatar-block-group--footer {
+  flex-wrap: wrap;
+}
+
+.hp-about-template .hp-about-gravatar-card .gravatar-block-name__text {
+  font-family: var(--wp--preset--font-family--display);
+}
+
+.hp-about-template .hp-about-gravatar-card .gravatar-block-paragraph__text,
+.hp-about-template .hp-about-gravatar-card .gravatar-block-link {
+  font-family: var(--wp--preset--font-family--body);
+}
+
 /* About — break the register/grid sections out of the 44rem reading column to the
    wide measure on desktop (the impact strip, capability register, and work ledger
    read as dashboards, not prose). Narrative, lead, headings, and quotes stay at the

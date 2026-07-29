@@ -75,6 +75,8 @@ jobs:
         run: |
           node --test \
             scripts/lib/about-page-contract.test.js \
+            scripts/lib/about-page-rendered-probe.test.js \
+            scripts/lib/about-gravatar-heading.test.js \
             scripts/lib/content-integrity.test.js \
             scripts/lib/job-placement-metadata-contract.test.js \
             scripts/lib/market-screen-parity.test.js \

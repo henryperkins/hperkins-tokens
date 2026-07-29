@@ -711,6 +711,10 @@ async function verifyCardHoverInertia( cdp, sessionId ) {
 		})()`,
 		returnByValue: true,
 	}, sessionId );
+	assert(
+		! probe.exceptionDetails,
+		`Hover probe setup threw: ${ JSON.stringify( probe.exceptionDetails ) }`
+	);
 	assert( ! probe.result.value.error, probe.result.value.error );
 	const { snapshot, x, y, viewport } = probe.result.value;
 	// Fail on the real cause rather than on the hover that could not land.
@@ -734,6 +738,10 @@ async function verifyCardHoverInertia( cdp, sessionId ) {
 		})()`,
 		returnByValue: true,
 	}, sessionId );
+	assert(
+		! after.exceptionDetails,
+		`Hover probe follow-up threw: ${ JSON.stringify( after.exceptionDetails ) }`
+	);
 	const state = after.result.value;
 	assert( state.hovering, 'Hover probe did not land on the project card.' );
 	for ( const property of [ 'border', 'background', 'shadow', 'transform' ] ) {
@@ -931,7 +939,11 @@ async function main() {
 	console.log( `About rendered contract verified at ${ origin }. Screenshots: ${ CAPTURE_DIR }` );
 }
 
-main().catch( ( error ) => {
-	console.error( error.message );
-	process.exit( 1 );
-} );
+if ( require.main === module ) {
+	main().catch( ( error ) => {
+		console.error( error.message );
+		process.exit( 1 );
+	} );
+}
+
+module.exports = { verifyCardHoverInertia };

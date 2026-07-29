@@ -9,6 +9,39 @@ const workflow = fs.readFileSync( path.join( themeRoot, '.github', 'workflows', 
 const headerVerifier = fs.readFileSync( path.join( themeRoot, 'scripts', 'verify-header.js' ), 'utf8' );
 const typography = fs.readFileSync( path.join( themeRoot, 'scripts', 'verify-typography.js' ), 'utf8' );
 
+function escapeRegExp( value ) {
+	return value.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
+}
+
+function assertSourceUnitTestsAreActive( workflowSource, testFiles ) {
+	const sourceJobStart = workflowSource.indexOf( '\n  verify:' );
+	const deployedJobStart = workflowSource.indexOf( '\n  deployed-content:' );
+	assert.ok( sourceJobStart >= 0, 'Workflow is missing the source job.' );
+	assert.ok( deployedJobStart > sourceJobStart, 'Workflow is missing the deployed job after the source job.' );
+
+	const sourceJob = workflowSource.slice( sourceJobStart, deployedJobStart );
+	const stepMarker = '\n      - name: Script library unit tests';
+	const stepStart = sourceJob.indexOf( stepMarker );
+	assert.ok( stepStart >= 0, 'Source job is missing the script-library unit-test step.' );
+
+	const nextStep = sourceJob.indexOf( '\n      - name:', stepStart + stepMarker.length );
+	assert.ok( nextStep > stepStart, 'Script-library unit-test step has no following step boundary.' );
+	const unitTestStep = sourceJob.slice( stepStart, nextStep );
+	const runMarker = '\n        run: |';
+	const runStart = unitTestStep.indexOf( runMarker );
+	assert.ok( runStart >= 0, 'Script-library unit-test step is missing its run block.' );
+	const runBlock = unitTestStep.slice( runStart + runMarker.length );
+
+	assert.match( runBlock, /^\s*node --test\s+\\\s*$/m, 'Unit-test run block has no active node --test command.' );
+	for ( const testFile of testFiles ) {
+		assert.match(
+			runBlock,
+			new RegExp( `^\\s*${ escapeRegExp( testFile ) }(?:\\s+\\\\)?\\s*$`, 'm' ),
+			`Workflow unit-test run block is missing an active ${ testFile } command line.`
+		);
+	}
+}
+
 test( 'runs the production gates on a daily schedule', () => {
 	assert.match( workflow, /\n  schedule:\s*\n    - cron: '17 12 \* \* \*'/ );
 } );
@@ -104,14 +137,43 @@ test( 'normalizes pointer media for the production header gate', () => {
 	assert.match( headerVerifier, /Page\.addScriptToEvaluateOnNewDocument/ );
 } );
 
-test( 'runs metadata, market parity, and production workflow contract tests in CI', () => {
-	for ( const testFile of [
+test( 'runs metadata, About probe, market parity, and production workflow contract tests in CI', () => {
+	assertSourceUnitTestsAreActive( workflow, [
 		'scripts/lib/about-page-contract.test.js',
+		'scripts/lib/about-page-rendered-probe.test.js',
+		'scripts/lib/about-gravatar-heading.test.js',
 		'scripts/lib/job-placement-metadata-contract.test.js',
 		'scripts/lib/market-screen-parity.test.js',
 		'scripts/lib/page-content-contract.test.js',
 		'scripts/lib/production-gates-workflow.test.js',
-	] ) {
-		assert.ok( workflow.includes( testFile ), `Workflow unit-test list is missing ${ testFile }.` );
-	}
+	] );
+} );
+
+test( 'does not count a commented About probe test as active CI coverage', () => {
+	const testFile = 'scripts/lib/about-page-rendered-probe.test.js';
+	const commentedWorkflow = workflow.replace(
+		`            ${ testFile } \\`,
+		`            # ${ testFile } \\`
+	);
+	assert.notEqual( commentedWorkflow, workflow, 'Commented-line mutation must apply.' );
+
+	assert.throws(
+		() => assertSourceUnitTestsAreActive( commentedWorkflow, [ testFile ] ),
+		/Workflow unit-test run block is missing an active scripts\/lib\/about-page-rendered-probe\.test\.js command line/
+	);
+} );
+
+test( 'does not count About probe prose outside the unit-test run block', () => {
+	const testFile = 'scripts/lib/about-page-rendered-probe.test.js';
+	const withoutActiveLine = workflow.replace( new RegExp( `^\\s*${ escapeRegExp( testFile ) }\\s+\\\\\\s*$\\r?\\n`, 'm' ), '' );
+	assert.notEqual( withoutActiveLine, workflow, 'Active-line removal mutation must apply.' );
+	const proseOnlyWorkflow = withoutActiveLine.replace(
+		'\n  verify:',
+		`\n# CI coverage includes ${ testFile }.\n  verify:`
+	);
+
+	assert.throws(
+		() => assertSourceUnitTestsAreActive( proseOnlyWorkflow, [ testFile ] ),
+		/Workflow unit-test run block is missing an active scripts\/lib\/about-page-rendered-probe\.test\.js command line/
+	);
 } );
