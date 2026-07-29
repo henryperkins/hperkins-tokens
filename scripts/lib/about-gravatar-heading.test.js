@@ -21,6 +21,10 @@ function serializePhpSingleQuotedLiteral( value ) {
 		.replaceAll( "'", "\\'" ) }'`;
 }
 
+function selectPhpBinary( env = process.env ) {
+	return env.HPERKINS_PHP_BIN || 'php';
+}
+
 function exerciseHook( phpHookPath = hookPath ) {
 	if ( ! fs.existsSync( phpHookPath ) ) {
 		return {
@@ -69,7 +73,7 @@ function exerciseHook( phpHookPath = hookPath ) {
 			'otherBlock' => hperkins_tokens_render_about_gravatar_heading( $markup, $other_block ),
 		) );
 	`;
-	const result = spawnSync( 'php', [ '-r', harness ], {
+	const result = spawnSync( selectPhpBinary(), [ '-r', harness ], {
 		cwd: themeRoot,
 		encoding: 'utf8',
 	} );
@@ -84,6 +88,14 @@ function exerciseHook( phpHookPath = hookPath ) {
 }
 
 const observed = exerciseHook();
+
+test( 'uses the configured PHP binary for the isolated harness', () => {
+	assert.equal(
+		selectPhpBinary( { HPERKINS_PHP_BIN: 'C:\\PHP 8.3\\php.exe' } ),
+		'C:\\PHP 8.3\\php.exe'
+	);
+	assert.equal( selectPhpBinary( {} ), 'php' );
+} );
 
 test( 'loads the real hook when its PHP path contains a single quote', () => {
 	const quotedDirectory = fs.mkdtempSync(
