@@ -42,6 +42,6 @@ function hperkins_tokens_render_about_gravatar_heading( $block_content, $parsed_
 		return $block_content;
 	}
 
-	return '<h3 class="screen-reader-text">Profile details</h3>' . $block_content;
+	return '<h3 class="screen-reader-text">' . esc_html__( 'Profile details', 'hperkins-tokens' ) . '</h3>' . $block_content;
 }
 add_filter( 'render_block_gravatar/block', 'hperkins_tokens_render_about_gravatar_heading', 10, 2 );

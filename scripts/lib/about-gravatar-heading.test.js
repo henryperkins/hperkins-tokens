@@ -1,6 +1,7 @@
 const test = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
+const os = require( 'node:os' );
 const path = require( 'node:path' );
 const { spawnSync } = require( 'node:child_process' );
 
@@ -14,22 +15,34 @@ const targetMarkup = [
 	'\n',
 ].join( '' );
 
-function exerciseHook() {
-	if ( ! fs.existsSync( hookPath ) ) {
+function serializePhpSingleQuotedLiteral( value ) {
+	return `'${ value
+		.replaceAll( '\\', '\\\\' )
+		.replaceAll( "'", "\\'" ) }'`;
+}
+
+function exerciseHook( phpHookPath = hookPath ) {
+	if ( ! fs.existsSync( phpHookPath ) ) {
 		return {
 			error: 'The PHP theme-boundary implementation is missing.',
 		};
 	}
 
-	const normalizedHookPath = hookPath.replaceAll( '\\', '/' );
+	const normalizedHookPath = phpHookPath.replaceAll( '\\', '/' );
 	const harness = `
 		define( 'ABSPATH', __DIR__ . '/' );
 		$registered = array();
+		$translations = array();
 		function add_filter( $hook, $callback, $priority, $accepted_args ) {
 			global $registered;
 			$registered[] = array( $hook, $callback, $priority, $accepted_args );
 		}
-		require '${ normalizedHookPath }';
+		function esc_html__( $text, $domain ) {
+			global $translations;
+			$translations[] = array( $text, $domain );
+			return $text;
+		}
+		require ${ serializePhpSingleQuotedLiteral( normalizedHookPath ) };
 		$markup = base64_decode( '${ Buffer.from( targetMarkup ).toString( 'base64' ) }' );
 		$target = array(
 			'blockName' => 'gravatar/block',
@@ -50,6 +63,7 @@ function exerciseHook() {
 		echo json_encode( array(
 			'registered' => $registered,
 			'target' => hperkins_tokens_render_about_gravatar_heading( $markup, $target ),
+			'translations' => $translations,
 			'otherGravatar' => hperkins_tokens_render_about_gravatar_heading( $markup, $other_gravatar ),
 			'similarClass' => hperkins_tokens_render_about_gravatar_heading( $markup, $similar_class ),
 			'otherBlock' => hperkins_tokens_render_about_gravatar_heading( $markup, $other_block ),
@@ -71,6 +85,31 @@ function exerciseHook() {
 
 const observed = exerciseHook();
 
+test( 'loads the real hook when its PHP path contains a single quote', () => {
+	const quotedDirectory = fs.mkdtempSync(
+		path.join( os.tmpdir(), "hperkins-about-'" )
+	);
+	const quotedHookPath = path.join(
+		quotedDirectory,
+		'about-gravatar-heading.php'
+	);
+
+	try {
+		fs.copyFileSync( hookPath, quotedHookPath );
+
+		const quotedObserved = exerciseHook( quotedHookPath );
+
+		assert.equal(
+			quotedObserved.error,
+			undefined,
+			quotedObserved.error
+		);
+		assert.equal( quotedObserved.target, prefix + targetMarkup );
+	} finally {
+		fs.rmSync( quotedDirectory, { recursive: true, force: true } );
+	}
+} );
+
 test( 'registers the transformation only on the Gravatar block render hook', () => {
 	assert.equal( observed.error, undefined, observed.error );
 	assert.deepEqual( observed.registered, [
@@ -80,6 +119,13 @@ test( 'registers the transformation only on the Gravatar block render hook', () 
 			10,
 			2,
 		],
+	] );
+} );
+
+test( 'localizes the hidden heading with the exact text and theme domain', () => {
+	assert.equal( observed.error, undefined, observed.error );
+	assert.deepEqual( observed.translations, [
+		[ 'Profile details', 'hperkins-tokens' ],
 	] );
 } );
 
