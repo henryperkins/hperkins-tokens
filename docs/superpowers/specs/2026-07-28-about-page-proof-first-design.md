@@ -187,7 +187,7 @@ values, and `On this page` remain non-heading text.
 | H3 | `Flavor Agent` | `section#selected-work` |
 | H3 | `AI Provider for Codex` | `section#selected-work` |
 | H3 | `DJ Lee & Voices of Judah` | `section#selected-work` |
-| H3 | `Tableau` | `section#selected-work` |
+| H3 | `Tableu` | `section#selected-work` |
 | H2 | `Core AI Contributions` | `section#core-ai-contributions` |
 | H2 | `AI workflows, WordPress delivery, and durable handoffs` | `section#capabilities` |
 | H3 | `AI implementation and governed workflows` | `section#capabilities` |
@@ -224,7 +224,7 @@ Project titles are plain-text H3s. Every project action link renders at least
 | Flavor Agent | `Release candidate · v0.1.0-rc.3`<br>`Builds governed WordPress AI actions around bounded operations, human review, server-side attribution, freshness checks, and drift-safe rollback before an agent changes live settings or content.` | `WordPress`; `AI governance`; `Abilities API`; `MCP` | `View Flavor Agent case study` → `/work/flavor-agent/`; `View Flavor Agent release` → `https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0-rc.3`; `View Flavor Agent source` → `https://github.com/henryperkins/flavor-agent` |
 | AI Provider for Codex | `Released · stable v2.1`<br>`Connects Codex text and image models to the WordPress AI Client through a local sidecar, per-user device login, and a read-only connector status screen inside WordPress.` | `WordPress`; `PHP`; `AI Client`; `Codex` | `View AI Provider for Codex case study` → `/work/ai-provider-for-codex/`; `View AI Provider for Codex release` → `https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v2.1`; `View AI Provider for Codex source` → `https://github.com/henryperkins/ai-provider-for-codex` |
 | DJ Lee & Voices of Judah | `Delivered · live site`<br>`Carries a booking-first client site from discovery through launch and support, with one Cloudflare Worker serving the frontend and a validated booking API for inquiries.` | `Cloudflare Workers`; `JavaScript`; `Booking API`; `Static site` | `View DJ Lee case study` → `/work/dj-lee-voices-of-judah/`; `Open DJ Lee live site` → `https://thevoicesofjudah.com`; `View DJ Lee source` → `https://github.com/henryperkins/dj-judas-v2` |
-| Tableau | `Deployed · live application`<br>`Delivers multiple tarot spreads and LLM-generated reading narratives through a React interface backed by Cloudflare Workers, D1, KV, and R2 services in a live application.` | `React`; `Cloudflare Workers`; `D1 / KV / R2`; `LLM` | `Open Tableau live application` → `https://tarot.lakefrontdev.com/`; `View Tableau source` → `https://github.com/henryperkins/tarot` |
+| Tableu | `Deployed · live application`<br>`Delivers multiple tarot spreads and LLM-generated reading narratives through a React interface backed by Cloudflare Workers, D1, KV, and R2 services in a live application.` | `React`; `Cloudflare Workers`; `D1 / KV / R2`; `LLM` | `Open Tableu live application` → `https://tarot.lakefrontdev.com/`; `View Tableu source` → `https://github.com/henryperkins/tarot` |
 
 Cards are not whole-card links. Hover and focus feedback belongs only to the
 actual links. Hovering a non-link portion of a card must not change the card's
@@ -272,7 +272,7 @@ is not permission to assume the same state at publication time.
 | Flavor Agent | Latest named card release is public RC `v0.1.0-rc.3` | `https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0-rc.3` |
 | AI Provider for Codex | Stable release `v2.1` | `https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v2.1` |
 | DJ Lee & Voices of Judah | Public site responds; source is public; booking-email delivery was not tested | `https://thevoicesofjudah.com`; `https://github.com/henryperkins/dj-judas-v2` |
-| Tableau | Public application responds; source is public | `https://tarot.lakefrontdev.com/`; `https://github.com/henryperkins/tarot` |
+| Tableu | Public application responds; source is public; public title and canonical README identify the product as `Tableu` | `https://tarot.lakefrontdev.com/`; `https://github.com/henryperkins/tarot` |
 
 Immediately before production promotion, a reviewer revisits every URL, records
 the check date and observed state in the implementation review notes, and
@@ -280,6 +280,11 @@ updates this specification and the candidate if any release tag, pull request,
 issue, date, credit, or live destination changed. An unresolved or unreachable
 proof blocks publication. Automated exact-copy checks establish conformance;
 they do not replace this factual review.
+
+The publication freshness gate ran on 2026-07-29. It confirmed the planned
+evidence states and corrected the public product name from `Tableau` to
+`Tableu` in the candidate and exact contract, matching the live application
+title and the canonical `henryperkins/tarot` README.
 
 ## Capabilities
 

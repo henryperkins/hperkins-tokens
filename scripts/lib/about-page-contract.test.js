@@ -248,18 +248,24 @@ test( 'fails when Selected Work order, status, tags, or destinations drift', () 
 	);
 	assert.throws(
 		() => verifyAboutBody(
-			mutated( 'href="https://github.com/henryperkins/tarot">View Tableau source', 'href="https://github.com/henryperkins/tarot-old">View Tableau source' )
+			mutated( 'href="https://github.com/henryperkins/tarot">View Tableu source', 'href="https://github.com/henryperkins/tarot-old">View Tableu source' )
 		),
 		/action 2 destination/
 	);
+} );
+
+test( 'requires the public Tableu heading and action labels, rejecting stale Tableau', () => {
+	const staleCandidate = candidate.replace( /Tableu/g, 'Tableau' );
+	assert.doesNotThrow( () => verifyAboutBody( candidate ) );
+	assert.throws( () => verifyAboutBody( staleCandidate ), /Project 4 title|Project 4 action|Heading/ );
 } );
 
 test( 'fails when a project title becomes a link (whole-card affordance)', () => {
 	assert.throws(
 		() => verifyAboutBody(
 			mutated(
-				'<h3 class="wp-block-heading hp-work-card__title">Tableau</h3>',
-				'<h3 class="wp-block-heading hp-work-card__title"><a href="https://tarot.lakefrontdev.com/">Tableau</a></h3>'
+				'<h3 class="wp-block-heading hp-work-card__title">Tableu</h3>',
+				'<h3 class="wp-block-heading hp-work-card__title"><a href="https://tarot.lakefrontdev.com/">Tableu</a></h3>'
 			)
 		),
 		/plain text|only its action links/
@@ -268,7 +274,7 @@ test( 'fails when a project title becomes a link (whole-card affordance)', () =>
 
 test( 'fails when HPerkins.com re-enters Selected Work', () => {
 	assert.throws(
-		() => verifyAboutBody( mutated( '<h3 class="wp-block-heading hp-work-card__title">Tableau</h3>', '<h3 class="wp-block-heading hp-work-card__title">HPerkins.com</h3>' ) ),
+		() => verifyAboutBody( mutated( '<h3 class="wp-block-heading hp-work-card__title">Tableu</h3>', '<h3 class="wp-block-heading hp-work-card__title">HPerkins.com</h3>' ) ),
 		/HPerkins\.com|Project 4 title|Heading/
 	);
 } );

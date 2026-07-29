@@ -99,13 +99,13 @@ const EXPECTED_PROJECTS = [
 		],
 	},
 	{
-		title: 'Tableau',
+		title: 'Tableu',
 		status: 'Deployed · live application',
 		impact: 'Delivers multiple tarot spreads and LLM-generated reading narratives through a React interface backed by Cloudflare Workers, D1, KV, and R2 services in a live application.',
 		tags: [ 'React', 'Cloudflare Workers', 'D1 / KV / R2', 'LLM' ],
 		actions: [
-			{ text: 'Open Tableau live application', href: 'https://tarot.lakefrontdev.com/' },
-			{ text: 'View Tableau source', href: 'https://github.com/henryperkins/tarot' },
+			{ text: 'Open Tableu live application', href: 'https://tarot.lakefrontdev.com/' },
+			{ text: 'View Tableu source', href: 'https://github.com/henryperkins/tarot' },
 		],
 	},
 ];
@@ -251,7 +251,7 @@ const EXPECTED_HEADINGS = [
 	{ level: 3, text: 'Flavor Agent', section: 'selected-work' },
 	{ level: 3, text: 'AI Provider for Codex', section: 'selected-work' },
 	{ level: 3, text: 'DJ Lee & Voices of Judah', section: 'selected-work' },
-	{ level: 3, text: 'Tableau', section: 'selected-work' },
+	{ level: 3, text: 'Tableu', section: 'selected-work' },
 	{ level: 2, text: 'Core AI Contributions', section: 'core-ai-contributions' },
 	{ level: 2, text: EXPECTED_CAPABILITIES.title, section: 'capabilities' },
 	{ level: 3, text: 'AI implementation and governed workflows', section: 'capabilities' },
