@@ -147,14 +147,12 @@ function verifyDocx( path, themeVersion ) {
 	assertOrdered( text, [
 		'WORDPRESS.COM SUPPORT',
 		'NAMED CLIENT DELIVERY',
-		'PRODUCTION ROOT-CAUSE DEBUGGING',
 		'UPSTREAM WORDPRESS CONTRIBUTION RECORD',
 		'TECHNICAL PROOF',
 	], 'Résumé' );
 	for ( const claim of [
 		'Automattic — Happiness Engineer',
 		'DJ Lee & Voices of Judah',
-		'commit c5dc3a1',
 		'WordPress/ai PR #501',
 		'Issue #529',
 		'Issue #732',
@@ -190,6 +188,9 @@ function verifyDocx( path, themeVersion ) {
 		[ /\bclients\b/i, 'plural client claim' ],
 		[ /\benterprise[- ]scale\b/i, 'unsupported enterprise-scale claim' ],
 		[ /\bv2\.0\b/i, 'stale provider version v2.0' ],
+		// Defects found and fixed on my own property are not evidence: they cleared
+		// nobody else's bar. Root-cause claims must rest on upstream reports.
+		[ /PRODUCTION ROOT-CAUSE DEBUGGING/i, 'self-fixed theme regression section' ],
 	];
 	for ( const [ pattern, label ] of forbiddenClaims ) {
 		assert( ! pattern.test( text ), `Résumé contains forbidden ${ label }.` );
