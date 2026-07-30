@@ -46,7 +46,7 @@ const PRIMARY_ACTIONS = [
 		href: '/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf',
 	},
 	{ text: 'Review GitHub evidence', href: '#evidence-register' },
-	{ text: 'Read the production debugging case', href: '#production-debugging' },
+	{ text: 'Read the root-cause investigation', href: '#root-cause-investigation' },
 	{ text: 'Contact Henry', href: '/contact/' },
 ];
 

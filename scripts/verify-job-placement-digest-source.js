@@ -89,7 +89,7 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 		'Why Support Engineer now',
 		'Enterprise monitoring and scale',
 		'I do not yet have a public enterprise-scale monitoring or incident record.',
-		'Keyboard focus rings appeared locally but disappeared after deployment.',
+		'The experiment presents as a log of AI requests; it is a log of the requests that happen to use one transport.',
 		'Within the standard block-editor controls this theme governs',
 		'A recurring class of palette-review work moves from manual enforcement into the authoring system.',
 		'A next step, stated plainly.',
@@ -101,7 +101,7 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 	for ( const action of [
 		'View one-page résumé',
 		'Review GitHub evidence',
-		'Read the production debugging case',
+		'Read the root-cause investigation',
 		'Contact Henry',
 	] ) {
 		assert( markup.includes( action ), `Main digest draft is missing first-screen action: ${ action }` );
