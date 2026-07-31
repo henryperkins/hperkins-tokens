@@ -51,6 +51,18 @@ test( 'normalizeSelectors splits on commas and collapses whitespace', () => {
 	assert.deepEqual( normalizeSelectors( '.a  .b,\n\t.c' ), [ '.a .b', '.c' ] );
 } );
 
+test( 'normalizeSelectors does not split commas inside functional pseudo-classes', () => {
+	// Splitting `:is(th, td)` naively yields `:is(th` and `td)`, which emits
+	// invalid CSS and makes a browser discard the rest of the stylesheet.
+	assert.deepEqual( normalizeSelectors( '.ledger :is(th, td)' ), [ '.ledger :is(th, td)' ] );
+	assert.deepEqual( normalizeSelectors( ':where(.a, .b) p, .c' ), [ ':where(.a, .b) p', '.c' ] );
+	assert.deepEqual( normalizeSelectors( 'li:nth-child(2n, 3n)' ), [ 'li:nth-child(2n, 3n)' ] );
+} );
+
+test( 'normalizeSelectors does not split commas inside attribute values', () => {
+	assert.deepEqual( normalizeSelectors( '[data-x="a,b"], .c' ), [ '[data-x="a,b"]', '.c' ] );
+} );
+
 test( 'bundleFor matches on prefix so BEM suffixes resolve', () => {
 	assert.equal( bundleFor( 'hp-callout' ), 'interactive' );
 	assert.equal( bundleFor( 'hp-callout--warn' ), 'interactive' );

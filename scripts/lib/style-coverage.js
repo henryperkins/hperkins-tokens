@@ -149,12 +149,47 @@ function selectorClasses( prelude ) {
  * Comma-split selector list with runs of whitespace collapsed to one space, so
  * two spellings of the same selector compare equal.
  *
+ * Splits only at bracket depth zero and outside quotes. A naive split breaks
+ * `:is(th, td)` into `:is(th` and `td)`, and re-emitting those halves produces
+ * invalid CSS that makes a browser discard the remainder of the stylesheet.
+ *
  * @param {string} prelude Selector text.
  * @return {string[]} Normalized selectors.
  */
 function normalizeSelectors( prelude ) {
-	return prelude
-		.split( ',' )
+	const parts = [];
+	let current = '';
+	let depth = 0;
+	let quote = null;
+
+	for ( let i = 0; i < prelude.length; i++ ) {
+		const char = prelude[ i ];
+
+		if ( quote ) {
+			current += char;
+			if ( char === quote && prelude[ i - 1 ] !== '\\' ) {
+				quote = null;
+			}
+			continue;
+		}
+
+		if ( char === '"' || char === "'" ) {
+			quote = char;
+		} else if ( char === '(' || char === '[' ) {
+			depth++;
+		} else if ( char === ')' || char === ']' ) {
+			depth--;
+		} else if ( char === ',' && depth === 0 ) {
+			parts.push( current );
+			current = '';
+			continue;
+		}
+
+		current += char;
+	}
+	parts.push( current );
+
+	return parts
 		.map( ( selector ) => selector.replace( /\s+/g, ' ' ).trim() )
 		.filter( Boolean );
 }
