@@ -43,6 +43,8 @@ function hperkins_tokens_bundle_map() {
 		),
 		'interactive' => array(
 			'hp-disclosure',
+			// Core details block wearing the disclosure style.
+			'is-style-hperkins-disclosure',
 			'hp-subscribe',
 			'hp-input',
 			'hp-icon-button',

@@ -7,7 +7,8 @@
  * scripts/verify-performance-assets.js fails the build if one does.
  */
 
-.hp-disclosure {
+.hp-disclosure,
+.wp-block-details.is-style-hperkins-disclosure {
 	box-sizing: border-box;
 	margin-block: var(--wp--preset--spacing--3);
 	background: var(--wp--custom--surface--card);
@@ -16,7 +17,8 @@
 	overflow: clip;
 }
 
-.hp-disclosure > summary {
+.hp-disclosure > summary,
+.wp-block-details.is-style-hperkins-disclosure > summary {
 	box-sizing: border-box;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) auto 1.25rem;
@@ -33,11 +35,13 @@
 	cursor: pointer;
 }
 
-.hp-disclosure > summary::-webkit-details-marker {
+.hp-disclosure > summary::-webkit-details-marker,
+.wp-block-details.is-style-hperkins-disclosure > summary::-webkit-details-marker {
 	display: none;
 }
 
-.hp-disclosure > summary::after {
+.hp-disclosure > summary::after,
+.wp-block-details.is-style-hperkins-disclosure > summary::after {
 	content: "+";
 	justify-self: end;
 	font-family: var(--wp--preset--font-family--mono);
@@ -47,15 +51,18 @@
 	color: var(--wp--custom--text--link);
 }
 
-.hp-disclosure[open] > summary::after {
+.hp-disclosure[open] > summary::after,
+.wp-block-details.is-style-hperkins-disclosure[open] > summary::after {
 	content: "\2212";
 }
 
-.hp-disclosure > summary:hover {
+.hp-disclosure > summary:hover,
+.wp-block-details.is-style-hperkins-disclosure > summary:hover {
 	background: var(--wp--custom--brand--subtle);
 }
 
-.hp-disclosure > summary:focus-visible {
+.hp-disclosure > summary:focus-visible,
+.wp-block-details.is-style-hperkins-disclosure > summary:focus-visible {
 	position: relative;
 	z-index: 1;
 	outline: 3px solid var(--wp--preset--color--gold-700);
@@ -76,7 +83,8 @@
 	border-radius: var(--hp-radius-pill);
 }
 
-.hp-disclosure > :not(summary) {
+.hp-disclosure > :not(summary),
+.wp-block-details.is-style-hperkins-disclosure > :not(summary) {
 	margin-block: 0;
 }
 

@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.56
+Version: 0.3.57
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -525,66 +525,23 @@ button,
 	border-radius: var(--hp-radius-card);
 }
 
-.wp-block-details.is-style-hperkins-disclosure {
-	box-sizing: border-box;
-	margin-block: var(--wp--preset--spacing--3);
-	background: var(--wp--custom--surface--card);
-	border: 1px solid var(--wp--custom--border--hair);
-	border-radius: var(--hp-radius-panel);
-	overflow: clip;
-}
-
-.wp-block-details.is-style-hperkins-disclosure > summary {
-	box-sizing: border-box;
-	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto 1.25rem;
-	align-items: center;
-	gap: var(--wp--preset--spacing--3);
-	min-block-size: var(--hp-touch-min);
-	padding: var(--wp--preset--spacing--3) var(--wp--preset--spacing--4);
-	font-family: var(--wp--preset--font-family--label);
-	font-size: var(--wp--preset--font-size--base);
-	line-height: 1.3;
-	color: var(--wp--custom--text--strong);
-	background: var(--wp--custom--surface--sunken);
-	list-style: none;
-	cursor: pointer;
-}
-
-.wp-block-details.is-style-hperkins-disclosure > summary::-webkit-details-marker {
-	display: none;
-}
-
-.wp-block-details.is-style-hperkins-disclosure > summary::after {
-	content: "+";
-	justify-self: end;
-	font-family: var(--wp--preset--font-family--mono);
-	font-size: var(--wp--preset--font-size--lg);
-	font-weight: var(--wp--custom--weight--medium);
-	line-height: 1;
-	color: var(--wp--custom--text--link);
-}
-
-.wp-block-details.is-style-hperkins-disclosure[open] > summary::after {
-	content: "\2212";
-}
-
-.wp-block-details.is-style-hperkins-disclosure > summary:hover {
-	background: var(--wp--custom--brand--subtle);
-}
-
-.wp-block-details.is-style-hperkins-disclosure > summary:focus-visible {
-	position: relative;
-	z-index: 1;
-	outline: 3px solid var(--wp--preset--color--gold-700);
-	outline-offset: -3px;
-}
 
 
 
-.wp-block-details.is-style-hperkins-disclosure > :not(summary) {
-	margin-block: 0;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .hp-fit-table,
 .hp-evidence-table,

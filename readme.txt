@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.56
+Stable tag: 0.3.57
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -337,6 +337,25 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.57 =
+* Split component CSS out of style.css into conditionally loaded bundles under
+  assets/c/ (evidence, interactive, longform). The sheet goes from 131.4 KiB to
+  79.2 KiB raw and 26.2 KiB to 17.5 KiB gzip, an 8.7 KiB (33%) transfer saving
+  on the front page, which loads none of the three. Selector count is unchanged
+  at 766 across the four files.
+* inc/component-styles.php enqueues a bundle only when the markup being
+  rendered uses one of its classes, resolved from the post body plus the
+  template WordPress actually resolved for the request (which respects a Site
+  Editor override in wp_template). Falls open to every bundle when a route
+  cannot be classified, so a resolution miss costs transfer, never styling.
+* Added responsive WebP candidates: 448w for the Wapuu hero and 768w for the
+  three Three Rings cards, with srcset/sizes derived from the layout rules.
+  448w serves desktop at 1x and mobile at 2x; 768w serves desktop at 2x and
+  mobile to roughly 2x. Existing files stay as the large candidates.
+* verify-performance-assets.js now pins the split: the PHP and JS bundle maps
+  must agree, no selector may live in both style.css and a bundle, and neither
+  the front page nor the shared template parts may use a bundle-owned class.
 
 = 0.3.56 =
 * About proof-first plumbing (Phase A of the 2026-07-28 About redesign spec;

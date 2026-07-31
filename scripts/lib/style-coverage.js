@@ -25,6 +25,9 @@ const BUNDLES = {
 	],
 	interactive: [
 		'hp-disclosure',
+		// Core details block wearing the disclosure style; keeps its grouped rule
+		// with .hp-disclosure > summary instead of splitting the pair across files.
+		'is-style-hperkins-disclosure',
 		'hp-subscribe',
 		'hp-input',
 		'hp-icon-button',

@@ -70,7 +70,18 @@ function read( relativePath ) {
 }
 
 function verifySourceContracts() {
-	const componentCss = read( 'style.css' );
+	// Component CSS is style.css plus the conditionally loaded bundles under
+	// assets/c/. The disclosure and reduced-motion rules below moved into the
+	// interactive bundle in 0.3.57; the contract is that they exist in the
+	// theme's component layer, not that they sit in one particular file.
+	const componentCss = [
+		'style.css',
+		'assets/c/evidence.css',
+		'assets/c/interactive.css',
+		'assets/c/longform.css',
+	]
+		.map( ( relativePath ) => read( relativePath ) )
+		.join( '\n' );
 	const pageCss = read( 'assets/imladris-pages.css' );
 
 	for ( const expected of [
@@ -84,7 +95,7 @@ function verifySourceContracts() {
 		'@media (prefers-reduced-motion: reduce)',
 		'transition-duration: 0.01ms !important;',
 	] ) {
-		assert( componentCss.includes( expected ), `style.css is missing recruiter-page contract: ${ expected }` );
+		assert( componentCss.includes( expected ), `Theme component CSS (style.css + assets/c/*.css) is missing recruiter-page contract: ${ expected }` );
 	}
 
 	for ( const expected of [
