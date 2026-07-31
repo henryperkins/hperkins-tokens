@@ -151,15 +151,30 @@ function hperkins_tokens_render_haystack() {
 		$parts[] = (string) $queried->post_content;
 	}
 
-	$template = hperkins_tokens_resolve_template_file();
-	if ( null === $template ) {
-		// A route this theme serves from the parent theme or from core. Its
-		// markup cannot be resolved here, so the caller falls open.
-		return null;
+	// Prefer the template WordPress has actually resolved for this request.
+	// locate_block_template() sets $_wp_current_template_content during
+	// template_include, which runs before wp_head() and therefore before
+	// wp_enqueue_scripts. It reflects a Site Editor customisation stored in
+	// wp_template, which shadows the theme file and can differ from it — this
+	// site carries such an override for front-page, with its patterns already
+	// expanded. Reading the file instead would resolve bundles from markup
+	// that is not what renders.
+	$template_markup = '';
+	if ( isset( $GLOBALS['_wp_current_template_content'] ) && is_string( $GLOBALS['_wp_current_template_content'] ) ) {
+		$template_markup = (string) $GLOBALS['_wp_current_template_content'];
 	}
 
-	$template_markup = (string) file_get_contents( $template );
-	$parts[]         = $template_markup;
+	if ( '' === $template_markup ) {
+		$template = hperkins_tokens_resolve_template_file();
+		if ( null === $template ) {
+			// A route this theme serves from the parent theme or from core. Its
+			// markup cannot be resolved here, so the caller falls open.
+			return null;
+		}
+		$template_markup = (string) file_get_contents( $template );
+	}
+
+	$parts[] = $template_markup;
 
 	if ( preg_match_all( '/wp:pattern\s*\{"slug":"hperkins-tokens\/([\w-]+)"/', $template_markup, $matches ) ) {
 		foreach ( array_unique( $matches[1] ) as $pattern_slug ) {
