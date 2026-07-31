@@ -262,6 +262,41 @@ assert(
 	'Footer backdrop should prefer the WebP asset via image-set().'
 );
 
+// --- Responsive candidates -------------------------------------------------
+// Candidate widths come from the layout rules, not from a measured display
+// size. The hero figure is 13rem (208px) under 781px and min(100%, 27.5rem)
+// (440px) above it, so 448w serves desktop at 1x and mobile at 2x — both of
+// which fetch the 640w file today. The ring grid is three ~365px columns above
+// 920px and one ~92vw column below, so 768w serves desktop at 2x and mobile up
+// to roughly 2x. A 600w candidate would have won none of those cases.
+const responsiveVariants = {
+	'assets/img/wapuu-color-448.webp': 30000,
+	'assets/img/imagery/rivendell-second-age-768.webp': 90000,
+	'assets/img/imagery/rivendell-third-age-768.webp': 90000,
+	'assets/img/imagery/rivendell-fourth-age-768.webp': 90000,
+};
+for ( const [ relativePath, maxBytes ] of Object.entries( responsiveVariants ) ) {
+	assertFileSmallerThan( relativePath, maxBytes );
+}
+
+assert(
+	heroPattern.includes( 'wapuu-color-448.webp' ) &&
+		/srcset="[^"]*448w[^"]*640w/.test( heroPattern ),
+	'Wapuu hero WebP source needs a 448w/640w srcset.'
+);
+assert(
+	heroPattern.includes( 'sizes="(max-width: 781px) 13rem, 27.5rem"' ),
+	'Wapuu hero sizes must match .hp-wapuu-hero__figure (13rem mobile, 27.5rem desktop).'
+);
+assert(
+	( ringPattern.match( /srcset="[^"]*768w[^"]*1100w/g ) || [] ).length >= 3,
+	'All three ring-card WebP sources need a 768w/1100w srcset.'
+);
+assert(
+	( ringPattern.match( /sizes="\(max-width: 920px\) 92vw, 23rem"/g ) || [] ).length >= 3,
+	'Ring-card sizes must match .hp-ring-grid (one column under 920px, ~23rem per column above).'
+);
+
 // Release-sync contract: style.css Version, readme.txt Stable tag, and the
 // matching changelog entry must agree. filemtime() busts the cache, but the
 // declared Version is the theme's release source of truth.

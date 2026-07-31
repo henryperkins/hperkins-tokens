@@ -9,22 +9,29 @@ $hperkins_ring_assets = array();
 foreach (
 	array(
 		'air'   => array(
-			'png'  => 'imagery/rivendell-second-age.png',
-			'webp' => 'imagery/rivendell-second-age.webp',
+			'png'     => 'imagery/rivendell-second-age.png',
+			'webp'    => 'imagery/rivendell-second-age.webp',
+			'webp768' => 'imagery/rivendell-second-age-768.webp',
 		),
 		'fire'  => array(
-			'png'  => 'imagery/rivendell-third-age.png',
-			'webp' => 'imagery/rivendell-third-age.webp',
+			'png'     => 'imagery/rivendell-third-age.png',
+			'webp'    => 'imagery/rivendell-third-age.webp',
+			'webp768' => 'imagery/rivendell-third-age-768.webp',
 		),
 		'water' => array(
-			'png'  => 'imagery/rivendell-fourth-age.png',
-			'webp' => 'imagery/rivendell-fourth-age.webp',
+			'png'     => 'imagery/rivendell-fourth-age.png',
+			'webp'    => 'imagery/rivendell-fourth-age.webp',
+			'webp768' => 'imagery/rivendell-fourth-age-768.webp',
 		),
 	) as $hperkins_ring_key => $hperkins_ring_file_name
 ) {
+	// 768w covers desktop at 2x (the grid is three ~365px columns above 920px)
+	// and mobile up to roughly 2x (one ~92vw column below it). Phones at 3x
+	// still resolve to the 1100w file, which is the correct outcome.
 	$hperkins_ring_assets[ $hperkins_ring_key ] = array(
-		'png'  => esc_url( hperkins_tokens_asset_url( 'assets/img/' . $hperkins_ring_file_name['png'] ) ),
-		'webp' => esc_url( hperkins_tokens_asset_url( 'assets/img/' . $hperkins_ring_file_name['webp'] ) ),
+		'png'     => esc_url( hperkins_tokens_asset_url( 'assets/img/' . $hperkins_ring_file_name['png'] ) ),
+		'webp'    => esc_url( hperkins_tokens_asset_url( 'assets/img/' . $hperkins_ring_file_name['webp'] ) ),
+		'webp768' => esc_url( hperkins_tokens_asset_url( 'assets/img/' . $hperkins_ring_file_name['webp768'] ) ),
 	);
 }
 ?>
@@ -32,7 +39,7 @@ foreach (
 <div class="wp-block-group alignwide hp-ring-framework"><!-- wp:columns {"className":"hp-ring-grid"} -->
 <div class="wp-block-columns hp-ring-grid"><!-- wp:column {"className":"hp-ring-card is-air"} -->
 <div class="wp-block-column hp-ring-card is-air"><!-- wp:html -->
-<figure class="wp-block-image size-full hp-ring-card__figure"><picture><source srcset="<?php echo $hperkins_ring_assets['air']['webp']; ?>" type="image/webp" /><img src="<?php echo $hperkins_ring_assets['air']['png']; ?>" alt="" width="1672" height="941" loading="lazy" decoding="async" /></picture></figure>
+<figure class="wp-block-image size-full hp-ring-card__figure"><picture><source srcset="<?php echo $hperkins_ring_assets['air']['webp768']; ?> 768w, <?php echo $hperkins_ring_assets['air']['webp']; ?> 1100w" sizes="(max-width: 920px) 92vw, 23rem" type="image/webp" /><img src="<?php echo $hperkins_ring_assets['air']['png']; ?>" alt="" width="1672" height="941" loading="lazy" decoding="async" /></picture></figure>
 <!-- /wp:html -->
 
 <!-- wp:html -->
@@ -68,7 +75,7 @@ foreach (
 
 <!-- wp:column {"className":"hp-ring-card is-fire"} -->
 <div class="wp-block-column hp-ring-card is-fire"><!-- wp:html -->
-<figure class="wp-block-image size-full hp-ring-card__figure"><picture><source srcset="<?php echo $hperkins_ring_assets['fire']['webp']; ?>" type="image/webp" /><img src="<?php echo $hperkins_ring_assets['fire']['png']; ?>" alt="" width="1672" height="941" loading="lazy" decoding="async" /></picture></figure>
+<figure class="wp-block-image size-full hp-ring-card__figure"><picture><source srcset="<?php echo $hperkins_ring_assets['fire']['webp768']; ?> 768w, <?php echo $hperkins_ring_assets['fire']['webp']; ?> 1100w" sizes="(max-width: 920px) 92vw, 23rem" type="image/webp" /><img src="<?php echo $hperkins_ring_assets['fire']['png']; ?>" alt="" width="1672" height="941" loading="lazy" decoding="async" /></picture></figure>
 <!-- /wp:html -->
 
 <!-- wp:html -->
@@ -104,7 +111,7 @@ foreach (
 
 <!-- wp:column {"className":"hp-ring-card is-water"} -->
 <div class="wp-block-column hp-ring-card is-water"><!-- wp:html -->
-<figure class="wp-block-image size-full hp-ring-card__figure"><picture><source srcset="<?php echo $hperkins_ring_assets['water']['webp']; ?>" type="image/webp" /><img src="<?php echo $hperkins_ring_assets['water']['png']; ?>" alt="" width="1672" height="941" loading="lazy" decoding="async" /></picture></figure>
+<figure class="wp-block-image size-full hp-ring-card__figure"><picture><source srcset="<?php echo $hperkins_ring_assets['water']['webp768']; ?> 768w, <?php echo $hperkins_ring_assets['water']['webp']; ?> 1100w" sizes="(max-width: 920px) 92vw, 23rem" type="image/webp" /><img src="<?php echo $hperkins_ring_assets['water']['png']; ?>" alt="" width="1672" height="941" loading="lazy" decoding="async" /></picture></figure>
 <!-- /wp:html -->
 
 <!-- wp:html -->
