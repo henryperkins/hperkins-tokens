@@ -151,7 +151,108 @@ assert(
 	'Ring-card images need intrinsic dimensions.'
 );
 
+// --- Component bundle split contracts --------------------------------------
+// style.css carries only what every route needs; component CSS lives in
+// assets/c/*.css and is enqueued from the content being rendered. These
+// assertions keep that split honest: the two bundle maps agreeing, no rule
+// living on both sides of the load order, and the front page resolving to
+// nothing.
+const {
+	BUNDLES,
+	parseRules,
+	anchorClasses,
+	normalizeSelectors,
+	classesInMarkup,
+	bundleFor,
+} = require( './lib/style-coverage' );
+
+const bundleNames = Object.keys( BUNDLES );
+const componentPhp = readFileSync( join( themeRoot, 'inc/component-styles.php' ), 'utf8' );
+
+for ( const [ name, prefixes ] of Object.entries( BUNDLES ) ) {
+	assert(
+		componentPhp.includes( `'${ name }'` ),
+		`inc/component-styles.php is missing the "${ name }" bundle.`
+	);
+	for ( const prefix of prefixes ) {
+		assert(
+			componentPhp.includes( `'${ prefix }'` ),
+			`inc/component-styles.php is missing the "${ prefix }" prefix from the ${ name } bundle.`
+		);
+	}
+}
+
+for ( const name of bundleNames ) {
+	assert(
+		existsSync( join( themeRoot, `assets/c/${ name }.css` ) ),
+		`assets/c/${ name }.css is missing.`
+	);
+}
+
+const retainedRules = parseRules( styleCss );
+for ( const rule of retainedRules ) {
+	if ( rule.prelude.startsWith( '@' ) ) {
+		continue;
+	}
+	for ( const selector of normalizeSelectors( rule.prelude ) ) {
+		const owners = [
+			...new Set( anchorClasses( selector ).map( bundleFor ).filter( Boolean ) ),
+		];
+		assert(
+			owners.length !== 1,
+			`style.css still styles bundle-owned selector "${ selector }" (belongs in ${ owners[ 0 ] }).`
+		);
+	}
+}
+
+// Bundles load after style.css, so a selector present in both would silently
+// invert which rule wins.
+const retainedSelectors = new Set();
+for ( const rule of retainedRules ) {
+	normalizeSelectors( rule.prelude ).forEach( ( selector ) => retainedSelectors.add( selector ) );
+}
+for ( const name of bundleNames ) {
+	const bundleCss = readFileSync( join( themeRoot, `assets/c/${ name }.css` ), 'utf8' );
+	for ( const rule of parseRules( bundleCss ) ) {
+		for ( const selector of normalizeSelectors( rule.prelude ) ) {
+			assert(
+				! retainedSelectors.has( selector ),
+				`Selector "${ selector }" is in both style.css and assets/c/${ name }.css; the cascade order inverts.`
+			);
+		}
+	}
+}
+
+// The front page must resolve to zero bundles, and template parts render on
+// every route, so neither may reference a bundle-owned class.
+const frontMarkup = [
+	readFileSync( join( themeRoot, 'templates/front-page.html' ), 'utf8' ),
+	readFileSync( join( themeRoot, 'patterns/wapuu-home-hero.php' ), 'utf8' ),
+	ringPattern,
+	frontPageSnapshot,
+];
+for ( const className of classesInMarkup( frontMarkup ) ) {
+	const owner = bundleFor( className );
+	assert(
+		owner === null,
+		`Front-page class "${ className }" belongs to the ${ owner } bundle, so the front page would load it.`
+	);
+}
+for ( const part of [ 'parts/header.html', 'parts/footer.html' ] ) {
+	for ( const className of classesInMarkup( [ readFileSync( join( themeRoot, part ), 'utf8' ) ] ) ) {
+		const owner = bundleFor( className );
+		assert(
+			owner === null,
+			`${ part } uses "${ className }" from the ${ owner } bundle, but template parts render on every route.`
+		);
+	}
+}
+
 const functionsPhp = readFileSync( join( themeRoot, 'functions.php' ), 'utf8' );
+assert(
+	functionsPhp.includes( "/inc/component-styles.php" ),
+	'functions.php must require inc/component-styles.php.'
+);
 assert(
 	functionsPhp.includes( '! is_front_page()' ),
 	'Page-layout CSS should not be enqueued on the front page.'
