@@ -146,6 +146,61 @@ function selectorClasses( prelude ) {
 }
 
 /**
+ * Remove the argument list of every functional pseudo-class, so only the
+ * "plain" part of a selector remains.
+ *
+ * @param {string} selector Selector text.
+ * @return {string} Selector with :not(...)/:is(...)/etc. arguments removed.
+ */
+function stripFunctionalPseudos( selector ) {
+	let out = '';
+	for ( let i = 0; i < selector.length; i++ ) {
+		if ( selector[ i ] === ':' ) {
+			let nameStart = i + 1;
+			if ( selector[ nameStart ] === ':' ) {
+				nameStart++;
+			}
+			let nameEnd = nameStart;
+			while ( nameEnd < selector.length && /[\w-]/.test( selector[ nameEnd ] ) ) {
+				nameEnd++;
+			}
+			if ( selector[ nameEnd ] === '(' ) {
+				let depth = 1;
+				let scan = nameEnd + 1;
+				while ( scan < selector.length && depth > 0 ) {
+					if ( selector[ scan ] === '(' ) {
+						depth++;
+					} else if ( selector[ scan ] === ')' ) {
+						depth--;
+					}
+					scan++;
+				}
+				i = scan - 1;
+				continue;
+			}
+		}
+		out += selector[ i ];
+	}
+	return out;
+}
+
+/**
+ * Classes that must be PRESENT for a selector to match.
+ *
+ * Classes inside functional pseudo-classes do not qualify. In
+ * `.hp-prose > :where(p, li):not(.hp-lead)` the only anchor is `.hp-prose`;
+ * `.hp-lead` is a negation, and treating it as an anchor moved a global prose
+ * rule into a component bundle, silently dropping it from every page that did
+ * not load that bundle.
+ *
+ * @param {string} selector A single selector (not a comma-separated list).
+ * @return {string[]} Anchoring class names.
+ */
+function anchorClasses( selector ) {
+	return selectorClasses( stripFunctionalPseudos( selector ) );
+}
+
+/**
  * Comma-split selector list with runs of whitespace collapsed to one space, so
  * two spellings of the same selector compare equal.
  *
@@ -235,6 +290,8 @@ module.exports = {
 	BUNDLES,
 	parseRules,
 	selectorClasses,
+	stripFunctionalPseudos,
+	anchorClasses,
 	normalizeSelectors,
 	bundleFor,
 	classesInMarkup,

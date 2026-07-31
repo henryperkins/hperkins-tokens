@@ -5,6 +5,8 @@ const {
 	BUNDLES,
 	parseRules,
 	selectorClasses,
+	stripFunctionalPseudos,
+	anchorClasses,
 	normalizeSelectors,
 	bundleFor,
 	classesInMarkup,
@@ -61,6 +63,28 @@ test( 'normalizeSelectors does not split commas inside functional pseudo-classes
 
 test( 'normalizeSelectors does not split commas inside attribute values', () => {
 	assert.deepEqual( normalizeSelectors( '[data-x="a,b"], .c' ), [ '[data-x="a,b"]', '.c' ] );
+} );
+
+test( 'stripFunctionalPseudos removes pseudo-class argument lists but keeps plain pseudos', () => {
+	assert.equal( stripFunctionalPseudos( '.a:not(.b) .c' ), '.a .c' );
+	assert.equal( stripFunctionalPseudos( '.a:hover' ), '.a:hover' );
+	assert.equal( stripFunctionalPseudos( '.a::before' ), '.a::before' );
+	assert.equal( stripFunctionalPseudos( '.a:is(.b:not(.c)) .d' ), '.a .d' );
+} );
+
+test( 'anchorClasses ignores classes that only appear inside :not() and :where()', () => {
+	// The class must be PRESENT for the selector to match. A negated class is
+	// the opposite, and counting it moved a global prose rule into a bundle.
+	assert.deepEqual(
+		anchorClasses( '.hp-prose > :where(p, li):not(.alignwide):not(.hp-lead)' ),
+		[ 'hp-prose' ]
+	);
+	assert.deepEqual( anchorClasses( '.hp-shot .wp-element-caption a' ), [
+		'hp-shot',
+		'wp-element-caption',
+	] );
+	// Every anchor living inside :is() means there is no guaranteed anchor.
+	assert.deepEqual( anchorClasses( ':is(.hp-callout, .hp-badge) p' ), [] );
 } );
 
 test( 'bundleFor matches on prefix so BEM suffixes resolve', () => {
