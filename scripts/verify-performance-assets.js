@@ -151,7 +151,132 @@ assert(
 	'Ring-card images need intrinsic dimensions.'
 );
 
+// --- Component bundle split contracts --------------------------------------
+// style.css carries only what every route needs; component CSS lives in
+// assets/c/*.css and is enqueued from the content being rendered. These
+// assertions keep that split honest: the two bundle maps agreeing, no rule
+// living on both sides of the load order, and the front page resolving to
+// nothing.
+const {
+	BUNDLES,
+	parseRules,
+	anchorClasses,
+	normalizeSelectors,
+	classesInMarkup,
+	bundleFor,
+	expandPatternChain,
+} = require( './lib/style-coverage' );
+
+// Patterns are read by slug the way the PHP resolver reads them, so a check
+// below follows the same chain the runtime does.
+function readPatternSource( slug ) {
+	const file = join( themeRoot, 'patterns', `${ slug }.php` );
+	return existsSync( file ) ? readFileSync( file, 'utf8' ) : null;
+}
+
+const bundleNames = Object.keys( BUNDLES );
+const componentPhp = readFileSync( join( themeRoot, 'inc/component-styles.php' ), 'utf8' );
+
+for ( const [ name, prefixes ] of Object.entries( BUNDLES ) ) {
+	assert(
+		componentPhp.includes( `'${ name }'` ),
+		`inc/component-styles.php is missing the "${ name }" bundle.`
+	);
+	for ( const prefix of prefixes ) {
+		assert(
+			componentPhp.includes( `'${ prefix }'` ),
+			`inc/component-styles.php is missing the "${ prefix }" prefix from the ${ name } bundle.`
+		);
+	}
+}
+
+for ( const name of bundleNames ) {
+	assert(
+		existsSync( join( themeRoot, `assets/c/${ name }.css` ) ),
+		`assets/c/${ name }.css is missing.`
+	);
+}
+
+const retainedRules = parseRules( styleCss );
+for ( const rule of retainedRules ) {
+	if ( rule.prelude.startsWith( '@' ) ) {
+		continue;
+	}
+	for ( const selector of normalizeSelectors( rule.prelude ) ) {
+		const owners = [
+			...new Set( anchorClasses( selector ).map( bundleFor ).filter( Boolean ) ),
+		];
+		assert(
+			owners.length !== 1,
+			`style.css still styles bundle-owned selector "${ selector }" (belongs in ${ owners[ 0 ] }).`
+		);
+	}
+}
+
+// Bundles load after style.css, so a selector present in both would silently
+// invert which rule wins.
+const retainedSelectors = new Set();
+for ( const rule of retainedRules ) {
+	normalizeSelectors( rule.prelude ).forEach( ( selector ) => retainedSelectors.add( selector ) );
+}
+for ( const name of bundleNames ) {
+	const bundleCss = readFileSync( join( themeRoot, `assets/c/${ name }.css` ), 'utf8' );
+	for ( const rule of parseRules( bundleCss ) ) {
+		for ( const selector of normalizeSelectors( rule.prelude ) ) {
+			assert(
+				! retainedSelectors.has( selector ),
+				`Selector "${ selector }" is in both style.css and assets/c/${ name }.css; the cascade order inverts.`
+			);
+		}
+	}
+}
+
+// The front page must resolve to zero bundles. Follow the pattern chain the
+// resolver follows, so a class introduced two patterns deep is still caught.
+const frontMarkup = expandPatternChain(
+	[
+		readFileSync( join( themeRoot, 'templates/front-page.html' ), 'utf8' ),
+		frontPageSnapshot,
+	],
+	readPatternSource
+);
+for ( const className of classesInMarkup( frontMarkup ) ) {
+	const owner = bundleFor( className );
+	assert(
+		owner === null,
+		`Front-page class "${ className }" belongs to the ${ owner } bundle, so the front page would load it.`
+	);
+}
+
+// Template parts render on every route and are deliberately excluded from the
+// resolver's haystack, so a bundle-owned class anywhere in their markup is
+// unstyled everywhere. Checking the part files alone is not enough: header.html
+// is a bare [hperkins_council_header] shortcode whose markup lives in
+// inc/council-header.php, and footer.html delegates to the footer-colophon
+// pattern. Follow both delegations or the guard passes over the very files that
+// carry the markup.
+const alwaysRenderedSources = [
+	...expandPatternChain(
+		[ 'parts/header.html', 'parts/footer.html' ].map( ( part ) =>
+			readFileSync( join( themeRoot, part ), 'utf8' )
+		),
+		readPatternSource
+	),
+	readFileSync( join( themeRoot, 'inc/council-header.php' ), 'utf8' ),
+];
+for ( const className of classesInMarkup( alwaysRenderedSources ) ) {
+	const owner = bundleFor( className );
+	assert(
+		owner === null,
+		`Always-rendered markup (template parts, their patterns, or the Council header renderer) uses "${ className }" from the ${ owner } bundle, but that markup is excluded from bundle resolution.`
+	);
+}
+
 const functionsPhp = readFileSync( join( themeRoot, 'functions.php' ), 'utf8' );
+assert(
+	functionsPhp.includes( "/inc/component-styles.php" ),
+	'functions.php must require inc/component-styles.php.'
+);
 assert(
 	functionsPhp.includes( '! is_front_page()' ),
 	'Page-layout CSS should not be enqueued on the front page.'
@@ -159,6 +284,41 @@ assert(
 assert(
 	functionsPhp.includes( 'valley-twilight.webp' ) && functionsPhp.includes( 'image-set(' ),
 	'Footer backdrop should prefer the WebP asset via image-set().'
+);
+
+// --- Responsive candidates -------------------------------------------------
+// Candidate widths come from the layout rules, not from a measured display
+// size. The hero figure is 13rem (208px) under 781px and min(100%, 27.5rem)
+// (440px) above it, so 448w serves desktop at 1x and mobile at 2x — both of
+// which fetch the 640w file today. The ring grid is three ~365px columns above
+// 920px and one ~92vw column below, so 768w serves desktop at 2x and mobile up
+// to roughly 2x. A 600w candidate would have won none of those cases.
+const responsiveVariants = {
+	'assets/img/wapuu-color-448.webp': 30000,
+	'assets/img/imagery/rivendell-second-age-768.webp': 90000,
+	'assets/img/imagery/rivendell-third-age-768.webp': 90000,
+	'assets/img/imagery/rivendell-fourth-age-768.webp': 90000,
+};
+for ( const [ relativePath, maxBytes ] of Object.entries( responsiveVariants ) ) {
+	assertFileSmallerThan( relativePath, maxBytes );
+}
+
+assert(
+	heroPattern.includes( 'wapuu-color-448.webp' ) &&
+		/srcset="[^"]*448w[^"]*640w/.test( heroPattern ),
+	'Wapuu hero WebP source needs a 448w/640w srcset.'
+);
+assert(
+	heroPattern.includes( 'sizes="(max-width: 781px) 13rem, 27.5rem"' ),
+	'Wapuu hero sizes must match .hp-wapuu-hero__figure (13rem mobile, 27.5rem desktop).'
+);
+assert(
+	( ringPattern.match( /srcset="[^"]*768w[^"]*1100w/g ) || [] ).length >= 3,
+	'All three ring-card WebP sources need a 768w/1100w srcset.'
+);
+assert(
+	( ringPattern.match( /sizes="\(max-width: 920px\) 92vw, 23rem"/g ) || [] ).length >= 3,
+	'Ring-card sizes must match .hp-ring-grid (one column under 920px, ~23rem per column above).'
 );
 
 // Release-sync contract: style.css Version, readme.txt Stable tag, and the

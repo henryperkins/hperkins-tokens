@@ -9,6 +9,10 @@
 // composition (same framed Wapuu-Dalf medallion the design uses).
 $hperkins_wapuu_png_url  = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu-color.png' ) );
 $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu-color.webp' ) );
+// 448w covers desktop at 1x (the figure is min(100%, 27.5rem) = 440px) and
+// mobile at 2x (13rem = 208px), both of which take the 640w file otherwise.
+// Mobile at 3x still resolves to 640w.
+$hperkins_wapuu_webp_448_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu-color-448.webp' ) );
 ?>
 <!-- wp:group {"align":"full","className":"hp-wapuu-hero-wrap","layout":{"type":"constrained"}} -->
 <div class="wp-block-group alignfull hp-wapuu-hero-wrap">
@@ -73,7 +77,7 @@ $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu
 			<!-- /wp:html -->
 
 			<!-- wp:html -->
-			<figure class="wp-block-image size-full hp-wapuu-hero__figure"><picture><source srcset="<?php echo $hperkins_wapuu_webp_url; ?>" type="image/webp" /><img src="<?php echo $hperkins_wapuu_png_url; ?>" alt="Wapuu dressed as a grey-robed wizard with a pointed hat, long beard, and wooden staff, holding a WordPress logo orb." width="962" height="1024" fetchpriority="high" decoding="async" /></picture></figure>
+			<figure class="wp-block-image size-full hp-wapuu-hero__figure"><picture><source srcset="<?php echo $hperkins_wapuu_webp_448_url; ?> 448w, <?php echo $hperkins_wapuu_webp_url; ?> 640w" sizes="(max-width: 781px) 13rem, 27.5rem" type="image/webp" /><img src="<?php echo $hperkins_wapuu_png_url; ?>" alt="Wapuu dressed as a grey-robed wizard with a pointed hat, long beard, and wooden staff, holding a WordPress logo orb." width="962" height="1024" fetchpriority="high" decoding="async" /></picture></figure>
 			<!-- /wp:html -->
 		</div>
 		<!-- /wp:column -->
