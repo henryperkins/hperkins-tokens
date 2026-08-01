@@ -36,7 +36,12 @@ coverage/
 /assets/screenshots/*
 !/assets/screenshots/flavor-agent-activity-log.png
 /assets/wapuu/_backup-developer-wapuu/
-/docs/superpowers/
+# Design intent (specs + plans) is versioned; the rest of superpowers/ is scratch.
+# Note the trailing /* — excluding the directory itself would make the negations
+# below unreachable, because git cannot re-include a path under an excluded dir.
+/docs/superpowers/*
+!/docs/superpowers/specs/
+!/docs/superpowers/plans/
 /docs/howhperkins.md
 /docs/howhperkinswasbuilt.html
 /docs/imladris.html
