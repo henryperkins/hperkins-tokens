@@ -10,6 +10,8 @@ const {
 	normalizeSelectors,
 	bundleFor,
 	classesInMarkup,
+	patternSlugsIn,
+	expandPatternChain,
 } = require( './style-coverage' );
 
 test( 'parseRules returns top-level rules with original offsets', () => {
@@ -111,4 +113,41 @@ test( 'classesInMarkup reads class attributes and block JSON attributes', () => 
 		'<!-- wp:group {"className":"c d"} -->',
 	] );
 	assert.deepEqual( [ ...found ].sort(), [ 'a', 'b', 'c', 'd' ] );
+} );
+
+test( 'patternSlugsIn reads theme pattern references and ignores other namespaces', () => {
+	const markup =
+		'<!-- wp:pattern {"slug":"hperkins-tokens/contact"} /-->\n' +
+		'<!-- wp:pattern {"slug":"core/three-columns"} /-->\n' +
+		'<!-- wp:pattern {"slug":"hperkins-tokens/contact"} /-->';
+	assert.deepEqual( patternSlugsIn( markup ), [ 'contact' ] );
+} );
+
+test( 'expandPatternChain follows nested patterns past the first level', () => {
+	// The live shape: page-contact.html names contact, which names
+	// imladris-subscribe, which is the only source of .hp-subscribe.
+	const sources = {
+		contact: '<div class="hp-input"></div><!-- wp:pattern {"slug":"hperkins-tokens/imladris-subscribe"} /-->',
+		'imladris-subscribe': '<div class="hp-subscribe"></div>',
+	};
+	const collected = expandPatternChain(
+		[ '<!-- wp:pattern {"slug":"hperkins-tokens/contact"} /-->' ],
+		( slug ) => sources[ slug ] ?? null
+	);
+	const classes = classesInMarkup( collected );
+	assert.equal( classes.has( 'hp-input' ), true );
+	assert.equal( classes.has( 'hp-subscribe' ), true, 'level-2 pattern must be reached' );
+} );
+
+test( 'expandPatternChain terminates on a pattern cycle and skips missing files', () => {
+	const sources = {
+		a: '<!-- wp:pattern {"slug":"hperkins-tokens/b"} /-->',
+		b: '<!-- wp:pattern {"slug":"hperkins-tokens/a"} /--><div class="hp-callout"></div>',
+	};
+	const collected = expandPatternChain(
+		[ '<!-- wp:pattern {"slug":"hperkins-tokens/a"} /--><!-- wp:pattern {"slug":"hperkins-tokens/gone"} /-->' ],
+		( slug ) => sources[ slug ] ?? null
+	);
+	assert.equal( collected.length, 3, 'seed plus each pattern exactly once' );
+	assert.equal( classesInMarkup( collected ).has( 'hp-callout' ), true );
 } );

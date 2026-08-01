@@ -289,6 +289,60 @@ function classesInMarkup( sources ) {
 	return found;
 }
 
+/**
+ * Theme pattern slugs a block-markup string names.
+ *
+ * Mirrors hperkins_tokens_pattern_slugs() in inc/component-styles.php.
+ *
+ * @param {string} markup Block markup.
+ * @return {string[]} Pattern slugs, without the namespace.
+ */
+function patternSlugsIn( markup ) {
+	return [
+		...new Set(
+			[ ...String( markup || '' ).matchAll( /wp:pattern\s*\{"slug":"hperkins-tokens\/([\w-]+)"/g ) ].map(
+				( m ) => m[ 1 ]
+			)
+		),
+	];
+}
+
+/**
+ * Markup for a set of seed sources plus every theme pattern reachable from
+ * them, expanded transitively.
+ *
+ * Mirrors the pattern walk in hperkins_tokens_render_haystack(): a template
+ * names a content pattern which names a component pattern, and stopping at one
+ * level misses the component. The visited set bounds the walk, so a pattern
+ * cycle terminates.
+ *
+ * @param {string[]} seeds       Markup strings to start from.
+ * @param {Function} readPattern Given a slug, returns its source or null.
+ * @return {string[]} Seeds followed by each reached pattern's source.
+ */
+function expandPatternChain( seeds, readPattern ) {
+	const collected = [ ...seeds ];
+	const pending = collected.flatMap( patternSlugsIn );
+	const seen = new Set();
+
+	while ( pending.length ) {
+		const slug = pending.shift();
+		if ( seen.has( slug ) ) {
+			continue;
+		}
+		seen.add( slug );
+
+		const source = readPattern( slug );
+		if ( source === null || source === undefined ) {
+			continue;
+		}
+		collected.push( source );
+		pending.push( ...patternSlugsIn( source ) );
+	}
+
+	return collected;
+}
+
 module.exports = {
 	BUNDLES,
 	parseRules,
@@ -298,4 +352,6 @@ module.exports = {
 	normalizeSelectors,
 	bundleFor,
 	classesInMarkup,
+	patternSlugsIn,
+	expandPatternChain,
 };

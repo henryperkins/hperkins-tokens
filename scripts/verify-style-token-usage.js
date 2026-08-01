@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
- * Fail when an authored sheet (style.css or assets/imladris-pages.css)
- * references an unresolved CSS custom property without a fallback. Dynamic
- * runtime variables can be allow-listed explicitly.
+ * Fail when an authored sheet (style.css, the conditionally loaded component
+ * bundles under assets/c/, or assets/imladris-pages.css) references an
+ * unresolved CSS custom property without a fallback. Dynamic runtime variables
+ * can be allow-listed explicitly.
  */
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
@@ -21,14 +22,22 @@ function assert( condition, message ) {
 }
 
 // Resolve the authored sheets relative to the theme root so the script works
-// from any CWD. imladris-pages.css loads after style.css (handle dependency),
-// so aliases defined in style.css's :root are in scope for both sheets.
-const AUTHORED_SHEETS = [ 'style.css', 'assets/imladris-pages.css' ].map( ( relative ) => ( {
-	relative,
-	css: fs.readFileSync( path.join( __dirname, '..', relative ), 'utf8' ),
-} ) );
+// from any CWD. Every conditional bundle and imladris-pages.css load after
+// style.css (handle dependency), so aliases defined in style.css's :root are in
+// scope for all of them. The bundle list comes from the shared map, so adding a
+// bundle without token-checking it is not possible.
+const { BUNDLES } = require( './lib/style-coverage' );
+const BUNDLE_SHEETS = Object.keys( BUNDLES ).map( ( name ) => `assets/c/${ name }.css` );
+
+function readSheet( relative ) {
+	return fs.readFileSync( path.join( __dirname, '..', relative ), 'utf8' );
+}
+
+const AUTHORED_SHEETS = [ 'style.css', ...BUNDLE_SHEETS, 'assets/imladris-pages.css' ].map(
+	( relative ) => ( { relative, css: readSheet( relative ) } )
+);
 const STYLE_CSS = AUTHORED_SHEETS[ 0 ].css;
-const PAGES_CSS = AUTHORED_SHEETS[ 1 ].css;
+const PAGES_CSS = AUTHORED_SHEETS[ AUTHORED_SHEETS.length - 1 ].css;
 
 // The generated variables come from the DB at HPERKINS_WP_PATH while ORIGIN
 // names the site under test; refuse a mismatched pair instead of mixing sites.
@@ -58,8 +67,17 @@ function collectDefinitions( sources ) {
 // page, so a style.css var() that only imladris-pages.css defines is
 // invalid-at-computed-value-time wherever the pages sheet is absent. A single
 // union across both sheets would call that reference satisfied.
+//
+// Each assets/c/ bundle is scoped to style.css plus itself for the same reason,
+// one step stricter: bundles load independently of each other and of the pages
+// sheet, so borrowing a definition from a sibling bundle would resolve here and
+// go undefined on any route that loads only one of the pair.
 const stylesheetScopes = new Map( [
 	[ 'style.css', collectDefinitions( [ STYLE_CSS, generatedVariables ] ) ],
+	...BUNDLE_SHEETS.map( ( relative ) => [
+		relative,
+		collectDefinitions( [ STYLE_CSS, readSheet( relative ), generatedVariables ] ),
+	] ),
 	[ 'assets/imladris-pages.css', collectDefinitions( [ STYLE_CSS, PAGES_CSS, generatedVariables ] ) ],
 ] );
 
@@ -89,4 +107,6 @@ assert(
 		.join( '\n' )
 );
 
-console.log( 'checked style.css and assets/imladris-pages.css token references' );
+console.log(
+	`checked token references in ${ AUTHORED_SHEETS.map( ( sheet ) => sheet.relative ).join( ', ' ) }`
+);

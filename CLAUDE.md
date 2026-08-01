@@ -60,8 +60,8 @@ node scripts/verify-journal-templates.js        # blog template source contract:
 node scripts/verify-job-placement-digest-source.js # recruiter main/appendix copy, outline, evidence, row counts, fragment target, immutable links, and retired-pattern contract. The digest's theme row is a claim about what is *released and deployed*, so it is checked against README.md's "Current release" + "Deployed commit" record, not against style.css — an in-flight version bump must not demand the page advertise a release tag nobody has cut. style.css may run ahead of that record, never behind it.
 node scripts/verify-job-placement-digest-metadata.js # read-only public SEO/share gate: exact title, description, canonical, OG title/description, and absolute OG image (`HPERKINS_ORIGIN` base; `--url` exact override)
 node scripts/verify-placement-artifacts.js      # one-page/searchable résumé, public/private workbook boundary, version/link consistency (--check-links performs the public HTTP pass). The résumé's HPerkins Tokens entry names a *shipped* version and links a release tag `--check-links` actually fetches, so — like the digest's theme row, and through the same `scripts/lib/release-record.js` parser — it is checked against README.md's release record rather than style.css.
-node scripts/verify-performance-assets.js       # image budgets, fontDisplay, eager LCP hero (fetchpriority=high, never loading=lazy), front-page CSS skip
-node scripts/verify-style-token-usage.js        # every var() in style.css AND assets/imladris-pages.css resolves against theme.json-generated variables (wp-cli)
+node scripts/verify-performance-assets.js       # image budgets, fontDisplay, eager LCP hero (fetchpriority=high, never loading=lazy), front-page CSS skip, responsive srcset/sizes contracts, and the 0.3.57 bundle split: PHP/JS bundle maps agree, no selector on both sides of the load order, and neither the front page nor the always-rendered markup (template parts, the patterns they delegate to, and inc/council-header.php) uses a bundle-owned class
+node scripts/verify-style-token-usage.js        # every var() in style.css, the three assets/c/ bundles, AND assets/imladris-pages.css resolves against theme.json-generated variables, scoped per sheet to what actually loads with it (wp-cli)
 node scripts/verify-about-page-source.js --drafts # exact proof-first About contract against the reviewed candidate content/page-drafts/about.html: hero copy, heading inventory, three proof signals, hp-about-nav landmark, four Selected Work cards, EvidenceBoard rows, capabilities, selected experience, skills/foundations, closing panel, deterministic 850–950 word count, thin pattern adapter, and exclusive imladris-pages.css CSS ownership. Omit --drafts to validate the accepted snapshot plus candidate↔snapshot parity (passes only after the redesign is promoted + exported)
 node scripts/verify-design-system-specimen.js   # post 79 specimen references live patterns; rendered checks auto-skip while the page is draft (wp-cli + HTTP)
 node scripts/verify-subscribe-endpoint.js       # subscribe nonce rejection over HTTP + storage/rate-limit/privacy runtime checks (wp-cli; MUTATES+restores options — the runtime half runs only when HPERKINS_WP_PATH is set, and then hard-fails rather than skips if HPERKINS_ORIGIN doesn't match that install's home URL, refusing to mutate a different site)
@@ -77,7 +77,7 @@ wp --path="$HPERKINS_WP_PATH" cache flush                # after theme.json / gl
 
 # Unit tests for the shared script libraries. Name every file explicitly — the
 # directory form of `node --test` is unreliable on Windows.
-node --test scripts/lib/content-integrity.test.js scripts/lib/job-placement-metadata-contract.test.js scripts/lib/market-screen-parity.test.js scripts/lib/navigation-content-contract.test.js scripts/lib/page-content-contract.test.js scripts/lib/page-markup-contract.test.js scripts/lib/placement-artifact-links.test.js scripts/lib/production-gates-workflow.test.js scripts/lib/release-record.test.js scripts/lib/site-url.test.js scripts/lib/wp-cli.test.js scripts/lib/zip-archive.test.js
+node --test scripts/lib/content-integrity.test.js scripts/lib/job-placement-metadata-contract.test.js scripts/lib/market-screen-parity.test.js scripts/lib/navigation-content-contract.test.js scripts/lib/page-content-contract.test.js scripts/lib/page-markup-contract.test.js scripts/lib/placement-artifact-links.test.js scripts/lib/production-gates-workflow.test.js scripts/lib/release-record.test.js scripts/lib/site-url.test.js scripts/lib/style-coverage.test.js scripts/lib/wp-cli.test.js scripts/lib/zip-archive.test.js
 
 # Re-classify this repo after structural changes with the wp-project-triage skill.
 ```
@@ -90,10 +90,11 @@ The verifiers load the **deployed** site at `https://hperkins.blog`; set `HPERKI
 
 It defines the entire token vocabulary: the palette (`parchment-*`, `mist-*`, `ink-*`, `green-*` (Evergreen, brand), `river-*` (links/info), `gold-*` (accent), `twilight-*`, plus semantic `leaf`/`amber`/`rust`/`slate`), the spacing scale, four self-hosted font families with type scale, and a deep `settings.custom` tree (`surface`, `text`, `border`, `rule`, `brand`, `accent`, `feedback`, `status`, `type`, `radius`, `shadow`, `ease`, `dur`, …). **All stock pickers and free-form value inputs are disabled** (`defaultPalette`/`defaultGradients`/`defaultDuotone`/`custom`/`customGradient`/`customDuotone` = false; `defaultFontSizes`/`defaultSpacingSizes` = false; `customFontSize`/`customSpacingSize` = false, so the editor offers no arbitrary type or spacing values either) so authors choose only from named tokens. `settings.typography.fluid` stays `false`, but the `2xl`–`5xl` heading presets are fluid **by value** — their `size` is a hand-authored `clamp()` (24–36 / 32–48 / 40–64 / 48–88px, 0.3.46), mirrored verbatim in the `custom.type.hero/h1/h2/h3` shorthand strings, so every heading that uses the presets is responsive without per-page overrides. Keep the preset and `custom.type` clamps in the same edit if either changes. Add new design values **here first**, then alias them in `style.css` — never introduce a parallel hardcoded value that can drift. One drift edge *inside* theme.json itself: the `settings.custom` tree repeats palette hexes as literals (a deliberate DS-mirror choice — `custom.type.*` shows the `var()` alternative), so when changing any palette color, grep theme.json for that hex and update the `custom` twins in the same edit.
 
-### CSS: a two-sheet split, aliased onto generated vars
+### CSS: an always-on sheet, three conditional bundles, and a page sheet — all aliased onto generated vars
 
-- **`style.css`** — the hand-authored sheet. Its `:root` block **aliases onto the `theme.json`-generated `--wp--preset--*` / `--wp--custom--*` vars** (e.g. `--hp-neutral-900: var(--wp--custom--text--strong)`) so there are no parallel hex copies. It then holds the **core component CSS** (`.hp-lead`, `.hp-ring-card`, `.hp-site-header`, `.hp-footer`, chips/rows/quotes, etc.). Treat it as the authored artifact; keep it clean.
-- **`assets/imladris-pages.css`** — **page-layout CSS** for designs pulled from the design system (about, ai-enablement essay, contact, work index, job-placement digest), **plus the entire blog surface**: the postcard vocabulary shared by `home`/`single`/`archive`/`search` (`.hp-postcard__*`, `.hp-journal-*`, `.hp-pagination`) and the reader hero (`.hp-reader-*`). Deliberately kept **out of `style.css`** so the hand-authored sheet stays untouched; enqueued separately (handle `hperkins-pages`) and depends on `hperkins-tokens` so the cascade is right. Put page-specific layout here, component tokens/CSS in `style.css`. The blog rules are the one set of genuinely reusable components living in this sheet; the front-page skip is safe for them only because `front-page.html` outranks `home.html` at `/`, so no blog route is ever the front page. **Anything a blog rule needs on every route must live in `style.css`** — that is why the heading wrap guard and the `.hp-tag` pill the reader's post tags join are there and not here.
+- **`style.css`** — the hand-authored sheet, loaded on **every** route. Its `:root` block **aliases onto the `theme.json`-generated `--wp--preset--*` / `--wp--custom--*` vars** (e.g. `--hp-neutral-900: var(--wp--custom--text--strong)`) so there are no parallel hex copies. It then holds the **core component CSS** (`.hp-ring-card`, `.hp-site-header`, `.hp-footer`, chips/rows, etc.). Treat it as the authored artifact; keep it clean.
+- **`assets/c/{evidence,interactive,longform}.css`** — **conditionally loaded component bundles** (0.3.57), extracted from `style.css` so the front page ships none of them (131.4 → 79.2 KiB raw, 26.2 → 17.5 KiB gzip). Each bundle owns a fixed set of class-name prefixes; `.hp-lead`, `.hp-quote` and the artifact/evidence vocabulary are `evidence`, the disclosure/subscribe/input/badge/tag/avatar vocabulary is `interactive`, and tables/reader-hero/archive-hero/work-template are `longform`. They enqueue after `hperkins-tokens` and before `hperkins-pages`, preserving the old source order. See **conditional component styles** below.
+- **`assets/imladris-pages.css`** — **page-layout CSS** for designs pulled from the design system (about, ai-enablement essay, contact, work index, job-placement digest), **plus the entire blog surface**: the postcard vocabulary shared by `home`/`single`/`archive`/`search` (`.hp-postcard__*`, `.hp-journal-*`, `.hp-pagination`) and the reader hero (`.hp-reader-*`). Deliberately kept **out of `style.css`** so the hand-authored sheet stays untouched; enqueued separately (handle `hperkins-pages`) and depends on `hperkins-tokens` so the cascade is right. Put page-specific layout here, component tokens/CSS in `style.css` or the matching bundle. The blog rules are the one set of genuinely reusable components living in this sheet; the front-page skip is safe for them only because `front-page.html` outranks `home.html` at `/`, so no blog route is ever the front page. **Anything a blog rule needs on every route must live in `style.css`** — that is why the heading wrap guard and the reader's post-tag pill are there and not here. The pill is the case that shows why the split is done at **selector**, not rule, granularity: `.hp-tag` and `.hp-reader-tags a` were one grouped rule, `.hp-tag` is `interactive`-owned, and `.hp-reader-tags a` is not — so the declarations were written into both files. `wp:post-terms` emits bare `<a>` elements, so the reader never matches `.hp-tag` and stays styled with no bundle loaded. Move the whole rule to a bundle and every untagged-by-`interactive` post loses its pills.
 
 Prominent page actions compose the canonical Button primitive through
 `.hp-action-rail`; final invitations add `.hp-action-panel.is-closing`.
@@ -105,13 +106,57 @@ The entire About page layer (`.hp-about-template…` composition, polish, wide
 breakout, and the proof-first redesign selectors) lives in
 `assets/imladris-pages.css` as of 0.3.56 — `style.css` contains no
 `.hp-about-template` selector anymore, and the About source contract enforces
-that split. `verify-style-token-usage.js` validates var() usage across both
-authored sheets.
+that split. `verify-style-token-usage.js` validates var() usage across all five
+authored sheets, each scoped to what actually loads with it: `style.css` alone,
+each `assets/c/` bundle against `style.css` plus itself (never a sibling
+bundle — they load independently), and `imladris-pages.css` against
+`style.css` plus itself.
+
+### Conditional component styles (`inc/component-styles.php`, 0.3.57)
+
+**The gate is content, not page identity.** These components arrive through
+patterns an editor inserts, so an `is_page()` allowlist would leave them
+unstyled the first time one is used somewhere new. On `wp_enqueue_scripts` the
+resolver builds a **haystack** — the queried post's body, the template
+WordPress actually resolved (`$_wp_current_template_content`, which respects a
+Site Editor override stored in `wp_template` and can differ from the theme
+file), and **every theme pattern reachable from either, expanded
+transitively** — then `strpos()`-matches each bundle's class prefixes against
+it. Two coupled maps must stay identical: `hperkins_tokens_bundle_map()` and
+`BUNDLES` in `scripts/lib/style-coverage.js`; `verify-performance-assets.js`
+fails if they diverge.
+
+Three things are easy to get wrong here:
+
+- **Pattern expansion has to be transitive.** `page-contact.html` names
+  `hperkins-tokens/contact`, which names `hperkins-tokens/imladris-subscribe`,
+  which is the only source of `.hp-subscribe`. A one-level walk resolved
+  `/contact/` correctly only by accident, because `contact.php` independently
+  uses `.hp-input` from the same bundle.
+- **Template parts are excluded on purpose.** They render on every route, so
+  anything they use belongs in `style.css`. The guard has to follow their
+  delegations, not just read the part files: `parts/header.html` is a bare
+  `[hperkins_council_header]` shortcode whose markup lives in
+  `inc/council-header.php`, and `parts/footer.html` delegates to the
+  `footer-colophon` pattern.
+- **The null-haystack "load everything" path is a backstop, not the safety
+  net.** WordPress sets `$_wp_current_template_content` for effectively every
+  front-end request on a block theme — falling back to the **parent** template
+  when this theme owns no match — so the haystack is almost never null. A
+  parent-served route with no queried post resolves to **zero** bundles, not
+  all three. Every route this theme serves is theme-owned today; keep it that
+  way, or add the route's template here.
+
+Enqueue order is carried by the `array( 'hperkins-tokens' )` dependency, which
+`WP_Dependencies` resolves at print time — **not** by the priority. The
+`require_once` at `functions.php:33` registers this callback *before* the main
+enqueue closure at the same priority 20, so it actually runs first. Keep the
+dependency.
 
 ### `functions.php` — parent/child load-order surgery (read before touching enqueue/editor wiring)
 
 Because Assembler registers `assembler-style` from the *stylesheet* dir — which under a child theme resolves to **this** theme's `style.css` — the child CSS would load twice. `functions.php`:
-- **Frontend (`wp_enqueue_scripts`, prio 20):** dequeues `assembler-style`, then enqueues **parent-then-child explicitly** (`assembler-parent` → `hperkins-tokens`), then `hperkins-pages` — **skipped on the front page** (`! is_front_page()`; the front page uses no page-layout CSS, and the full-page router adds the sheet's `<link>` on client swaps to other pages — verified live). It injects the footer- and hero-backdrop image URLs as CSS custom properties (`--hp-footer-backdrop-url`, `--hp-council-hero-backdrop-url`) via `wp_add_inline_style` (the hero uses an `image-set(webp,png)` branch when `elvenbook.webp` exists), and enqueues three deferred progressive-enhancement scripts: `header-controller.js`, `form-enhance.js`, and `router-scroll.js`. The Council controller replaces the retired `nav-close-delight.js` and `header-search.js` listeners. No-JS fallbacks: the header exposes its complete noscript navigation, the contact form is a `mailto:` form, and the subscribe form is a real HTTPS POST to `admin-post.php` (see the subscribe endpoint below).
+- **Frontend (`wp_enqueue_scripts`, prio 20):** dequeues `assembler-style`, then enqueues **parent-then-child explicitly** (`assembler-parent` → `hperkins-tokens`), then `hperkins-pages` — **skipped on the front page** (`! is_front_page()`; the front page uses no page-layout CSS, and the full-page router adds the sheet's `<link>` on client swaps to other pages — verified live). `inc/component-styles.php` adds the `hperkins-c-*` bundles to the same hook; they print between `hperkins-tokens` and `hperkins-pages`, which is the order the rules had inside `style.css` before the split. It injects the footer- and hero-backdrop image URLs as CSS custom properties (`--hp-footer-backdrop-url`, `--hp-council-hero-backdrop-url`) via `wp_add_inline_style` (the hero uses an `image-set(webp,png)` branch when `elvenbook.webp` exists), and enqueues three deferred progressive-enhancement scripts: `header-controller.js`, `form-enhance.js`, and `router-scroll.js`. The Council controller replaces the retired `nav-close-delight.js` and `header-search.js` listeners. No-JS fallbacks: the header exposes its complete noscript navigation, the contact form is a `mailto:` form, and the subscribe form is a real HTTPS POST to `admin-post.php` (see the subscribe endpoint below).
 - **Editor (`after_setup_theme`, prio 20):** rewrites editor styles to load **three** sheets — parent `style.css`, child `style.css`, and `imladris-pages.css` (the editor previews page CSS on every template since `add_editor_style` registers globally) — dropping only the fragile relative `style.css` entry (so other plugins' editor styles survive). Also `remove_action(..., 'assembler_preload_fonts', 1)` — the parent preloads an InterVariable font path that 404s under this child (Imladris serves its own `theme.json` font faces).
 - **`init` (prio 9):** registers the **`hperkins` pattern category** and block styles — `core/button`: `secondary`/`ghost`/`accent`/`link`; `core/quote`: `imladris`.
 - **Subscribe endpoint (`admin_post[_nopriv]_hperkins_tokens_subscribe`):** the newsletter form POSTs to `admin-post.php` — nonce check, `is_email`, per-IP transient rate limit (5/10min, filterable), then storage in the bounded non-autoloaded `hperkins_tokens_subscribe_requests` option (capped 200, optimistic concurrency) + a notification mail (recipient filterable via `hperkins_tokens_subscribe_notify_email`). Duplicates resolve to the generic success status (anti-enumeration). WordPress privacy **exporter + eraser** callbacks are registered for the stored requests. Status returns via `?hperkins_subscribe=<status>#subscribe`, rendered by the subscribe pattern.
@@ -120,7 +165,7 @@ Because Assembler registers `assembler-style` from the *stylesheet* dir — whic
 - **Other request-time hooks:** a 301 from the agent-owned `flavor-agent-demo` seed slug to `/work/flavor-agent/demo/` (`template_redirect`); a site-wide `<link rel=preload>` for the Cormorant Garamond display face (`wp_head` prio 1, URL matched to the theme.json font face so the browser dedupes; theme.json sets every heading in that family and every route opens on one, so scoping the preload to the front page left the /essays/ masthead, every reader hero, and every archive title to swap); and a five-hook set that **hides inherited Assembler style variations + section styles** from the Site Editor, global-styles/block-type REST responses, and the theme-JSON data (so the editor can't switch the child onto parent palettes that bypass the locked tokens).
 - **`after_switch_theme`:** one-time legacy `wp_global_styles` cleanup (removes stale `wp-global-styles-pub/` and `…-assembler` posts, clears the theme-JSON cache). Activation-time migration, not a request-time task; guarded by the `hperkins_tokens_global_styles_cleanup_v1` option.
 
-> **Cache-busting is `filemtime()`-based for every hand-authored asset.** `style.css`, `assets/imladris-pages.css`, and the three JS files (`header-controller.js`, `form-enhance.js`, `router-scroll.js`) bust on file mtime, so editing any of them ships under a fresh cache key automatically — no manual step. Still bump the `style.css` `Version:` header (and mirror it in `readme.txt`) when you change `style.css`/`theme.json`, but now for **release/version tracking** (the theme's declared version + changelog source-of-truth), not cache invalidation. The parent `assembler-parent` sheet is versioned by Assembler's own `Version`.
+> **Cache-busting is `filemtime()`-based for every hand-authored asset.** `style.css`, `assets/imladris-pages.css`, the three `assets/c/` bundles, and the three JS files (`header-controller.js`, `form-enhance.js`, `router-scroll.js`) bust on file mtime, so editing any of them ships under a fresh cache key automatically — no manual step. Still bump the `style.css` `Version:` header (and mirror it in `readme.txt`) when you change `style.css`/`theme.json`, but now for **release/version tracking** (the theme's declared version + changelog source-of-truth), not cache invalidation. The parent `assembler-parent` sheet is versioned by Assembler's own `Version`.
 
 ### Patterns & templates
 
@@ -153,7 +198,7 @@ Three Council header values sit **below the site-wide 12px text floor**, deliber
 
 - **WordPress PHP standards:** tabs, escaped output (`esc_url`, `esc_html`), sanitized input, nonce + capability checks for privileged actions, prefix theme functions/hooks `hperkins_` / patterns `hperkins-tokens/`.
 - **Tokens first:** new design values go in `theme.json`, then alias in `style.css`. No parallel hardcoded hex.
-- **Respect the CSS split:** component tokens/CSS → `style.css`; page-layout CSS for pulled designs → `assets/imladris-pages.css`.
+- **Respect the CSS split:** always-on tokens/CSS → `style.css`; component CSS whose classes a bundle owns → the matching `assets/c/` bundle; page-layout CSS for pulled designs → `assets/imladris-pages.css`. A rule that any route needs *without* a bundle anchor present belongs in `style.css`, and a grouped rule split across the two must carry its declarations in both.
 - **Bump `style.css` `Version:`** (and mirror in `readme.txt` + add a changelog entry) when `style.css` or `theme.json` changes — release/version tracking; the cache key is `filemtime()`.
 - **Don't edit the parent as if it's ours:** `assembler` is vendored upstream and lives beside this theme in the target WordPress install's `wp-content/themes/`, not in this repo.
 - **`.design-pull/` is disposable** (gitignored, re-pullable); the durable provenance is `docs/design-system/`.

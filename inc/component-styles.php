@@ -9,9 +9,16 @@
  * an editor inserts into post content, so an is_page() allowlist would leave
  * them unstyled the first time someone used one somewhere new. Resolution
  * happens on wp_enqueue_scripts so the sheets print in <head> and nothing
- * renders unstyled, and it fails open: when the request cannot be classified,
- * every bundle loads and the transfer profile is simply what it was before the
- * split.
+ * renders unstyled.
+ *
+ * The null-haystack path loads every bundle, restoring the pre-split transfer
+ * profile. It is a backstop, not the routine safety net: WordPress sets
+ * $_wp_current_template_content for effectively every front-end request on a
+ * block theme — falling back to the PARENT template when this theme owns no
+ * match — so the haystack is almost never null. A parent-served route without
+ * a queried post therefore resolves to zero bundles rather than all three.
+ * Every route this theme serves is theme-owned today; keep it that way, or
+ * give the new route a template here.
  *
  * @package hperkins-tokens
  */
@@ -136,12 +143,34 @@ function hperkins_tokens_resolve_template_file() {
 }
 
 /**
+ * Theme pattern slugs a block-markup string names.
+ *
+ * @param string $markup Block markup.
+ * @return string[] Pattern slugs, without the namespace.
+ */
+function hperkins_tokens_pattern_slugs( $markup ) {
+	if ( ! preg_match_all( '/wp:pattern\s*\{"slug":"hperkins-tokens\/([\w-]+)"/', $markup, $matches ) ) {
+		return array();
+	}
+	return array_unique( $matches[1] );
+}
+
+/**
  * Markup that will render for this request: the post body, the template file,
- * and the patterns that template names, expanded one level.
+ * and every theme pattern reachable from either, expanded transitively.
+ *
+ * Expansion has to follow the whole chain, not one level: page-contact.html
+ * names hperkins-tokens/contact, and that pattern names
+ * hperkins-tokens/imladris-subscribe, which is the only place .hp-subscribe
+ * appears. A one-level walk resolves /contact/ correctly today only because
+ * contact.php happens to use .hp-input from the same bundle — move either
+ * prefix and the subscribe form renders unstyled. The visited set bounds the
+ * walk at the number of pattern files, so a pattern cycle terminates.
  *
  * Template parts are deliberately excluded. They render on every route, so
  * anything they use has to live in style.css; verify-performance-assets.js
- * pins that they reference no bundle-owned class.
+ * pins that they — and the pattern and shortcode markup they delegate to —
+ * reference no bundle-owned class.
  *
  * @return string|null Concatenated markup, or null when it cannot be resolved.
  */
@@ -178,13 +207,29 @@ function hperkins_tokens_render_haystack() {
 
 	$parts[] = $template_markup;
 
-	if ( preg_match_all( '/wp:pattern\s*\{"slug":"hperkins-tokens\/([\w-]+)"/', $template_markup, $matches ) ) {
-		foreach ( array_unique( $matches[1] ) as $pattern_slug ) {
-			$pattern_file = get_stylesheet_directory() . '/patterns/' . $pattern_slug . '.php';
-			if ( file_exists( $pattern_file ) ) {
-				$parts[] = (string) file_get_contents( $pattern_file );
-			}
+	// Seed from everything collected so far: a stored post body can name a
+	// pattern too, not just the template.
+	$pending = array();
+	foreach ( $parts as $markup ) {
+		$pending = array_merge( $pending, hperkins_tokens_pattern_slugs( $markup ) );
+	}
+
+	$seen = array();
+	while ( $pending ) {
+		$pattern_slug = array_shift( $pending );
+		if ( isset( $seen[ $pattern_slug ] ) ) {
+			continue;
 		}
+		$seen[ $pattern_slug ] = true;
+
+		$pattern_file = get_stylesheet_directory() . '/patterns/' . $pattern_slug . '.php';
+		if ( ! file_exists( $pattern_file ) ) {
+			continue;
+		}
+
+		$pattern_markup = (string) file_get_contents( $pattern_file );
+		$parts[]        = $pattern_markup;
+		$pending        = array_merge( $pending, hperkins_tokens_pattern_slugs( $pattern_markup ) );
 	}
 
 	return implode( "\n", $parts );
@@ -234,7 +279,12 @@ function hperkins_tokens_enqueue_component_styles() {
 		);
 	}
 }
-// Priority 20 so the 'hperkins-tokens' dependency is registered first.
+// Priority 20 to sit with the theme's other style work. It does NOT guarantee
+// this runs after functions.php's main enqueue — same-priority callbacks fire
+// in registration order, and the require_once for this file precedes that
+// add_action(), so this one actually runs first. Order is safe because the
+// 'hperkins-tokens' dependency below is resolved by WP_Dependencies at print
+// time, not at enqueue time. Keep the dependency; do not lean on the priority.
 add_action( 'wp_enqueue_scripts', 'hperkins_tokens_enqueue_component_styles', 20 );
 
 /**

@@ -164,7 +164,15 @@ const {
 	normalizeSelectors,
 	classesInMarkup,
 	bundleFor,
+	expandPatternChain,
 } = require( './lib/style-coverage' );
+
+// Patterns are read by slug the way the PHP resolver reads them, so a check
+// below follows the same chain the runtime does.
+function readPatternSource( slug ) {
+	const file = join( themeRoot, 'patterns', `${ slug }.php` );
+	return existsSync( file ) ? readFileSync( file, 'utf8' ) : null;
+}
 
 const bundleNames = Object.keys( BUNDLES );
 const componentPhp = readFileSync( join( themeRoot, 'inc/component-styles.php' ), 'utf8' );
@@ -223,14 +231,15 @@ for ( const name of bundleNames ) {
 	}
 }
 
-// The front page must resolve to zero bundles, and template parts render on
-// every route, so neither may reference a bundle-owned class.
-const frontMarkup = [
-	readFileSync( join( themeRoot, 'templates/front-page.html' ), 'utf8' ),
-	readFileSync( join( themeRoot, 'patterns/wapuu-home-hero.php' ), 'utf8' ),
-	ringPattern,
-	frontPageSnapshot,
-];
+// The front page must resolve to zero bundles. Follow the pattern chain the
+// resolver follows, so a class introduced two patterns deep is still caught.
+const frontMarkup = expandPatternChain(
+	[
+		readFileSync( join( themeRoot, 'templates/front-page.html' ), 'utf8' ),
+		frontPageSnapshot,
+	],
+	readPatternSource
+);
 for ( const className of classesInMarkup( frontMarkup ) ) {
 	const owner = bundleFor( className );
 	assert(
@@ -238,14 +247,29 @@ for ( const className of classesInMarkup( frontMarkup ) ) {
 		`Front-page class "${ className }" belongs to the ${ owner } bundle, so the front page would load it.`
 	);
 }
-for ( const part of [ 'parts/header.html', 'parts/footer.html' ] ) {
-	for ( const className of classesInMarkup( [ readFileSync( join( themeRoot, part ), 'utf8' ) ] ) ) {
-		const owner = bundleFor( className );
-		assert(
-			owner === null,
-			`${ part } uses "${ className }" from the ${ owner } bundle, but template parts render on every route.`
-		);
-	}
+
+// Template parts render on every route and are deliberately excluded from the
+// resolver's haystack, so a bundle-owned class anywhere in their markup is
+// unstyled everywhere. Checking the part files alone is not enough: header.html
+// is a bare [hperkins_council_header] shortcode whose markup lives in
+// inc/council-header.php, and footer.html delegates to the footer-colophon
+// pattern. Follow both delegations or the guard passes over the very files that
+// carry the markup.
+const alwaysRenderedSources = [
+	...expandPatternChain(
+		[ 'parts/header.html', 'parts/footer.html' ].map( ( part ) =>
+			readFileSync( join( themeRoot, part ), 'utf8' )
+		),
+		readPatternSource
+	),
+	readFileSync( join( themeRoot, 'inc/council-header.php' ), 'utf8' ),
+];
+for ( const className of classesInMarkup( alwaysRenderedSources ) ) {
+	const owner = bundleFor( className );
+	assert(
+		owner === null,
+		`Always-rendered markup (template parts, their patterns, or the Council header renderer) uses "${ className }" from the ${ owner } bundle, but that markup is excluded from bundle resolution.`
+	);
 }
 
 const functionsPhp = readFileSync( join( themeRoot, 'functions.php' ), 'utf8' );
