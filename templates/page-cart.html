@@ -1,0 +1,85 @@
+<!-- wp:template-part {"slug":"header"} /-->
+
+<!-- wp:woocommerce/page-content-wrapper {"page":"cart"} -->
+<!-- wp:group {"tagName":"main","align":"full","className":"hp-commerce hp-commerce--cart","layout":{"type":"constrained"}} -->
+<main class="wp-block-group alignfull hp-commerce hp-commerce--cart">
+	<!-- wp:group {"align":"wide","className":"hp-commerce__masthead","layout":{"type":"constrained"}} -->
+	<div class="wp-block-group alignwide hp-commerce__masthead">
+		<!-- wp:paragraph {"className":"hp-commerce__eyebrow"} -->
+		<p class="hp-commerce__eyebrow">Order desk</p>
+		<!-- /wp:paragraph -->
+
+		<!-- wp:heading {"level":1} -->
+		<h1 class="wp-block-heading">Your cart</h1>
+		<!-- /wp:heading -->
+
+		<!-- wp:paragraph {"className":"hp-commerce__lede"} -->
+		<p class="hp-commerce__lede">Review your selection, adjust quantities, and continue when the order looks right.</p>
+		<!-- /wp:paragraph -->
+	</div>
+	<!-- /wp:group -->
+
+	<!-- wp:group {"align":"wide","className":"hp-commerce__panel","layout":{"type":"default"}} -->
+	<div class="wp-block-group alignwide hp-commerce__panel">
+		<!-- wp:woocommerce/cart {"lock":{"remove":true,"move":true}} -->
+		<div class="wp-block-woocommerce-cart alignwide is-loading">
+			<!-- wp:woocommerce/filled-cart-block -->
+			<div class="wp-block-woocommerce-filled-cart-block">
+				<!-- wp:woocommerce/cart-items-block -->
+				<div class="wp-block-woocommerce-cart-items-block">
+					<!-- wp:woocommerce/cart-line-items-block -->
+					<div class="wp-block-woocommerce-cart-line-items-block"></div>
+					<!-- /wp:woocommerce/cart-line-items-block -->
+				</div>
+				<!-- /wp:woocommerce/cart-items-block -->
+
+				<!-- wp:woocommerce/cart-totals-block -->
+				<div class="wp-block-woocommerce-cart-totals-block">
+					<!-- wp:woocommerce/cart-order-summary-block -->
+					<div class="wp-block-woocommerce-cart-order-summary-block">
+						<!-- wp:woocommerce/cart-order-summary-heading-block -->
+						<div class="wp-block-woocommerce-cart-order-summary-heading-block"></div>
+						<!-- /wp:woocommerce/cart-order-summary-heading-block -->
+
+						<!-- wp:woocommerce/cart-order-summary-coupon-form-block -->
+						<div class="wp-block-woocommerce-cart-order-summary-coupon-form-block"></div>
+						<!-- /wp:woocommerce/cart-order-summary-coupon-form-block -->
+
+						<!-- wp:woocommerce/cart-order-summary-totals-block -->
+						<div class="wp-block-woocommerce-cart-order-summary-totals-block">
+							<!-- wp:woocommerce/cart-order-summary-subtotal-block --><div class="wp-block-woocommerce-cart-order-summary-subtotal-block"></div><!-- /wp:woocommerce/cart-order-summary-subtotal-block -->
+							<!-- wp:woocommerce/cart-order-summary-fee-block --><div class="wp-block-woocommerce-cart-order-summary-fee-block"></div><!-- /wp:woocommerce/cart-order-summary-fee-block -->
+							<!-- wp:woocommerce/cart-order-summary-discount-block --><div class="wp-block-woocommerce-cart-order-summary-discount-block"></div><!-- /wp:woocommerce/cart-order-summary-discount-block -->
+							<!-- wp:woocommerce/cart-order-summary-shipping-block --><div class="wp-block-woocommerce-cart-order-summary-shipping-block"></div><!-- /wp:woocommerce/cart-order-summary-shipping-block -->
+							<!-- wp:woocommerce/cart-order-summary-taxes-block --><div class="wp-block-woocommerce-cart-order-summary-taxes-block"></div><!-- /wp:woocommerce/cart-order-summary-taxes-block -->
+						</div>
+						<!-- /wp:woocommerce/cart-order-summary-totals-block -->
+					</div>
+					<!-- /wp:woocommerce/cart-order-summary-block -->
+
+					<!-- wp:woocommerce/cart-express-payment-block --><div class="wp-block-woocommerce-cart-express-payment-block"></div><!-- /wp:woocommerce/cart-express-payment-block -->
+					<!-- wp:woocommerce/proceed-to-checkout-block --><div class="wp-block-woocommerce-proceed-to-checkout-block"></div><!-- /wp:woocommerce/proceed-to-checkout-block -->
+					<!-- wp:woocommerce/cart-accepted-payment-methods-block --><div class="wp-block-woocommerce-cart-accepted-payment-methods-block"></div><!-- /wp:woocommerce/cart-accepted-payment-methods-block -->
+				</div>
+				<!-- /wp:woocommerce/cart-totals-block -->
+			</div>
+			<!-- /wp:woocommerce/filled-cart-block -->
+
+			<!-- wp:woocommerce/empty-cart-block -->
+			<div class="wp-block-woocommerce-empty-cart-block">
+				<!-- wp:heading {"textAlign":"center","level":2} --><h2 class="wp-block-heading has-text-align-center">Your cart is ready for a first choice.</h2><!-- /wp:heading -->
+				<!-- wp:paragraph {"align":"center"} --><p class="has-text-align-center">Browse the shop and add a focused WordPress engagement when you are ready.</p><!-- /wp:paragraph -->
+				<!-- wp:buttons {"layout":{"type":"flex","justifyContent":"center"}} -->
+				<div class="wp-block-buttons"><!-- wp:button --><div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/shop/">Browse the shop</a></div><!-- /wp:button --></div>
+				<!-- /wp:buttons -->
+			</div>
+			<!-- /wp:woocommerce/empty-cart-block -->
+		</div>
+		<!-- /wp:woocommerce/cart -->
+	</div>
+	<!-- /wp:group -->
+</main>
+<!-- /wp:group -->
+<!-- /wp:woocommerce/page-content-wrapper -->
+
+<!-- wp:template-part {"slug":"footer","area":"footer"} /-->

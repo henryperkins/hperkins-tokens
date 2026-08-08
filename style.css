@@ -3180,6 +3180,224 @@ body.search .wp-block-post-date {
    meaning on paper is dropped. Scoped entirely to @media print, so nothing here
    can leak into the screen cascade.
    ========================================================================= */
+/* ===========================================================================
+   Commerce — a calm, ledger-like path from offer to order
+   ======================================================================== */
+.hp-commerce {
+	padding-block: clamp(3rem, 7vw, 6.5rem);
+	background:
+		linear-gradient(90deg, transparent 0 31px, color-mix(in srgb, var(--wp--preset--color--gold-500) 18%, transparent) 32px, transparent 33px),
+		var(--wp--custom--surface--page);
+}
+
+.hp-commerce__masthead {
+	margin-bottom: clamp(2rem, 5vw, 4.5rem);
+}
+
+.hp-commerce__masthead > * {
+	max-width: 48rem;
+}
+
+.hp-commerce__masthead h1,
+.hp-product .wp-block-post-title {
+	margin-block: 0.25rem 0;
+	max-width: 18ch;
+	font-size: clamp(2.75rem, 7vw, 5.75rem);
+	line-height: 0.98;
+	letter-spacing: -0.035em;
+}
+
+.hp-commerce__eyebrow {
+	margin: 0;
+	font-family: var(--hp-font-mono);
+	font-size: var(--wp--preset--font-size--xs);
+	font-weight: var(--hp-weight-strong);
+	letter-spacing: var(--hp-tracking-label);
+	text-transform: uppercase;
+	color: var(--wp--custom--text--link);
+}
+
+.hp-commerce__lede {
+	margin-top: var(--wp--preset--spacing--4);
+	max-width: 42rem;
+	font-size: var(--wp--preset--font-size--lg);
+	line-height: var(--hp-leading-lead);
+	color: var(--wp--custom--text--muted);
+}
+
+.hp-commerce__panel {
+	padding: clamp(1rem, 3vw, 2rem);
+	background: var(--wp--custom--surface--card);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-top: 4px solid var(--wp--preset--color--gold-500);
+	border-radius: var(--hp-radius-frame);
+	box-shadow: var(--hp-shadow-panel);
+}
+
+.hp-commerce__panel .wc-block-components-title,
+.hp-commerce__panel .wc-block-components-checkout-step__title,
+.hp-commerce__panel .wc-block-cart__totals-title {
+	font-family: var(--hp-font-label);
+	letter-spacing: 0.02em;
+}
+
+.hp-commerce :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+.hp-product :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+	min-height: var(--hp-touch-min);
+	color: var(--wp--custom--text--strong);
+	background: var(--wp--custom--surface--page);
+	border-color: var(--wp--custom--border--strong);
+	border-radius: var(--hp-radius-register);
+}
+
+.hp-commerce :where(input[type="checkbox"], input[type="radio"]) {
+	min-height: 0;
+}
+
+.hp-commerce :where(.wc-block-components-button, .wc-block-cart__submit-button),
+.hp-product :where(.wc-block-components-button, .single_add_to_cart_button) {
+	min-height: var(--hp-touch-min);
+	font-family: var(--hp-font-label);
+	font-weight: var(--hp-weight-title);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--wp--custom--text--inverse);
+	background: var(--wp--custom--brand--default);
+	border-radius: var(--hp-radius-card);
+	box-shadow: var(--wp--custom--shadow--xs);
+}
+
+.hp-commerce :where(.wc-block-components-button, .wc-block-cart__submit-button):hover,
+.hp-product :where(.wc-block-components-button, .single_add_to_cart_button):hover {
+	color: var(--wp--custom--text--inverse);
+	background: var(--wp--custom--brand--hover);
+}
+
+.hp-commerce__assurance {
+	gap: var(--wp--preset--spacing--3) var(--wp--preset--spacing--6);
+	margin-top: var(--wp--preset--spacing--5);
+	padding-top: var(--wp--preset--spacing--4);
+	border-top: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-commerce__assurance p,
+.hp-product__signals p {
+	margin: 0;
+	font-family: var(--hp-font-mono);
+	font-size: var(--wp--preset--font-size--xs);
+	color: var(--wp--custom--text--muted);
+}
+
+.hp-commerce__assurance p::before,
+.hp-product__signals p::before {
+	content: "";
+	display: inline-block;
+	width: 0.55rem;
+	height: 0.55rem;
+	margin-right: 0.55rem;
+	background: var(--wp--custom--status--done);
+	border-radius: var(--hp-radius-pill);
+}
+
+.hp-product__trail {
+	margin-bottom: var(--wp--preset--spacing--5);
+}
+
+.hp-product__hero {
+	gap: clamp(2rem, 6vw, 6rem);
+	align-items: flex-start;
+}
+
+.hp-product__media,
+.hp-product__summary {
+	min-width: 0;
+}
+
+.hp-product__media {
+	padding: clamp(0.75rem, 2vw, 1.25rem);
+	background: var(--wp--custom--surface--card);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--hp-radius-frame);
+	box-shadow: var(--hp-shadow-frame);
+}
+
+.hp-product__media img {
+	border-radius: var(--hp-radius-panel);
+}
+
+.hp-product__summary {
+	position: sticky;
+	top: calc(var(--hp-header-h) + 2rem);
+}
+
+.hp-product__price-line {
+	gap: var(--wp--preset--spacing--3);
+	margin-block: var(--wp--preset--spacing--5) var(--wp--preset--spacing--3);
+}
+
+.hp-product__price-line .wc-block-components-product-price {
+	font-size: var(--wp--preset--font-size--xl);
+	font-weight: var(--hp-weight-strong);
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-product__purchase {
+	margin-top: var(--wp--preset--spacing--5);
+	padding-block: var(--wp--preset--spacing--5);
+	border-block: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-product__signals {
+	display: grid;
+	gap: var(--wp--preset--spacing--2);
+	margin-top: var(--wp--preset--spacing--4);
+}
+
+.hp-product__details,
+.hp-product__reviews {
+	margin-top: clamp(4rem, 9vw, 8rem);
+	padding: clamp(1.5rem, 4vw, 3.5rem);
+	background: var(--wp--custom--surface--card);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--hp-radius-frame);
+}
+
+.hp-product__reviews:not(:has(*)) {
+	display: none;
+}
+
+.hp-product__review {
+	margin-top: var(--wp--preset--spacing--4);
+	padding: var(--wp--preset--spacing--5);
+	background: var(--wp--custom--surface--sunken);
+	border-left: var(--hp-rule-evidence) solid var(--wp--custom--status--done);
+	border-radius: var(--hp-radius-panel);
+}
+
+@media (max-width: 781px) {
+	.hp-commerce {
+		padding-block: 2.5rem 4rem;
+		background: var(--wp--custom--surface--page);
+	}
+
+	.hp-commerce__panel {
+		padding-inline: 0.75rem;
+	}
+
+	.hp-product__hero {
+		gap: var(--wp--preset--spacing--6);
+	}
+
+	.hp-product__summary {
+		position: static;
+	}
+
+	.hp-commerce__assurance {
+		display: grid;
+		justify-content: stretch;
+	}
+}
+
 @media print {
 	/* Ink economy, and no reliance on background printing being enabled. */
 	body {

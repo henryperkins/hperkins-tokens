@@ -1,121 +1,110 @@
 <!-- wp:template-part {"slug":"header"} /-->
 
-<!-- wp:group {"tagName":"main","metadata":{"name":"Main"},"align":"full","style":{"spacing":{"margin":{"top":"0","bottom":"0"},"padding":{"top":"var:preset|spacing|30","bottom":"var:preset|spacing|50"}}},"layout":{"inherit":true,"type":"constrained"}} -->
-<main class="wp-block-group alignfull" style="margin-top:0;margin-bottom:0;padding-top:var(--wp--preset--spacing--30);padding-bottom:var(--wp--preset--spacing--50)">
-	<!-- wp:group {"metadata":{"name":"Single product"},"align":"wide","style":{"spacing":{"blockGap":"var:preset|spacing|20"}},"layout":{"type":"default"}} -->
-	<div class="wp-block-group alignwide">
+<!-- wp:group {"tagName":"main","align":"full","className":"hp-commerce hp-product","layout":{"type":"constrained"}} -->
+<main class="wp-block-group alignfull hp-commerce hp-product">
+	<!-- wp:group {"align":"wide","className":"hp-product__trail","layout":{"type":"default"}} -->
+	<div class="wp-block-group alignwide hp-product__trail">
 		<!-- wp:woocommerce/breadcrumbs /-->
+	</div>
+	<!-- /wp:group -->
 
-		<!-- wp:columns {"align":"wide","style":{"spacing":{"blockGap":{"top":"var:preset|spacing|50","left":"var:preset|spacing|50"},"margin":{"top":"var:preset|spacing|20"}}}} -->
-		<div class="wp-block-columns alignwide" style="margin-top:var(--wp--preset--spacing--20)">
-			<!-- wp:column {"width":"50%","layout":{"type":"default"}} -->
-			<div class="wp-block-column" style="flex-basis:50%">
-				<!-- wp:woocommerce/product-gallery {"hoverZoom":false} -->
-				<div class="wp-block-woocommerce-product-gallery wc-block-product-gallery">
-					<!-- wp:woocommerce/product-gallery-thumbnails {"thumbnailSize":"19%","activeThumbnailStyle":"outline"} /-->
-					<!-- wp:woocommerce/product-gallery-large-image -->
-					<div class="wp-block-woocommerce-product-gallery-large-image wc-block-product-gallery-large-image__inner-blocks">
-						<!-- wp:woocommerce/product-image {"showProductLink":false,"showSaleBadge":false,"style":{"dimensions":{"aspectRatio":"1"}}} -->
-						<div class="is-loading"></div>
-						<!-- /wp:woocommerce/product-image -->
-
-						<!-- wp:woocommerce/product-gallery-large-image-next-previous {"align":"right","layout":{"type":"flex","flexWrap":"nowrap","verticalAlignment":"bottom"}} -->
-						<div class="wp-block-woocommerce-product-gallery-large-image-next-previous alignright"></div>
-						<!-- /wp:woocommerce/product-gallery-large-image-next-previous -->
-					</div>
-					<!-- /wp:woocommerce/product-gallery-large-image -->
+	<!-- wp:columns {"align":"wide","className":"hp-product__hero"} -->
+	<div class="wp-block-columns alignwide hp-product__hero">
+		<!-- wp:column {"className":"hp-product__media"} -->
+		<div class="wp-block-column hp-product__media">
+			<!-- wp:woocommerce/product-gallery {"hoverZoom":false} -->
+			<div class="wp-block-woocommerce-product-gallery wc-block-product-gallery">
+				<!-- wp:woocommerce/product-gallery-thumbnails {"thumbnailSize":"19%","activeThumbnailStyle":"outline"} /-->
+				<!-- wp:woocommerce/product-gallery-large-image -->
+				<div class="wp-block-woocommerce-product-gallery-large-image wc-block-product-gallery-large-image__inner-blocks">
+					<!-- wp:woocommerce/product-image {"showProductLink":false,"showSaleBadge":false} -->
+					<div class="is-loading"></div>
+					<!-- /wp:woocommerce/product-image -->
+					<!-- wp:woocommerce/product-gallery-large-image-next-previous {"align":"right","layout":{"type":"flex","flexWrap":"nowrap","verticalAlignment":"bottom"}} -->
+					<div class="wp-block-woocommerce-product-gallery-large-image-next-previous alignright"></div>
+					<!-- /wp:woocommerce/product-gallery-large-image-next-previous -->
 				</div>
-				<!-- /wp:woocommerce/product-gallery -->
+				<!-- /wp:woocommerce/product-gallery-large-image -->
 			</div>
-			<!-- /wp:column -->
+			<!-- /wp:woocommerce/product-gallery -->
+		</div>
+		<!-- /wp:column -->
 
-			<!-- wp:column {"width":"50%","style":{"spacing":{"blockGap":"var:preset|spacing|20"}}} -->
-			<div class="wp-block-column" style="flex-basis:50%">
-				<!-- wp:group {"layout":{"type":"default"}} -->
-				<div class="wp-block-group">
-					<!-- wp:group {"style":{"spacing":{"blockGap":"10px"}},"layout":{"type":"flex","orientation":"vertical"}} -->
-					<div class="wp-block-group">
-						<!-- wp:post-title {"level":1,"style":{"spacing":{"margin":{"top":"0","bottom":"0"}}},"__woocommerceNamespace":"woocommerce/product-query/product-title"} /-->
+		<!-- wp:column {"className":"hp-product__summary"} -->
+		<div class="wp-block-column hp-product__summary">
+			<!-- wp:paragraph {"className":"hp-commerce__eyebrow"} -->
+			<p class="hp-commerce__eyebrow">Focused engagement</p>
+			<!-- /wp:paragraph -->
 
-						<!-- wp:group {"style":{"spacing":{"blockGap":"0.625rem"}},"layout":{"type":"flex","flexWrap":"nowrap","justifyContent":"left"}} -->
-						<div class="wp-block-group">
-							<!-- wp:woocommerce/product-price {"isDescendentOfSingleProductTemplate":true} /-->
+			<!-- wp:post-title {"level":1,"__woocommerceNamespace":"woocommerce/product-query/product-title"} /-->
 
-							<!-- wp:woocommerce/product-sale-badge /-->
-						</div>
-						<!-- /wp:group -->
-					</div>
-					<!-- /wp:group -->
+			<!-- wp:group {"className":"hp-product__price-line","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"left"}} -->
+			<div class="wp-block-group hp-product__price-line">
+				<!-- wp:woocommerce/product-price {"isDescendentOfSingleProductTemplate":true} /-->
+				<!-- wp:woocommerce/product-sale-badge /-->
+			</div>
+			<!-- /wp:group -->
 
-					<!-- wp:woocommerce/product-rating {"isDescendentOfSingleProductTemplate":true} /-->
-				</div>
-				<!-- /wp:group -->
+			<!-- wp:woocommerce/product-rating {"isDescendentOfSingleProductTemplate":true} /-->
+			<!-- wp:woocommerce/product-summary {"isDescendentOfSingleProductTemplate":true,"showDescriptionIfEmpty":true} /-->
 
-				<!-- wp:woocommerce/product-summary {"isDescendentOfSingleProductTemplate":true,"showDescriptionIfEmpty":true} /-->
-
+			<!-- wp:group {"className":"hp-product__purchase","layout":{"type":"default"}} -->
+			<div class="wp-block-group hp-product__purchase">
 				<!-- wp:woocommerce/add-to-cart-with-options /-->
 			</div>
-			<!-- /wp:column -->
-		</div>
-		<!-- /wp:columns -->
+			<!-- /wp:group -->
 
-		<!-- wp:group {"metadata":{"name":"Product details"},"style":{"spacing":{"margin":{"top":"var:preset|spacing|8"}}},"layout":{"type":"constrained"}} -->
-		<div class="wp-block-group" style="margin-top:var(--wp--preset--spacing--8)">
-			<!-- wp:woocommerce/product-details {"align":"none"} -->
-			<div class="wp-block-woocommerce-product-details">
-				<!-- wp:woocommerce/product-description /-->
+			<!-- wp:group {"className":"hp-product__signals","layout":{"type":"default"}} -->
+			<div class="wp-block-group hp-product__signals">
+				<!-- wp:paragraph --><p>Direct collaboration with Henry</p><!-- /wp:paragraph -->
+				<!-- wp:paragraph --><p>Clear scope before work begins</p><!-- /wp:paragraph -->
+				<!-- wp:paragraph --><p>Secure payment and order record</p><!-- /wp:paragraph -->
 			</div>
-			<!-- /wp:woocommerce/product-details -->
-
-			<!-- wp:woocommerce/product-specifications /-->
+			<!-- /wp:group -->
 		</div>
-		<!-- /wp:group -->
+		<!-- /wp:column -->
+	</div>
+	<!-- /wp:columns -->
+
+	<!-- wp:group {"align":"wide","className":"hp-product__details","layout":{"type":"constrained"}} -->
+	<div class="wp-block-group alignwide hp-product__details">
+		<!-- wp:paragraph {"className":"hp-commerce__eyebrow"} --><p class="hp-commerce__eyebrow">Engagement brief</p><!-- /wp:paragraph -->
+		<!-- wp:woocommerce/product-details {"align":"none"} -->
+		<div class="wp-block-woocommerce-product-details">
+			<!-- wp:woocommerce/product-description /-->
+		</div>
+		<!-- /wp:woocommerce/product-details -->
+		<!-- wp:woocommerce/product-specifications /-->
 	</div>
 	<!-- /wp:group -->
 
 	<!-- wp:pattern {"slug":"assembler/hidden-upsells"} /-->
-
 	<!-- wp:pattern {"slug":"assembler/hidden-related-products"} /-->
 
-	<!-- wp:group {"metadata":{"name":"Product reviews"},"align":"full","style":{"spacing":{"padding":{"top":"var:preset|spacing|40"},"margin":{"top":"0","bottom":"0"}}},"layout":{"type":"constrained","contentSize":"","wideSize":""}} -->
-	<div class="wp-block-group alignfull" style="margin-top:0;margin-bottom:0;padding-top:var(--wp--preset--spacing--40)">
+	<!-- wp:group {"align":"wide","className":"hp-product__reviews","layout":{"type":"constrained"}} -->
+	<div class="wp-block-group alignwide hp-product__reviews">
 		<!-- wp:woocommerce/product-reviews -->
 		<div class="wp-block-woocommerce-product-reviews">
-			<!-- wp:woocommerce/product-reviews-title {"showProductTitle":false,"showReviewsCount":false,"level":3,"style":{"spacing":{"margin":{"top":"0","bottom":"0"}}}} /-->
-
-			<!-- wp:woocommerce/product-review-template {"style":{"spacing":{"margin":{"top":"var:preset|spacing|20"}}}} -->
-				<!-- wp:columns {"style":{"spacing":{"blockGap":{"top":"0","left":"var:preset|spacing|20"}}}} -->
-				<div class="wp-block-columns">
-					<!-- wp:column {"width":"130px"} -->
-					<div class="wp-block-column" style="flex-basis:130px">
+			<!-- wp:woocommerce/product-reviews-title {"showProductTitle":false,"showReviewsCount":true,"level":2} /-->
+			<!-- wp:woocommerce/product-review-template -->
+				<!-- wp:group {"className":"hp-product__review","layout":{"type":"constrained"}} -->
+				<div class="wp-block-group hp-product__review">
+					<!-- wp:woocommerce/product-review-rating {"textAlign":"left"} /-->
+					<!-- wp:woocommerce/product-review-content /-->
+					<!-- wp:group {"layout":{"type":"flex","flexWrap":"wrap"}} -->
+					<div class="wp-block-group">
 						<!-- wp:woocommerce/product-review-author-name {"isLink":false} /-->
+						<!-- wp:woocommerce/product-review-date {"format":"M j, Y","isLink":false} /-->
 					</div>
-					<!-- /wp:column -->
-
-					<!-- wp:column {"width":""} -->
-					<div class="wp-block-column">
-						<!-- wp:group {"style":{"spacing":{"blockGap":"0"}},"layout":{"type":"flex","orientation":"vertical"}} -->
-						<div class="wp-block-group">
-							<!-- wp:woocommerce/product-review-rating {"textAlign":"left"} /-->
-
-							<!-- wp:woocommerce/product-review-content {"style":{"layout":{"selfStretch":"fit","flexSize":null}}} /-->
-
-							<!-- wp:woocommerce/product-review-date {"format":"M j, Y","isLink":false} /-->
-						</div>
-						<!-- /wp:group -->
-					</div>
-					<!-- /wp:column -->
+					<!-- /wp:group -->
 				</div>
-				<!-- /wp:columns -->
+				<!-- /wp:group -->
 			<!-- /wp:woocommerce/product-review-template -->
-
 			<!-- wp:woocommerce/product-reviews-pagination {"layout":{"type":"flex","justifyContent":"space-between"}} -->
 				<!-- wp:woocommerce/product-reviews-pagination-previous /-->
-
 				<!-- wp:woocommerce/product-reviews-pagination-next /-->
 			<!-- /wp:woocommerce/product-reviews-pagination -->
-
-			<!-- wp:woocommerce/product-review-form {"style":{"spacing":{"margin":{"top":"var:preset|spacing|40"}}}} /-->
+			<!-- wp:woocommerce/product-review-form /-->
 		</div>
 		<!-- /wp:woocommerce/product-reviews -->
 	</div>
