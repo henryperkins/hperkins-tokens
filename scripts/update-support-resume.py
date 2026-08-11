@@ -185,6 +185,64 @@ def remove_external_hyperlink_relationships(document):
             del relationships[relationship_id]
 
 
+def effective_style_size(style):
+    while style is not None:
+        if style.font.size is not None:
+            return style.font.size.pt
+        style = style.base_style
+    return None
+
+
+def effective_run_size(document, paragraph, run_element):
+    run_properties = run_element.find(qn("w:rPr"))
+    if run_properties is not None:
+        direct_sizes = []
+        for size_name in ("w:sz", "w:szCs"):
+            size_element = run_properties.find(qn(size_name))
+            if size_element is not None:
+                direct_sizes.append(int(size_element.get(qn("w:val"))) / 2)
+        if direct_sizes:
+            return min(direct_sizes)
+
+        run_style = run_properties.find(qn("w:rStyle"))
+        if run_style is not None:
+            style_id = run_style.get(qn("w:val"))
+            for style in document.styles:
+                if style.type == WD_STYLE_TYPE.CHARACTER and style.style_id == style_id:
+                    style_size = effective_style_size(style)
+                    if style_size is not None:
+                        return style_size
+
+    paragraph_size = effective_style_size(paragraph.style)
+    if paragraph_size is not None:
+        return paragraph_size
+    return effective_style_size(document.styles["Normal"])
+
+
+def minimum_effective_body_size(document):
+    sizes = []
+    for paragraph in document.paragraphs:
+        if paragraph.style.name == "Resume Event":
+            continue
+        for run_element in paragraph._p.xpath(".//w:r"):
+            if not any(node.text for node in run_element.xpath(".//w:t")):
+                continue
+            size = effective_run_size(document, paragraph, run_element)
+            if size is None:
+                raise ValueError(f"Cannot resolve effective font size in paragraph: {paragraph.text}")
+            sizes.append(size)
+    if not sizes:
+        raise ValueError("Résumé contains no non-event text runs to audit")
+    return min(sizes)
+
+
+def assert_minimum_body_size(document, floor=9.5):
+    minimum = minimum_effective_body_size(document)
+    if minimum < floor:
+        raise ValueError(f"Résumé effective non-event text falls below {floor:.1f}pt: {minimum:.1f}pt")
+    return minimum
+
+
 def canonical_docx_bytes(document):
     source = io.BytesIO()
     document.save(source)
@@ -312,6 +370,7 @@ def main():
     document.core_properties.title = TITLE
     document.core_properties.author = AUTHOR
 
+    assert_minimum_body_size(document)
     output = canonical_docx_bytes(document)
     changed = DOCX_PATH.read_bytes() != output
     if changed:
@@ -321,7 +380,7 @@ def main():
 
     reopened = Document(DOCX_PATH)
     visible_text = " ".join(paragraph.text for paragraph in reopened.paragraphs)
-    minimum_body_size = reopened.styles["Normal"].font.size.pt
+    minimum_body_size = assert_minimum_body_size(reopened)
     print(f"updated={str(changed).lower()}")
     print(f"sections={len(reopened.sections)}")
     print("page=US Letter 8.50x11.00in")

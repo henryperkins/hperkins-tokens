@@ -6,7 +6,7 @@ const test = require( 'node:test' );
 const { openZip } = require( './zip-archive' );
 const {
 	compactText,
-	unescapePdfString,
+	pdfAnnotationUriSequence,
 	xmlAttributes,
 	xmlText,
 } = require( '../verify-placement-artifacts' );
@@ -72,19 +72,6 @@ function docxHyperlinkSequence( archive ) {
 	return urls;
 }
 
-function pdfUriSequence( source ) {
-	const urls = [];
-	const pattern = /\/URI\s*(?:\(((?:\\[\s\S]|[^\\)])*)\)|<([\da-f\s]+)>)/gi;
-	for ( const match of source.matchAll( pattern ) ) {
-		urls.push(
-			match[1] !== undefined
-				? unescapePdfString( match[1] )
-				: Buffer.from( match[2].replace( /\s/g, '' ), 'hex' ).toString( 'utf8' )
-		);
-	}
-	return urls;
-}
-
 test( 'resume carries the approved current WCUS and evidence copy', () => {
 	const archive = openZip( docxPath );
 	const text = compactText( xmlText( archive.text( 'word/document.xml' ) ) );
@@ -100,12 +87,30 @@ test( 'resume carries the approved current WCUS and evidence copy', () => {
 test( 'DOCX and PDF expose the same ordered external hyperlinks including duplicates', () => {
 	const archive = openZip( docxPath );
 	const docxUrls = docxHyperlinkSequence( archive );
-	const pdfUrls = pdfUriSequence( fs.readFileSync( pdfPath ).toString( 'latin1' ) );
+	const pdfUrls = pdfAnnotationUriSequence( fs.readFileSync( pdfPath ).toString( 'latin1' ) );
 
 	for ( const requiredUrl of REQUIRED_IMMUTABLE_URLS ) {
 		assert.ok( docxUrls.includes( requiredUrl ), `DOCX is missing ${ requiredUrl }` );
 	}
 	assert.deepEqual( pdfUrls, docxUrls );
+} );
+
+test( 'PDF link order follows each page Annots array rather than object serialization', () => {
+	const source = `%PDF-1.4
+1 0 obj
+<</Subtype/Link/A<</S/URI/URI(https://example.test/serialized-first)>> >>
+endobj
+2 0 obj
+<</Subtype/Link/A<</S/URI/URI(https://example.test/tab-first)>> >>
+endobj
+3 0 obj
+<</Type/Page/Annots[2 0 R 1 0 R]>>
+endobj
+`;
+	assert.deepEqual( pdfAnnotationUriSequence( source ), [
+		'https://example.test/tab-first',
+		'https://example.test/serialized-first',
+	] );
 } );
 
 test( 'PDF is a tagged, searchable, one-page document with semantic headings', () => {

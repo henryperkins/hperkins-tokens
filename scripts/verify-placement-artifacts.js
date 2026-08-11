@@ -307,15 +307,89 @@ function pdfUris( source ) {
 	return urls;
 }
 
-function pdfUriSequence( source ) {
+function pdfIndirectObjects( source ) {
+	const objects = new Map();
+	for ( const match of source.matchAll( /(?:^|[\r\n])(\d+)\s+(\d+)\s+obj\b([\s\S]*?)\bendobj\b/g ) ) {
+		objects.set( `${ match[1] } ${ match[2] }`, match[3] );
+	}
+	return objects;
+}
+
+function pdfReferences( source ) {
+	return [ ...source.matchAll( /(\d+)\s+(\d+)\s+R\b/g ) ].map( ( match ) => `${ match[1] } ${ match[2] }` );
+}
+
+function pdfArrayForKey( body, key, objects ) {
+	const direct = body.match( new RegExp( `/${ key }\\s*\\[([\\s\\S]*?)\\]` ) );
+	if ( direct ) {
+		return direct[1];
+	}
+	const indirect = body.match( new RegExp( `/${ key }\\s+(\\d+)\\s+(\\d+)\\s+R\\b` ) );
+	if ( ! indirect ) {
+		return null;
+	}
+	const arrayObject = objects.get( `${ indirect[1] } ${ indirect[2] }` );
+	if ( ! arrayObject ) {
+		return null;
+	}
+	const array = arrayObject.match( /\[([\s\S]*?)\]/ );
+	return array ? array[1] : null;
+}
+
+function pdfPageSequence( objects ) {
+	const catalog = [ ...objects.values() ].find( ( body ) => /\/Type\s*\/Catalog\b/.test( body ) );
+	const rootPages = catalog && catalog.match( /\/Pages\s+(\d+)\s+(\d+)\s+R\b/ );
+	const pages = [];
+	const visit = ( reference ) => {
+		const body = objects.get( reference );
+		if ( ! body ) {
+			return;
+		}
+		if ( /\/Type\s*\/Page\b/.test( body ) ) {
+			pages.push( reference );
+			return;
+		}
+		const kids = pdfArrayForKey( body, 'Kids', objects );
+		for ( const child of kids ? pdfReferences( kids ) : [] ) {
+			visit( child );
+		}
+	};
+	if ( rootPages ) {
+		visit( `${ rootPages[1] } ${ rootPages[2] }` );
+	}
+	if ( pages.length === 0 ) {
+		for ( const [ reference, body ] of objects ) {
+			if ( /\/Type\s*\/Page\b/.test( body ) ) {
+				pages.push( reference );
+			}
+		}
+	}
+	return pages;
+}
+
+function pdfUriFromAnnotation( body, objects ) {
+	let actionBody = body;
+	const actionReference = body.match( /\/A\s+(\d+)\s+(\d+)\s+R\b/ );
+	if ( actionReference ) {
+		actionBody = objects.get( `${ actionReference[1] } ${ actionReference[2] }` ) || '';
+	}
+	const uri = pdfUris( actionBody );
+	return uri.size === 1 ? [ ...uri ][0] : null;
+}
+
+function pdfAnnotationUriSequence( source ) {
+	const objects = pdfIndirectObjects( source );
 	const urls = [];
-	const pattern = /\/URI\s*(?:\(((?:\\[\s\S]|[^\\)])*)\)|<([\da-f\s]+)>)/gi;
-	for ( const match of source.matchAll( pattern ) ) {
-		urls.push(
-			match[1] !== undefined
-				? unescapePdfString( match[1] )
-				: Buffer.from( match[2].replace( /\s/g, '' ), 'hex' ).toString( 'utf8' )
-		);
+	for ( const pageReference of pdfPageSequence( objects ) ) {
+		const pageBody = objects.get( pageReference );
+		const annots = pdfArrayForKey( pageBody, 'Annots', objects );
+		for ( const annotationReference of annots ? pdfReferences( annots ) : [] ) {
+			const annotationBody = objects.get( annotationReference );
+			const url = annotationBody && pdfUriFromAnnotation( annotationBody, objects );
+			if ( url ) {
+				urls.push( url );
+			}
+		}
 	}
 	return urls;
 }
@@ -392,7 +466,7 @@ function verifyPdf( path, docxUrls ) {
 	assert( /\/H1\b/.test( source ), 'Résumé PDF must include an H1 structure tag.' );
 	assert( ( source.match( /\/H2\b/g ) || [] ).length >= 4, 'Résumé PDF must include at least four H2 structure tags.' );
 
-	const urls = pdfUriSequence( source );
+	const urls = pdfAnnotationUriSequence( source );
 	assert(
 		urls.length === docxUrls.length && urls.every( ( url, index ) => url === docxUrls[index] ),
 		'Résumé PDF annotation URLs must exactly match DOCX hyperlink order, including duplicates.'
@@ -795,7 +869,7 @@ module.exports = {
 	compactText,
 	externalHyperlinkSequence,
 	externalRelationships,
-	pdfUriSequence,
+	pdfAnnotationUriSequence,
 	pdfUris,
 	unescapePdfString,
 	verifyAppendixWorkbookParity,

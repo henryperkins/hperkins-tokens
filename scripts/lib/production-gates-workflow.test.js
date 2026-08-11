@@ -183,6 +183,7 @@ test( 'runs metadata, Digest, About probe, market parity, and production workflo
 		'scripts/lib/placement-artifact-contract.test.js',
 		'scripts/lib/production-gates-workflow.test.js',
 		'scripts/lib/resume-route-contract.test.js',
+		'scripts/lib/support-resume-cleanup.test.js',
 	] );
 } );
 

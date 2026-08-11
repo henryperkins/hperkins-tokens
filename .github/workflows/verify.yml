@@ -91,6 +91,7 @@ jobs:
             scripts/lib/resume-route-contract.test.js \
             scripts/lib/release-record.test.js \
             scripts/lib/site-url.test.js \
+            scripts/lib/support-resume-cleanup.test.js \
             scripts/lib/style-coverage.test.js \
             scripts/lib/wp-cli.test.js \
             scripts/lib/zip-archive.test.js
