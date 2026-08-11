@@ -207,6 +207,45 @@ function verifySourceContracts() {
 		{ selector: '.hp-debug-proof__item :is(dt, dd) > p', declarations: { margin: '0' } },
 		{ selector: '.hp-wcus-callout__actions', atContext: '@media (max-width: 781px)', declarations: { 'grid-template-columns': 'minmax(0, 1fr)' } },
 		{ selector: '.hp-debug-proof__grid', atContext: '@media (max-width: 781px)', declarations: { 'grid-template-columns': 'minmax(0, 1fr)' } },
+		{
+			selector: '.hp-digest-template',
+			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			declarations: { 'padding-block-start': 'var(--wp--preset--spacing--5) !important' },
+		},
+		{
+			selector: '.hp-digest__hero h1',
+			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			declarations: {
+				'max-inline-size': 'none',
+				'font-size': 'var(--wp--preset--font-size--3xl)',
+			},
+		},
+		{
+			selector: '.hp-category-bar',
+			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			declarations: { 'margin-block': 'var(--wp--preset--spacing--3)' },
+		},
+		{
+			selector: '.hp-wcus-callout',
+			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			declarations: {
+				'margin-block-start': 'var(--wp--preset--spacing--5)',
+				padding: 'var(--wp--preset--spacing--5)',
+			},
+		},
+		{
+			selector: '.hp-wcus-callout > h2',
+			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			declarations: {
+				'font-size': 'var(--wp--preset--font-size--2xl)',
+				'margin-block-start': 'var(--wp--preset--spacing--4)',
+			},
+		},
+		{
+			selector: '.hp-wcus-callout > p:not(.hp-page-hero__eyebrow)',
+			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			declarations: { 'margin-block-start': 'var(--wp--preset--spacing--4)' },
+		},
 	] ) {
 		assertRuleDeclarations( pageCss, contract );
 	}

@@ -22,6 +22,64 @@ const pagesCss = fs.readFileSync(
 	'utf8'
 ).replace( /\r\n/g, '\n' );
 
+const DIGEST_TABLET_CONTEXT = '@media (min-width: 601px) and (max-width: 781px)';
+const DIGEST_TABLET_CONTRACTS = [
+	{
+		selector: '.hp-digest-template',
+		atContext: DIGEST_TABLET_CONTEXT,
+		declarations: { 'padding-block-start': 'var(--wp--preset--spacing--5) !important' },
+	},
+	{
+		selector: '.hp-digest__hero h1',
+		atContext: DIGEST_TABLET_CONTEXT,
+		declarations: {
+			'max-inline-size': 'none',
+			'font-size': 'var(--wp--preset--font-size--3xl)',
+		},
+	},
+	{
+		selector: '.hp-category-bar',
+		atContext: DIGEST_TABLET_CONTEXT,
+		declarations: { 'margin-block': 'var(--wp--preset--spacing--3)' },
+	},
+	{
+		selector: '.hp-wcus-callout',
+		atContext: DIGEST_TABLET_CONTEXT,
+		declarations: {
+			'margin-block-start': 'var(--wp--preset--spacing--5)',
+			padding: 'var(--wp--preset--spacing--5)',
+		},
+	},
+	{
+		selector: '.hp-wcus-callout > h2',
+		atContext: DIGEST_TABLET_CONTEXT,
+		declarations: {
+			'font-size': 'var(--wp--preset--font-size--2xl)',
+			'margin-block-start': 'var(--wp--preset--spacing--4)',
+		},
+	},
+	{
+		selector: '.hp-wcus-callout > p:not(.hp-page-hero__eyebrow)',
+		atContext: DIGEST_TABLET_CONTEXT,
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--4)' },
+	},
+];
+
+function mutateDeclaration( css, contract, property, expected ) {
+	const rule = parseRules( css ).find( ( candidate ) =>
+		candidate.atContext === contract.atContext &&
+			normalizeSelectors( candidate.prelude ).includes( contract.selector )
+	);
+	assert( rule, `Mutation fixture is missing ${ contract.selector } in ${ contract.atContext }.` );
+	const escapedProperty = property.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
+	const escapedExpected = expected.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
+	const declaration = new RegExp( `${ escapedProperty }\\s*:\\s*${ escapedExpected }\\s*;` );
+	const source = css.slice( rule.start, rule.end );
+	const mutant = source.replace( declaration, `${ property }: initial;` );
+	assert.notEqual( mutant, source, `Mutation must replace ${ property } for ${ contract.selector }.` );
+	return `${ css.slice( 0, rule.start ) }${ mutant }${ css.slice( rule.end ) }`;
+}
+
 test( 'assertRuleDeclarations rejects comment-only, empty, wrong-value, and wrong-media CSS', () => {
 	assert.equal( typeof assertRuleDeclarations, 'function', 'style coverage must expose declaration-aware rule validation' );
 	const contract = {
@@ -59,6 +117,19 @@ test( 'native proof-grid items neutralize WordPress flow margins', () => {
 		() => assertRuleDeclarations( mutant, contract ),
 		/hp-debug-proof__grid|margin-block/
 	);
+} );
+
+test( 'Digest tablet fold uses a bounded token-based compact treatment', () => {
+	for ( const contract of DIGEST_TABLET_CONTRACTS ) {
+		assert.doesNotThrow( () => assertRuleDeclarations( pagesCss, contract ) );
+		for ( const [ property, expected ] of Object.entries( contract.declarations ) ) {
+			const mutant = mutateDeclaration( pagesCss, contract, property, expected );
+			assert.throws(
+				() => assertRuleDeclarations( mutant, contract ),
+				/Digest|hp-|padding|margin|font-size|max-inline-size|601px|781px/
+			);
+		}
+	}
 } );
 
 test( 'parseRules returns top-level rules with original offsets', () => {

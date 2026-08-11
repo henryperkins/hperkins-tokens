@@ -629,6 +629,39 @@ p.hp-contact-form__hint {
   }
 }
 
+/* The WCUS actions become one touch-friendly column below 782px. On the
+   tablet-only band, tighten the surrounding hero rhythm by one token step so
+   all three actions remain in the first 1000px without shrinking their 44px
+   targets. Desktop composition and the <=600px phone treatment stay intact. */
+@media (min-width: 601px) and (max-width: 781px) {
+  .hp-digest-template {
+    padding-block-start: var(--wp--preset--spacing--5) !important;
+  }
+
+  .hp-digest__hero h1 {
+    max-inline-size: none;
+    font-size: var(--wp--preset--font-size--3xl);
+  }
+
+  .hp-category-bar {
+    margin-block: var(--wp--preset--spacing--3);
+  }
+
+  .hp-wcus-callout {
+    margin-block-start: var(--wp--preset--spacing--5);
+    padding: var(--wp--preset--spacing--5);
+  }
+
+  .hp-wcus-callout > h2 {
+    margin-block-start: var(--wp--preset--spacing--4);
+    font-size: var(--wp--preset--font-size--2xl);
+  }
+
+  .hp-wcus-callout > p:not(.hp-page-hero__eyebrow) {
+    margin-block-start: var(--wp--preset--spacing--4);
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Wide ledgers on a phone.
 
