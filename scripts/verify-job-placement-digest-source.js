@@ -9,6 +9,7 @@ const {
 	getClassCount,
 	hasMeaningfulFragmentTarget,
 } = require( './lib/page-markup-contract' );
+const { parseTopLevelBlocks } = require( './lib/about-page-contract' );
 const { readReleaseRecord } = require( './lib/release-record' );
 
 const themeRoot = path.join( __dirname, '..' );
@@ -210,8 +211,17 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 		assert( markup.includes( required ), `Main digest draft is missing required copy: ${ required }` );
 	}
 
-	const hero = getScopedElement( markup, 'section', 'hp-digest__hero' );
-	assert( extractLinks( hero ).length === 0, 'The digest hero must not retain the old action rail.' );
+	const topLevelBlocks = parseTopLevelBlocks( markup );
+	const hasBlockClass = ( block, className ) =>
+		( block.attrs.className || '' ).split( /\s+/ ).includes( className );
+	const heroIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-digest__hero' ) );
+	assert( heroIndex !== -1, 'Main digest draft must contain a top-level .hp-digest__hero block.' );
+	const hero = topLevelBlocks[ heroIndex ].outer;
+	assert(
+		getClassCount( hero, 'hp-wcus-callout' ) === 1 &&
+			getClassCount( hero, 'hp-digest__primary-actions' ) === 1,
+		'The WCUS panel and its recruiter actions must be contained by the Digest hero.'
+	);
 	const wcusPanelMatch = getScopedElementMatch( markup, 'section', 'hp-wcus-callout' );
 	const wcusPanel = wcusPanelMatch[ 2 ];
 	for ( const required of [
@@ -225,16 +235,15 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 		JSON.stringify( extractLinks( wcusPanel ) ) === JSON.stringify( WCUS_ACTIONS ),
 		`The WCUS panel actions must match the approved ordered contract: ${ JSON.stringify( WCUS_ACTIONS ) }.`
 	);
-	const whySection = /<section\b[^>]*\bid=(['"])why-support-engineer-now\1[^>]*>/i.exec( markup );
-	assert( whySection, 'Main digest draft must contain #why-support-engineer-now.' );
-	const betweenWcusAndWhy = markup.slice(
-		wcusPanelMatch.index + wcusPanelMatch[ 0 ].length,
-		whySection.index
-	);
 	assert(
-		whySection.index > wcusPanelMatch.index &&
-			betweenWcusAndWhy.replace( /<!--\s*\/?wp:[\s\S]*?-->/g, '' ).trim() === '',
-		'The WCUS panel must be the immediate HTML sibling before Why Support Engineer now.'
+		JSON.stringify( extractLinks( hero ) ) === JSON.stringify( WCUS_ACTIONS ),
+		'The Digest hero must expose only the approved WCUS recruiter actions.'
+	);
+	const whyIndex = topLevelBlocks.findIndex( ( block ) => block.attrs.anchor === 'why-support-engineer-now' );
+	assert( whyIndex !== -1, 'Main digest draft must contain #why-support-engineer-now.' );
+	assert(
+		whyIndex === heroIndex + 1,
+		'Why Support Engineer now must immediately follow the hero-contained WCUS panel.'
 	);
 	assert(
 		markup.includes( 'Published 13 Jul 2026 · Last verified 10 Aug 2026' ),

@@ -20,6 +20,42 @@ function replaceOnce( value, search, replacement ) {
 	return value.replace( search, replacement );
 }
 
+const HERO_CLOSE = '\n</section>\n<!-- /wp:group -->\n\n';
+const WCUS_BLOCK_START = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-wcus-callout hp-action-panel","layout":{"type":"constrained"}} -->';
+const WHY_BLOCK_START = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-digest-section hp-support-now","layout":{"type":"constrained"},"anchor":"why-support-engineer-now"} -->';
+
+function containWcusPanel( value ) {
+	const siblingBoundary = `${ HERO_CLOSE }${ WCUS_BLOCK_START }`;
+	if ( ! value.includes( siblingBoundary ) ) {
+		return value;
+	}
+
+	const wcusStart = value.indexOf( WCUS_BLOCK_START );
+	const whyStart = value.indexOf( WHY_BLOCK_START );
+	assert( whyStart > wcusStart, 'Fixture must place Why Support Engineer after the WCUS panel.' );
+	const wcusBlock = value.slice( wcusStart, whyStart ).trimEnd();
+	const withoutWcus = `${ value.slice( 0, wcusStart ) }${ value.slice( whyStart ) }`;
+	const heroClose = withoutWcus.indexOf( HERO_CLOSE );
+	assert.notEqual( heroClose, -1, 'Fixture must contain the Digest hero closer.' );
+
+	return `${ withoutWcus.slice( 0, heroClose ) }\n\n${ wcusBlock }${ withoutWcus.slice( heroClose ) }`;
+}
+
+function moveWcusPanelOutsideHero( value ) {
+	const wcusStart = value.indexOf( WCUS_BLOCK_START );
+	const whyStart = value.indexOf( WHY_BLOCK_START );
+	assert( whyStart > wcusStart, 'Fixture must place Why Support Engineer after the WCUS panel.' );
+	const heroClose = value.lastIndexOf( HERO_CLOSE, whyStart );
+	assert( heroClose > wcusStart, 'Fixture must contain the WCUS panel before the Digest hero closer.' );
+	const wcusBlock = value.slice( wcusStart, heroClose ).trim();
+	const withoutWcus = `${ value.slice( 0, wcusStart ) }${ value.slice( heroClose ) }`;
+	const nextHeroClose = withoutWcus.indexOf( HERO_CLOSE );
+	assert.notEqual( nextHeroClose, -1, 'Fixture must retain the Digest hero closer.' );
+	const afterHero = nextHeroClose + HERO_CLOSE.length;
+
+	return `${ withoutWcus.slice( 0, afterHero ) }${ wcusBlock }\n\n${ withoutWcus.slice( afterHero ) }`;
+}
+
 test( 'serializes the debugging proof as editable native blocks', () => {
 	assert.doesNotMatch(
 		DIGEST,
@@ -38,14 +74,15 @@ test( 'serializes the debugging proof as editable native blocks', () => {
 	);
 } );
 
-test( 'rejects an interposed sibling between the WCUS panel and Support Engineer section', () => {
-	const whyBlock = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-digest-section hp-support-now","layout":{"type":"constrained"},"anchor":"why-support-engineer-now"} -->';
-	const interposed = '<!-- wp:group {"tagName":"section"} -->\n<section class="wp-block-group"><!-- wp:paragraph -->\n<p>Interposed sibling.</p>\n<!-- /wp:paragraph --></section>\n<!-- /wp:group -->\n\n';
-	const mutant = replaceOnce( DIGEST, whyBlock, `${ interposed }${ whyBlock }` );
+test( 'requires the WCUS panel and recruiter actions inside the Digest hero', () => {
+	const contained = containWcusPanel( DIGEST );
+	const outsideHero = moveWcusPanelOutsideHero( contained );
+	assert.notEqual( outsideHero, contained, 'Containment mutation must move the WCUS panel.' );
 
+	assert.doesNotThrow( () => verifyMain( contained, THEME_VERSION, DEPLOYED_COMMIT ) );
 	assert.throws(
-		() => verifyMain( mutant, THEME_VERSION, DEPLOYED_COMMIT ),
-		/WCUS panel must be the immediate HTML sibling before Why Support Engineer now/
+		() => verifyMain( outsideHero, THEME_VERSION, DEPLOYED_COMMIT ),
+		/WCUS panel and its recruiter actions must be contained by the Digest hero/
 	);
 } );
 

@@ -13,7 +13,8 @@ const fsPromises = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
-const { findHeadings, findLinks, extractExactText } = require( './lib/about-page-contract' );
+const { findHeadings, findLinks, extractExactText, parseTopLevelBlocks } = require( './lib/about-page-contract' );
+const { getClassCount } = require( './lib/page-markup-contract' );
 const { assertKnownOptions, selectDigestSource } = require( './lib/page-phase-contract' );
 const { getOrigin } = require( './lib/site-url' );
 const { assertRuleDeclarations } = require( './lib/style-coverage' );
@@ -55,6 +56,11 @@ function deriveDigestExpectations( html ) {
 	const wcusCallout = findWpBlocksByClass( html, 'group', 'hp-wcus-callout' )[ 0 ] || null;
 	const wcusActions = findWpBlocksByClass( html, 'buttons', 'hp-wcus-callout__actions' )[ 0 ] || null;
 	const rootCauseSection = /<section\b[^>]*\bid="root-cause-investigation"[^>]*>([\s\S]*?)<\/section>/i.exec( html );
+	const topLevelBlocks = parseTopLevelBlocks( html );
+	const hasBlockClass = ( block, className ) =>
+		( block.attrs.className || '' ).split( /\s+/ ).includes( className );
+	const heroIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-digest__hero' ) );
+	const whyIndex = topLevelBlocks.findIndex( ( block ) => block.attrs.anchor === 'why-support-engineer-now' );
 
 	assert( h1, 'Selected Digest body has no H1.' );
 	assert( primaryRail, 'Selected Digest body has no primary action rail.' );
@@ -62,9 +68,12 @@ function deriveDigestExpectations( html ) {
 	assert( eyebrows.length > 0, 'Selected Digest body has no closing eyebrow.' );
 	if ( wcusCallout ) {
 		assert(
-			/<section\b[^>]*\bhp-digest__hero\b[^>]*>[\s\S]*?<\/section>\s*<!-- \/wp:group -->\s*<!-- wp:group [^\n]*\bhp-wcus-callout\b/i.test( html ),
-			'Selected Digest body must place .hp-wcus-callout immediately after .hp-digest__hero.'
+			heroIndex !== -1 &&
+				getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-wcus-callout' ) === 1 &&
+				getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-digest__primary-actions' ) === 1,
+			'Selected Digest body must contain .hp-wcus-callout and its recruiter actions inside .hp-digest__hero.'
 		);
+		assert( whyIndex === heroIndex + 1, 'Why Support Engineer now must immediately follow the Digest hero.' );
 		assert( wcusActions, 'Selected Digest WCUS callout has no .hp-wcus-callout__actions.' );
 		assert( rootCauseSection, 'Selected Digest WCUS body has no #root-cause-investigation section.' );
 	}
@@ -519,7 +528,7 @@ function assertPageMetrics( result, page, viewport ) {
 		assert( result.closing.heading === DIGEST_EXPECTATIONS.closingHeading, `${ context } has the wrong closing heading.` );
 		assertActions( result.closing.actions, DIGEST_EXPECTATIONS.closingActions, `${ context } closing panel` );
 		if ( DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
-			assert( result.wcus, `${ context } is missing .hp-digest__hero + .hp-wcus-callout.` );
+			assert( result.wcus, `${ context } is missing the hero-contained .hp-wcus-callout.` );
 			assertActions( result.wcus.actions, DIGEST_EXPECTATIONS.wcusActions, `${ context } WCUS callout` );
 			assert( result.wcus.actions.every( ( action ) => action.textContained ), `${ context } clips a WCUS action label.` );
 			if ( viewport.width >= 782 ) {
@@ -738,7 +747,8 @@ async function inspectPage( cdp, page, viewport ) {
 			const primaryRect = primaryRail?.getBoundingClientRect();
 			const closing = document.querySelector('.hp-digest-cta');
 			const anchor = document.getElementById('resume-keyword-bank');
-			const wcus = document.querySelector('.hp-digest__hero + .hp-wcus-callout');
+			const hero = document.querySelector('.hp-digest__hero');
+			const wcus = hero?.querySelector(':scope > .hp-wcus-callout');
 			const wcusActionsRoot = wcus?.querySelector('.hp-wcus-callout__actions');
 			const proofItems = Array.from(document.querySelectorAll('#root-cause-investigation .hp-debug-proof__item')).map((item) => {
 				const bounds = item.getBoundingClientRect();
