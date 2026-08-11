@@ -188,6 +188,36 @@ test( 'runs metadata, Digest, About probe, market parity, and production workflo
 	] );
 } );
 
+test( 'runs the ownership-docs and event-retirement regression suites as active CI commands', () => {
+	const regressionTests = [
+		'scripts/lib/content-ownership-docs.test.js',
+		'scripts/lib/event-copy-retirement-runbook.test.js',
+	];
+
+	assertSourceUnitTestsAreActive( workflow, regressionTests );
+
+	for ( const testFile of regressionTests ) {
+		const activeLine = new RegExp( `^([ \\t]*)${ escapeRegExp( testFile ) }(\\s+\\\\)?\\s*$`, 'm' );
+		const commentedWorkflow = workflow.replace( activeLine, `$1# ${ testFile }$2` );
+		assert.notEqual( commentedWorkflow, workflow, `Commented-line mutation must apply for ${ testFile }.` );
+		assert.throws(
+			() => assertSourceUnitTestsAreActive( commentedWorkflow, [ testFile ] ),
+			/Workflow unit-test run block is missing an active/
+		);
+
+		const withoutActiveLine = workflow.replace( new RegExp( `^\\s*${ escapeRegExp( testFile ) }(?:\\s+\\\\)?\\s*$\\r?\\n`, 'm' ), '' );
+		assert.notEqual( withoutActiveLine, workflow, `Active-line removal mutation must apply for ${ testFile }.` );
+		const proseOnlyWorkflow = withoutActiveLine.replace(
+			'\n  verify:',
+			`\n# CI documentation mentions ${ testFile }.\n  verify:`
+		);
+		assert.throws(
+			() => assertSourceUnitTestsAreActive( proseOnlyWorkflow, [ testFile ] ),
+			/Workflow unit-test run block is missing an active/
+		);
+	}
+} );
+
 test( 'does not count a commented About probe test as active CI coverage', () => {
 	const testFile = 'scripts/lib/about-page-rendered-probe.test.js';
 	const commentedWorkflow = workflow.replace(

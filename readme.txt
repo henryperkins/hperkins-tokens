@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.57
+Stable tag: 0.3.58
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -380,6 +380,20 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.58 =
+* Added the stable semantic `/one-page-resume/` route and its guarded source,
+  redirect-chain, GET, and HEAD verification. Refreshed the one-page WordPress
+  support résumé DOCX/PDF pair while preserving text, link-order, page-count,
+  tagging, searchability, and accessibility contracts.
+* Prepared page-scoped WordCamp US candidates and presentation for the Job
+  Placement Digest and About page, including the compact in-page root-cause
+  proof and current event and Core AI booth context. These bodies remain
+  reviewed candidates until separately authorized production publication.
+* Added phase-aware local, candidate, accepted-snapshot, and public verification,
+  plus explicit page-scoped local application and guarded content-ownership
+  workflows. No production page, footer, snapshot, or deployment is claimed by
+  this source release entry.
 
 = 0.3.57 =
 * Split component CSS out of style.css into conditionally loaded bundles under

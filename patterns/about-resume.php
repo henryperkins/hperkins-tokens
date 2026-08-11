@@ -60,4 +60,4 @@ if (
 	return;
 }
 
-echo $hperkins_about_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- trusted, versioned theme snapshot markup; only URL substitutions above are computed, and both are esc_url()-escaped.
+echo $hperkins_about_markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- trusted, versioned theme snapshot markup; only the portrait URL substitution above is computed and esc_url()-escaped.
