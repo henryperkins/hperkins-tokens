@@ -20,6 +20,24 @@ function replaceOnce( value, search, replacement ) {
 	return value.replace( search, replacement );
 }
 
+test( 'serializes the debugging proof as editable native blocks', () => {
+	assert.doesNotMatch(
+		DIGEST,
+		/<!--\s+wp:html\s*-->/,
+		'The candidate must not depend on a Studio-policy-incompatible Custom HTML block.'
+	);
+	assert.match(
+		DIGEST,
+		/<!-- wp:group \{[^\n]*"className":"hp-debug-proof__grid"/,
+		'The proof grid must be a native Group block.'
+	);
+	assert.equal(
+		[ ...DIGEST.matchAll( /<!-- wp:group \{[^\n]*"className":"hp-debug-proof__item"/g ) ].length,
+		4,
+		'The proof grid must expose four editable native Group items.'
+	);
+} );
+
 test( 'rejects an interposed sibling between the WCUS panel and Support Engineer section', () => {
 	const whyBlock = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-digest-section hp-support-now","layout":{"type":"constrained"},"anchor":"why-support-engineer-now"} -->';
 	const interposed = '<!-- wp:group {"tagName":"section"} -->\n<section class="wp-block-group"><!-- wp:paragraph -->\n<p>Interposed sibling.</p>\n<!-- /wp:paragraph --></section>\n<!-- /wp:group -->\n\n';

@@ -684,7 +684,7 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	const expectedShape = [
 		'hp-about-hero',
 		'hp-signal-strip hp-about-impact',
-		'html',
+		'hp-about-nav',
 		'selected-work',
 		'core-ai-contributions',
 		'capabilities',
@@ -772,9 +772,15 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	} );
 
 	// --- on-this-page navigation --------------------------------------------
-	assert( navBlock.name === 'html', 'The page navigation must be one core Custom HTML block.' );
+	assert( navBlock.name === 'group', 'The page navigation must be one native core Group block.' );
 	const htmlBlocks = blocks.filter( ( block ) => block.name === 'html' );
-	assert( htmlBlocks.length === 1, `${ label } must contain exactly one core/html block.` );
+	assert( htmlBlocks.length === 0, `${ label } must not contain core/html blocks.` );
+	assertExact( navBlock.attrs.tagName, 'nav', 'Navigation Group tag name' );
+	assertExact( navBlock.attrs.ariaLabel, 'On this page', 'Navigation Group aria label' );
+	assert(
+		( navBlock.attrs.className || '' ).split( /\s+/ ).includes( 'hp-about-nav' ),
+		'The navigation Group must retain the hp-about-nav contract class.'
+	);
 	const navRoots = [ ...navBlock.outer.matchAll( /<nav\b[^>]*>/g ) ];
 	assert( navRoots.length === 1, 'The navigation block must contain exactly one nav root.' );
 	assert(
@@ -789,6 +795,14 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	assert( ! /<h[1-6]\b/.test( navBlock.outer ), 'The nav label must not be a heading.' );
 	const navLists = [ ...navBlock.outer.matchAll( /<ul\b[^>]*>/g ) ];
 	assert( navLists.length === 1, 'The nav must contain exactly one list.' );
+	assert(
+		/<!-- wp:list \{"className":"hp-about-nav__list"\} -->/.test( navBlock.outer ),
+		'The nav links must be serialized in one native core List block.'
+	);
+	assert(
+		[ ...navBlock.outer.matchAll( /<!-- wp:list-item -->/g ) ].length === 6,
+		'The nav must contain exactly six native List Item blocks.'
+	);
 	const navLinks = findLinks( navInner[ 1 ], label );
 	assert( navLinks.length === 6, `The nav must contain exactly six links, got ${ navLinks.length }.` );
 	EXPECTED_NAV_LINKS.forEach( ( expected, index ) => {

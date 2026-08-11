@@ -474,6 +474,10 @@ p.hp-contact-form__hint {
   overflow-wrap: anywhere;
 }
 
+.hp-debug-proof__item :is(dt, dd) > p {
+  margin: 0;
+}
+
 /* The evidence register is deliberately compact: direct proof, state, link.
    Wide and dense ledgers scroll within their figure rather than widening the
    page. Long repository labels and URLs may wrap at any safe character. */

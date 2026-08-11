@@ -134,10 +134,15 @@ function extractLinks( markup ) {
 }
 
 function extractDefinitionPairs( markup ) {
-	return [ ...markup.matchAll( /<div\b[^>]*class=(['"])[^'"]*\bhp-debug-proof__item\b[^'"]*\1[^>]*>\s*<dt>([\s\S]*?)<\/dt>\s*<dd>([\s\S]*?)<\/dd>\s*<\/div>/gi ) ].map( ( match ) => [
-		stripMarkup( match[ 2 ] ),
-		stripMarkup( match[ 3 ] ),
-	] );
+	return [ ...markup.matchAll( /<div\b[^>]*class=(['"])[^'"]*\bhp-debug-proof__item\b[^'"]*\1[^>]*>([\s\S]*?)<\/div>/gi ) ].map( ( match ) => {
+		const term = /<dt\b[^>]*>([\s\S]*?)<\/dt>/i.exec( match[ 2 ] );
+		const definition = /<dd\b[^>]*>([\s\S]*?)<\/dd>/i.exec( match[ 2 ] );
+
+		return [
+			term ? stripMarkup( term[ 1 ] ) : '',
+			definition ? stripMarkup( definition[ 1 ] ) : '',
+		];
+	} );
 }
 
 function extractEvidenceRows( markup ) {
@@ -248,7 +253,15 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 	);
 	assert( countMatches( investigation, /<h2\b/gi ) === 1, 'The root-cause investigation must contain exactly one H2.' );
 	assert( countMatches( investigation, /<h3\b/gi ) === 0, 'The compact root-cause proof must not contain H3 headings.' );
-	assert( /<!-- wp:html -->\s*<dl class="hp-debug-proof__grid">[\s\S]*<\/dl>\s*<!-- \/wp:html -->/.test( investigation ), 'The proof definition list must be serialized in one core/html block.' );
+	assert( ! /<!--\s+wp:html\s*-->/.test( investigation ), 'The proof must not use a Studio-policy-incompatible core/html block.' );
+	assert(
+		/<!-- wp:group \{[^\n]*"tagName":"dl"[^\n]*"className":"hp-debug-proof__grid"[^\n]*\} -->[\s\S]*<dl\b[^>]*\bhp-debug-proof__grid\b[^>]*>[\s\S]*<\/dl>[\s\S]*<!-- \/wp:group -->/.test( investigation ),
+		'The proof definition list must be serialized as a native Group block.'
+	);
+	assert(
+		countMatches( investigation, /<!-- wp:group \{[^\n]*"className":"hp-debug-proof__item"[^\n]*\} -->/g ) === DEBUG_PROOF.length,
+		'The compact root-cause proof must contain four native Group items.'
+	);
 	const proofPairs = extractDefinitionPairs( investigation );
 	assert( proofPairs.length === DEBUG_PROOF.length, 'The compact root-cause proof must contain exactly four definition items.' );
 	for ( let index = 0; index < DEBUG_PROOF.length; index++ ) {

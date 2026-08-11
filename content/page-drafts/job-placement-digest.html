@@ -169,14 +169,63 @@
 <h2 class="wp-block-heading">Debugging proof: a request log that silently under-reported</h2>
 <!-- /wp:heading -->
 
-<!-- wp:html -->
-<dl class="hp-debug-proof__grid">
-  <div class="hp-debug-proof__item"><dt>Signal</dt><dd>Codex provider generations never appeared in the WordPress AI request log. Nothing errored; the diagnostic silently looked complete.</dd></div>
-  <div class="hp-debug-proof__item"><dt>Diagnosis</dt><dd>Logging decorated one SDK HTTP transporter. Supported providers using a sidecar, custom handler, or direct WordPress HTTP request bypassed that boundary and disappeared from the record.</dd></div>
-  <div class="hp-debug-proof__item"><dt>Constraint</dt><dd>Lifecycle-hook capture restored the missing success rows in integration testing, but it double-logged successes when the provider bridge remained active and still omitted failures. Capture, attribution, and ownership cannot be collapsed into a one-line fix.</dd></div>
-  <div class="hp-debug-proof__item"><dt>Result</dt><dd>Henry authored issue #732 and its reproduction. Anubhav Anand authored PR #757. Henry tested the integration and proposed the ownership split. An earlier report, issue #529, was reproduced and fixed by a maintainer in PR #593 and shipped in WordPress AI 1.0.1.</dd></div>
-</dl>
-<!-- /wp:html -->
+<!-- wp:group {"tagName":"dl","className":"hp-debug-proof__grid","layout":{"type":"default"}} -->
+<dl class="wp-block-group hp-debug-proof__grid"><!-- wp:group {"className":"hp-debug-proof__item","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-debug-proof__item"><!-- wp:group {"tagName":"dt","layout":{"type":"default"}} -->
+<dt class="wp-block-group"><!-- wp:paragraph -->
+<p>Signal</p>
+<!-- /wp:paragraph --></dt>
+<!-- /wp:group -->
+
+<!-- wp:group {"tagName":"dd","layout":{"type":"default"}} -->
+<dd class="wp-block-group"><!-- wp:paragraph -->
+<p>Codex provider generations never appeared in the WordPress AI request log. Nothing errored; the diagnostic silently looked complete.</p>
+<!-- /wp:paragraph --></dd>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-debug-proof__item","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-debug-proof__item"><!-- wp:group {"tagName":"dt","layout":{"type":"default"}} -->
+<dt class="wp-block-group"><!-- wp:paragraph -->
+<p>Diagnosis</p>
+<!-- /wp:paragraph --></dt>
+<!-- /wp:group -->
+
+<!-- wp:group {"tagName":"dd","layout":{"type":"default"}} -->
+<dd class="wp-block-group"><!-- wp:paragraph -->
+<p>Logging decorated one SDK HTTP transporter. Supported providers using a sidecar, custom handler, or direct WordPress HTTP request bypassed that boundary and disappeared from the record.</p>
+<!-- /wp:paragraph --></dd>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-debug-proof__item","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-debug-proof__item"><!-- wp:group {"tagName":"dt","layout":{"type":"default"}} -->
+<dt class="wp-block-group"><!-- wp:paragraph -->
+<p>Constraint</p>
+<!-- /wp:paragraph --></dt>
+<!-- /wp:group -->
+
+<!-- wp:group {"tagName":"dd","layout":{"type":"default"}} -->
+<dd class="wp-block-group"><!-- wp:paragraph -->
+<p>Lifecycle-hook capture restored the missing success rows in integration testing, but it double-logged successes when the provider bridge remained active and still omitted failures. Capture, attribution, and ownership cannot be collapsed into a one-line fix.</p>
+<!-- /wp:paragraph --></dd>
+<!-- /wp:group --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-debug-proof__item","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-debug-proof__item"><!-- wp:group {"tagName":"dt","layout":{"type":"default"}} -->
+<dt class="wp-block-group"><!-- wp:paragraph -->
+<p>Result</p>
+<!-- /wp:paragraph --></dt>
+<!-- /wp:group -->
+
+<!-- wp:group {"tagName":"dd","layout":{"type":"default"}} -->
+<dd class="wp-block-group"><!-- wp:paragraph -->
+<p>Henry authored issue #732 and its reproduction. Anubhav Anand authored PR #757. Henry tested the integration and proposed the ownership split. An earlier report, issue #529, was reproduced and fixed by a maintainer in PR #593 and shipped in WordPress AI 1.0.1.</p>
+<!-- /wp:paragraph --></dd>
+<!-- /wp:group --></div>
+<!-- /wp:group --></dl>
+<!-- /wp:group -->
 
 <!-- wp:paragraph -->
 <p><a href="https://github.com/WordPress/ai/issues/732">Inspect Henry’s issue #732 report and reproduction</a> · <a href="https://github.com/WordPress/ai/pull/757#issuecomment-4980297831">Read Henry’s PR #757 integration-test findings</a> · <a href="https://github.com/WordPress/ai/pull/757#issuecomment-4981567682">Read Henry’s PR #757 ownership proposal</a> · <a href="https://github.com/WordPress/ai/issues/529">Inspect Henry’s earlier issue #529 report</a> · <a href="https://github.com/WordPress/ai/pull/593">Inspect the maintainer-authored fix in PR #593</a> · <a href="https://github.com/WordPress/ai/releases/tag/1.0.1">Verify the fix shipped in WordPress AI 1.0.1</a></p>

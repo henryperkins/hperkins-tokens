@@ -128,7 +128,8 @@ test( 'parses top-level blocks with nested groups and JSON attributes', () => {
 	const blocks = parseTopLevelBlocks( candidate );
 	assert.equal( blocks.length, 10 );
 	assert.equal( blocks[ 0 ].attrs.className, 'hp-about-hero' );
-	assert.equal( blocks[ 2 ].name, 'html' );
+	assert.equal( blocks[ 2 ].name, 'group' );
+	assert.equal( blocks[ 2 ].attrs.tagName, 'nav' );
 	assert.equal( blocks[ 3 ].attrs.anchor, 'selected-work' );
 	assert.equal( blocks[ 8 ].attrs.anchor, 'contact' );
 	assert.equal( blocks[ 9 ].name, 'paragraph' );
@@ -181,6 +182,19 @@ test( 'fails when the hero copy drifts', () => {
 		() => verifyAboutBody( mutated( 'For teams building stuff with tokens.', 'For teams.' ) ),
 		/strapline/i
 	);
+} );
+
+test( 'serializes the in-page navigation as editable native blocks', () => {
+	const blocks = parseTopLevelBlocks( candidate );
+	assert.equal(
+		blocks.filter( ( block ) => block.name === 'html' ).length,
+		0,
+		'The candidate must not depend on a Studio-policy-incompatible Custom HTML block.'
+	);
+	assert.equal( blocks[ 2 ].name, 'group' );
+	assert.equal( blocks[ 2 ].attrs.tagName, 'nav' );
+	assert.equal( blocks[ 2 ].attrs.ariaLabel, 'On this page' );
+	assert.match( blocks[ 2 ].outer, /<!-- wp:list \{"className":"hp-about-nav__list"\} -->/ );
 } );
 
 test( 'fails when any WordCamp US status fact or action drifts', () => {

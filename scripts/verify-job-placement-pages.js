@@ -70,7 +70,7 @@ function deriveDigestExpectations( html ) {
 	}
 
 	const proofLabels = rootCauseSection
-		? [ ...rootCauseSection[ 1 ].matchAll( /<div\b[^>]*\bhp-debug-proof__item\b[^>]*>\s*<dt>([^<]+)<\/dt>/gi ) ]
+		? [ ...rootCauseSection[ 1 ].matchAll( /<div\b[^>]*\bhp-debug-proof__item\b[^>]*>[\s\S]*?<dt\b[^>]*>[\s\S]*?<p\b[^>]*>([^<]+)<\/p>[\s\S]*?<\/dt>/gi ) ]
 			.map( ( match ) => match[ 1 ].trim() )
 		: [];
 
@@ -194,6 +194,7 @@ function verifySourceContracts() {
 			},
 		},
 		{ selector: '.hp-debug-proof__item dd', declarations: { margin: 'var(--wp--preset--spacing--2) 0 0', 'overflow-wrap': 'anywhere' } },
+		{ selector: '.hp-debug-proof__item :is(dt, dd) > p', declarations: { margin: '0' } },
 		{ selector: '.hp-wcus-callout__actions', atContext: '@media (max-width: 781px)', declarations: { 'grid-template-columns': 'minmax(0, 1fr)' } },
 		{ selector: '.hp-debug-proof__grid', atContext: '@media (max-width: 781px)', declarations: { 'grid-template-columns': 'minmax(0, 1fr)' } },
 	] ) {
