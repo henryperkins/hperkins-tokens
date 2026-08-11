@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-10
 
-**Status:** Approved in conversation; awaiting review of this written specification
+**Status:** Approved by the user on 2026-08-10
 
 **Surfaces:** `/job-placement-digest/`, the root-cause proof within that page, `/about/`, the one-page Support Engineer résumé, global résumé links, and the proposed `/one-page-resume/` redirect
 
