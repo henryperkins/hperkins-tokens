@@ -24,6 +24,45 @@ The current public portfolio is materially incomplete for July and August:
 
 No authored upstream WordPress pull request merged during this audit window. That is not a weakness to conceal: the current record contains two authored open code changes, an authored issue with regression coverage, substantive integration testing and access-control feedback, released owned work, and extensive evidence/governance engineering.
 
+## Publication-day refresh — 11 Aug 2026
+
+**Retrieved:** 2026-08-11 03:42:16.933 America/Chicago (`2026-08-11T08:42:16.933Z`)
+
+This read-only refresh extends the discoverable activity window from July 1 through the retrieval time above. Authenticated contribution collection now returns 1,150 commit contributions, 103 pull-request contributions, 1 issue contribution, 3 qualifying pull-request-review contributions, and 4 restricted contributions. Paginated authored search returns 121 pull requests. The two-PR increase from the August 10 snapshot's 101 contribution-collection PRs and 119 authored-search PRs is exactly Flavor Agent #77 and #78; no new authored upstream WordPress issue or pull request appeared.
+
+### Newly qualifying activity
+
+| Evidence | Exact state at retrieval | Taxonomy and treatment |
+|---|---|---|
+| [Flavor Agent PR #77 — Harden docs corpus validation, deletion guards, and settlement waiting](https://github.com/henryperkins/flavor-agent/pull/77) | Authored by `henryperkins`; open, unmerged, non-draft; created `2026-08-11T06:29:06Z`; updated `2026-08-11T06:35:59Z`; base `master` | **Owned work · open/in development.** Substantive corpus-validation and deletion-safety work, but neither merged nor released. Preserve in this full inventory; do not displace RC3 or merged post-RC3 proof on recruiter surfaces. |
+| [Flavor Agent PR #78 — Add Gutenberg opt-in to WP 7.0 harness and fix design-token resolution](https://github.com/henryperkins/flavor-agent/pull/78) | Authored by `henryperkins`; open, unmerged, non-draft; created `2026-08-11T06:57:45Z`; updated `2026-08-11T07:27:01Z`; base `master` | **Owned WordPress/Gutenberg work · open/in development.** Substantive WordPress 7.0/Gutenberg harness, package-export-aware design-token resolution, and abilities-bridge compatibility work. Recruiter-relevant, but lower-state than the selected released/merged evidence; do not add it to the candidates or résumé while it remains open. |
+| [Agent Skills skill-audit/WP-Bench integration commit `2817235`](https://github.com/henryperkins/agent-skills/commit/2817235c29d1e20afb23eb3fecbcf2317896bc69) | Authored and committed by Henry Perkins at `2026-08-11T01:10:53Z`; public on default branch `trunk` | **Owned maintained distribution · default-branch work.** The previously local audit and WP-Bench integration documents are now public default-branch evidence. |
+| [Agent Skills plugin-metadata/CI commit `ff67695`](https://github.com/henryperkins/agent-skills/commit/ff6769576e96f554b1929665311d0fb3b39019a0) | Authored and committed by Henry Perkins at `2026-08-11T01:47:04Z`; public on `trunk`; branch `release/plugin-1.2.0` points to the same commit; GitHub Releases remains empty and no release tag was found | **Owned maintained distribution · default-branch metadata 1.2.0 · no GitHub release/tag.** “Plugin metadata 1.2.0” remains distinct from “released 1.2.0” and does not replace stronger released evidence. |
+| [Roadmaptrac refresh-prompt census correction `16dc64e`](https://github.com/henryperkins/roadmaptrac/commit/16dc64e3d6d6f66827a27aef68ebca08bd346b2f) | Authored and committed by Henry Perkins at `2026-08-11T01:41:50Z`; public on default branch `main` | **Active evidence tooling · no release.** Post-census prompt-documentation maintenance; it does not supersede the pinned census implementation. |
+| [Roadmaptrac portable-path correction `0d4726a`](https://github.com/henryperkins/roadmaptrac/commit/0d4726a4ea73d2ab46c1e6f62ca35102e5278512) | Authored and committed by Henry Perkins at `2026-08-11T01:44:24Z`; public on `main`; no Roadmaptrac release exists | **Active evidence tooling · no release.** A lower-signal prompt portability fix; retain the stronger census commit on recruiter surfaces. |
+
+### Re-resolved cited evidence
+
+All cited candidate facts remain unchanged at retrieval:
+
+- [WordPress/ai PR #501](https://github.com/WordPress/ai/pull/501) remains Henry-authored and merged at `2026-05-18T21:03:46Z`.
+- [php-ai-client issue #262](https://github.com/WordPress/php-ai-client/issues/262) remains Henry-authored and open; [PR #263](https://github.com/WordPress/php-ai-client/pull/263) remains Henry-authored, open, and unmerged.
+- [ai-provider-for-openai PR #40](https://github.com/WordPress/ai-provider-for-openai/pull/40) remains Henry-authored, open, and unmerged.
+- [WordPress/ai issue #529](https://github.com/WordPress/ai/issues/529) remains Henry's closed report; [PR #593](https://github.com/WordPress/ai/pull/593) remains `gziolo`-authored and merged at `2026-05-20T20:56:51Z`; [1.0.1](https://github.com/WordPress/ai/releases/tag/1.0.1) remains a stable release published `2026-05-27T22:09:28Z`.
+- [WordPress/ai issue #732](https://github.com/WordPress/ai/issues/732) remains Henry-authored and open; [PR #757](https://github.com/WordPress/ai/pull/757) remains `i-anubhav-anand`-authored, open, and unmerged. Henry's [integration-test result](https://github.com/WordPress/ai/pull/757#issuecomment-4980297831) and [ownership proposal](https://github.com/WordPress/ai/pull/757#issuecomment-4981567682) remain top-level non-formal technical feedback.
+- [PR #749](https://github.com/WordPress/ai/pull/749) remains `Infinite-Null`-authored, open, and unmerged; Henry's [access-control comment](https://github.com/WordPress/ai/pull/749#issuecomment-5010134375) remains non-formal design feedback.
+- [Flavor Agent v0.1.0-rc.3](https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0-rc.3) remains the latest public Flavor Agent artifact and a prerelease. Post-RC3 PRs #53, #61, #66, #67, #74, and #76 remain Henry-authored and merged to owned `master`; PR #75 remains merged but Copilot-authored; #72 and #73 remain Henry-authored and open.
+- [AI Provider for Codex v2.1](https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v2.1) and [HPerkins Tokens v0.3.53](https://github.com/henryperkins/hperkins-tokens/releases/tag/v0.3.53) remain the latest public releases in their repositories. The later HPerkins Tokens WooCommerce/presentation commits remain merged to `main` and unreleased.
+- [`roadmaptrac` census commit `b101bca`](https://github.com/henryperkins/roadmaptrac/commit/b101bca432825a34135c9b3d8a224031a1a7ad18) remains the selected active-tooling implementation evidence; the repository still has no release.
+
+### Coverage and placement conclusion
+
+The authenticated July-to-retrieval contribution collection, paginated authored issue/PR search, reviewed-item search, commented-item search, repository release/comparison checks, and public Events API reproduced every WordPress workstream already classified below. The newly visible activity is fully accounted for by the six items above.
+
+Noise and exclusions remain deliberate: `community-forums#64`, Candidary, Pattern-Like, Gemini-Plato, and other adjacent application events are not WordPress implementation; WP-Bench branch pushes remain agent-authored fork evidence already confined to this audit; Henry's comments/review event on his own Flavor Agent #78 do not become independent upstream-review proof; branch creation and plugin metadata do not create a release; repository sync/fork/watch events remain non-achievements. Restricted activity is still unmappable and excluded from claims.
+
+Taxonomy conclusion: the new items are open owned work, public default-branch distribution work without a release, or unreleased prompt-documentation maintenance. None is stronger than the candidate's authored-upstream, merged, or released proof. No Job Placement Digest, About candidate, DOCX, PDF, or verifier-literal change is required for this refresh.
+
 ## Method And Coverage
 
 The pass used authenticated GitHub GraphQL, issue/PR search, commit search, repository comparisons, release records, and per-item comment/review endpoints. America/Chicago determines the date boundary, so activity before 05:00 UTC on August 11 still belongs to August 10 locally.
