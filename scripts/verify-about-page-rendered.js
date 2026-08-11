@@ -28,19 +28,24 @@ const path = require( 'node:path' );
 const { assertMatchingSiteUrl, getOrigin, normalizeSiteUrl } = require( './lib/site-url' );
 const {
 	ABOUT_WORD_RANGE,
-	EXPECTED_CLOSING,
-	EXPECTED_HEADINGS,
-	EXPECTED_HERO,
-	EXPECTED_NAV_LABEL,
-	EXPECTED_NAV_LINKS,
-	EXPECTED_PROJECTS,
 	countVisibleWords,
 	countRenderedText,
+	decodeCharacterReferences,
+	extractExactText,
+	findHeadings,
+	findLinks,
+	parseTopLevelBlocks,
+	verifyCssOwnership,
 } = require( './lib/about-page-contract' );
+const { assertKnownOptions, selectAboutSource } = require( './lib/page-phase-contract' );
+const { assertRuleDeclarations } = require( './lib/style-coverage' );
 
 const THEME_ROOT = path.join( __dirname, '..' );
+const ARGV = process.argv.slice( 2 );
+assertKnownOptions( ARGV, [ '--drafts', '--source-only', '--require-local' ] );
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
-const REQUIRE_LOCAL = process.argv.includes( '--require-local' );
+const REQUIRE_LOCAL = ARGV.includes( '--require-local' );
+const SOURCE_ONLY = ARGV.includes( '--source-only' );
 const PRODUCTION_ORIGIN = 'https://hperkins.blog';
 const CAPTURE_DIR = process.env.HPERKINS_CAPTURE_DIR ||
 	path.join( os.tmpdir(), 'hperkins-about-rendered' );
@@ -49,8 +54,8 @@ const PRIMARY_VIEWPORTS = [
 	{ name: '1440', width: 1440, height: 1000, mobile: false, canonical: true },
 	{ name: '1024', width: 1024, height: 1000, mobile: false },
 	{ name: '768', width: 768, height: 1000, mobile: false },
-	{ name: '390', width: 390, height: 1000, mobile: true },
-	{ name: '320', width: 320, height: 1000, mobile: true },
+	{ name: '390', width: 390, height: 844, mobile: true },
+	{ name: '320', width: 320, height: 844, mobile: true },
 ];
 
 // Geometry-only probes for the exclusive responsive boundaries. These produce
@@ -68,6 +73,163 @@ function assert( condition, message ) {
 	if ( ! condition ) {
 		throw new Error( message );
 	}
+}
+
+function findBalancedElementsByClass( html, className, label ) {
+	const escaped = className.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
+	const openPattern = new RegExp(
+		`<([a-z][a-z0-9-]*)\\b[^>]*class="[^"]*(?<![\\w-])${ escaped }(?![\\w-])[^"]*"[^>]*>`,
+		'gi'
+	);
+	const results = [];
+
+	for ( const open of html.matchAll( openPattern ) ) {
+		const tag = open[ 1 ].toLowerCase();
+		const tagPattern = new RegExp( `<${ tag }\\b[^>]*>|</${ tag }>`, 'gi' );
+		tagPattern.lastIndex = open.index + open[ 0 ].length;
+		let depth = 1;
+		let closing;
+		for ( let token = tagPattern.exec( html ); token; token = tagPattern.exec( html ) ) {
+			depth += token[ 0 ].startsWith( '</' ) ? -1 : 1;
+			if ( depth === 0 ) {
+				closing = token;
+				break;
+			}
+		}
+		assert( closing, `${ label } has an unbalanced .${ className } element.` );
+		results.push( {
+			inner: html.slice( open.index + open[ 0 ].length, closing.index ),
+			open: open[ 0 ],
+			outer: html.slice( open.index, closing.index + closing[ 0 ].length ),
+			start: open.index,
+			end: closing.index + closing[ 0 ].length,
+		} );
+	}
+
+	return results;
+}
+
+function textByClass( html, className, label ) {
+	const element = findBalancedElementsByClass( html, className, label )[ 0 ];
+	assert( element, `${ label } is missing .${ className }.` );
+	return extractExactText( element.inner, { label } );
+}
+
+function deriveRenderedExpectations( html, { label = 'selected About body' } = {} ) {
+	const blocks = parseTopLevelBlocks( html );
+	const headings = blocks.flatMap( ( block ) =>
+		findHeadings( block.outer, label ).map( ( heading ) => ( {
+			level: heading.level,
+			text: heading.text,
+			section: block.attrs?.anchor || 'hero',
+		} ) )
+	);
+	const navs = findBalancedElementsByClass( html, 'hp-about-nav', label );
+	assert( navs.length === 1, `${ label } must contain one .hp-about-nav, got ${ navs.length }.` );
+	const navLabelMatch = /\baria-label="([^"]+)"/i.exec( navs[ 0 ].open );
+	assert( navLabelMatch, `${ label } .hp-about-nav has no aria-label.` );
+	const navLinks = findLinks( navs[ 0 ].inner, label );
+	assert( navLinks.length > 0, `${ label } .hp-about-nav has no links.` );
+
+	const projects = findBalancedElementsByClass( html, 'hp-work-card', label ).map( ( card ) => {
+		const actions = findBalancedElementsByClass( card.inner, 'hp-work-card__actions', label )[ 0 ];
+		assert( actions, `${ label } project card has no .hp-work-card__actions.` );
+		return {
+			title: textByClass( card.inner, 'hp-work-card__title', label ),
+			status: textByClass( card.inner, 'hp-work-card__status', label ),
+			actions: findLinks( actions.inner, label ),
+		};
+	} );
+	const rails = findBalancedElementsByClass( html, 'hp-action-rail', label ).map( ( rail ) =>
+		findLinks( rail.inner, label )
+	);
+	assert( rails.length > 0, `${ label } has no .hp-action-rail.` );
+
+	const avatar = findBalancedElementsByClass( html, 'hp-about-avatar', label )[ 0 ];
+	const portrait = avatar && /<img\b[^>]*\balt="([^"]*)"/i.exec( avatar.inner );
+	assert( portrait, `${ label } has no portrait alternative text to compare with the render.` );
+	const foundations = findBalancedElementsByClass( html, 'hp-about-foundations-grid', label )[ 0 ];
+	assert( foundations, `${ label } has no .hp-about-foundations-grid.` );
+	const wcus = findBalancedElementsByClass( html, 'hp-about-wcus', label )[ 0 ] || null;
+	const coreAi = findBalancedElementsByClass( html, 'hp-about-core-ai', label )[ 0 ] || null;
+	let wcusActions = [];
+	if ( wcus ) {
+		assert(
+			findBalancedElementsByClass( html, 'hp-about-hero__copy', label )[ 0 ]?.inner.includes( wcus.outer ),
+			`${ label } must place .hp-about-wcus inside .hp-about-hero__copy.`
+		);
+		const actionRails = findBalancedElementsByClass( html, 'hp-action-rail', label );
+		assert(
+			! actionRails.some( ( rail ) => rail.start < wcus.end && rail.end > wcus.start ),
+			`${ label } .hp-about-wcus and its action must stay outside any hp-action-rail ancestor or descendant.`
+		);
+		const wcusActionElements = findBalancedElementsByClass( wcus.inner, 'hp-about-wcus__action', label );
+		assert( wcusActionElements.length === 1, `${ label } .hp-about-wcus must contain exactly one .hp-about-wcus__action.` );
+		const buttons = findBalancedElementsByClass( wcusActionElements[ 0 ].inner, 'wp-block-button', label );
+		assert( buttons.length === 1, `${ label } .hp-about-wcus__action must contain exactly one core Button .wp-block-button.` );
+		wcusActions = findLinks( buttons[ 0 ].inner, label );
+		assert( wcusActions.length === 1, `${ label } .hp-about-wcus must expose exactly one action.` );
+		assert( coreAi, `${ label } with a WCUS callout has no .hp-about-core-ai section.` );
+		assert(
+			findBalancedElementsByClass( coreAi.inner, 'hp-evidence-row', label ).length === 4,
+			`${ label } .hp-about-core-ai must contain exactly four evidence rows.`
+		);
+	}
+
+	return {
+		closingActionLabels: rails.at( -1 ).map( ( action ) => action.text ),
+		foundationsOrder: findHeadings( foundations.inner, label )
+			.filter( ( heading ) => heading.level === 3 )
+			.map( ( heading ) => heading.text ),
+		fragments: navLinks.map( ( link ) => link.href.slice( 1 ) ),
+		headings,
+		heroActionLabels: rails[ 0 ].map( ( action ) => action.text ),
+		navLabel: decodeCharacterReferences( navLabelMatch[ 1 ] ),
+		navLinks,
+		portraitAlt: decodeCharacterReferences( portrait[ 1 ] ),
+		projects,
+		sourceWordCount: countVisibleWords( html, { label } ),
+		wcusActionLabels: wcusActions.map( ( action ) => action.text ),
+	};
+}
+
+function verifySourceContracts( selectedAboutBody, pageCss, label ) {
+	const expectations = deriveRenderedExpectations( selectedAboutBody, { label } );
+	verifyCssOwnership(
+		fs.readFileSync( path.join( THEME_ROOT, 'style.css' ), 'utf8' ),
+		pageCss
+	);
+	if ( expectations.wcusActionLabels.length > 0 ) {
+		for ( const contract of [
+			{
+				selector: '.hp-about-wcus',
+				declarations: {
+					'margin-block-start': 'var(--wp--preset--spacing--4)',
+					padding: 'var(--wp--preset--spacing--4)',
+					'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
+					background: 'color-mix(in srgb, var(--wp--preset--color--parchment-100) 90%, var(--wp--preset--color--gold-100))',
+				},
+			},
+			{
+				selector: '.hp-about-wcus__label',
+				declarations: {
+					margin: '0',
+					color: 'var(--wp--preset--color--green-700)',
+					'font-family': 'var(--wp--preset--font-family--mono)',
+					'font-size': 'var(--wp--preset--font-size--xs)',
+					'font-weight': '700',
+					'letter-spacing': '0.06em',
+					'text-transform': 'uppercase',
+				},
+			},
+			{ selector: '.hp-about-wcus__copy', declarations: { 'margin-block-start': 'var(--wp--preset--spacing--3)' } },
+			{ selector: '.hp-about-wcus__action', declarations: { 'margin-block-start': 'var(--wp--preset--spacing--3)' } },
+		] ) {
+			assertRuleDeclarations( pageCss, contract );
+		}
+	}
+	console.log( 'About rendered-page source contracts verified.' );
+	return expectations;
 }
 
 function wait( ms ) {
@@ -271,7 +433,7 @@ function buildInspectionExpression( opts ) {
 		});
 
 		// --- named navigation + unnamed section targets -------------------
-		const navs = content.querySelectorAll('nav[aria-label="On this page"]');
+		const navs = content.querySelectorAll('.hp-about-nav');
 		out.navCount = navs.length;
 		const nav = navs[0] || null;
 		out.nav = null;
@@ -323,6 +485,21 @@ function buildInspectionExpression( opts ) {
 		const heroPortrait = content.querySelector('.hp-about-hero__portrait');
 		out.hero = heroCopy && heroPortrait ? { copy: rect(heroCopy), portrait: rect(heroPortrait) } : null;
 		out.signals = Array.from(content.querySelectorAll('.hp-about-impact .hp-signal')).map(rect);
+		const wcus = content.querySelector('.hp-about-hero__copy .hp-about-wcus');
+		out.wcus = wcus ? {
+			insideActionRail: wcus.matches('.hp-action-rail') || !!wcus.closest('.hp-action-rail') || !!wcus.querySelector('.hp-action-rail'),
+			actions: Array.from(wcus.querySelectorAll('.hp-about-wcus__action .wp-block-button__link')).map((link) => {
+				const bounds = link.getBoundingClientRect();
+				const range = document.createRange();
+				range.selectNodeContents(link);
+				return {
+					text: link.textContent.trim(),
+					rect: rect(link),
+					textContained: Array.from(range.getClientRects()).every((value) => value.left >= bounds.left - 1 && value.right <= bounds.right + 1 && value.top >= bounds.top - 1 && value.bottom <= bounds.bottom + 1),
+				};
+			}),
+		} : null;
+		out.coreAiEvidenceRows = content.querySelectorAll('.hp-about-core-ai .hp-evidence-row').length;
 		const foundationColumns = Array.from(
 			content.querySelectorAll('.hp-about-foundations-grid > .wp-block-column')
 		);
@@ -357,6 +534,7 @@ function buildInspectionExpression( opts ) {
 			...(nav ? Array.from(nav.querySelectorAll('a')) : []),
 			...Array.from(content.querySelectorAll('.hp-work-card__actions a')),
 			...Array.from(content.querySelectorAll('.hp-action-rail .wp-block-button__link')),
+			...Array.from(content.querySelectorAll('.hp-about-wcus__action .wp-block-button__link')),
 		];
 		for (const link of focusTargets) {
 			try { link.focus({ preventScroll: true }); } catch (error) { link.focus(); }
@@ -395,6 +573,19 @@ function buildInspectionExpression( opts ) {
 			shellMain.remove();
 		}
 
+		const maximumSeconds = (value) => Math.max(...value.split(',').map((part) => {
+			const number = Number.parseFloat(part) || 0;
+			return part.trim().endsWith('ms') ? number / 1000 : number;
+		}));
+		out.reducedMotion = {
+			matches: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+			offenders: Array.from(content.querySelectorAll('*')).filter((element) => {
+				const style = getComputedStyle(element);
+				return style.display !== 'none' && style.visibility !== 'hidden' && element.getClientRects().length > 0 &&
+					(maximumSeconds(style.animationDuration) > 0.001 || maximumSeconds(style.transitionDuration) > 0.001);
+			}).map((element) => element.tagName.toLowerCase() + (element.className ? '.' + String(element.className).trim().replace(/\\s+/g, '.') : '')),
+		};
+
 		return out;
 	})()`;
 }
@@ -420,7 +611,7 @@ function assertStacked( rects, label ) {
 	}
 }
 
-function verifyGeometry( result, viewport ) {
+function verifyGeometry( result, viewport, expectations ) {
 	const width = viewport.width;
 	const label = `${ width }px`;
 
@@ -436,6 +627,17 @@ function verifyGeometry( result, viewport ) {
 		result.capabilityColumns.length === 3,
 		`${ label }: expected three capability units, got ${ result.capabilityColumns.length }.`
 	);
+	if ( expectations.wcusActionLabels.length > 0 ) {
+		assert( result.wcus, `${ label }: missing .hp-about-hero__copy .hp-about-wcus.` );
+		assert( ! result.wcus.insideActionRail, `${ label }: .hp-about-wcus is inside hp-action-rail.` );
+		assert( result.wcus.actions.length === 1, `${ label }: WCUS callout must expose exactly one action.` );
+		assert( result.wcus.actions[ 0 ].text === expectations.wcusActionLabels[ 0 ], `${ label }: WCUS action label or order changed.` );
+		assert( result.wcus.actions[ 0 ].rect.height >= 44, `${ label }: WCUS action is shorter than 44px.` );
+		assert( result.wcus.actions[ 0 ].textContained, `${ label }: WCUS action label clips instead of wrapping.` );
+		assert( result.coreAiEvidenceRows === 4, `${ label }: Core AI evidence renders ${ result.coreAiEvidenceRows } rows; expected 4.` );
+	}
+	assert( result.reducedMotion.matches, `${ label }: reduced-motion emulation did not apply.` );
+	assert( result.reducedMotion.offenders.length === 0, `${ label }: visible motion remains under reduced motion: ${ result.reducedMotion.offenders.slice( 0, 8 ).join( ', ' ) }.` );
 	const cardRects = result.cards.map( ( card ) => card.rect );
 	const capabilityRects = result.capabilityColumns;
 	if ( width >= 896 ) {
@@ -529,7 +731,7 @@ function verifyContent( result, viewport, expectations ) {
 
 	// Heading inventory, order, levels, and section ancestry.
 	const actual = result.headings.map( ( heading ) => `${ heading.level }|${ heading.text }|${ heading.section }` );
-	const expected = EXPECTED_HEADINGS.map( ( heading ) => `${ heading.level }|${ heading.text }|${ heading.section }` );
+	const expected = expectations.headings.map( ( heading ) => `${ heading.level }|${ heading.text }|${ heading.section }` );
 	assert(
 		actual.length === expected.length && expected.every( ( entry, index ) => actual[ index ] === entry ),
 		`${ label }: heading inventory mismatch.\nexpected:\n${ expected.join( '\n' ) }\nactual:\n${ actual.join( '\n' ) }`
@@ -538,11 +740,14 @@ function verifyContent( result, viewport, expectations ) {
 	// One named navigation with six links; six unnamed section targets whose
 	// first heading is their H2.
 	assert( result.navCount === 1, `${ label }: expected one named page navigation, got ${ result.navCount }.` );
-	assert( result.nav.labelText === EXPECTED_NAV_LABEL, `${ label }: nav label reads "${ result.nav.labelText }".` );
+	assert( result.nav.labelText === expectations.navLabel, `${ label }: nav label reads "${ result.nav.labelText }".` );
 	assert( ! result.nav.labelIsHeading, `${ label }: the nav label must not be a heading.` );
 	assert( result.nav.listCount === 1, `${ label }: the nav must contain one list.` );
-	assert( result.nav.links.length === 6, `${ label }: the nav must contain six links.` );
-	EXPECTED_NAV_LINKS.forEach( ( expectedLink, index ) => {
+	assert(
+		result.nav.links.length === expectations.navLinks.length,
+		`${ label }: the nav must contain ${ expectations.navLinks.length } links.`
+	);
+	expectations.navLinks.forEach( ( expectedLink, index ) => {
 		const link = result.nav.links[ index ];
 		assert(
 			link.text === expectedLink.text && link.hash === expectedLink.href,
@@ -563,7 +768,7 @@ function verifyContent( result, viewport, expectations ) {
 	// Project cards: order, explicit links, 24px targets, no whole-card
 	// anchor, plain-text titles, redundant status words.
 	assert( result.cards.length === 4, `${ label }: expected four project cards, got ${ result.cards.length }.` );
-	EXPECTED_PROJECTS.forEach( ( project, index ) => {
+	expectations.projects.forEach( ( project, index ) => {
 		const card = result.cards[ index ];
 		assert( card.title === project.title, `${ label }: card ${ index + 1 } is "${ card.title }"; expected "${ project.title }".` );
 		assert( ! card.titleHasAnchor, `${ label }: "${ project.title }" title must stay plain text.` );
@@ -588,7 +793,7 @@ function verifyContent( result, viewport, expectations ) {
 
 	// Foundations DOM order (Skills, then AI Leaders, then Education).
 	assert(
-		( result.foundationsOrder || [] ).join( '|' ) === 'Skills|AI Leaders|Education',
+		( result.foundationsOrder || [] ).join( '|' ) === expectations.foundationsOrder.join( '|' ),
 		`${ label }: Skills and Foundations column order is ${ ( result.foundationsOrder || [] ).join( ', ' ) }.`
 	);
 
@@ -598,7 +803,7 @@ function verifyContent( result, viewport, expectations ) {
 	assert( result.panelCount === 1, `${ label }: expected one closing panel, got ${ result.panelCount }.` );
 	const railLabels = result.rails.map( ( rail ) => rail.links.map( ( link ) => link.text ) );
 	assert(
-		railLabels[ 0 ].join( '|' ) === EXPECTED_HERO.actions.map( ( action ) => action.text ).join( '|' ),
+		railLabels[ 0 ].join( '|' ) === expectations.heroActionLabels.join( '|' ),
 		`${ label }: hero rail order is [${ railLabels[ 0 ].join( ', ' ) }].`
 	);
 	assert(
@@ -615,7 +820,7 @@ function verifyContent( result, viewport, expectations ) {
 	}
 
 	// Portrait and focus indicators.
-	assert( result.portraitAlt === EXPECTED_HERO.portraitAlt, `${ label }: portrait alt reads "${ result.portraitAlt }".` );
+	assert( result.portraitAlt === expectations.portraitAlt, `${ label }: portrait alt reads "${ result.portraitAlt }".` );
 	for ( const focus of result.focus ) {
 		assert(
 			focus.matchesFocusVisible && focus.outlineStyle !== 'none' && focus.outlineWidth >= 2,
@@ -630,6 +835,10 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 		height: viewport.height,
 		deviceScaleFactor: 1,
 		mobile: viewport.mobile,
+	}, sessionId );
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		media: 'screen',
+		features: [ { name: 'prefers-reduced-motion', value: 'reduce' } ],
 	}, sessionId );
 
 	const loaded = cdp.once( 'Page.loadEventFired', sessionId );
@@ -647,7 +856,7 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 
 	const evaluated = await cdp.send( 'Runtime.evaluate', {
 		expression: buildInspectionExpression( {
-			fragments: EXPECTED_NAV_LINKS.map( ( link ) => link.href.slice( 1 ) ),
+			fragments: expectations.fragments,
 			countWords: ! viewport.name.startsWith( 'boundary-' ),
 		} ),
 		awaitPromise: true,
@@ -657,7 +866,7 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 	const result = evaluated.result.value;
 	assert( result.violations.length === 0, `${ viewport.width }px: ${ result.violations.join( '; ' ) }` );
 
-	verifyGeometry( result, viewport );
+	verifyGeometry( result, viewport, expectations );
 	if ( ! viewport.name.startsWith( 'boundary-' ) ) {
 		verifyContent( result, viewport, expectations );
 
@@ -757,13 +966,13 @@ async function verifyCardHoverInertia( cdp, sessionId ) {
 // link, the final hash matches, router-scroll focuses the section with a
 // programmatic-only tabindex, the target clears the sticky header, and the
 // next Tab continues logically from the section.
-async function verifyKeyboardFragments( cdp, sessionId ) {
-	for ( const [ index, link ] of EXPECTED_NAV_LINKS.entries() ) {
+async function verifyKeyboardFragments( cdp, sessionId, navLinks ) {
+	for ( const [ index, link ] of navLinks.entries() ) {
 		const fragment = link.href.slice( 1 );
 
 		await cdp.send( 'Runtime.evaluate', {
 			expression: `(() => {
-				const links = document.querySelectorAll('nav[aria-label="On this page"] a');
+				const links = document.querySelectorAll('.hp-about-nav a');
 				links[${ index }].focus();
 				return document.activeElement === links[${ index }];
 			})()`,
@@ -855,13 +1064,35 @@ async function captureScreenshot( cdp, sessionId, viewport ) {
 }
 
 async function main() {
+	const selectedSource = selectAboutSource( {
+		drafts: ARGV.includes( '--drafts' ),
+		requireLocal: REQUIRE_LOCAL,
+	} );
+	const sourceRelative = path.relative( THEME_ROOT, selectedSource ).replace( /\\/g, '/' );
+	const sourceHtml = fs.readFileSync( selectedSource, 'utf8' );
+
+	// Preserve the pre-redesign accepted-snapshot compatibility gate. Draft
+	// mode never skips: candidate source failures must stay visible in CI.
+	if ( ! ARGV.includes( '--drafts' ) && ! REQUIRE_LOCAL && ! sourceHtml.includes( 'hp-about-nav' ) ) {
+		console.log(
+			`${ sourceRelative } is still the pre-redesign body; the rendered About contract ` +
+			'applies from the promotion onward. Skipping.'
+		);
+		return;
+	}
+
+	const pageCss = fs.readFileSync( path.join( THEME_ROOT, 'assets', 'imladris-pages.css' ), 'utf8' );
+	const expectations = verifySourceContracts( sourceHtml, pageCss, sourceRelative );
+	if ( SOURCE_ONLY ) {
+		return;
+	}
+
 	assert(
 		process.env.HPERKINS_ORIGIN?.trim(),
 		'HPERKINS_ORIGIN must be set explicitly for the rendered About contract.'
 	);
 	const origin = getOrigin();
 
-	let sourceRelative = 'content/page-snapshots/about.html';
 	if ( REQUIRE_LOCAL ) {
 		assert(
 			normalizeSiteUrl( origin ) !== normalizeSiteUrl( PRODUCTION_ORIGIN ),
@@ -869,36 +1100,9 @@ async function main() {
 		);
 		const { runWp } = require( './lib/wp-cli' );
 		assertMatchingSiteUrl( origin, runWp( [ 'option', 'get', 'home' ] ).trim() );
-		// Local acceptance renders the applied candidate.
-		sourceRelative = 'content/page-drafts/about.html';
-	} else {
-		// Deployed mode. This whole contract describes the proof-first body, so
-		// it only applies once that body is the accepted one — the same
-		// phase-derivation verify-prominent-actions.js and
-		// verify-published-content-drift.js use, for the same reason. Asserting
-		// the redesign against a site still serving the previous body would red
-		// the deployed job on every push until an out-of-band promotion, and a
-		// permanently red step hides the regressions the other gates in it are
-		// there to catch. Exporting the promoted snapshot arms this gate.
-		const accepted = fs.readFileSync( path.join( THEME_ROOT, sourceRelative ), 'utf8' );
-		if ( ! accepted.includes( 'hp-about-nav' ) ) {
-			console.log(
-				`${ sourceRelative } is still the pre-redesign body; the rendered About contract ` +
-				'applies from the promotion onward. Skipping.'
-			);
-			return;
-		}
 	}
 
-	const sourceHtml = fs.readFileSync( path.join( THEME_ROOT, sourceRelative ), 'utf8' );
-	const sourceWordCount = countVisibleWords( sourceHtml, { label: sourceRelative } );
-	console.log( `source word count (${ sourceRelative }): ${ sourceWordCount }` );
-
-	const expectations = {
-		fragments: EXPECTED_NAV_LINKS.map( ( link ) => link.href.slice( 1 ) ),
-		closingActionLabels: EXPECTED_CLOSING.actions.map( ( action ) => action.text ),
-		sourceWordCount,
-	};
+	console.log( `source word count (${ sourceRelative }): ${ expectations.sourceWordCount }` );
 
 	const url = new URL( '/about/', origin ).href;
 
@@ -917,7 +1121,7 @@ async function main() {
 				await inspectViewport( cdp, sessionId, url, viewport, expectations );
 				if ( viewport.canonical ) {
 					await verifyCardHoverInertia( cdp, sessionId );
-					await verifyKeyboardFragments( cdp, sessionId );
+					await verifyKeyboardFragments( cdp, sessionId, expectations.navLinks );
 					// Re-navigate so keyboard-era state never leaks forward.
 					const reloaded = cdp.once( 'Page.loadEventFired', sessionId );
 					await cdp.send( 'Page.navigate', { url }, sessionId );
@@ -946,4 +1150,4 @@ if ( require.main === module ) {
 	} );
 }
 
-module.exports = { verifyCardHoverInertia };
+module.exports = { deriveRenderedExpectations, verifyCardHoverInertia };

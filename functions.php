@@ -31,6 +31,7 @@ require_once get_stylesheet_directory() . '/inc/council-header.php';
 require_once get_stylesheet_directory() . '/inc/content-integrity.php';
 require_once get_stylesheet_directory() . '/inc/about-gravatar-heading.php';
 require_once get_stylesheet_directory() . '/inc/component-styles.php';
+require_once get_stylesheet_directory() . '/inc/resume-route.php';
 
 if ( ! function_exists( 'hperkins_tokens_asset_url' ) ) {
 	/**

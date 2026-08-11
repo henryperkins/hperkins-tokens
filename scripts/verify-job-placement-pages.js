@@ -13,17 +13,94 @@ const fsPromises = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
+const { findHeadings, findLinks, extractExactText, parseTopLevelBlocks } = require( './lib/about-page-contract' );
+const { getClassCount } = require( './lib/page-markup-contract' );
+const { assertKnownOptions, selectDigestSource } = require( './lib/page-phase-contract' );
 const { getOrigin } = require( './lib/site-url' );
+const { assertRuleDeclarations } = require( './lib/style-coverage' );
 
 const ROOT = path.join( __dirname, '..' );
+const ARGV = process.argv.slice( 2 );
+assertKnownOptions( ARGV, [ '--source-only', '--drafts' ] );
 const ORIGIN = getOrigin();
-const SOURCE_ONLY = process.argv.includes( '--source-only' );
+const SOURCE_ONLY = ARGV.includes( '--source-only' );
+const DIGEST_SOURCE = selectDigestSource( ARGV );
+
+function read( sourcePath ) {
+	const resolved = path.isAbsolute( sourcePath ) ? sourcePath : path.join( ROOT, sourcePath );
+	return fs.readFileSync( resolved, 'utf8' ).replace( /\r\n/g, '\n' );
+}
+
+function findWpBlocksByClass( html, blockName, className ) {
+	const blocks = [];
+	const pattern = new RegExp(
+		`<!-- wp:${ blockName }(?: ({[^\n]*}))? -->([\\s\\S]*?)<!-- \/wp:${ blockName } -->`,
+		'g'
+	);
+	for ( const match of html.matchAll( pattern ) ) {
+		const attrs = match[ 1 ] ? JSON.parse( match[ 1 ] ) : {};
+		if ( ( attrs.className || '' ).split( /\s+/ ).includes( className ) ) {
+			blocks.push( match[ 2 ] );
+		}
+	}
+	return blocks;
+}
+
+function deriveDigestExpectations( html ) {
+	const headings = findHeadings( html, 'selected Digest body' );
+	const h1 = headings.find( ( heading ) => heading.level === 1 );
+	const actionRails = findWpBlocksByClass( html, 'buttons', 'hp-action-rail' );
+	const primaryRail = findWpBlocksByClass( html, 'buttons', 'hp-digest__primary-actions' )[ 0 ];
+	const eyebrow = /<p\b[^>]*class="[^"]*\bhp-page-hero__eyebrow\b[^"]*"[^>]*>([\s\S]*?)<\/p>/g;
+	const eyebrows = [ ...html.matchAll( eyebrow ) ];
+	const wcusCallout = findWpBlocksByClass( html, 'group', 'hp-wcus-callout' )[ 0 ] || null;
+	const wcusActions = findWpBlocksByClass( html, 'buttons', 'hp-wcus-callout__actions' )[ 0 ] || null;
+	const rootCauseSection = /<section\b[^>]*\bid="root-cause-investigation"[^>]*>([\s\S]*?)<\/section>/i.exec( html );
+	const topLevelBlocks = parseTopLevelBlocks( html );
+	const hasBlockClass = ( block, className ) =>
+		( block.attrs.className || '' ).split( /\s+/ ).includes( className );
+	const heroIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-digest__hero' ) );
+	const whyIndex = topLevelBlocks.findIndex( ( block ) => block.attrs.anchor === 'why-support-engineer-now' );
+
+	assert( h1, 'Selected Digest body has no H1.' );
+	assert( primaryRail, 'Selected Digest body has no primary action rail.' );
+	assert( actionRails.length >= 2, 'Selected Digest body has no closing action rail.' );
+	assert( eyebrows.length > 0, 'Selected Digest body has no closing eyebrow.' );
+	if ( wcusCallout ) {
+		assert(
+			heroIndex !== -1 &&
+				getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-wcus-callout' ) === 1 &&
+				getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-digest__primary-actions' ) === 1,
+			'Selected Digest body must contain .hp-wcus-callout and its recruiter actions inside .hp-digest__hero.'
+		);
+		assert( whyIndex === heroIndex + 1, 'Why Support Engineer now must immediately follow the Digest hero.' );
+		assert( wcusActions, 'Selected Digest WCUS callout has no .hp-wcus-callout__actions.' );
+		assert( rootCauseSection, 'Selected Digest WCUS body has no #root-cause-investigation section.' );
+	}
+
+	const proofLabels = rootCauseSection
+		? [ ...rootCauseSection[ 1 ].matchAll( /<div\b[^>]*\bhp-debug-proof__item\b[^>]*>[\s\S]*?<dt\b[^>]*>[\s\S]*?<p\b[^>]*>([^<]+)<\/p>[\s\S]*?<\/dt>/gi ) ]
+			.map( ( match ) => match[ 1 ].trim() )
+		: [];
+
+	return {
+		h1: h1.text,
+		primaryActions: findLinks( primaryRail, 'selected Digest primary actions' ),
+		closingActions: findLinks( actionRails.at( -1 ), 'selected Digest closing actions' ),
+		closingEyebrow: extractExactText( eyebrows.at( -1 )[ 1 ], { label: 'selected Digest closing eyebrow' } ),
+		closingHeading: headings.filter( ( heading ) => heading.level === 2 ).at( -1 ).text,
+		wcusActions: wcusActions ? findLinks( wcusActions, 'selected Digest WCUS actions' ) : [],
+		proofLabels,
+	};
+}
+
+const DIGEST_EXPECTATIONS = deriveDigestExpectations( read( DIGEST_SOURCE ) );
 
 const PAGES = [
 	{
 		name: 'digest',
 		route: '/job-placement-digest/',
-		h1: 'I debug WordPress systems, document root causes, and turn recurring failures into constraints.',
+		h1: DIGEST_EXPECTATIONS.h1,
 	},
 	{
 		name: 'appendix',
@@ -35,38 +112,17 @@ const PAGES = [
 const VIEWPORTS = [
 	{ name: 'desktop-1440', width: 1440, height: 1000 },
 	{ name: 'desktop-1024', width: 1024, height: 1000 },
+	{ name: 'compact-upper-1023', width: 1023, height: 1000 },
+	{ name: 'small-laptop-782', width: 782, height: 1000 },
 	{ name: 'tablet-768', width: 768, height: 1000 },
 	{ name: 'mobile-390', width: 390, height: 1000 },
 	{ name: 'mobile-320', width: 320, height: 1000 },
-];
-
-const PRIMARY_ACTIONS = [
-	{
-		text: 'View one-page résumé',
-		href: '/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf',
-	},
-	{ text: 'Review GitHub evidence', href: '#evidence-register' },
-	{ text: 'Read the root-cause investigation', href: '#root-cause-investigation' },
-	{ text: 'Contact Henry', href: '/contact/' },
-];
-
-const CLOSING_ACTIONS = [
-	{ text: 'Contact Henry', href: '/contact/' },
-	{
-		text: 'View one-page résumé',
-		href: '/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf',
-	},
-	{ text: 'Review GitHub evidence', href: '#evidence-register' },
 ];
 
 function assert( condition, message ) {
 	if ( ! condition ) {
 		throw new Error( message );
 	}
-}
-
-function read( relativePath ) {
-	return fs.readFileSync( path.join( ROOT, relativePath ), 'utf8' ).replace( /\r\n/g, '\n' );
 }
 
 function verifySourceContracts() {
@@ -100,6 +156,7 @@ function verifySourceContracts() {
 
 	for ( const expected of [
 		'.hp-digest__primary-actions.hp-action-rail {',
+		'.hp-digest__primary-actions.hp-action-rail:not(.hp-wcus-callout__actions) {',
 		'grid-template-columns: repeat(4, minmax(0, 1fr));',
 		'.hp-evidence-table table {',
 		'min-inline-size: 50rem;',
@@ -107,6 +164,100 @@ function verifySourceContracts() {
 		'min-inline-size: 48rem;',
 	] ) {
 		assert( pageCss.includes( expected ), `assets/imladris-pages.css is missing recruiter-page contract: ${ expected }` );
+	}
+	for ( const contract of [
+		{
+			selector: '.hp-wcus-callout',
+			declarations: {
+				'margin-block-start': 'var(--wp--preset--spacing--6)',
+				padding: 'var(--wp--preset--spacing--6)',
+				'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
+				background: 'color-mix(in srgb, var(--wp--preset--color--parchment-100) 88%, var(--wp--preset--color--gold-100))',
+			},
+		},
+		{ selector: '.hp-wcus-callout__actions', declarations: { 'grid-template-columns': 'repeat(3, minmax(0, 1fr))' } },
+		{
+			selector: '.hp-debug-proof__grid',
+			declarations: {
+				display: 'grid',
+				'grid-template-columns': 'repeat(2, minmax(0, 1fr))',
+				gap: 'var(--wp--preset--spacing--4)',
+				margin: 'var(--wp--preset--spacing--5) 0 0',
+			},
+		},
+		{
+			selector: '.hp-debug-proof__item',
+			declarations: {
+				'min-inline-size': '0',
+				'padding-block-start': 'var(--wp--preset--spacing--3)',
+				'border-block-start': '2px solid var(--wp--preset--color--river-500)',
+			},
+		},
+		{ selector: '.hp-debug-proof__grid > .hp-debug-proof__item', declarations: { 'margin-block': '0' } },
+		{
+			selector: '.hp-debug-proof__item dt',
+			declarations: {
+				color: 'var(--wp--preset--color--green-700)',
+				'font-family': 'var(--wp--preset--font-family--mono)',
+				'font-size': 'var(--wp--preset--font-size--xs)',
+				'font-weight': '700',
+				'letter-spacing': '0.06em',
+				'text-transform': 'uppercase',
+			},
+		},
+		{ selector: '.hp-debug-proof__item dd', declarations: { margin: 'var(--wp--preset--spacing--2) 0 0', 'overflow-wrap': 'anywhere' } },
+		{ selector: '.hp-debug-proof__item :is(dt, dd) > p', declarations: { margin: '0' } },
+		{ selector: '.hp-wcus-callout__actions', atContext: '@media (max-width: 781px)', declarations: { 'grid-template-columns': 'minmax(0, 1fr)' } },
+		{ selector: '.hp-debug-proof__grid', atContext: '@media (max-width: 781px)', declarations: { 'grid-template-columns': 'minmax(0, 1fr)' } },
+		{
+			selector: '.hp-digest-template',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
+			declarations: { 'padding-block-start': 'var(--wp--preset--spacing--5) !important' },
+		},
+		{
+			selector: '.hp-digest__hero h1',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
+			declarations: {
+				'max-inline-size': 'none',
+				'font-size': 'var(--wp--preset--font-size--3-xl)',
+			},
+		},
+		{
+			selector: '.hp-category-bar',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
+			declarations: { 'margin-block': 'var(--wp--preset--spacing--3)' },
+		},
+		{
+			selector: '.hp-wcus-callout',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
+			declarations: {
+				'margin-block-start': 'var(--wp--preset--spacing--5)',
+				padding: 'var(--wp--preset--spacing--5)',
+				'padding-block-start': 'var(--wp--preset--spacing--4)',
+			},
+		},
+		{
+			selector: '.hp-wcus-callout > h2',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
+			declarations: {
+				'font-size': 'var(--wp--preset--font-size--2-xl)',
+				'margin-block-start': 'var(--wp--preset--spacing--4)',
+			},
+		},
+		{
+			selector: '.hp-wcus-callout > p:not(.hp-page-hero__eyebrow)',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
+			declarations: { 'margin-block-start': 'var(--wp--preset--spacing--4)' },
+		},
+	] ) {
+		assertRuleDeclarations( pageCss, contract );
+	}
+	if ( DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
+		assert( DIGEST_EXPECTATIONS.wcusActions.length === 3, 'Selected Digest WCUS callout must expose exactly three ordered actions.' );
+		assert(
+			DIGEST_EXPECTATIONS.proofLabels.join( '|' ) === 'Signal|Diagnosis|Constraint|Result',
+			`Selected Digest proof order is ${ DIGEST_EXPECTATIONS.proofLabels.join( ', ' ) }; expected Signal, Diagnosis, Constraint, Result.`
+		);
 	}
 
 	verifyStackedLedgerLabels( pageCss );
@@ -147,7 +298,7 @@ function ledgerHeaders( html, className ) {
  */
 function verifyStackedLedgerLabels( pageCss ) {
 	const appendix = read( 'content/page-snapshots/placement-method-evidence.html' );
-	const digest = read( 'content/page-snapshots/job-placement-digest.html' );
+	const digest = read( DIGEST_SOURCE );
 
 	const keyword = ledgerHeaders( appendix, 'hp-keyword-table' );
 	const state = ledgerHeaders( appendix, 'hp-state-table' );
@@ -401,7 +552,7 @@ function assertPageMetrics( result, page, viewport ) {
 
 	if ( page.name === 'digest' ) {
 		assert( result.primaryActions, `${ context } is missing the first-screen action rail.` );
-		assertActions( result.primaryActions.actions, PRIMARY_ACTIONS, `${ context } first-screen rail` );
+		assertActions( result.primaryActions.actions, DIGEST_EXPECTATIONS.primaryActions, `${ context } first-screen rail` );
 		assert( result.primaryActions.inHero, `${ context } first-screen action rail is outside the recruiter hero.` );
 		assert( result.primaryActions.top >= -1, `${ context } first-screen rail begins above the viewport.` );
 		// Phone height is intentionally not part of the requested matrix (the
@@ -415,9 +566,52 @@ function assertPageMetrics( result, page, viewport ) {
 			);
 		}
 		assert( result.closing, `${ context } is missing the composed closing panel.` );
-		assert( result.closing.eyebrow === 'A next step, stated plainly.', `${ context } has the wrong closing eyebrow.` );
-		assert( result.closing.heading === 'Bring me the problem behind the ticket.', `${ context } has the wrong closing heading.` );
-		assertActions( result.closing.actions, CLOSING_ACTIONS, `${ context } closing panel` );
+		assert( result.closing.eyebrow === DIGEST_EXPECTATIONS.closingEyebrow, `${ context } has the wrong closing eyebrow.` );
+		assert( result.closing.heading === DIGEST_EXPECTATIONS.closingHeading, `${ context } has the wrong closing heading.` );
+		assertActions( result.closing.actions, DIGEST_EXPECTATIONS.closingActions, `${ context } closing panel` );
+		if ( DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
+			assert( result.wcus, `${ context } is missing the hero-contained .hp-wcus-callout.` );
+			assertActions( result.wcus.actions, DIGEST_EXPECTATIONS.wcusActions, `${ context } WCUS callout` );
+			assert( result.wcus.actions.every( ( action ) => action.textContained ), `${ context } clips a WCUS action label.` );
+			if ( viewport.width >= 782 ) {
+				assert(
+					result.wcus.actions.every( ( action ) => Math.abs( action.top - result.wcus.actions[ 0 ].top ) <= 2 ) &&
+						result.wcus.actions.every( ( action, index ) => index === 0 || action.left > result.wcus.actions[ index - 1 ].left ),
+					`${ context } does not keep the three WCUS actions in ordered columns.`
+				);
+			} else {
+				for ( let index = 0; index < result.wcus.actions.length; index++ ) {
+					const action = result.wcus.actions[ index ];
+					assert( action.width >= result.wcus.width - 12, `${ context } WCUS action ${ index + 1 } does not fill its stacked row.` );
+					if ( index > 0 ) {
+						assert( action.top >= result.wcus.actions[ index - 1 ].bottom - 1, `${ context } WCUS action ${ index + 1 } does not stack below action ${ index }.` );
+					}
+				}
+			}
+			assert( result.proofItems.length === 4, `${ context } renders ${ result.proofItems.length } root-cause proof items; expected 4.` );
+			assert(
+				result.proofItems.map( ( item ) => item.label ).join( '|' ) === DIGEST_EXPECTATIONS.proofLabels.join( '|' ),
+				`${ context } changes the Signal → Diagnosis → Constraint → Result proof order.`
+			);
+			if ( viewport.width < 782 ) {
+				for ( let index = 1; index < result.proofItems.length; index++ ) {
+					assert(
+						result.proofItems[ index ].top >= result.proofItems[ index - 1 ].bottom - 1,
+						`${ context } does not stack proof item ${ index + 1 } below item ${ index }.`
+					);
+				}
+			}
+			assert( result.rootCauseFragment, `${ context } did not exercise #root-cause-investigation.` );
+			assert( result.rootCauseFragment.hash === '#root-cause-investigation', `${ context } did not retain the root-cause fragment hash.` );
+			assert( result.rootCauseFragment.focused, `${ context } did not focus the root-cause proof section.` );
+			assert( result.rootCauseFragment.tabindex === '-1', `${ context } did not keep fragment focus programmatic-only.` );
+			assert(
+				result.rootCauseFragment.targetTop >= result.rootCauseFragment.headerBottom - 1 &&
+					result.rootCauseFragment.targetTop < viewport.height,
+				`${ context } did not scroll the root-cause proof section clear of the sticky header.`
+			);
+			assert( result.rootCauseFragment.headingOutlineUnchanged, `${ context } changed the heading outline during fragment focus.` );
+		}
 	} else {
 		assert( result.fragment, `${ context } is missing #resume-keyword-bank.` );
 		assert( result.fragment.tagName === 'SECTION', `${ context } assigns #resume-keyword-bank to ${ result.fragment.tagName}, not SECTION.` );
@@ -576,15 +770,36 @@ async function inspectPage( cdp, page, viewport ) {
 				}
 			}
 
-			const actions = (root) => root ? Array.from(root.querySelectorAll('.wp-block-button__link')).map((link) => ({
-				text: link.textContent.trim().replace(/\\s+/g, ' '),
-				href: link.getAttribute('href'),
-				height: round(link.getBoundingClientRect().height),
-			})) : [];
+			const actions = (root) => root ? Array.from(root.querySelectorAll('.wp-block-button__link')).map((link) => {
+				const bounds = link.getBoundingClientRect();
+				const range = document.createRange();
+				range.selectNodeContents(link);
+				return {
+					text: link.textContent.trim().replace(/\\s+/g, ' '),
+					href: link.getAttribute('href'),
+					height: round(bounds.height),
+					width: round(bounds.width),
+					left: round(bounds.left),
+					top: round(bounds.top),
+					bottom: round(bounds.bottom),
+					textContained: Array.from(range.getClientRects()).every((rect) => rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1 && rect.top >= bounds.top - 1 && rect.bottom <= bounds.bottom + 1),
+				};
+			}) : [];
 			const primaryRail = document.querySelector('.hp-digest__primary-actions');
 			const primaryRect = primaryRail?.getBoundingClientRect();
 			const closing = document.querySelector('.hp-digest-cta');
 			const anchor = document.getElementById('resume-keyword-bank');
+			const hero = document.querySelector('.hp-digest__hero');
+			const wcus = hero?.querySelector(':scope > .hp-wcus-callout');
+			const wcusActionsRoot = wcus?.querySelector('.hp-wcus-callout__actions');
+			const proofItems = Array.from(document.querySelectorAll('#root-cause-investigation .hp-debug-proof__item')).map((item) => {
+				const bounds = item.getBoundingClientRect();
+				return {
+					label: item.querySelector('dt')?.textContent.trim() || '',
+					top: round(bounds.top),
+					bottom: round(bounds.bottom),
+				};
+			});
 
 			return {
 				url: location.href,
@@ -606,6 +821,8 @@ async function inspectPage( cdp, page, viewport ) {
 					heading: closing.querySelector('h2')?.textContent.trim() || null,
 					actions: actions(closing),
 				} : null,
+				wcus: wcusActionsRoot ? { width: round(wcusActionsRoot.getBoundingClientRect().width), actions: actions(wcusActionsRoot) } : null,
+				proofItems,
 				fragment: anchor ? {
 					tagName: anchor.tagName,
 					visible: isVisible(anchor) && !!anchor.querySelector('h2') && !!anchor.querySelector('details'),
@@ -628,6 +845,24 @@ async function inspectPage( cdp, page, viewport ) {
 					`document.querySelector(':target') === document.getElementById('resume-keyword-bank')`
 				);
 			}
+		}
+		if ( page.name === 'digest' && DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
+			const initialOutline = await evaluate( cdp, sessionId, `Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')` );
+			await evaluate( cdp, sessionId, `location.hash = 'root-cause-investigation'` );
+			await wait( 100 );
+			metrics.rootCauseFragment = await evaluate( cdp, sessionId, `(() => {
+				const target = document.getElementById('root-cause-investigation');
+				const header = document.querySelector('header.wp-block-template-part');
+				return {
+					hash: location.hash,
+					focused: document.activeElement === target,
+					tabindex: target?.getAttribute('tabindex') || null,
+					targetTop: target?.getBoundingClientRect().top ?? null,
+					headerBottom: header?.getBoundingClientRect().bottom ?? 0,
+				};
+			})()` );
+			const finalOutline = await evaluate( cdp, sessionId, `Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')` );
+			metrics.rootCauseFragment.headingOutlineUnchanged = initialOutline === finalOutline;
 		}
 
 		await cdp.send( 'Emulation.setEmulatedMedia', {

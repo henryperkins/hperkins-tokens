@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.57
+Stable tag: 0.3.58
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -235,10 +235,11 @@ and verify with `node scripts/verify-content-ownership.js`. The older
 filesystem patterns `work-index` and `ai-enablement` remain reusable
 seeds/reference copies rather than the live route owners for those pages.
 `about-resume` is different: it is a thin inserter adapter that reads the
-accepted `content/page-snapshots/about.html`, substitutes the
-filemtime()-derived portrait and résumé asset URLs, and fails closed on any
-mismatch — it carries no About page markup of its own, so the About body
-cannot acquire a third maintained copy. The About redesign flow keeps exactly
+accepted `content/page-snapshots/about.html`, substitutes exactly one
+filemtime()-derived portrait URL, and fails closed on any mismatch — it carries
+no About page markup of its own, so the About body cannot acquire a third
+maintained copy. Résumé links stay on the stable `/one-page-resume/` route;
+the adapter does not rewrite them. The About redesign flow keeps exactly
 one human-authored candidate at `content/page-drafts/about.html`; it reaches a
 local database only through the explicit, guarded
 `node scripts/apply-local-page-drafts.js --confirm-local --page=about`
@@ -248,6 +249,48 @@ parity-checked `node scripts/export-page-snapshots.js --page=about
 deployment-integrity endpoint alongside the two recruiter pages. The former
 full-page `job-placement-digest` pattern is retired so it cannot drift into a
 third maintained body. `wapuu-home-hero` remains the live front-page hero.
+
+= WCUS portfolio route, adapter, and publication phases =
+
+`/one-page-resume/` is the stable visible-link destination. The final PDF remains a theme-owned artifact verified directly. `about-resume` substitutes only the portrait URL. Digest and About database bodies remain canonical; drafts are candidates and snapshots are accepted mirrors. Production page/footer writes are separate from a theme deploy.
+
+The adapter never rewrites résumé links; visible résumé actions stay on the
+stable route.
+
+Run the route, candidate, local-render, and artifact contracts with these exact
+commands:
+
+```powershell
+node scripts/verify-resume-route.js --source-only
+node scripts/verify-resume-route.js
+node scripts/verify-job-placement-pages.js --source-only --drafts
+node scripts/verify-prominent-actions.js --source-only --drafts
+node scripts/verify-about-page-source.js --drafts
+node scripts/verify-about-page-rendered.js --require-local --drafts
+node scripts/verify-placement-artifacts.js --check-links
+```
+
+For the Task 9 local browser pass, the HTTP-capable modes must be selected
+explicitly and refuse any origin except localhost or an IP loopback:
+
+```powershell
+node scripts/verify-typography.js --require-local
+node scripts/verify-resume-route.js --require-local
+```
+
+The typography local mode quarantines only filesystem-like local fixture
+permalinks and still fails unless it can audit a valid same-origin single-post
+route. The public/default modes remain unquarantined, and the resume-route
+default remains HTTPS-only.
+
+The source-only and `--drafts` checks validate unpublished candidates. The
+unflagged résumé-route check proves the public redirect and final PDF response;
+the artifact link check continues to inspect the PDF directly. None of these
+checks promotes a candidate. Accepted snapshots are not changed before
+publication: first explicitly approve and publish the database bodies, then
+freshly read them back, prove exact equality, and promote the snapshots as
+accepted mirrors. Deploying theme files does not write the production Digest,
+About, or database-owned footer body.
 
 = Condensed Council header =
 
@@ -337,6 +380,20 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.58 =
+* Added the stable semantic `/one-page-resume/` route and its guarded source,
+  redirect-chain, GET, and HEAD verification. Refreshed the one-page WordPress
+  support résumé DOCX/PDF pair while preserving text, link-order, page-count,
+  tagging, searchability, and accessibility contracts.
+* Prepared page-scoped WordCamp US candidates and presentation for the Job
+  Placement Digest and About page, including the compact in-page root-cause
+  proof and current event and Core AI booth context. These bodies remain
+  reviewed candidates until separately authorized production publication.
+* Added phase-aware local, candidate, accepted-snapshot, and public verification,
+  plus explicit page-scoped local application and guarded content-ownership
+  workflows. No production page, footer, snapshot, or deployment is claimed by
+  this source release entry.
 
 = 0.3.57 =
 * Split component CSS out of style.css into conditionally loaded bundles under

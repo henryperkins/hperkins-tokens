@@ -10,17 +10,22 @@
  * Intl.Segmenter algorithm the rendered verifier injects into Chrome.
  */
 
-const RESUME_HREF =
-	'/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf';
+const RESUME_HREF = '/one-page-resume/';
+
+const EXPECTED_WCUS_STATUS = {
+	label: 'WordCamp US 2026 · Phoenix · Aug 16–19',
+	copy: 'I’ll be there, and I’ve been selected to staff the Core AI booth.',
+	action: { text: 'Start a conversation', href: '/contact/' },
+};
 
 const ABOUT_WORD_RANGE = { min: 850, max: 950 };
 
 // Maximum visible words per content area (the spec's editorial budget).
 const ABOUT_SECTION_WORD_CAPS = {
-	hero: 45,
+	hero: 70,
 	signalsAndNav: 50,
 	selectedWork: 225,
-	coreAi: 150,
+	coreAi: 210,
 	capabilities: 120,
 	experience: 190,
 	skillsAndFoundations: 110,
@@ -99,13 +104,13 @@ const EXPECTED_PROJECTS = [
 		],
 	},
 	{
-		title: 'Tableu',
+		title: 'Tableau',
 		status: 'Deployed · live application',
 		impact: 'Delivers multiple tarot spreads and LLM-generated reading narratives through a React interface backed by Cloudflare Workers, D1, KV, and R2 services in a live application.',
 		tags: [ 'React', 'Cloudflare Workers', 'D1 / KV / R2', 'LLM' ],
 		actions: [
-			{ text: 'Open Tableu live application', href: 'https://tarot.lakefrontdev.com/' },
-			{ text: 'View Tableu source', href: 'https://github.com/henryperkins/tarot' },
+			{ text: 'Open Tableau live application', href: 'https://tarot.lakefrontdev.com/' },
+			{ text: 'View Tableau source', href: 'https://github.com/henryperkins/tarot' },
 		],
 	},
 ];
@@ -117,25 +122,39 @@ const EXPECTED_EVIDENCE = {
 	rows: [
 		{
 			classes: [ 'is-status-merged', 'is-kind-docs' ],
-			label: 'WordPress/ai PR #501 · merged May 18, 2026',
-			links: [ { text: 'Experiment documentation credited in AI Plugin 1.0.0', href: 'https://github.com/WordPress/ai/pull/501' } ],
-			meta: 'Authored Content Resizing and Title Generation experiment docs; the 1.0.0 release notes list PR #501 under Various documentation updates.',
+			label: 'WordPress/ai PR #501 · authored and merged',
+			links: [ { text: 'Experiment documentation merged upstream', href: 'https://github.com/WordPress/ai/pull/501' } ],
+			meta: 'Authored the Content Resizing and Title Generation experiment documentation; merged May 18, 2026.',
 		},
 		{
 			classes: [ 'is-status-merged', 'is-kind-issue' ],
-			label: 'WordPress/ai issue #529 · fixed in 1.0.1',
-			links: [ { text: 'Guidelines content-type defect reported and fixed upstream', href: 'https://github.com/WordPress/ai/issues/529' } ],
-			meta: 'Reported the defect; a maintainer fixed it in PR #593, and AI Plugin 1.0.1 records the change.',
+			label: 'WordPress/ai issue #529 · report fixed by a maintainer',
+			links: [
+				{ text: 'Issue #529', href: 'https://github.com/WordPress/ai/issues/529' },
+				{ text: 'Maintainer PR #593', href: 'https://github.com/WordPress/ai/pull/593' },
+				{ text: 'WordPress AI 1.0.1', href: 'https://github.com/WordPress/ai/releases/tag/1.0.1' },
+			],
+			meta: 'Reported and reproduced the Guidelines content-type defect; a maintainer fixed it and WordPress AI 1.0.1 shipped it.',
+		},
+		{
+			classes: [ 'is-status-review', 'is-kind-source' ],
+			label: 'Open upstream code · PRs #263 and #40',
+			links: [
+				{ text: 'php-ai-client issue #262', href: 'https://github.com/WordPress/php-ai-client/issues/262' },
+				{ text: 'php-ai-client PR #263', href: 'https://github.com/WordPress/php-ai-client/pull/263' },
+				{ text: 'ai-provider-for-openai PR #40', href: 'https://github.com/WordPress/ai-provider-for-openai/pull/40' },
+			],
+			meta: 'Authored finite-vector validation and regression coverage in #263, and model-aware sampling compatibility with tests in #40; both remain open upstream.',
 		},
 		{
 			classes: [ 'is-status-review', 'is-kind-review' ],
-			label: 'Current state · request logging and agent skills',
+			label: 'WordPress/ai issue #732 · report, integration test, technical feedback',
 			links: [
 				{ text: 'Issue #732', href: 'https://github.com/WordPress/ai/issues/732' },
-				{ text: 'PR #757', href: 'https://github.com/WordPress/ai/pull/757' },
-				{ text: 'agent-skills PR #49', href: 'https://github.com/WordPress/agent-skills/pull/49' },
+				{ text: 'PR #757 test result', href: 'https://github.com/WordPress/ai/pull/757#issuecomment-4980297831' },
+				{ text: 'Ownership proposal', href: 'https://github.com/WordPress/ai/pull/757#issuecomment-4981567682' },
 			],
-			meta: 'Filed the sidecar/custom-transport request-logging issue; PR #757 remains open and unmerged. Authored WordPress 7.0+ AI Client, Connectors, AI Plugin, Abilities, and MCP guidance in PR #49; it closed without merge on July 18, 2026.',
+			meta: 'Authored the report and reproduction. Anubhav Anand authored PR #757; Henry integration-tested it and supplied non-formal technical feedback.',
 		},
 	],
 };
@@ -251,7 +270,7 @@ const EXPECTED_HEADINGS = [
 	{ level: 3, text: 'Flavor Agent', section: 'selected-work' },
 	{ level: 3, text: 'AI Provider for Codex', section: 'selected-work' },
 	{ level: 3, text: 'DJ Lee & Voices of Judah', section: 'selected-work' },
-	{ level: 3, text: 'Tableu', section: 'selected-work' },
+	{ level: 3, text: 'Tableau', section: 'selected-work' },
 	{ level: 2, text: 'Core AI Contributions', section: 'core-ai-contributions' },
 	{ level: 2, text: EXPECTED_CAPABILITIES.title, section: 'capabilities' },
 	{ level: 3, text: 'AI implementation and governed workflows', section: 'capabilities' },
@@ -469,6 +488,15 @@ function countRenderedText( text ) {
 const BLOCK_DELIMITER =
 	/<!--\s*(\/)?wp:([a-z][a-z0-9_/-]*)\s*(\{[\s\S]*?\})?\s*(\/)?-->/g;
 
+function assertNoCoreHtmlBlocks( html, label = 'About body' ) {
+	for ( const match of html.matchAll( BLOCK_DELIMITER ) ) {
+		const [ , closing, name ] = match;
+		if ( ! closing && name === 'html' ) {
+			throw new Error( `${ label } must not contain core/html blocks, including nested blocks.` );
+		}
+	}
+}
+
 function parseTopLevelBlocks( html ) {
 	const blocks = [];
 	let open = null;
@@ -658,6 +686,7 @@ function findSectionBlock( blocks, anchor ) {
  */
 function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	assertNoForbiddenMarkup( html, label );
+	assertNoCoreHtmlBlocks( html, label );
 
 	const blocks = parseTopLevelBlocks( html );
 
@@ -666,13 +695,14 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	const expectedShape = [
 		'hp-about-hero',
 		'hp-signal-strip hp-about-impact',
-		'html',
+		'hp-about-nav',
 		'selected-work',
 		'core-ai-contributions',
 		'capabilities',
 		'selected-experience',
 		'skills-and-foundations',
 		'contact',
+		'paragraph',
 	];
 	assert(
 		shape.length === expectedShape.length && expectedShape.every( ( entry, index ) => shape[ index ] === entry ),
@@ -716,6 +746,26 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 		assertExact( heroActions[ index ].href, expected.href, `Hero action ${ index + 1 } destination` );
 	} );
 
+	const heroCopy = findBalancedByClass( hero.outer, 'hp-about-hero__copy', label );
+	assert( heroCopy.length === 1, 'Hero must contain exactly one copy group.' );
+	const wcusGroups = findBalancedByClass( heroCopy[ 0 ].inner, 'hp-about-wcus', label );
+	assert( wcusGroups.length === 1, 'Hero copy must contain exactly one WordCamp US status group.' );
+	assert( ! wcusGroups[ 0 ].inner.includes( 'hp-action-rail' ), 'The WordCamp US action must stay outside hp-action-rail.' );
+	const wcusLabel = findByClass( wcusGroups[ 0 ].inner, 'hp-about-wcus__label', label );
+	assert( wcusLabel.length === 1, 'WordCamp US status must contain one label.' );
+	assertExact( wcusLabel[ 0 ].text, EXPECTED_WCUS_STATUS.label, 'WordCamp US event label' );
+	const wcusCopy = findByClass( wcusGroups[ 0 ].inner, 'hp-about-wcus__copy', label );
+	assert( wcusCopy.length === 1, 'WordCamp US status must contain one copy paragraph.' );
+	assertExact( wcusCopy[ 0 ].text, EXPECTED_WCUS_STATUS.copy, 'WordCamp US event copy' );
+	const wcusActions = findLinks( wcusGroups[ 0 ].inner, label );
+	assert( wcusActions.length === 1, 'WordCamp US status must contain exactly one action.' );
+	assertExact( wcusActions[ 0 ].text, EXPECTED_WCUS_STATUS.action.text, 'WordCamp US event action label' );
+	assertExact( wcusActions[ 0 ].href, EXPECTED_WCUS_STATUS.action.href, 'WordCamp US event action destination' );
+	assert(
+		heroCopy[ 0 ].inner.indexOf( 'hp-about-wcus' ) > heroCopy[ 0 ].inner.indexOf( 'hp-about-hero__cta' ),
+		'WordCamp US status must follow the hero action rail.'
+	);
+
 	const portrait = /<img\b[^>]*alt="([^"]*)"[^>]*>/.exec( hero.outer );
 	assert( portrait, 'Hero must retain the portrait image.' );
 	assertExact( portrait[ 1 ], EXPECTED_HERO.portraitAlt, 'Portrait alternative text' );
@@ -733,9 +783,13 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	} );
 
 	// --- on-this-page navigation --------------------------------------------
-	assert( navBlock.name === 'html', 'The page navigation must be one core Custom HTML block.' );
-	const htmlBlocks = blocks.filter( ( block ) => block.name === 'html' );
-	assert( htmlBlocks.length === 1, `${ label } must contain exactly one core/html block.` );
+	assert( navBlock.name === 'group', 'The page navigation must be one native core Group block.' );
+	assertExact( navBlock.attrs.tagName, 'nav', 'Navigation Group tag name' );
+	assertExact( navBlock.attrs.ariaLabel, 'On this page', 'Navigation Group aria label' );
+	assert(
+		( navBlock.attrs.className || '' ).split( /\s+/ ).includes( 'hp-about-nav' ),
+		'The navigation Group must retain the hp-about-nav contract class.'
+	);
 	const navRoots = [ ...navBlock.outer.matchAll( /<nav\b[^>]*>/g ) ];
 	assert( navRoots.length === 1, 'The navigation block must contain exactly one nav root.' );
 	assert(
@@ -750,6 +804,14 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	assert( ! /<h[1-6]\b/.test( navBlock.outer ), 'The nav label must not be a heading.' );
 	const navLists = [ ...navBlock.outer.matchAll( /<ul\b[^>]*>/g ) ];
 	assert( navLists.length === 1, 'The nav must contain exactly one list.' );
+	assert(
+		/<!-- wp:list \{"className":"hp-about-nav__list"\} -->/.test( navBlock.outer ),
+		'The nav links must be serialized in one native core List block.'
+	);
+	assert(
+		[ ...navBlock.outer.matchAll( /<!-- wp:list-item -->/g ) ].length === 6,
+		'The nav must contain exactly six native List Item blocks.'
+	);
 	const navLinks = findLinks( navInner[ 1 ], label );
 	assert( navLinks.length === 6, `The nav must contain exactly six links, got ${ navLinks.length }.` );
 	EXPECTED_NAV_LINKS.forEach( ( expected, index ) => {
@@ -847,7 +909,7 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	assertExact( summary[ 0 ].text, EXPECTED_EVIDENCE.summary, 'EvidenceBoard summary' );
 
 	const rowBlocks = [ ...coreAi.outer.matchAll( /<!-- wp:group \{"className":"hp-evidence-row ([^"]*)"[\s\S]*?-->([\s\S]*?<!-- \/wp:group -->)/g ) ];
-	assert( rowBlocks.length === 3, `Core AI Contributions must keep exactly three evidence rows, got ${ rowBlocks.length }.` );
+	assert( rowBlocks.length === 4, `Core AI Contributions must keep exactly four evidence rows, got ${ rowBlocks.length }.` );
 	EXPECTED_EVIDENCE.rows.forEach( ( expected, index ) => {
 		const [ , classes, rowHtml ] = rowBlocks[ index ];
 		assert(
@@ -932,9 +994,14 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 
 	// --- skills and foundations --------------------------------------------------
 	const foundations = findSectionBlock( blocks, 'skills-and-foundations' );
-	const columnSplit = foundations.outer.split( /<!-- wp:column -->/ );
-	assert( columnSplit.length === 3, 'Skills and Foundations must contain exactly two columns.' );
-	const [ , firstColumn, secondColumn ] = columnSplit;
+	const foundationGrids = findBalancedByClass( foundations.outer, 'hp-about-foundations-grid', label );
+	assert( foundationGrids.length === 1, 'Skills and Foundations must contain exactly one Columns grid.' );
+	const foundationColumns = parseTopLevelBlocks( foundationGrids[ 0 ].inner );
+	assert(
+		foundationColumns.length === 2 && foundationColumns.every( ( column ) => column.name === 'column' ),
+		`Skills and Foundations must contain exactly two direct native Columns, got ${ foundationColumns.map( ( column ) => column.name ).join( ', ' ) || 'none' }.`
+	);
+	const [ firstColumn, secondColumn ] = foundationColumns.map( ( column ) => column.outer );
 
 	const firstColumnHeadings = findHeadings( firstColumn, label );
 	assert(
@@ -1006,6 +1073,7 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 		assertExact( closingActions[ index ].text, expected.text, `Closing action ${ index + 1 } label` );
 		assertExact( closingActions[ index ].href, expected.href, `Closing action ${ index + 1 } destination` );
 	} );
+	assert( findBalancedByClass( html, 'hp-action-rail', label ).length === 2, 'About body must contain exactly two prominent-action rails.' );
 
 	// --- heading inventory (complete, ordered, one H1, correct ancestry) -------
 	const allHeadings = findHeadings( html, label );
@@ -1078,25 +1146,18 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 
 /**
  * The thin pattern-adapter contract: patterns/about-resume.php reads the
- * accepted snapshot, substitutes only the two known asset URLs, fails closed,
+ * accepted snapshot, substitutes only the known portrait URL, fails closed,
  * and carries no page markup of its own.
  */
 function verifyPatternAdapter( source ) {
 	for ( const required of [
 		"get_theme_file_path( 'content/page-snapshots/about.html' )",
-		// The substitution expectation is counted off the snapshot the adapter
-		// actually read, not inferred from a marker class — a rename or a
-		// different action count must not silently register an empty pattern.
-		'$hperkins_about_resume_found   = preg_match_all(',
-		'$hperkins_about_resume_found < 1',
-		'$hperkins_about_resume_found !== $hperkins_about_resume_count',
-		// Both matchers tolerate an absolute host and an existing ?v=, so the
-		// adapter's own output survives a round trip through the database.
+		// The portrait matcher tolerates an absolute host and an existing ?v=,
+		// so the adapter's output survives a database round trip.
 		'(?:https?://[^"/]+)?',
 		'(?:\\?v=\\d+)?',
 		'/wp-content/uploads/2026/06/henry-perkins.png',
-		'assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf',
-		'hperkins_tokens_asset_url',
+		'1 !== $hperkins_about_portrait_found',
 		'1 !== $hperkins_about_portrait_count',
 	] ) {
 		assert( source.includes( required ), `patterns/about-resume.php adapter is missing: ${ required }` );
@@ -1109,6 +1170,13 @@ function verifyPatternAdapter( source ) {
 		! source.includes( 'content/page-drafts/' ),
 		'The adapter must never read the work-in-progress draft.'
 	);
+	for ( const forbidden of [
+		'$hperkins_about_resume_',
+		'assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf',
+		'hperkins_tokens_asset_url',
+	] ) {
+		assert( ! source.includes( forbidden ), `The portrait-only adapter must contain no résumé or PDF replacement logic (${ forbidden }).` );
+	}
 	for ( const forbidden of [ '<h1', 'hp-evidence-row', 'hp-work-card', 'hp-capability', 'hp-exp__role', 'hp-edu-card' ] ) {
 		assert(
 			! source.includes( forbidden ),
@@ -1166,6 +1234,7 @@ module.exports = {
 	EXPECTED_PROJECTS,
 	EXPECTED_SIGNALS,
 	EXPECTED_SKILL_GROUPS,
+	EXPECTED_WCUS_STATUS,
 	RESUME_HREF,
 	assertNoForbiddenMarkup,
 	countRenderedText,

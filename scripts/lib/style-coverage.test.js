@@ -1,5 +1,8 @@
 const test = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
+const fs = require( 'node:fs' );
+const path = require( 'node:path' );
+const themeJson = require( '../../theme.json' );
 
 const {
 	BUNDLES,
@@ -12,7 +15,181 @@ const {
 	classesInMarkup,
 	patternSlugsIn,
 	expandPatternChain,
+	assertRuleDeclarations,
 } = require( './style-coverage' );
+
+const pagesCss = fs.readFileSync(
+	path.join( __dirname, '..', '..', 'assets', 'imladris-pages.css' ),
+	'utf8'
+).replace( /\r\n/g, '\n' );
+
+const DIGEST_COMPACT_CONTEXT = '@media (min-width: 601px) and (max-width: 1023px)';
+const DIGEST_TABLET_CONTRACTS = [
+	{
+		selector: '.hp-digest-template',
+		atContext: DIGEST_COMPACT_CONTEXT,
+		declarations: { 'padding-block-start': 'var(--wp--preset--spacing--5) !important' },
+	},
+	{
+		selector: '.hp-digest__hero h1',
+		atContext: DIGEST_COMPACT_CONTEXT,
+		declarations: {
+			'max-inline-size': 'none',
+			'font-size': 'var(--wp--preset--font-size--3-xl)',
+		},
+	},
+	{
+		selector: '.hp-category-bar',
+		atContext: DIGEST_COMPACT_CONTEXT,
+		declarations: { 'margin-block': 'var(--wp--preset--spacing--3)' },
+	},
+	{
+		selector: '.hp-wcus-callout',
+		atContext: DIGEST_COMPACT_CONTEXT,
+		declarations: {
+			'margin-block-start': 'var(--wp--preset--spacing--5)',
+			padding: 'var(--wp--preset--spacing--5)',
+			'padding-block-start': 'var(--wp--preset--spacing--4)',
+		},
+	},
+	{
+		selector: '.hp-wcus-callout > h2',
+		atContext: DIGEST_COMPACT_CONTEXT,
+		declarations: {
+			'font-size': 'var(--wp--preset--font-size--2-xl)',
+			'margin-block-start': 'var(--wp--preset--spacing--4)',
+		},
+	},
+	{
+		selector: '.hp-wcus-callout > p:not(.hp-page-hero__eyebrow)',
+		atContext: DIGEST_COMPACT_CONTEXT,
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--4)' },
+	},
+];
+
+function generatedFontPresetName( slug ) {
+	return `--wp--preset--font-size--${ slug.replace( /^(\d+)(?=[a-z])/i, '$1-' ).toLowerCase() }`;
+}
+
+function assertFontPresetReferencesResolve( contracts, config ) {
+	const fontSizes = config?.settings?.typography?.fontSizes ?? [];
+	const generatedPresets = new Map(
+		fontSizes.map( ( preset ) => [ generatedFontPresetName( preset.slug ), preset.size ] )
+	);
+	const references = new Set();
+	for ( const contract of contracts ) {
+		for ( const value of Object.values( contract.declarations ) ) {
+			for ( const match of value.matchAll( /var\((--wp--preset--font-size--[a-z0-9-]+)\)/g ) ) {
+				references.add( match[ 1 ] );
+			}
+		}
+	}
+	assert.notEqual( references.size, 0, 'Digest tablet contracts must reference generated font presets.' );
+	for ( const reference of references ) {
+		assert(
+			generatedPresets.has( reference ) && generatedPresets.get( reference ),
+			`${ reference } must resolve to a font-size preset declared in theme.json.`
+		);
+	}
+}
+
+function mutateDeclaration( css, contract, property, expected ) {
+	const rule = parseRules( css ).find( ( candidate ) =>
+		candidate.atContext === contract.atContext &&
+			normalizeSelectors( candidate.prelude ).includes( contract.selector )
+	);
+	assert( rule, `Mutation fixture is missing ${ contract.selector } in ${ contract.atContext }.` );
+	const escapedProperty = property.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
+	const escapedExpected = expected.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
+	const declaration = new RegExp( `${ escapedProperty }\\s*:\\s*${ escapedExpected }\\s*;` );
+	const source = css.slice( rule.start, rule.end );
+	const mutant = source.replace( declaration, `${ property }: initial;` );
+	assert.notEqual( mutant, source, `Mutation must replace ${ property } for ${ contract.selector }.` );
+	return `${ css.slice( 0, rule.start ) }${ mutant }${ css.slice( rule.end ) }`;
+}
+
+test( 'assertRuleDeclarations rejects comment-only, empty, wrong-value, and wrong-media CSS', () => {
+	assert.equal( typeof assertRuleDeclarations, 'function', 'style coverage must expose declaration-aware rule validation' );
+	const contract = {
+		selector: '.hp-example',
+		atContext: '@media (max-width: 781px)',
+		declarations: { 'grid-template-columns': 'minmax(0, 1fr)' },
+	};
+	assert.doesNotThrow( () => assertRuleDeclarations(
+		'@media (max-width: 781px) { .hp-example { grid-template-columns: minmax(0, 1fr); } }',
+		contract
+	) );
+	for ( const css of [
+		'/* @media (max-width: 781px) { .hp-example { grid-template-columns: minmax(0, 1fr); } } */',
+		'@media (max-width: 781px) { .hp-example {} }',
+		'@media (max-width: 781px) { .hp-example { grid-template-columns: repeat(2, 1fr); } }',
+		'@media (max-width: 782px) { .hp-example { grid-template-columns: minmax(0, 1fr); } }',
+	] ) {
+		assert.throws( () => assertRuleDeclarations( css, contract ), /hp-example|grid-template-columns|781px/ );
+	}
+} );
+
+test( 'native proof-grid items neutralize WordPress flow margins', () => {
+	const contract = {
+		selector: '.hp-debug-proof__grid > .hp-debug-proof__item',
+		declarations: { 'margin-block': '0' },
+	};
+	assert.doesNotThrow( () => assertRuleDeclarations( pagesCss, contract ) );
+
+	const mutant = pagesCss.replace(
+		/\.hp-debug-proof__grid > \.hp-debug-proof__item\s*\{[\s\S]*?\}\s*/,
+		''
+	);
+	assert.notEqual( mutant, pagesCss, 'The reset-removal mutation must change the stylesheet.' );
+	assert.throws(
+		() => assertRuleDeclarations( mutant, contract ),
+		/hp-debug-proof__grid|margin-block/
+	);
+} );
+
+test( 'Digest tablet and small-laptop fold use a bounded token-based compact treatment', () => {
+	assert.doesNotThrow( () => assertFontPresetReferencesResolve( DIGEST_TABLET_CONTRACTS, themeJson ) );
+	const missingTokenTheme = structuredClone( themeJson );
+	missingTokenTheme.settings.typography.fontSizes = missingTokenTheme.settings.typography.fontSizes.filter(
+		( preset ) => preset.slug !== '3xl'
+	);
+	assert.throws(
+		() => assertFontPresetReferencesResolve( DIGEST_TABLET_CONTRACTS, missingTokenTheme ),
+		/--wp--preset--font-size--3-xl.*theme\.json/
+	);
+
+	for ( const contract of DIGEST_TABLET_CONTRACTS ) {
+		assert.doesNotThrow( () => assertRuleDeclarations( pagesCss, contract ) );
+		for ( const [ property, expected ] of Object.entries( contract.declarations ) ) {
+			const mutant = mutateDeclaration( pagesCss, contract, property, expected );
+			assert.throws(
+				() => assertRuleDeclarations( mutant, contract ),
+				/Digest|hp-|padding|margin|font-size|max-inline-size|601px|781px/
+			);
+		}
+	}
+
+	const calloutContract = DIGEST_TABLET_CONTRACTS.find( ( contract ) => contract.selector === '.hp-wcus-callout' );
+	const withoutTopPadding = pagesCss.replace(
+		/\n\s*padding-block-start:\s*var\(--wp--preset--spacing--4\);/,
+		''
+	);
+	assert.notEqual( withoutTopPadding, pagesCss, 'The rail-affecting top-padding removal must change the stylesheet.' );
+	assert.throws(
+		() => assertRuleDeclarations( withoutTopPadding, calloutContract ),
+		/hp-wcus-callout|padding-block-start/
+	);
+
+	const wrongUpperBound = pagesCss.replace(
+		DIGEST_COMPACT_CONTEXT,
+		'@media (min-width: 601px) and (max-width: 1024px)'
+	);
+	assert.notEqual( wrongUpperBound, pagesCss, 'The compact-band boundary mutation must change the stylesheet.' );
+	assert.throws(
+		() => assertRuleDeclarations( wrongUpperBound, calloutContract ),
+		/hp-wcus-callout|601px|1023px/
+	);
+} );
 
 test( 'parseRules returns top-level rules with original offsets', () => {
 	const css = '.a { color: red; }\n.b { color: blue; }';

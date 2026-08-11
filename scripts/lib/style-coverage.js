@@ -253,6 +253,49 @@ function normalizeSelectors( prelude ) {
 }
 
 /**
+ * Require one effective selector in one exact at-rule context with the
+ * declarations a source-only browser contract depends on. This deliberately
+ * uses parseRules(), so comments and empty lookalike rules cannot satisfy it.
+ *
+ * @param {string} css Stylesheet source.
+ * @param {{selector:string, atContext?:string|null, declarations:Object<string,string>}} contract Contract.
+ */
+function assertRuleDeclarations( css, contract ) {
+	const atContext = contract.atContext || null;
+	const matches = parseRules( css ).filter( ( rule ) =>
+		rule.atContext === atContext && normalizeSelectors( rule.prelude ).includes( contract.selector )
+	);
+	if ( matches.length !== 1 ) {
+		throw new Error(
+			`CSS contract ${ contract.selector } in ${ atContext || 'the top level' } matched ${ matches.length } rules; expected exactly one.`
+		);
+	}
+
+	const declarations = new Map();
+	const body = matches[ 0 ].body.replace( /\/\*[\s\S]*?\*\//g, '' );
+	for ( const statement of body.split( ';' ) ) {
+		const colon = statement.indexOf( ':' );
+		if ( colon < 0 ) {
+			continue;
+		}
+		const property = statement.slice( 0, colon ).trim();
+		const value = statement.slice( colon + 1 ).replace( /\s+/g, ' ' ).trim();
+		if ( property ) {
+			declarations.set( property, value );
+		}
+	}
+
+	for ( const [ property, expected ] of Object.entries( contract.declarations ) ) {
+		const actual = declarations.get( property );
+		if ( actual !== expected ) {
+			throw new Error(
+				`CSS contract ${ contract.selector } in ${ atContext || 'the top level' } requires ${ property}: ${ expected }; got ${ actual || '<missing>' }.`
+			);
+		}
+	}
+}
+
+/**
  * The bundle owning a class name, or null when the class stays in style.css.
  *
  * @param {string} className Class to resolve.
@@ -350,6 +393,7 @@ module.exports = {
 	stripFunctionalPseudos,
 	anchorClasses,
 	normalizeSelectors,
+	assertRuleDeclarations,
 	bundleFor,
 	classesInMarkup,
 	patternSlugsIn,

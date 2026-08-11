@@ -356,13 +356,27 @@ p.hp-contact-form__hint {
   margin-block: var(--wp--preset--spacing--4);
 }
 
+.hp-wcus-callout {
+  margin-block-start: var(--wp--preset--spacing--6);
+  padding: var(--wp--preset--spacing--6);
+  border-inline-start: 0.25rem solid var(--wp--preset--color--gold-600);
+  background: color-mix(in srgb, var(--wp--preset--color--parchment-100) 88%, var(--wp--preset--color--gold-100));
+}
+
+.hp-wcus-callout__actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 /* Four first-screen actions share one compact rail. Grid keeps long labels
    inside their cells rather than letting one button force page overflow. */
 .hp-digest__primary-actions.hp-action-rail {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
   width: 100%;
   margin-block-start: 0;
+}
+
+.hp-digest__primary-actions.hp-action-rail:not(.hp-wcus-callout__actions) {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .hp-digest__primary-actions .wp-block-button,
@@ -431,6 +445,41 @@ p.hp-contact-form__hint {
   margin-block-end: 0;
   padding-block-start: var(--wp--preset--spacing--3);
   border-block-start: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-debug-proof__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--wp--preset--spacing--4);
+  margin: var(--wp--preset--spacing--5) 0 0;
+}
+
+.hp-debug-proof__grid > .hp-debug-proof__item {
+  margin-block: 0;
+}
+
+.hp-debug-proof__item {
+  min-inline-size: 0;
+  padding-block-start: var(--wp--preset--spacing--3);
+  border-block-start: 2px solid var(--wp--preset--color--river-500);
+}
+
+.hp-debug-proof__item dt {
+  color: var(--wp--preset--color--green-700);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hp-debug-proof__item dd {
+  margin: var(--wp--preset--spacing--2) 0 0;
+  overflow-wrap: anywhere;
+}
+
+.hp-debug-proof__item :is(dt, dd) > p {
+  margin: 0;
 }
 
 /* The evidence register is deliberately compact: direct proof, state, link.
@@ -532,7 +581,7 @@ p.hp-contact-form__hint {
 }
 
 @media (max-width: 960px) {
-  .hp-digest__primary-actions.hp-action-rail {
+  .hp-digest__primary-actions.hp-action-rail:not(.hp-wcus-callout__actions) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -551,7 +600,7 @@ p.hp-contact-form__hint {
     max-inline-size: none;
   }
 
-  .hp-digest__primary-actions.hp-action-rail {
+  .hp-digest__primary-actions.hp-action-rail:not(.hp-wcus-callout__actions) {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -580,6 +629,42 @@ p.hp-contact-form__hint {
   }
 }
 
+/* The WCUS actions become one touch-friendly column below 782px; their
+   separate layout rule preserves three columns from 782px upward. Through the
+   small-laptop band, keep the surrounding hero rhythm compact so all three
+   actions remain in the first 1000px without shrinking their 44px targets.
+   Full desktop composition at 1024px+ and the <=600px phone treatment stay
+   intact. */
+@media (min-width: 601px) and (max-width: 1023px) {
+  .hp-digest-template {
+    padding-block-start: var(--wp--preset--spacing--5) !important;
+  }
+
+  .hp-digest__hero h1 {
+    max-inline-size: none;
+    font-size: var(--wp--preset--font-size--3-xl);
+  }
+
+  .hp-category-bar {
+    margin-block: var(--wp--preset--spacing--3);
+  }
+
+  .hp-wcus-callout {
+    margin-block-start: var(--wp--preset--spacing--5);
+    padding: var(--wp--preset--spacing--5);
+    padding-block-start: var(--wp--preset--spacing--4);
+  }
+
+  .hp-wcus-callout > h2 {
+    margin-block-start: var(--wp--preset--spacing--4);
+    font-size: var(--wp--preset--font-size--2-xl);
+  }
+
+  .hp-wcus-callout > p:not(.hp-page-hero__eyebrow) {
+    margin-block-start: var(--wp--preset--spacing--4);
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Wide ledgers on a phone.
 
@@ -601,6 +686,11 @@ p.hp-contact-form__hint {
    these selectors makes them (0,2,2) so they win wherever they are placed.
    ------------------------------------------------------------------------ */
 @media (max-width: 781px) {
+  .hp-wcus-callout__actions,
+  .hp-debug-proof__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   /* Each column header is reproduced inside its cell below, so the header row
      would only repeat itself. Keep it in the accessibility tree. */
   .wp-block-table.hp-keyword-table thead,
@@ -2526,6 +2616,28 @@ p.hp-contact-form__hint {
   letter-spacing: var(--wp--custom--tracking--wide);
   text-transform: uppercase;
   color: var(--wp--custom--text--accent);
+}
+
+.hp-about-wcus {
+  margin-block-start: var(--wp--preset--spacing--4);
+  padding: var(--wp--preset--spacing--4);
+  border-inline-start: 0.25rem solid var(--wp--preset--color--gold-600);
+  background: color-mix(in srgb, var(--wp--preset--color--parchment-100) 90%, var(--wp--preset--color--gold-100));
+}
+
+.hp-about-wcus__label {
+  margin: 0;
+  color: var(--wp--preset--color--green-700);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hp-about-wcus__copy,
+.hp-about-wcus__action {
+  margin-block-start: var(--wp--preset--spacing--3);
 }
 
 @media (min-width: 782px) {

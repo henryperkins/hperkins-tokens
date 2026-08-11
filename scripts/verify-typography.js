@@ -8,13 +8,16 @@ const {
 	findHeadingOutlineJumps,
 	findScopedHeadingOutlineJumps,
 } = require( './lib/page-markup-contract' );
-const { getOrigin } = require( './lib/site-url' );
+const { selectJournalRoute } = require( './lib/journal-route-discovery' );
+const { getOrigin, isLoopbackOrigin } = require( './lib/site-url' );
 
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
 const ORIGIN = getOrigin();
 const THEME_PATH = path.join( __dirname, '..' );
-const SOURCE_ONLY = process.argv.includes( '--source-only' );
-const REPORT = process.argv.includes( '--report' );
+const ARGV = process.argv.slice( 2 );
+const SOURCE_ONLY = ARGV.includes( '--source-only' );
+const REPORT = ARGV.includes( '--report' );
+const REQUIRE_LOCAL = ARGV.includes( '--require-local' );
 
 const PROBE_404 = '/hp-typography-404-probe/';
 const PAGES = [
@@ -652,36 +655,19 @@ async function evaluateOnPage( cdp, pagePath, viewport, expression ) {
 
 // The reader (single.html) and the term archive (archive.html) have no fixed
 // path, so they cannot be listed in PAGES like every other route. Read them off
-// the journal index instead: the first postcard's permalink is a real published
-// post, and the first topic-filter link is a real category archive. Discovering
-// them beats pinning one post slug, which would rot the first time that post is
-// unpublished or renamed.
+// the journal index instead. Collect every candidate so a malformed first local
+// fixture cannot hide a later valid permalink, and so public runs reject rather
+// than silently ignore any malformed journal link. Discovering them beats
+// pinning one post slug, which would rot when that post is renamed/unpublished.
 const DISCOVERY_EXPRESSION = `(() => {
-	const first = (selector) => {
-		const el = document.querySelector(selector);
-		return el ? el.getAttribute('href') : null;
-	};
+	const all = (selector) => Array.from(document.querySelectorAll(selector),
+		(el) => el.getAttribute('href'));
 	return {
-		post: first('.hp-postcards .hp-postcard__title a'),
-		topic: first('.hp-topic-filter a[href]'),
+		posts: all('.hp-postcards .hp-postcard__title a[href]'),
+		topics: all('.hp-topic-filter a[href]'),
 		cards: document.querySelectorAll('.hp-postcards .wp-block-post-template > li').length,
 	};
 })()`;
-
-function toSitePath( href ) {
-	if ( ! href ) {
-		return null;
-	}
-	try {
-		const url = new URL( href, ORIGIN );
-		if ( new URL( ORIGIN ).host !== url.host ) {
-			return null;
-		}
-		return url.pathname + url.search;
-	} catch ( error ) {
-		return null;
-	}
-}
 
 async function discoverJournalRoutes( cdp ) {
 	let found;
@@ -693,29 +679,35 @@ async function discoverJournalRoutes( cdp ) {
 	}
 
 	const routes = [];
-	const post = toSitePath( found.post );
-	const topic = toSitePath( found.topic );
+	const post = selectJournalRoute( found.posts, ORIGIN, { kind: 'post', requireLocal: REQUIRE_LOCAL } );
+	const topic = selectJournalRoute( found.topics, ORIGIN, { kind: 'category', requireLocal: REQUIRE_LOCAL } );
+	const discoveryViolations = [ ...post.violations, ...topic.violations ];
+	for ( const quarantine of [ ...post.quarantined, ...topic.quarantined ] ) {
+		console.log( `local fixture quarantine: ${ quarantine }` );
+	}
 
-	if ( post ) {
-		routes.push( { path: post, template: 'single' } );
+	if ( post.path ) {
+		routes.push( { path: post.path, template: 'single' } );
 	} else if ( found.cards > 0 ) {
 		// Cards are on the page but no permalink came back: the postcard title
-		// link is missing or has stopped being a link. That is a real defect in
-		// home.html, not an empty journal.
-		handleViolations( 'journal route discovery', [
-			`/essays/ rendered ${ found.cards } postcard(s) but no .hp-postcard__title anchor — the reader route cannot be audited`,
-		] );
+		// link is missing, malformed, or every explicitly local fixture was
+		// quarantined. This stays a hard failure: single.html was not audited.
+		discoveryViolations.push(
+			`/essays/ rendered ${ found.cards } postcard(s) but no valid same-origin .hp-postcard__title permalink — the reader route cannot be audited`
+		);
 	} else {
 		// Loud, not silent: the audit is genuinely narrower than usual and the
 		// operator should know which template went unchecked.
 		console.log( 'note: /essays/ published no posts, so single.html was not audited this run' );
 	}
 
-	if ( topic ) {
-		routes.push( { path: topic, template: 'archive' } );
+	if ( topic.path ) {
+		routes.push( { path: topic.path, template: 'archive' } );
 	} else {
-		console.log( 'note: /essays/ exposed no category links, so archive.html was not audited this run' );
+		console.log( 'note: /essays/ exposed no valid category links, so archive.html was not audited this run' );
 	}
+
+	handleViolations( 'journal route discovery', discoveryViolations );
 
 	if ( routes.length > 0 ) {
 		console.log( `discovered journal routes: ${ routes.map( ( route ) => route.path ).join( ', ' ) }` );
@@ -737,6 +729,16 @@ const BATTERY_ORDER = [
 ];
 
 async function main() {
+	for ( const option of ARGV ) {
+		assert( [ '--source-only', '--report', '--require-local' ].includes( option ), `Unknown option: ${ option }.` );
+	}
+	if ( REQUIRE_LOCAL ) {
+		assert(
+			isLoopbackOrigin( ORIGIN ),
+			'--require-local typography verification requires a localhost or loopback HPERKINS_ORIGIN.'
+		);
+	}
+
 	const staticViolations = await verifyStaticContract();
 	handleViolations( 'static contract', staticViolations );
 	if ( staticViolations.length === 0 ) {

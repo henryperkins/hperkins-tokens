@@ -45,7 +45,7 @@ component CSS to refresh either — the theme's `style.css` is a superset.
 | Design (project) | Theme artifact(s) | Wiring |
 |---|---|---|
 | `templates/front-page` | `content/page-snapshots/front-page.html`, `templates/front-page.html`, `patterns/wapuu-home-hero.php` | Published **Home** page (slug `home`, ID 36) in hybrid mode: theme-owned Wapuu hero + Three Rings shell, DB-owned middle body |
-| `templates/about` | `content/page-drafts/about.html` (the only human-authored About candidate), `content/page-snapshots/about.html` (accepted snapshot, export-only mirror), `patterns/about-resume.php` (thin accepted-snapshot adapter — no page markup of its own), `templates/page-about.html`, About page layer in `assets/imladris-pages.css` | Published **About + Resume** page (slug `about`, ID 6) in DB-owned page-body mode. The proof-first candidate in `content/page-drafts/about.html` is applied locally only via the explicit `--page=about` draft command and is not the deployed body until it passes review and controlled promotion |
+| `templates/about` | `content/page-drafts/about.html` (the only human-authored About candidate), `content/page-snapshots/about.html` (accepted snapshot, export-only mirror), `patterns/about-resume.php` (portrait-only thin accepted-snapshot adapter — no page markup of its own), `templates/page-about.html`, About page layer in `assets/imladris-pages.css` | Published **About + Resume** page (slug `about`, ID 6) in DB-owned page-body mode. The proof-first candidate in `content/page-drafts/about.html` is applied locally only via the explicit `--page=about` draft command and is not the deployed body until it passes review and controlled promotion |
 | `templates/contact` | `patterns/contact.php`, `templates/page-contact.html` | Published **Contact** page (slug `contact`, ID 233) |
 | `templates/ai-enablement` | `content/page-snapshots/ai-enablement.html`, `templates/page-ai-enablement.html` | Published **AI Enablement** page (slug `ai-enablement`, ID 175) in DB-owned page-body mode; `patterns/ai-enablement.php` remains a reusable seed/reference copy |
 | `templates/work-index` | `content/page-snapshots/work.html`, `templates/page-work.html` | Published **Work** page (slug `work`, ID 13) in DB-owned page-body mode; `patterns/work-index.php` remains a reusable seed/reference copy |
@@ -70,6 +70,47 @@ Core DS-mapped templates (including the
 `wp server` + Playwright): `front-page`, `home`, `single`, `page-about`,
 `page-ai-enablement`, `page-contact`, `page-work`, and `page-case-study`; tokens
 resolve, `imladris-pages.css` loads, and there were zero console errors.
+
+### WCUS portfolio route, adapter, and publication phases
+
+`/one-page-resume/` is the stable visible-link destination. The final PDF remains a theme-owned artifact verified directly. `about-resume` substitutes only the portrait URL. Digest and About database bodies remain canonical; drafts are candidates and snapshots are accepted mirrors. Production page/footer writes are separate from a theme deploy.
+
+`patterns/about-resume.php` reads only the accepted About mirror and changes
+only its one known portrait URL; it does not rewrite résumé actions. Visible
+résumé actions point to the stable route, while artifact verification remains
+directly against the final PDF. Use the complete route/adapter preparation
+sequence:
+
+```powershell
+node scripts/verify-resume-route.js --source-only
+node scripts/verify-resume-route.js
+node scripts/verify-job-placement-pages.js --source-only --drafts
+node scripts/verify-prominent-actions.js --source-only --drafts
+node scripts/verify-about-page-source.js --drafts
+node scripts/verify-about-page-rendered.js --require-local --drafts
+node scripts/verify-placement-artifacts.js --check-links
+```
+
+The Task 9 local browser pass uses explicit loopback-only modes; the unflagged
+public commands above retain their stricter production behavior:
+
+```powershell
+node scripts/verify-typography.js --require-local
+node scripts/verify-resume-route.js --require-local
+```
+
+Typography may quarantine only filesystem-like local fixture permalinks in
+that mode and must still select a valid same-origin single post. The local
+resume pass permits HTTP without relaxing redirect, query, loop, same-origin,
+PDF-body, or content-type enforcement.
+
+The `--source-only --drafts` and local rendered checks prove candidate wiring;
+they do not make a candidate accepted or deployed. Do not change accepted
+snapshots before publication. After an explicit production write approval,
+freshly read the database bodies, prove they equal the approved drafts, and
+only then promote the snapshots as accepted mirrors. The theme route, adapter,
+CSS, footer source, and PDF may deploy independently; the production Digest,
+About, and database-owned footer writes remain a separate phase.
 
 > **Note on the blog templates:** the site currently has a published Posts page
 > (`/essays/`, page `236`) and published posts, so `home.html` / `single.html`

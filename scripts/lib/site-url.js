@@ -4,6 +4,22 @@ function getOrigin( env = process.env ) {
 	return env.HPERKINS_ORIGIN?.trim() || DEFAULT_ORIGIN;
 }
 
+function isLoopbackOrigin( value ) {
+	let url;
+	try {
+		url = new URL( value );
+	} catch {
+		return false;
+	}
+
+	if ( url.protocol !== 'http:' && url.protocol !== 'https:' ) {
+		return false;
+	}
+
+	const hostname = url.hostname.toLowerCase().replace( /^\[|\]$/g, '' );
+	return hostname === 'localhost' || hostname === '::1' || /^127(?:\.\d{1,3}){3}$/.test( hostname );
+}
+
 function parseUrl( value, label ) {
 	try {
 		return new URL( value );
@@ -47,6 +63,7 @@ function resolveSiteUrl( origin, relativePath ) {
 module.exports = {
 	assertMatchingSiteUrl,
 	getOrigin,
+	isLoopbackOrigin,
 	normalizeSiteUrl,
 	resolveSiteUrl,
 };

@@ -13,6 +13,14 @@ function escapeRegExp( value ) {
 	return value.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
 }
 
+function assertActiveSourceCommand( sourceJob, command ) {
+	assert.match(
+		sourceJob,
+		new RegExp( `^[ \\t]*run:[ \\t]*${ escapeRegExp( command ) }[ \\t]*\\r?$`, 'm' ),
+		`${ command } is not an active workflow line.`
+	);
+}
+
 function assertSourceUnitTestsAreActive( workflowSource, testFiles ) {
 	const sourceJobStart = workflowSource.indexOf( '\n  verify:' );
 	const deployedJobStart = workflowSource.indexOf( '\n  deployed-content:' );
@@ -60,6 +68,7 @@ test( 'keeps all production browser gates in the deployed job on Node 22', () =>
 		'verify-prominent-actions',
 		'verify-job-placement-pages',
 		'verify-about-page-rendered',
+		'verify-resume-route',
 	] ) {
 		assert.match(
 			deployedJob,
@@ -67,7 +76,10 @@ test( 'keeps all production browser gates in the deployed job on Node 22', () =>
 			`${ gate } is not an active line in the deployed job.`
 		);
 	}
-	assert.doesNotMatch( deployedJob, /verify-(?:header|typography|prominent-actions|job-placement-pages)\.js --source-only/ );
+	assert.doesNotMatch( deployedJob, /verify-(?:header|typography|prominent-actions|job-placement-pages|resume-route)\.js --source-only/ );
+	assert.match( deployedJob, /node scripts\/verify-job-placement-pages\.js/ );
+	assert.doesNotMatch( deployedJob, /verify-job-placement-pages\.js[^\n]*--drafts/ );
+	assert.doesNotMatch( deployedJob, /verify-prominent-actions\.js[^\n]*--drafts/ );
 } );
 
 test( 'both CI jobs pin the same Node 22.x major for the normative About word count', () => {
@@ -89,12 +101,33 @@ test( 'includes the research appendix in the rendered typography route matrix', 
 
 test( 'runs the recruiter rendered-page source half on every branch', () => {
 	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
-	assert.match( sourceJob, /node scripts\/verify-job-placement-pages\.js --source-only/ );
+	assertActiveSourceCommand( sourceJob, 'node scripts/verify-job-placement-pages.js --source-only --drafts' );
 } );
 
 test( 'runs the prominent-actions source contract on every branch', () => {
 	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
-	assert.match( sourceJob, /node scripts\/verify-prominent-actions\.js --source-only/ );
+	assertActiveSourceCommand( sourceJob, 'node scripts/verify-prominent-actions.js --source-only --drafts' );
+} );
+
+test( 'runs the resume-route source contract on every branch', () => {
+	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
+	assertActiveSourceCommand( sourceJob, 'node scripts/verify-resume-route.js --source-only' );
+	assert.doesNotMatch( sourceJob, /^\s*run:\s*node scripts\/verify-resume-route\.js\s*$/m );
+} );
+
+test( 'does not count commented phase commands as active source gates', () => {
+	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
+	for ( const command of [
+		'node scripts/verify-job-placement-pages.js --source-only --drafts',
+		'node scripts/verify-prominent-actions.js --source-only --drafts',
+	] ) {
+		const commentedSourceJob = sourceJob.replace( `run: ${ command }`, `# run: ${ command }` );
+		assert.notEqual( commentedSourceJob, sourceJob, `Commented-line mutation did not apply for ${ command }.` );
+		assert.throws(
+			() => assertActiveSourceCommand( commentedSourceJob, command ),
+			/not an active workflow line/
+		);
+	}
 } );
 
 test( 'normalizes pointer media for the production header gate', () => {
@@ -137,16 +170,52 @@ test( 'normalizes pointer media for the production header gate', () => {
 	assert.match( headerVerifier, /Page\.addScriptToEvaluateOnNewDocument/ );
 } );
 
-test( 'runs metadata, About probe, market parity, and production workflow contract tests in CI', () => {
+test( 'runs metadata, Digest, About probe, market parity, and production workflow contract tests in CI', () => {
 	assertSourceUnitTestsAreActive( workflow, [
 		'scripts/lib/about-page-contract.test.js',
 		'scripts/lib/about-page-rendered-probe.test.js',
 		'scripts/lib/about-gravatar-heading.test.js',
+		'scripts/lib/job-placement-digest-source-contract.test.js',
 		'scripts/lib/job-placement-metadata-contract.test.js',
+		'scripts/lib/journal-route-discovery.test.js',
 		'scripts/lib/market-screen-parity.test.js',
 		'scripts/lib/page-content-contract.test.js',
+		'scripts/lib/page-phase-contract.test.js',
+		'scripts/lib/placement-artifact-contract.test.js',
 		'scripts/lib/production-gates-workflow.test.js',
+		'scripts/lib/resume-route-contract.test.js',
+		'scripts/lib/support-resume-cleanup.test.js',
 	] );
+} );
+
+test( 'runs the ownership-docs and event-retirement regression suites as active CI commands', () => {
+	const regressionTests = [
+		'scripts/lib/content-ownership-docs.test.js',
+		'scripts/lib/event-copy-retirement-runbook.test.js',
+	];
+
+	assertSourceUnitTestsAreActive( workflow, regressionTests );
+
+	for ( const testFile of regressionTests ) {
+		const activeLine = new RegExp( `^([ \\t]*)${ escapeRegExp( testFile ) }(\\s+\\\\)?\\s*$`, 'm' );
+		const commentedWorkflow = workflow.replace( activeLine, `$1# ${ testFile }$2` );
+		assert.notEqual( commentedWorkflow, workflow, `Commented-line mutation must apply for ${ testFile }.` );
+		assert.throws(
+			() => assertSourceUnitTestsAreActive( commentedWorkflow, [ testFile ] ),
+			/Workflow unit-test run block is missing an active/
+		);
+
+		const withoutActiveLine = workflow.replace( new RegExp( `^\\s*${ escapeRegExp( testFile ) }(?:\\s+\\\\)?\\s*$\\r?\\n`, 'm' ), '' );
+		assert.notEqual( withoutActiveLine, workflow, `Active-line removal mutation must apply for ${ testFile }.` );
+		const proseOnlyWorkflow = withoutActiveLine.replace(
+			'\n  verify:',
+			`\n# CI documentation mentions ${ testFile }.\n  verify:`
+		);
+		assert.throws(
+			() => assertSourceUnitTestsAreActive( proseOnlyWorkflow, [ testFile ] ),
+			/Workflow unit-test run block is missing an active/
+		);
+	}
 } );
 
 test( 'does not count a commented About probe test as active CI coverage', () => {
