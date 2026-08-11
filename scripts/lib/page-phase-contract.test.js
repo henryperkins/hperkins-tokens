@@ -1,5 +1,6 @@
 const test = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
+const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 const { spawnSync } = require( 'node:child_process' );
 
@@ -49,7 +50,7 @@ test( 'phase-aware page verifiers reject unknown options', () => {
 	}
 } );
 
-test( 'prominent-action source mode reads the selected draft paths on Windows', () => {
+test( 'prominent-action source mode reads the selected absolute draft paths across platforms', () => {
 	const result = spawnSync(
 		process.execPath,
 		[ path.join( themeRoot, 'scripts', 'verify-prominent-actions.js' ), '--source-only', '--drafts' ],
@@ -57,4 +58,16 @@ test( 'prominent-action source mode reads the selected draft paths on Windows', 
 	);
 	assert.equal( result.status, 0, result.stderr );
 	assert.match( result.stdout, /prominent action source contracts verified/ );
+} );
+
+test( 'rendered recruiter probes align containment, masthead, and rail membership with source contracts', () => {
+	const recruiter = fs.readFileSync( path.join( themeRoot, 'scripts', 'verify-job-placement-pages.js' ), 'utf8' );
+	assert.match( recruiter, /hero\?\.querySelector\('\.hp-wcus-callout'\)/ );
+	assert.doesNotMatch( recruiter, /querySelector\(':scope > \.hp-wcus-callout'\)/ );
+	assert.match( recruiter, /headerPresent/ );
+	assert.match( recruiter, /headerPosition/ );
+
+	const prominent = fs.readFileSync( path.join( themeRoot, 'scripts', 'verify-prominent-actions.js' ), 'utf8' );
+	assert.match( prominent, /\.wp-block-buttons\.hp-action-rail/ );
+	assert.match( prominent, /\.hp-action-rail:not\(\.wp-block-buttons\)/ );
 } );

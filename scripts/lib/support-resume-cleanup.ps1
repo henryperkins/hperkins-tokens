@@ -37,7 +37,7 @@ function Invoke-SupportResumeOperationWithCleanup {
 
     if ($cleanupErrors.Count -gt 0) {
         $details = @($cleanupErrors | ForEach-Object { "$($_.Name): $($_.Error.Exception.Message)" }) -join '; '
-        throw "Support résumé cleanup failed: $details"
+        throw "Support resume cleanup failed: $details"
     }
 
     return $operationResult

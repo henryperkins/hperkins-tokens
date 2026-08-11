@@ -1,0 +1,28 @@
+const SOURCE_UNIT_TEST_FILES = [
+	'scripts/lib/about-page-contract.test.js',
+	'scripts/lib/about-page-rendered-probe.test.js',
+	'scripts/lib/about-gravatar-heading.test.js',
+	'scripts/lib/content-integrity.test.js',
+	'scripts/lib/content-ownership-docs.test.js',
+	'scripts/lib/event-copy-retirement-runbook.test.js',
+	'scripts/lib/job-placement-digest-source-contract.test.js',
+	'scripts/lib/job-placement-metadata-contract.test.js',
+	'scripts/lib/journal-route-discovery.test.js',
+	'scripts/lib/market-screen-parity.test.js',
+	'scripts/lib/navigation-content-contract.test.js',
+	'scripts/lib/page-content-contract.test.js',
+	'scripts/lib/page-markup-contract.test.js',
+	'scripts/lib/page-phase-contract.test.js',
+	'scripts/lib/placement-artifact-contract.test.js',
+	'scripts/lib/placement-artifact-links.test.js',
+	'scripts/lib/production-gates-workflow.test.js',
+	'scripts/lib/release-record.test.js',
+	'scripts/lib/resume-route-contract.test.js',
+	'scripts/lib/site-url.test.js',
+	'scripts/lib/style-coverage.test.js',
+	'scripts/lib/support-resume-cleanup.test.js',
+	'scripts/lib/wp-cli.test.js',
+	'scripts/lib/zip-archive.test.js',
+];
+
+module.exports = { SOURCE_UNIT_TEST_FILES };

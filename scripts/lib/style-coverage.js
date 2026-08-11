@@ -252,6 +252,16 @@ function normalizeSelectors( prelude ) {
 		.filter( Boolean );
 }
 
+function normalizeAtContext( value ) {
+	if ( value === null || value === undefined ) {
+		return null;
+	}
+	return value
+		.replace( /\s+/g, ' ' )
+		.replace( /\s*([():,])\s*/g, '$1' )
+		.trim();
+}
+
 /**
  * Require one effective selector in one exact at-rule context with the
  * declarations a source-only browser contract depends on. This deliberately
@@ -262,8 +272,10 @@ function normalizeSelectors( prelude ) {
  */
 function assertRuleDeclarations( css, contract ) {
 	const atContext = contract.atContext || null;
+	const normalizedAtContext = normalizeAtContext( atContext );
 	const matches = parseRules( css ).filter( ( rule ) =>
-		rule.atContext === atContext && normalizeSelectors( rule.prelude ).includes( contract.selector )
+		normalizeAtContext( rule.atContext ) === normalizedAtContext &&
+			normalizeSelectors( rule.prelude ).includes( contract.selector )
 	);
 	if ( matches.length !== 1 ) {
 		throw new Error(
@@ -393,6 +405,7 @@ module.exports = {
 	stripFunctionalPseudos,
 	anchorClasses,
 	normalizeSelectors,
+	normalizeAtContext,
 	assertRuleDeclarations,
 	bundleFor,
 	classesInMarkup,

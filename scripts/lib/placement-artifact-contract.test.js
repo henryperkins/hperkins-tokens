@@ -6,6 +6,8 @@ const test = require( 'node:test' );
 const { openZip } = require( './zip-archive' );
 const {
 	compactText,
+	externalHyperlinkSequence,
+	findForbiddenResumeCopy,
 	pdfAnnotationUriSequence,
 	xmlAttributes,
 	xmlText,
@@ -82,6 +84,32 @@ test( 'resume carries the approved current WCUS and evidence copy', () => {
 	for ( const forbiddenCopy of FORBIDDEN_RESUME_COPY ) {
 		assert.ok( ! text.includes( forbiddenCopy ), `resume retains forbidden copy: ${ forbiddenCopy }` );
 	}
+} );
+
+test( 'forbidden numeric copy uses whole-number boundaries', () => {
+	assert.equal( findForbiddenResumeCopy( '30 contracts' ), '30 contracts' );
+	assert.equal( findForbiddenResumeCopy( '35 contracts' ), '35 contracts' );
+	assert.equal( findForbiddenResumeCopy( '130 contracts and 235 contracts' ), null );
+} );
+
+test( 'DOCX external-link sequence skips anchor-only hyperlinks and rejects dangling relationships', () => {
+	const archive = {
+		text( name ) {
+			if ( name === 'word/_rels/document.xml.rels' ) {
+				return '<Relationships><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="https://example.test/" TargetMode="External"/></Relationships>';
+			}
+			return '<w:document><w:hyperlink w:anchor="section-one"/><w:hyperlink r:id="rId1"/></w:document>';
+		},
+	};
+	assert.deepEqual( externalHyperlinkSequence( archive ), [ 'https://example.test/' ] );
+
+	const dangling = {
+		...archive,
+		text( name ) {
+			return name.endsWith( '.rels' ) ? '<Relationships/>' : '<w:document><w:hyperlink r:id="missing"/></w:document>';
+		},
+	};
+	assert.throws( () => externalHyperlinkSequence( dangling ), /unresolved external hyperlink/i );
 } );
 
 test( 'DOCX and PDF expose the same ordered external hyperlinks including duplicates', () => {

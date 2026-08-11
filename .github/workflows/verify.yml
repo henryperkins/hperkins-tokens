@@ -86,16 +86,16 @@ jobs:
             scripts/lib/market-screen-parity.test.js \
             scripts/lib/navigation-content-contract.test.js \
             scripts/lib/page-content-contract.test.js \
-            scripts/lib/page-phase-contract.test.js \
             scripts/lib/page-markup-contract.test.js \
+            scripts/lib/page-phase-contract.test.js \
             scripts/lib/placement-artifact-contract.test.js \
             scripts/lib/placement-artifact-links.test.js \
             scripts/lib/production-gates-workflow.test.js \
-            scripts/lib/resume-route-contract.test.js \
             scripts/lib/release-record.test.js \
+            scripts/lib/resume-route-contract.test.js \
             scripts/lib/site-url.test.js \
-            scripts/lib/support-resume-cleanup.test.js \
             scripts/lib/style-coverage.test.js \
+            scripts/lib/support-resume-cleanup.test.js \
             scripts/lib/wp-cli.test.js \
             scripts/lib/zip-archive.test.js
 

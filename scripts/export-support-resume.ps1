@@ -1,10 +1,32 @@
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib\support-resume-cleanup.ps1')
 
+function Resolve-SupportResumePython {
+    $python = $env:HPERKINS_PYTHON_BIN
+    if ([string]::IsNullOrWhiteSpace($python)) {
+        $command = Get-Command python -ErrorAction SilentlyContinue
+        if ($null -eq $command) {
+            throw 'Python is required. Set HPERKINS_PYTHON_BIN to an interpreter with python-docx, pdfplumber, and pypdf.'
+        }
+        $python = $command.Source
+    }
+
+    try {
+        & $python -c 'import docx, pdfplumber, pypdf'
+    } catch {
+        throw "Unable to run the support-resume Python interpreter '$python': $($_.Exception.Message)"
+    }
+    if ($LASTEXITCODE -ne 0) {
+        throw "Support-resume Python dependency preflight failed for '$python'. Install python-docx, pdfplumber, and pypdf or set HPERKINS_PYTHON_BIN to a prepared interpreter."
+    }
+    return $python
+}
+
 function Invoke-SupportResumeExport {
     $themeRoot = Split-Path -Parent $PSScriptRoot
     $docxPath = Join-Path $themeRoot 'assets\documents\henry-perkins-wordpress-support-engineer-resume.docx'
     $pdfPath = Join-Path $themeRoot 'assets\documents\henry-perkins-wordpress-support-engineer-resume.pdf'
+    $python = Resolve-SupportResumePython
     $wordProcessIdsBefore = @(Get-Process -Name WINWORD -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id)
     $state = @{
         Word = $null
@@ -74,7 +96,6 @@ function Invoke-SupportResumeExport {
 
     # Word emits valid heading tags inside compressed PDF object streams.
     # Rewrite them losslessly so the portable raw-structure gate can audit H1/H2.
-    $python = 'C:\Users\htper\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
     & $python (Join-Path $PSScriptRoot 'verify-placement-text-parity.py') --normalize-word-pdf
     if ($LASTEXITCODE -ne 0) {
         throw "Tagged-PDF normalization failed with exit code $LASTEXITCODE"

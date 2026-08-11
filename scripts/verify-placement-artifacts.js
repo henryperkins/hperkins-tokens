@@ -49,13 +49,13 @@ const REQUIRED_RESUME_COPY = [
 	'HPerkins Tokens',
 ];
 const FORBIDDEN_RESUME_COPY = [
-	'as of Jul 30, 2026',
-	'54 commits ahead',
-	'30 contracts',
-	'35 contracts',
-	'my PR #593',
-	'my PR #757',
-	'final v0.1.0',
+	[ /as of Jul 30, 2026/, 'as of Jul 30, 2026' ],
+	[ /54 commits ahead/, '54 commits ahead' ],
+	[ /\b30 contracts\b/, '30 contracts' ],
+	[ /\b35 contracts\b/, '35 contracts' ],
+	[ /my PR #593/, 'my PR #593' ],
+	[ /my PR #757/, 'my PR #757' ],
+	[ /final v0\.1\.0/, 'final v0.1.0' ],
 ];
 
 function assert( condition, message ) {
@@ -105,6 +105,11 @@ function compactText( value ) {
 	return value.replace( /\s+/g, ' ' ).trim();
 }
 
+function findForbiddenResumeCopy( value ) {
+	const match = FORBIDDEN_RESUME_COPY.find( ( [ pattern ] ) => pattern.test( value ) );
+	return match ? match[ 1 ] : null;
+}
+
 function stripHtml( value ) {
 	return compactText( decodeXml( value.replace( /<!--([\s\S]*?)-->/g, '' ).replace( /<[^>]+>/g, '' ) ) );
 }
@@ -152,7 +157,11 @@ function externalHyperlinkSequence( archive ) {
 
 	const urls = [];
 	for ( const match of archive.text( 'word/document.xml' ).matchAll( /<w:hyperlink\b([^>]*)>/g ) ) {
-		const relationshipId = xmlAttributes( match[1] )[ 'r:id' ];
+		const attributes = xmlAttributes( match[1] );
+		const relationshipId = attributes[ 'r:id' ];
+		if ( ! relationshipId && attributes[ 'w:anchor' ] ) {
+			continue;
+		}
 		assert( relationshipId && relationships.has( relationshipId ), 'Résumé DOCX contains an unresolved external hyperlink.' );
 		urls.push( relationships.get( relationshipId ) );
 	}
@@ -200,9 +209,8 @@ function verifyDocx( path, themeVersion ) {
 	] ) {
 		assert( text.includes( claim ), `Résumé is missing required evidence: ${ claim }.` );
 	}
-	for ( const forbiddenCopy of FORBIDDEN_RESUME_COPY ) {
-		assert( ! text.includes( forbiddenCopy ), `Résumé contains forbidden stale copy: ${ forbiddenCopy }.` );
-	}
+	const forbiddenCopy = findForbiddenResumeCopy( text );
+	assert( ! forbiddenCopy, `Résumé contains forbidden stale copy: ${ forbiddenCopy }.` );
 
 	const providerSection = text.slice(
 		text.indexOf( 'AI Provider for Codex — Author' ),
@@ -869,6 +877,7 @@ module.exports = {
 	compactText,
 	externalHyperlinkSequence,
 	externalRelationships,
+	findForbiddenResumeCopy,
 	pdfAnnotationUriSequence,
 	pdfUris,
 	unescapePdfString,
