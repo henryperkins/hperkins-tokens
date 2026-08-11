@@ -51,11 +51,27 @@ function deriveDigestExpectations( html ) {
 	const primaryRail = findWpBlocksByClass( html, 'buttons', 'hp-digest__primary-actions' )[ 0 ];
 	const eyebrow = /<p\b[^>]*class="[^"]*\bhp-page-hero__eyebrow\b[^"]*"[^>]*>([\s\S]*?)<\/p>/g;
 	const eyebrows = [ ...html.matchAll( eyebrow ) ];
+	const wcusCallout = findWpBlocksByClass( html, 'group', 'hp-wcus-callout' )[ 0 ] || null;
+	const wcusActions = findWpBlocksByClass( html, 'buttons', 'hp-wcus-callout__actions' )[ 0 ] || null;
+	const rootCauseSection = /<section\b[^>]*\bid="root-cause-investigation"[^>]*>([\s\S]*?)<\/section>/i.exec( html );
 
 	assert( h1, 'Selected Digest body has no H1.' );
 	assert( primaryRail, 'Selected Digest body has no primary action rail.' );
 	assert( actionRails.length >= 2, 'Selected Digest body has no closing action rail.' );
 	assert( eyebrows.length > 0, 'Selected Digest body has no closing eyebrow.' );
+	if ( wcusCallout ) {
+		assert(
+			/<section\b[^>]*\bhp-digest__hero\b[^>]*>[\s\S]*?<\/section>\s*<!-- \/wp:group -->\s*<!-- wp:group [^\n]*\bhp-wcus-callout\b/i.test( html ),
+			'Selected Digest body must place .hp-wcus-callout immediately after .hp-digest__hero.'
+		);
+		assert( wcusActions, 'Selected Digest WCUS callout has no .hp-wcus-callout__actions.' );
+		assert( rootCauseSection, 'Selected Digest WCUS body has no #root-cause-investigation section.' );
+	}
+
+	const proofLabels = rootCauseSection
+		? [ ...rootCauseSection[ 1 ].matchAll( /<div\b[^>]*\bhp-debug-proof__item\b[^>]*>\s*<dt>([^<]+)<\/dt>/gi ) ]
+			.map( ( match ) => match[ 1 ].trim() )
+		: [];
 
 	return {
 		h1: h1.text,
@@ -63,6 +79,8 @@ function deriveDigestExpectations( html ) {
 		closingActions: findLinks( actionRails.at( -1 ), 'selected Digest closing actions' ),
 		closingEyebrow: extractExactText( eyebrows.at( -1 )[ 1 ], { label: 'selected Digest closing eyebrow' } ),
 		closingHeading: headings.filter( ( heading ) => heading.level === 2 ).at( -1 ).text,
+		wcusActions: wcusActions ? findLinks( wcusActions, 'selected Digest WCUS actions' ) : [],
+		proofLabels,
 	};
 }
 
@@ -125,7 +143,12 @@ function verifySourceContracts() {
 	}
 
 	for ( const expected of [
+		'.hp-wcus-callout {',
+		'.hp-wcus-callout__actions {',
+		'.hp-debug-proof__grid {',
+		'.hp-debug-proof__item {',
 		'.hp-digest__primary-actions.hp-action-rail {',
+		'.hp-digest__primary-actions.hp-action-rail:not(.hp-wcus-callout__actions) {',
 		'grid-template-columns: repeat(4, minmax(0, 1fr));',
 		'.hp-evidence-table table {',
 		'min-inline-size: 50rem;',
@@ -133,6 +156,13 @@ function verifySourceContracts() {
 		'min-inline-size: 48rem;',
 	] ) {
 		assert( pageCss.includes( expected ), `assets/imladris-pages.css is missing recruiter-page contract: ${ expected }` );
+	}
+	if ( DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
+		assert( DIGEST_EXPECTATIONS.wcusActions.length === 3, 'Selected Digest WCUS callout must expose exactly three ordered actions.' );
+		assert(
+			DIGEST_EXPECTATIONS.proofLabels.join( '|' ) === 'Signal|Diagnosis|Constraint|Result',
+			`Selected Digest proof order is ${ DIGEST_EXPECTATIONS.proofLabels.join( ', ' ) }; expected Signal, Diagnosis, Constraint, Result.`
+		);
 	}
 
 	verifyStackedLedgerLabels( pageCss );
@@ -444,6 +474,49 @@ function assertPageMetrics( result, page, viewport ) {
 		assert( result.closing.eyebrow === DIGEST_EXPECTATIONS.closingEyebrow, `${ context } has the wrong closing eyebrow.` );
 		assert( result.closing.heading === DIGEST_EXPECTATIONS.closingHeading, `${ context } has the wrong closing heading.` );
 		assertActions( result.closing.actions, DIGEST_EXPECTATIONS.closingActions, `${ context } closing panel` );
+		if ( DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
+			assert( result.wcus, `${ context } is missing .hp-digest__hero + .hp-wcus-callout.` );
+			assertActions( result.wcus.actions, DIGEST_EXPECTATIONS.wcusActions, `${ context } WCUS callout` );
+			assert( result.wcus.actions.every( ( action ) => action.textContained ), `${ context } clips a WCUS action label.` );
+			if ( viewport.width >= 782 ) {
+				assert(
+					result.wcus.actions.every( ( action ) => Math.abs( action.top - result.wcus.actions[ 0 ].top ) <= 2 ) &&
+						result.wcus.actions.every( ( action, index ) => index === 0 || action.left > result.wcus.actions[ index - 1 ].left ),
+					`${ context } does not keep the three WCUS actions in ordered columns.`
+				);
+			} else {
+				for ( let index = 0; index < result.wcus.actions.length; index++ ) {
+					const action = result.wcus.actions[ index ];
+					assert( action.width >= result.wcus.width - 12, `${ context } WCUS action ${ index + 1 } does not fill its stacked row.` );
+					if ( index > 0 ) {
+						assert( action.top >= result.wcus.actions[ index - 1 ].bottom - 1, `${ context } WCUS action ${ index + 1 } does not stack below action ${ index }.` );
+					}
+				}
+			}
+			assert( result.proofItems.length === 4, `${ context } renders ${ result.proofItems.length } root-cause proof items; expected 4.` );
+			assert(
+				result.proofItems.map( ( item ) => item.label ).join( '|' ) === DIGEST_EXPECTATIONS.proofLabels.join( '|' ),
+				`${ context } changes the Signal → Diagnosis → Constraint → Result proof order.`
+			);
+			if ( viewport.width < 782 ) {
+				for ( let index = 1; index < result.proofItems.length; index++ ) {
+					assert(
+						result.proofItems[ index ].top >= result.proofItems[ index - 1 ].bottom - 1,
+						`${ context } does not stack proof item ${ index + 1 } below item ${ index }.`
+					);
+				}
+			}
+			assert( result.rootCauseFragment, `${ context } did not exercise #root-cause-investigation.` );
+			assert( result.rootCauseFragment.hash === '#root-cause-investigation', `${ context } did not retain the root-cause fragment hash.` );
+			assert( result.rootCauseFragment.focused, `${ context } did not focus the root-cause proof section.` );
+			assert( result.rootCauseFragment.tabindex === '-1', `${ context } did not keep fragment focus programmatic-only.` );
+			assert(
+				result.rootCauseFragment.targetTop >= result.rootCauseFragment.headerBottom - 1 &&
+					result.rootCauseFragment.targetTop < viewport.height,
+				`${ context } did not scroll the root-cause proof section clear of the sticky header.`
+			);
+			assert( result.rootCauseFragment.headingOutlineUnchanged, `${ context } changed the heading outline during fragment focus.` );
+		}
 	} else {
 		assert( result.fragment, `${ context } is missing #resume-keyword-bank.` );
 		assert( result.fragment.tagName === 'SECTION', `${ context } assigns #resume-keyword-bank to ${ result.fragment.tagName}, not SECTION.` );
@@ -602,15 +675,35 @@ async function inspectPage( cdp, page, viewport ) {
 				}
 			}
 
-			const actions = (root) => root ? Array.from(root.querySelectorAll('.wp-block-button__link')).map((link) => ({
-				text: link.textContent.trim().replace(/\\s+/g, ' '),
-				href: link.getAttribute('href'),
-				height: round(link.getBoundingClientRect().height),
-			})) : [];
+			const actions = (root) => root ? Array.from(root.querySelectorAll('.wp-block-button__link')).map((link) => {
+				const bounds = link.getBoundingClientRect();
+				const range = document.createRange();
+				range.selectNodeContents(link);
+				return {
+					text: link.textContent.trim().replace(/\\s+/g, ' '),
+					href: link.getAttribute('href'),
+					height: round(bounds.height),
+					width: round(bounds.width),
+					left: round(bounds.left),
+					top: round(bounds.top),
+					bottom: round(bounds.bottom),
+					textContained: Array.from(range.getClientRects()).every((rect) => rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1 && rect.top >= bounds.top - 1 && rect.bottom <= bounds.bottom + 1),
+				};
+			}) : [];
 			const primaryRail = document.querySelector('.hp-digest__primary-actions');
 			const primaryRect = primaryRail?.getBoundingClientRect();
 			const closing = document.querySelector('.hp-digest-cta');
 			const anchor = document.getElementById('resume-keyword-bank');
+			const wcus = document.querySelector('.hp-digest__hero + .hp-wcus-callout');
+			const wcusActionsRoot = wcus?.querySelector('.hp-wcus-callout__actions');
+			const proofItems = Array.from(document.querySelectorAll('#root-cause-investigation .hp-debug-proof__item')).map((item) => {
+				const bounds = item.getBoundingClientRect();
+				return {
+					label: item.querySelector('dt')?.textContent.trim() || '',
+					top: round(bounds.top),
+					bottom: round(bounds.bottom),
+				};
+			});
 
 			return {
 				url: location.href,
@@ -632,6 +725,8 @@ async function inspectPage( cdp, page, viewport ) {
 					heading: closing.querySelector('h2')?.textContent.trim() || null,
 					actions: actions(closing),
 				} : null,
+				wcus: wcusActionsRoot ? { width: round(wcusActionsRoot.getBoundingClientRect().width), actions: actions(wcusActionsRoot) } : null,
+				proofItems,
 				fragment: anchor ? {
 					tagName: anchor.tagName,
 					visible: isVisible(anchor) && !!anchor.querySelector('h2') && !!anchor.querySelector('details'),
@@ -654,6 +749,24 @@ async function inspectPage( cdp, page, viewport ) {
 					`document.querySelector(':target') === document.getElementById('resume-keyword-bank')`
 				);
 			}
+		}
+		if ( page.name === 'digest' && DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
+			const initialOutline = await evaluate( cdp, sessionId, `Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')` );
+			await evaluate( cdp, sessionId, `location.hash = 'root-cause-investigation'` );
+			await wait( 100 );
+			metrics.rootCauseFragment = await evaluate( cdp, sessionId, `(() => {
+				const target = document.getElementById('root-cause-investigation');
+				const header = document.querySelector('header.wp-block-template-part');
+				return {
+					hash: location.hash,
+					focused: document.activeElement === target,
+					tabindex: target?.getAttribute('tabindex') || null,
+					targetTop: target?.getBoundingClientRect().top ?? null,
+					headerBottom: header?.getBoundingClientRect().bottom ?? 0,
+				};
+			})()` );
+			const finalOutline = await evaluate( cdp, sessionId, `Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')` );
+			metrics.rootCauseFragment.headingOutlineUnchanged = initialOutline === finalOutline;
 		}
 
 		await cdp.send( 'Emulation.setEmulatedMedia', {

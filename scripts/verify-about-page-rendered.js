@@ -53,8 +53,8 @@ const PRIMARY_VIEWPORTS = [
 	{ name: '1440', width: 1440, height: 1000, mobile: false, canonical: true },
 	{ name: '1024', width: 1024, height: 1000, mobile: false },
 	{ name: '768', width: 768, height: 1000, mobile: false },
-	{ name: '390', width: 390, height: 1000, mobile: true },
-	{ name: '320', width: 320, height: 1000, mobile: true },
+	{ name: '390', width: 390, height: 844, mobile: true },
+	{ name: '320', width: 320, height: 844, mobile: true },
 ];
 
 // Geometry-only probes for the exclusive responsive boundaries. These produce
@@ -147,6 +147,25 @@ function deriveRenderedExpectations( html, { label = 'selected About body' } = {
 	assert( portrait, `${ label } has no portrait alternative text to compare with the render.` );
 	const foundations = findBalancedElementsByClass( html, 'hp-about-foundations-grid', label )[ 0 ];
 	assert( foundations, `${ label } has no .hp-about-foundations-grid.` );
+	const wcus = findBalancedElementsByClass( html, 'hp-about-wcus', label )[ 0 ] || null;
+	const coreAi = findBalancedElementsByClass( html, 'hp-about-core-ai', label )[ 0 ] || null;
+	let wcusActions = [];
+	if ( wcus ) {
+		assert(
+			findBalancedElementsByClass( html, 'hp-about-hero__copy', label )[ 0 ]?.inner.includes( wcus.outer ),
+			`${ label } must place .hp-about-wcus inside .hp-about-hero__copy.`
+		);
+		assert( ! wcus.outer.includes( 'hp-action-rail' ), `${ label } .hp-about-wcus must stay outside hp-action-rail.` );
+		const wcusAction = findBalancedElementsByClass( wcus.inner, 'hp-about-wcus__action', label )[ 0 ];
+		assert( wcusAction, `${ label } .hp-about-wcus has no .hp-about-wcus__action.` );
+		wcusActions = findLinks( wcusAction.inner, label );
+		assert( wcusActions.length === 1, `${ label } .hp-about-wcus must expose exactly one action.` );
+		assert( coreAi, `${ label } with a WCUS callout has no .hp-about-core-ai section.` );
+		assert(
+			findBalancedElementsByClass( coreAi.inner, 'hp-evidence-row', label ).length === 4,
+			`${ label } .hp-about-core-ai must contain exactly four evidence rows.`
+		);
+	}
 
 	return {
 		closingActionLabels: rails.at( -1 ).map( ( action ) => action.text ),
@@ -161,6 +180,7 @@ function deriveRenderedExpectations( html, { label = 'selected About body' } = {
 		portraitAlt: decodeCharacterReferences( portrait[ 1 ] ),
 		projects,
 		sourceWordCount: countVisibleWords( html, { label } ),
+		wcusActionLabels: wcusActions.map( ( action ) => action.text ),
 	};
 }
 
@@ -170,6 +190,16 @@ function verifySourceContracts( selectedAboutBody, pageCss, label ) {
 		fs.readFileSync( path.join( THEME_ROOT, 'style.css' ), 'utf8' ),
 		pageCss
 	);
+	if ( expectations.wcusActionLabels.length > 0 ) {
+		for ( const expected of [
+			'.hp-about-wcus {',
+			'.hp-about-wcus__label {',
+			'.hp-about-wcus__copy,',
+			'.hp-about-wcus__action {',
+		] ) {
+			assert( pageCss.includes( expected ), `assets/imladris-pages.css is missing About WCUS contract: ${ expected }` );
+		}
+	}
 	console.log( 'About rendered-page source contracts verified.' );
 	return expectations;
 }
@@ -427,6 +457,21 @@ function buildInspectionExpression( opts ) {
 		const heroPortrait = content.querySelector('.hp-about-hero__portrait');
 		out.hero = heroCopy && heroPortrait ? { copy: rect(heroCopy), portrait: rect(heroPortrait) } : null;
 		out.signals = Array.from(content.querySelectorAll('.hp-about-impact .hp-signal')).map(rect);
+		const wcus = content.querySelector('.hp-about-hero__copy .hp-about-wcus');
+		out.wcus = wcus ? {
+			insideActionRail: !!wcus.closest('.hp-action-rail'),
+			actions: Array.from(wcus.querySelectorAll('.hp-about-wcus__action .wp-block-button__link')).map((link) => {
+				const bounds = link.getBoundingClientRect();
+				const range = document.createRange();
+				range.selectNodeContents(link);
+				return {
+					text: link.textContent.trim(),
+					rect: rect(link),
+					textContained: Array.from(range.getClientRects()).every((value) => value.left >= bounds.left - 1 && value.right <= bounds.right + 1 && value.top >= bounds.top - 1 && value.bottom <= bounds.bottom + 1),
+				};
+			}),
+		} : null;
+		out.coreAiEvidenceRows = content.querySelectorAll('.hp-about-core-ai .hp-evidence-row').length;
 		const foundationColumns = Array.from(
 			content.querySelectorAll('.hp-about-foundations-grid > .wp-block-column')
 		);
@@ -461,6 +506,7 @@ function buildInspectionExpression( opts ) {
 			...(nav ? Array.from(nav.querySelectorAll('a')) : []),
 			...Array.from(content.querySelectorAll('.hp-work-card__actions a')),
 			...Array.from(content.querySelectorAll('.hp-action-rail .wp-block-button__link')),
+			...Array.from(content.querySelectorAll('.hp-about-wcus__action .wp-block-button__link')),
 		];
 		for (const link of focusTargets) {
 			try { link.focus({ preventScroll: true }); } catch (error) { link.focus(); }
@@ -498,6 +544,19 @@ function buildInspectionExpression( opts ) {
 			out.renderedText = clone.innerText;
 			shellMain.remove();
 		}
+
+		const maximumSeconds = (value) => Math.max(...value.split(',').map((part) => {
+			const number = Number.parseFloat(part) || 0;
+			return part.trim().endsWith('ms') ? number / 1000 : number;
+		}));
+		out.reducedMotion = {
+			matches: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+			offenders: Array.from(content.querySelectorAll('*')).filter((element) => {
+				const style = getComputedStyle(element);
+				return style.display !== 'none' && style.visibility !== 'hidden' && element.getClientRects().length > 0 &&
+					(maximumSeconds(style.animationDuration) > 0.001 || maximumSeconds(style.transitionDuration) > 0.001);
+			}).map((element) => element.tagName.toLowerCase() + (element.className ? '.' + String(element.className).trim().replace(/\\s+/g, '.') : '')),
+		};
 
 		return out;
 	})()`;
@@ -540,6 +599,17 @@ function verifyGeometry( result, viewport, expectations ) {
 		result.capabilityColumns.length === 3,
 		`${ label }: expected three capability units, got ${ result.capabilityColumns.length }.`
 	);
+	if ( expectations.wcusActionLabels.length > 0 ) {
+		assert( result.wcus, `${ label }: missing .hp-about-hero__copy .hp-about-wcus.` );
+		assert( ! result.wcus.insideActionRail, `${ label }: .hp-about-wcus is inside hp-action-rail.` );
+		assert( result.wcus.actions.length === 1, `${ label }: WCUS callout must expose exactly one action.` );
+		assert( result.wcus.actions[ 0 ].text === expectations.wcusActionLabels[ 0 ], `${ label }: WCUS action label or order changed.` );
+		assert( result.wcus.actions[ 0 ].rect.height >= 44, `${ label }: WCUS action is shorter than 44px.` );
+		assert( result.wcus.actions[ 0 ].textContained, `${ label }: WCUS action label clips instead of wrapping.` );
+		assert( result.coreAiEvidenceRows === 4, `${ label }: Core AI evidence renders ${ result.coreAiEvidenceRows } rows; expected 4.` );
+	}
+	assert( result.reducedMotion.matches, `${ label }: reduced-motion emulation did not apply.` );
+	assert( result.reducedMotion.offenders.length === 0, `${ label }: visible motion remains under reduced motion: ${ result.reducedMotion.offenders.slice( 0, 8 ).join( ', ' ) }.` );
 	const cardRects = result.cards.map( ( card ) => card.rect );
 	const capabilityRects = result.capabilityColumns;
 	if ( width >= 896 ) {
@@ -737,6 +807,10 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 		height: viewport.height,
 		deviceScaleFactor: 1,
 		mobile: viewport.mobile,
+	}, sessionId );
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		media: 'screen',
+		features: [ { name: 'prefers-reduced-motion', value: 'reduce' } ],
 	}, sessionId );
 
 	const loaded = cdp.once( 'Page.loadEventFired', sessionId );

@@ -87,8 +87,8 @@ const LIVE_PAGES = [
 
 const VIEWPORTS = [
 	{ name: 'desktop', width: 1440, height: 1000, mobile: false },
-	{ name: 'mobile-390', width: 390, height: 1000, mobile: true },
-	{ name: 'mobile-320', width: 320, height: 1000, mobile: true },
+	{ name: 'mobile-390', width: 390, height: 844, mobile: true },
+	{ name: 'mobile-320', width: 320, height: 844, mobile: true },
 ];
 
 function assert( condition, message ) {
@@ -116,6 +116,7 @@ function hasClassSet( contents, expectedClasses ) {
 
 function verifySourceContracts() {
 	const css = read( 'style.css' );
+	const pageCss = read( 'assets/imladris-pages.css' );
 	for ( const expected of [
 		'.hp-action-rail {',
 		'.hp-action-panel.is-closing {',
@@ -124,6 +125,13 @@ function verifySourceContracts() {
 		'.wp-block-button__link:focus-visible',
 	] ) {
 		assert( css.includes( expected ), `style.css is missing expected contract: ${ expected }` );
+	}
+	if ( DIGEST_BODY.includes( 'hp-wcus-callout' ) ) {
+		assert( pageCss.includes( '.hp-wcus-callout {' ), 'assets/imladris-pages.css is missing .hp-wcus-callout presentation.' );
+		assert( pageCss.includes( '.hp-wcus-callout__actions {' ), 'assets/imladris-pages.css is missing .hp-wcus-callout__actions layout.' );
+	}
+	if ( read( ABOUT_SOURCE ).includes( 'hp-about-wcus' ) ) {
+		assert( pageCss.includes( '.hp-about-wcus {' ), 'assets/imladris-pages.css is missing .hp-about-wcus presentation.' );
 	}
 
 	for ( const file of RAIL_FILES ) {

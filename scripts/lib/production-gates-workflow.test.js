@@ -68,6 +68,7 @@ test( 'keeps all production browser gates in the deployed job on Node 22', () =>
 		'verify-prominent-actions',
 		'verify-job-placement-pages',
 		'verify-about-page-rendered',
+		'verify-resume-route',
 	] ) {
 		assert.match(
 			deployedJob,
@@ -75,7 +76,7 @@ test( 'keeps all production browser gates in the deployed job on Node 22', () =>
 			`${ gate } is not an active line in the deployed job.`
 		);
 	}
-	assert.doesNotMatch( deployedJob, /verify-(?:header|typography|prominent-actions|job-placement-pages)\.js --source-only/ );
+	assert.doesNotMatch( deployedJob, /verify-(?:header|typography|prominent-actions|job-placement-pages|resume-route)\.js --source-only/ );
 	assert.match( deployedJob, /node scripts\/verify-job-placement-pages\.js/ );
 	assert.doesNotMatch( deployedJob, /verify-job-placement-pages\.js[^\n]*--drafts/ );
 	assert.doesNotMatch( deployedJob, /verify-prominent-actions\.js[^\n]*--drafts/ );
@@ -106,6 +107,12 @@ test( 'runs the recruiter rendered-page source half on every branch', () => {
 test( 'runs the prominent-actions source contract on every branch', () => {
 	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
 	assertActiveSourceCommand( sourceJob, 'node scripts/verify-prominent-actions.js --source-only --drafts' );
+} );
+
+test( 'runs the resume-route source contract on every branch', () => {
+	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
+	assertActiveSourceCommand( sourceJob, 'node scripts/verify-resume-route.js --source-only' );
+	assert.doesNotMatch( sourceJob, /^\s*run:\s*node scripts\/verify-resume-route\.js\s*$/m );
 } );
 
 test( 'does not count commented phase commands as active source gates', () => {
@@ -174,6 +181,7 @@ test( 'runs metadata, Digest, About probe, market parity, and production workflo
 		'scripts/lib/page-content-contract.test.js',
 		'scripts/lib/page-phase-contract.test.js',
 		'scripts/lib/production-gates-workflow.test.js',
+		'scripts/lib/resume-route-contract.test.js',
 	] );
 } );
 

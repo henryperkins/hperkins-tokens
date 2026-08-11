@@ -87,6 +87,7 @@ jobs:
             scripts/lib/page-markup-contract.test.js \
             scripts/lib/placement-artifact-links.test.js \
             scripts/lib/production-gates-workflow.test.js \
+            scripts/lib/resume-route-contract.test.js \
             scripts/lib/release-record.test.js \
             scripts/lib/site-url.test.js \
             scripts/lib/style-coverage.test.js \
@@ -122,6 +123,9 @@ jobs:
 
       - name: Prominent actions source contract
         run: node scripts/verify-prominent-actions.js --source-only --drafts
+
+      - name: Résumé route source contract
+        run: node scripts/verify-resume-route.js --source-only
 
       - name: Deployment-integrity endpoint source contract
         run: node scripts/verify-deployed-content-ownership.js --source-only
@@ -240,6 +244,10 @@ jobs:
           fi
           if ! node scripts/verify-about-page-rendered.js; then
             echo "::error::verify-about-page-rendered.js failed against production."
+            fail=1
+          fi
+          if ! node scripts/verify-resume-route.js; then
+            echo "::error::verify-resume-route.js failed against production."
             fail=1
           fi
           exit $fail
