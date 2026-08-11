@@ -86,6 +86,8 @@ node --test scripts/lib/content-integrity.test.js scripts/lib/job-placement-meta
 
 `/one-page-resume/` is the stable visible-link destination. The final PDF remains a theme-owned artifact verified directly. `about-resume` substitutes only the portrait URL. Digest and About database bodies remain canonical; drafts are candidates and snapshots are accepted mirrors. Production page/footer writes are separate from a theme deploy.
 
+The adapter never rewrites résumé links; visible résumé actions stay on the stable route.
+
 Use the candidate-aware source and local-render checks before publication. The unflagged résumé-route command proves the public redirect and PDF response, while the artifact link pass validates the PDF and the other recruiter artifacts directly:
 
 ```powershell

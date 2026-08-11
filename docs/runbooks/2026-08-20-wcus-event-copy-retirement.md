@@ -67,6 +67,35 @@ response. The artifact command verifies the regenerated files directly. The
 candidate checks do not promote drafts and must leave accepted snapshots
 byte-identical.
 
+## Complete source gate
+
+After the retirement edits and focused candidate checks, this complete source
+gate must pass before seeking publication approval. Run the block exactly; the
+artifact step here is the source-gate form, while live link checks remain in
+the post-publication proof block below.
+
+```powershell
+Get-ChildItem -Recurse -Filter *.php | ForEach-Object { php -l $_.FullName; if ($LASTEXITCODE -ne 0) { throw "PHP lint failed: $($_.FullName)" } }
+node --test scripts/lib/about-page-contract.test.js scripts/lib/about-page-rendered-probe.test.js scripts/lib/about-gravatar-heading.test.js scripts/lib/content-integrity.test.js scripts/lib/content-ownership-docs.test.js scripts/lib/event-copy-retirement-runbook.test.js scripts/lib/job-placement-metadata-contract.test.js scripts/lib/market-screen-parity.test.js scripts/lib/navigation-content-contract.test.js scripts/lib/page-content-contract.test.js scripts/lib/page-markup-contract.test.js scripts/lib/page-phase-contract.test.js scripts/lib/placement-artifact-contract.test.js scripts/lib/placement-artifact-links.test.js scripts/lib/production-gates-workflow.test.js scripts/lib/release-record.test.js scripts/lib/resume-route-contract.test.js scripts/lib/site-url.test.js scripts/lib/style-coverage.test.js scripts/lib/wp-cli.test.js scripts/lib/zip-archive.test.js
+node scripts/verify-placement-artifacts.js
+node scripts/verify-header.js --source-only
+node scripts/verify-typography.js --source-only
+node scripts/verify-journal-templates.js
+node scripts/verify-performance-assets.js
+node scripts/verify-job-placement-digest-source.js
+node scripts/verify-about-page-source.js --drafts
+node scripts/verify-job-placement-pages.js --source-only --drafts
+node scripts/verify-prominent-actions.js --source-only --drafts
+node scripts/verify-resume-route.js --source-only
+node scripts/verify-deployed-content-ownership.js --source-only
+node scripts/verify-content-ownership-docs.js
+node scripts/verify-style-token-usage.js
+git diff --check
+```
+
+Any failure returns the retirement candidate to source review. A partial pass
+is not sufficient evidence for publication approval.
+
 ## Publication gates
 
 Publication must repeat, in order:
@@ -85,6 +114,25 @@ Publication must repeat, in order:
    ownership, footer-link, artifact, accessibility, and responsive checks
    against the actual public origin. Preserve the fresh remote equality record;
    local WordPress evidence is not production proof.
+
+After the separately approved writes and snapshot promotion, run these exact
+public verification commands against the public origin:
+
+```powershell
+node scripts/verify-resume-route.js
+node scripts/verify-deployed-content-ownership.js --drafts --page=job-placement-digest --page=about
+node scripts/verify-job-placement-pages.js --drafts
+node scripts/verify-about-page-rendered.js --drafts
+node scripts/verify-prominent-actions.js --drafts
+node scripts/verify-job-placement-digest-metadata.js
+node scripts/verify-placement-artifacts.js --check-links
+node scripts/verify-typography.js
+```
+
+These read-only verification commands do not authorize a production write,
+deployment, or publication. The runbook still requires a fresh read and direct
+confirmation before any write, and a separate deployment approval before any
+deploy.
 
 If any write, equality check, or public proof fails, stop, identify exactly
 which records changed, and freshly read every affected record before proposing
