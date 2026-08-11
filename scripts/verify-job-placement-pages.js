@@ -13,17 +13,66 @@ const fsPromises = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
+const { findHeadings, findLinks, extractExactText } = require( './lib/about-page-contract' );
+const { assertKnownOptions, selectDigestSource } = require( './lib/page-phase-contract' );
 const { getOrigin } = require( './lib/site-url' );
 
 const ROOT = path.join( __dirname, '..' );
+const ARGV = process.argv.slice( 2 );
+assertKnownOptions( ARGV, [ '--source-only', '--drafts' ] );
 const ORIGIN = getOrigin();
-const SOURCE_ONLY = process.argv.includes( '--source-only' );
+const SOURCE_ONLY = ARGV.includes( '--source-only' );
+const DIGEST_SOURCE = selectDigestSource( ARGV );
+
+function read( sourcePath ) {
+	const resolved = path.isAbsolute( sourcePath ) ? sourcePath : path.join( ROOT, sourcePath );
+	return fs.readFileSync( resolved, 'utf8' ).replace( /\r\n/g, '\n' );
+}
+
+function findWpBlocksByClass( html, blockName, className ) {
+	const blocks = [];
+	const pattern = new RegExp(
+		`<!-- wp:${ blockName }(?: ({[^\n]*}))? -->([\\s\\S]*?)<!-- \/wp:${ blockName } -->`,
+		'g'
+	);
+	for ( const match of html.matchAll( pattern ) ) {
+		const attrs = match[ 1 ] ? JSON.parse( match[ 1 ] ) : {};
+		if ( ( attrs.className || '' ).split( /\s+/ ).includes( className ) ) {
+			blocks.push( match[ 2 ] );
+		}
+	}
+	return blocks;
+}
+
+function deriveDigestExpectations( html ) {
+	const headings = findHeadings( html, 'selected Digest body' );
+	const h1 = headings.find( ( heading ) => heading.level === 1 );
+	const actionRails = findWpBlocksByClass( html, 'buttons', 'hp-action-rail' );
+	const primaryRail = findWpBlocksByClass( html, 'buttons', 'hp-digest__primary-actions' )[ 0 ];
+	const eyebrow = /<p\b[^>]*class="[^"]*\bhp-page-hero__eyebrow\b[^"]*"[^>]*>([\s\S]*?)<\/p>/g;
+	const eyebrows = [ ...html.matchAll( eyebrow ) ];
+
+	assert( h1, 'Selected Digest body has no H1.' );
+	assert( primaryRail, 'Selected Digest body has no primary action rail.' );
+	assert( actionRails.length >= 2, 'Selected Digest body has no closing action rail.' );
+	assert( eyebrows.length > 0, 'Selected Digest body has no closing eyebrow.' );
+
+	return {
+		h1: h1.text,
+		primaryActions: findLinks( primaryRail, 'selected Digest primary actions' ),
+		closingActions: findLinks( actionRails.at( -1 ), 'selected Digest closing actions' ),
+		closingEyebrow: extractExactText( eyebrows.at( -1 )[ 1 ], { label: 'selected Digest closing eyebrow' } ),
+		closingHeading: headings.filter( ( heading ) => heading.level === 2 ).at( -1 ).text,
+	};
+}
+
+const DIGEST_EXPECTATIONS = deriveDigestExpectations( read( DIGEST_SOURCE ) );
 
 const PAGES = [
 	{
 		name: 'digest',
 		route: '/job-placement-digest/',
-		h1: 'I debug WordPress systems, document root causes, and turn recurring failures into constraints.',
+		h1: DIGEST_EXPECTATIONS.h1,
 	},
 	{
 		name: 'appendix',
@@ -40,33 +89,10 @@ const VIEWPORTS = [
 	{ name: 'mobile-320', width: 320, height: 1000 },
 ];
 
-const PRIMARY_ACTIONS = [
-	{
-		text: 'View one-page résumé',
-		href: '/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf',
-	},
-	{ text: 'Review GitHub evidence', href: '#evidence-register' },
-	{ text: 'Read the root-cause investigation', href: '#root-cause-investigation' },
-	{ text: 'Contact Henry', href: '/contact/' },
-];
-
-const CLOSING_ACTIONS = [
-	{ text: 'Contact Henry', href: '/contact/' },
-	{
-		text: 'View one-page résumé',
-		href: '/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf',
-	},
-	{ text: 'Review GitHub evidence', href: '#evidence-register' },
-];
-
 function assert( condition, message ) {
 	if ( ! condition ) {
 		throw new Error( message );
 	}
-}
-
-function read( relativePath ) {
-	return fs.readFileSync( path.join( ROOT, relativePath ), 'utf8' ).replace( /\r\n/g, '\n' );
 }
 
 function verifySourceContracts() {
@@ -147,7 +173,7 @@ function ledgerHeaders( html, className ) {
  */
 function verifyStackedLedgerLabels( pageCss ) {
 	const appendix = read( 'content/page-snapshots/placement-method-evidence.html' );
-	const digest = read( 'content/page-snapshots/job-placement-digest.html' );
+	const digest = read( DIGEST_SOURCE );
 
 	const keyword = ledgerHeaders( appendix, 'hp-keyword-table' );
 	const state = ledgerHeaders( appendix, 'hp-state-table' );
@@ -401,7 +427,7 @@ function assertPageMetrics( result, page, viewport ) {
 
 	if ( page.name === 'digest' ) {
 		assert( result.primaryActions, `${ context } is missing the first-screen action rail.` );
-		assertActions( result.primaryActions.actions, PRIMARY_ACTIONS, `${ context } first-screen rail` );
+		assertActions( result.primaryActions.actions, DIGEST_EXPECTATIONS.primaryActions, `${ context } first-screen rail` );
 		assert( result.primaryActions.inHero, `${ context } first-screen action rail is outside the recruiter hero.` );
 		assert( result.primaryActions.top >= -1, `${ context } first-screen rail begins above the viewport.` );
 		// Phone height is intentionally not part of the requested matrix (the
@@ -415,9 +441,9 @@ function assertPageMetrics( result, page, viewport ) {
 			);
 		}
 		assert( result.closing, `${ context } is missing the composed closing panel.` );
-		assert( result.closing.eyebrow === 'A next step, stated plainly.', `${ context } has the wrong closing eyebrow.` );
-		assert( result.closing.heading === 'Bring me the problem behind the ticket.', `${ context } has the wrong closing heading.` );
-		assertActions( result.closing.actions, CLOSING_ACTIONS, `${ context } closing panel` );
+		assert( result.closing.eyebrow === DIGEST_EXPECTATIONS.closingEyebrow, `${ context } has the wrong closing eyebrow.` );
+		assert( result.closing.heading === DIGEST_EXPECTATIONS.closingHeading, `${ context } has the wrong closing heading.` );
+		assertActions( result.closing.actions, DIGEST_EXPECTATIONS.closingActions, `${ context } closing panel` );
 	} else {
 		assert( result.fragment, `${ context } is missing #resume-keyword-bank.` );
 		assert( result.fragment.tagName === 'SECTION', `${ context } assigns #resume-keyword-bank to ${ result.fragment.tagName}, not SECTION.` );

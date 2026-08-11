@@ -68,6 +68,9 @@ test( 'keeps all production browser gates in the deployed job on Node 22', () =>
 		);
 	}
 	assert.doesNotMatch( deployedJob, /verify-(?:header|typography|prominent-actions|job-placement-pages)\.js --source-only/ );
+	assert.match( deployedJob, /node scripts\/verify-job-placement-pages\.js/ );
+	assert.doesNotMatch( deployedJob, /verify-job-placement-pages\.js[^\n]*--drafts/ );
+	assert.doesNotMatch( deployedJob, /verify-prominent-actions\.js[^\n]*--drafts/ );
 } );
 
 test( 'both CI jobs pin the same Node 22.x major for the normative About word count', () => {
@@ -89,12 +92,12 @@ test( 'includes the research appendix in the rendered typography route matrix', 
 
 test( 'runs the recruiter rendered-page source half on every branch', () => {
 	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
-	assert.match( sourceJob, /node scripts\/verify-job-placement-pages\.js --source-only/ );
+	assert.match( sourceJob, /node scripts\/verify-job-placement-pages\.js --source-only --drafts/ );
 } );
 
 test( 'runs the prominent-actions source contract on every branch', () => {
 	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
-	assert.match( sourceJob, /node scripts\/verify-prominent-actions\.js --source-only/ );
+	assert.match( sourceJob, /node scripts\/verify-prominent-actions\.js --source-only --drafts/ );
 } );
 
 test( 'normalizes pointer media for the production header gate', () => {
@@ -145,6 +148,7 @@ test( 'runs metadata, About probe, market parity, and production workflow contra
 		'scripts/lib/job-placement-metadata-contract.test.js',
 		'scripts/lib/market-screen-parity.test.js',
 		'scripts/lib/page-content-contract.test.js',
+		'scripts/lib/page-phase-contract.test.js',
 		'scripts/lib/production-gates-workflow.test.js',
 	] );
 } );

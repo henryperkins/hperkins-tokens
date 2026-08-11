@@ -6,24 +6,24 @@ const fsPromises = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
+const { findHeadings } = require( './lib/about-page-contract' );
+const { assertKnownOptions, selectAboutSource, selectDigestSource } = require( './lib/page-phase-contract' );
 const { getOrigin } = require( './lib/site-url' );
 
 const THEME_ROOT = path.join( __dirname, '..' );
+const ARGV = process.argv.slice( 2 );
+assertKnownOptions( ARGV, [ '--source-only', '--drafts' ] );
 const CHROME = process.env.CHROME_BIN || '/usr/bin/google-chrome';
 const ORIGIN = getOrigin();
-const SOURCE_ONLY = process.argv.includes( '--source-only' );
-const USE_DRAFTS = process.argv.includes( '--drafts' );
+const SOURCE_ONLY = ARGV.includes( '--source-only' );
+const USE_DRAFTS = ARGV.includes( '--drafts' );
 const CAPTURE_DIR = process.env.HPERKINS_CAPTURE_DIR ||
 	path.join( os.tmpdir(), 'hperkins-prominent-actions' );
-const DIGEST_SOURCE = USE_DRAFTS
-	? 'content/page-drafts/job-placement-digest.html'
-	: 'content/page-snapshots/job-placement-digest.html';
+const DIGEST_SOURCE = selectDigestSource( ARGV );
 // About body copy lives in the selected candidate or accepted snapshot;
 // patterns/about-resume.php is a thin adapter over the snapshot and carries
 // no rail/panel markup of its own (it is asserted clean below).
-const ABOUT_SOURCE = USE_DRAFTS
-	? 'content/page-drafts/about.html'
-	: 'content/page-snapshots/about.html';
+const ABOUT_SOURCE = selectAboutSource( { drafts: USE_DRAFTS } );
 // The proof-first About body (marked by its hp-about-nav landmark) carries a
 // hero rail plus a closing invitation; the previous body has one rail and no
 // panel. Deriving the expectation from the selected source keeps every phase
@@ -31,7 +31,7 @@ const ABOUT_SOURCE = USE_DRAFTS
 // candidate and exported redesign snapshot -> 2/1.
 const ABOUT_REDESIGNED = ( () => {
 	try {
-		return fs.readFileSync( path.join( THEME_ROOT, ABOUT_SOURCE ), 'utf8' ).includes( 'hp-about-nav' );
+		return fs.readFileSync( ABOUT_SOURCE, 'utf8' ).includes( 'hp-about-nav' );
 	} catch ( cause ) {
 		throw new Error( `About source ${ ABOUT_SOURCE } is missing; the prominent-action contract derives its /about/ expectation from it.`, { cause } );
 	}
@@ -58,14 +58,21 @@ const EXCLUDED_FILES = [
 	'patterns/about-resume.php',
 ];
 
-const DIGEST_COPY = [
-	'A next step, stated plainly',
-	'Bring me the problem behind the ticket.',
-	'I want Support Engineer work where the symptom matters, the root cause can be documented, and the next occurrence can be prevented. If that is the problem in front of your team, let’s compare notes.',
-	'href="/contact/"',
-	'href="/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf"',
-	'href="#evidence-register"',
-];
+const DIGEST_BODY = fs.readFileSync( DIGEST_SOURCE, 'utf8' );
+const DIGEST_CLOSING_HEADING = findHeadings( DIGEST_BODY, 'selected Digest body' )
+	.filter( ( heading ) => heading.level === 2 )
+	.at( -1 )?.text;
+if ( ! DIGEST_CLOSING_HEADING ) {
+	throw new Error( `Selected Digest body ${ DIGEST_SOURCE } has no closing H2.` );
+}
+const DIGEST_ACTION_COUNTS = {
+	railCount: classLists( DIGEST_BODY ).filter( ( classes ) =>
+		[ 'wp-block-buttons', 'hp-action-rail' ].every( ( className ) => classes.includes( className ) )
+	).length,
+	panelCount: classLists( DIGEST_BODY ).filter( ( classes ) =>
+		[ 'hp-action-panel', 'is-closing' ].every( ( className ) => classes.includes( className ) )
+	).length,
+};
 
 const LIVE_PAGES = [
 	{ route: '/', railCount: 2, panelCount: 1 },
@@ -74,7 +81,7 @@ const LIVE_PAGES = [
 		railCount: ABOUT_REDESIGNED ? 2 : 1,
 		panelCount: ABOUT_REDESIGNED ? 1 : 0,
 	},
-	{ route: '/job-placement-digest/', railCount: 2, panelCount: 1, digest: true },
+	{ route: '/job-placement-digest/', ...DIGEST_ACTION_COUNTS, digest: true },
 	{ route: '/work/flavor-agent/demo/', railCount: 1, panelCount: 1 },
 ];
 
@@ -91,7 +98,8 @@ function assert( condition, message ) {
 }
 
 function read( relativePath ) {
-	return fs.readFileSync( path.join( THEME_ROOT, relativePath ), 'utf8' );
+	const resolved = path.isAbsolute( relativePath ) ? relativePath : path.join( THEME_ROOT, relativePath );
+	return fs.readFileSync( resolved, 'utf8' );
 }
 
 function classLists( contents ) {
@@ -136,17 +144,6 @@ function verifySourceContracts() {
 		const contents = read( file );
 		assert( ! contents.includes( 'hp-action-rail' ), `${ file } must remain outside hp-action-rail.` );
 		assert( ! contents.includes( 'hp-action-panel' ), `${ file } must remain outside hp-action-panel.` );
-	}
-
-	for ( const file of [ DIGEST_SOURCE ] ) {
-		const contents = read( file );
-		for ( const expected of DIGEST_COPY ) {
-			assert( contents.includes( expected ), `${ file } is missing approved Digest content: ${ expected }` );
-		}
-		assert(
-			/<h2\b[^>]*>Bring me the problem behind the ticket\.<\/h2>/.test( contents ),
-			`${ file } must render the approved Digest closing heading as h2.`
-		);
 	}
 
 	// The Version <-> Stable tag <-> changelog release-sync contract lives in
@@ -535,7 +532,7 @@ async function verifyLiveContracts() {
 
 				if ( page.digest ) {
 					assert(
-						result.digestHeading === 'Bring me the problem behind the ticket.',
+						result.digestHeading === DIGEST_CLOSING_HEADING,
 						`${ result.url } rendered the wrong Digest closing h2.`
 					);
 				}
