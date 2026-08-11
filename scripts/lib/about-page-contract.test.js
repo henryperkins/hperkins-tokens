@@ -126,11 +126,12 @@ test( 'dotted tokens stay one word', () => {
 
 test( 'parses top-level blocks with nested groups and JSON attributes', () => {
 	const blocks = parseTopLevelBlocks( candidate );
-	assert.equal( blocks.length, 9 );
+	assert.equal( blocks.length, 10 );
 	assert.equal( blocks[ 0 ].attrs.className, 'hp-about-hero' );
 	assert.equal( blocks[ 2 ].name, 'html' );
 	assert.equal( blocks[ 3 ].attrs.anchor, 'selected-work' );
 	assert.equal( blocks[ 8 ].attrs.anchor, 'contact' );
+	assert.equal( blocks[ 9 ].name, 'paragraph' );
 } );
 
 // ---------------------------------------------------------------------------
@@ -148,8 +149,8 @@ test( 'the reviewed candidate satisfies the complete About body contract', () =>
 	}
 } );
 
-test( 'the expected heading inventory contains one H1 and 21 ordered headings', () => {
-	assert.equal( EXPECTED_HEADINGS.length, 21 );
+test( 'the expected heading inventory contains one H1 and 20 ordered headings', () => {
+	assert.equal( EXPECTED_HEADINGS.length, 20 );
 	assert.equal( EXPECTED_HEADINGS.filter( ( heading ) => heading.level === 1 ).length, 1 );
 	assert.equal( EXPECTED_HEADINGS[ 6 ].text, 'Core AI Contributions' );
 } );
@@ -180,6 +181,19 @@ test( 'fails when the hero copy drifts', () => {
 		() => verifyAboutBody( mutated( 'For teams building stuff with tokens.', 'For teams.' ) ),
 		/strapline/i
 	);
+} );
+
+test( 'fails when any WordCamp US status fact or action drifts', () => {
+	for ( const [ from, to ] of [
+		[ 'WordCamp US 2026', 'WordCamp US 2027' ],
+		[ 'Aug 16–19', 'Aug 17–19' ],
+		[ 'Aug 16–19', 'Aug 16–20' ],
+		[ 'selected to staff the Core AI booth', 'selected to support the Core AI booth' ],
+		[ 'selected to staff the Core AI booth', 'selected to staff the AI booth' ],
+		[ 'href="/contact/">Start a conversation', 'href="/events/">Start a conversation' ],
+	] ) {
+		assert.throws( () => verifyAboutBody( mutated( from, to ) ), /WordCamp|WCUS|event/i );
+	}
 } );
 
 test( 'fails when the role-tag row returns', () => {
@@ -229,8 +243,8 @@ test( 'fails when a fragment target section loses its id or gains an aria-label'
 	assert.throws(
 		() => verifyAboutBody(
 			mutated(
-				'<section class="wp-block-group hp-about-closing hp-action-panel is-closing" id="contact">',
-				'<section class="wp-block-group hp-about-closing hp-action-panel is-closing" id="contact" aria-labelledby="contact-title">'
+				'<section id="contact" class="wp-block-group hp-about-closing hp-action-panel is-closing">',
+				'<section id="contact" class="wp-block-group hp-about-closing hp-action-panel is-closing" aria-labelledby="contact-title">'
 			)
 		),
 		/aria-label/
@@ -248,24 +262,25 @@ test( 'fails when Selected Work order, status, tags, or destinations drift', () 
 	);
 	assert.throws(
 		() => verifyAboutBody(
-			mutated( 'href="https://github.com/henryperkins/tarot">View Tableu source', 'href="https://github.com/henryperkins/tarot-old">View Tableu source' )
+			mutated( 'href="https://github.com/henryperkins/tarot">View Tableau source', 'href="https://github.com/henryperkins/tarot-old">View Tableau source' )
 		),
 		/action 2 destination/
 	);
 } );
 
-test( 'requires the public Tableu heading and action labels, rejecting stale Tableau', () => {
-	const staleCandidate = candidate.replace( /Tableu/g, 'Tableau' );
-	assert.doesNotThrow( () => verifyAboutBody( candidate ) );
-	assert.throws( () => verifyAboutBody( staleCandidate ), /Project 4 title|Project 4 action|Heading/ );
+test( 'requires Tableau spelling in the project heading and meaningful action labels', () => {
+	assert.throws(
+		() => verifyAboutBody( mutated( 'Tableau', 'Tableu' ) ),
+		/Project 4 title|Project 4 action|Heading/
+	);
 } );
 
 test( 'fails when a project title becomes a link (whole-card affordance)', () => {
 	assert.throws(
 		() => verifyAboutBody(
 			mutated(
-				'<h3 class="wp-block-heading hp-work-card__title">Tableu</h3>',
-				'<h3 class="wp-block-heading hp-work-card__title"><a href="https://tarot.lakefrontdev.com/">Tableu</a></h3>'
+				'<h3 class="wp-block-heading hp-work-card__title">Tableau</h3>',
+				'<h3 class="wp-block-heading hp-work-card__title"><a href="https://tarot.lakefrontdev.com/">Tableau</a></h3>'
 			)
 		),
 		/plain text|only its action links/
@@ -274,7 +289,7 @@ test( 'fails when a project title becomes a link (whole-card affordance)', () =>
 
 test( 'fails when HPerkins.com re-enters Selected Work', () => {
 	assert.throws(
-		() => verifyAboutBody( mutated( '<h3 class="wp-block-heading hp-work-card__title">Tableu</h3>', '<h3 class="wp-block-heading hp-work-card__title">HPerkins.com</h3>' ) ),
+		() => verifyAboutBody( mutated( '<h3 class="wp-block-heading hp-work-card__title">Tableau</h3>', '<h3 class="wp-block-heading hp-work-card__title">HPerkins.com</h3>' ) ),
 		/HPerkins\.com|Project 4 title|Heading/
 	);
 } );
@@ -282,11 +297,22 @@ test( 'fails when HPerkins.com re-enters Selected Work', () => {
 test( 'fails when EvidenceBoard rows change copy, class, or composition', () => {
 	assert.throws(
 		() => verifyAboutBody( mutated( 'is-status-review is-kind-review', 'is-status-merged is-kind-review' ) ),
-		/Evidence row 3/
+		/Evidence row 4/
 	);
 	assert.throws(
-		() => verifyAboutBody( mutated( 'PR #757 remains open and unmerged.', 'PR #757 merged.' ) ),
-		/Evidence row 3 meta/
+		() => verifyAboutBody( mutated( 'a maintainer fixed it', 'I fixed it' ) ),
+		/Evidence row 2 meta/
+	);
+	assert.throws(
+		() => verifyAboutBody( mutated( 'Anubhav Anand authored PR #757', 'my PR #757' ) ),
+		/Evidence row 4 meta/
+	);
+} );
+
+test( 'fails when any résumé action bypasses the semantic route', () => {
+	assert.throws(
+		() => verifyAboutBody( mutated( '/one-page-resume/', '/resume/' ) ),
+		/résumé|resume|destination/i
 	);
 } );
 
@@ -330,11 +356,7 @@ test( 'fails when the six-bullet budget changes', () => {
 	);
 } );
 
-test( 'fails when skills, AI Leaders, or education drift', () => {
-	assert.throws(
-		() => verifyAboutBody( mutated( '<span aria-hidden="true">#</span>Vite', '<span aria-hidden="true">#</span>Webpack' ) ),
-		/Skill group "Tools and workflow" tags/
-	);
+test( 'fails when AI Leaders or education drifts', () => {
 	assert.throws(
 		() => verifyAboutBody( mutated( 'href="https://aileaderswp.blog/"', 'href="https://example.com/"' ) ),
 		/AI Leaders link destination/
@@ -347,7 +369,10 @@ test( 'fails when skills, AI Leaders, or education drift', () => {
 
 test( 'fails when the closing invitation loses an action or reorders them', () => {
 	assert.throws(
-		() => verifyAboutBody( mutated( 'Start a conversation', 'Contact Henry' ) ),
+		() => verifyAboutBody( mutated(
+			'<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/contact/">Start a conversation</a></div>',
+			'<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/contact/">Contact Henry</a></div>'
+		) ),
 		/Closing action 1 label/
 	);
 } );
@@ -390,6 +415,12 @@ test( 'the pattern adapter contract rejects page markup and draft reads', () => 
 		() => verifyPatternAdapter( source.replace( 'content/page-snapshots/about.html', 'content/page-drafts/about.html' ) ),
 		/missing|draft/
 	);
+} );
+
+test( 'the pattern adapter contract rejects direct-PDF replacement logic', () => {
+	const source = fs.readFileSync( path.join( themeRoot, 'patterns', 'about-resume.php' ), 'utf8' );
+	const directPdfReplacement = `${ source }\n$hperkins_about_resume_rel = 'assets/documents/resume.pdf';\nhperkins_tokens_asset_url( $hperkins_about_resume_rel );`;
+	assert.throws( () => verifyPatternAdapter( directPdfReplacement ), /portrait-only|résumé|PDF/i );
 } );
 
 test( 'CSS ownership is exclusive to assets/imladris-pages.css', () => {
