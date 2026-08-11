@@ -281,7 +281,8 @@ const EXPECTED_HEADINGS = [
 	{ level: 3, text: 'Shift Supervisor', section: 'selected-experience' },
 	{ level: 3, text: 'Happiness Engineer', section: 'selected-experience' },
 	{ level: 3, text: 'Developer Community Manager', section: 'selected-experience' },
-	{ level: 2, text: 'Foundations', section: 'skills-and-foundations' },
+	{ level: 2, text: 'Skills and Foundations', section: 'skills-and-foundations' },
+	{ level: 3, text: 'Skills', section: 'skills-and-foundations' },
 	{ level: 3, text: 'AI Leaders', section: 'skills-and-foundations' },
 	{ level: 3, text: 'Education', section: 'skills-and-foundations' },
 	{ level: 2, text: EXPECTED_CLOSING.title, section: 'contact' },
@@ -993,15 +994,39 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 
 	// --- skills and foundations --------------------------------------------------
 	const foundations = findSectionBlock( blocks, 'skills-and-foundations' );
-	const foundationColumns = [ ...foundations.outer.matchAll( /<!-- wp:column(?: \{[^\n]*\})? -->([\s\S]*?)<!-- \/wp:column -->/g ) ];
-	assert( foundationColumns.length === 1, `Foundations must contain exactly one column, got ${ foundationColumns.length }.` );
-	const foundationColumn = foundationColumns[ 0 ][ 1 ];
-	const foundationHeadings = findHeadings( foundationColumn, label );
+	const foundationGrids = findBalancedByClass( foundations.outer, 'hp-about-foundations-grid', label );
+	assert( foundationGrids.length === 1, 'Skills and Foundations must contain exactly one Columns grid.' );
+	const foundationColumns = parseTopLevelBlocks( foundationGrids[ 0 ].inner );
 	assert(
-		foundationHeadings.map( ( heading ) => `${ heading.level }:${ heading.text }` ).join( '|' ) === '3:AI Leaders|3:Education',
-		'The Foundations column must contain H3 AI Leaders followed by H3 Education.'
+		foundationColumns.length === 2 && foundationColumns.every( ( column ) => column.name === 'column' ),
+		`Skills and Foundations must contain exactly two direct native Columns, got ${ foundationColumns.map( ( column ) => column.name ).join( ', ' ) || 'none' }.`
 	);
-	const note = findByClass( foundationColumn, 'hp-about-foundations__note', label );
+	const [ firstColumn, secondColumn ] = foundationColumns.map( ( column ) => column.outer );
+
+	const firstColumnHeadings = findHeadings( firstColumn, label );
+	assert(
+		firstColumnHeadings.length === 1 && firstColumnHeadings[ 0 ].text === 'Skills' && firstColumnHeadings[ 0 ].level === 3,
+		'The first Foundations column must open with H3 Skills.'
+	);
+	const legends = findByClass( firstColumn, 'hp-skill-group__legend', label );
+	assert( legends.length === 4, `Skills must contain exactly four groups, got ${ legends.length }.` );
+	const groupBlocks = firstColumn.split( '{"className":"hp-skill-group",' ).slice( 1 );
+	assert( groupBlocks.length === 4, `Skills must contain exactly four hp-skill-group blocks, got ${ groupBlocks.length }.` );
+	EXPECTED_SKILL_GROUPS.forEach( ( group, index ) => {
+		assertExact( legends[ index ].text, group.legend, `Skill group ${ index + 1 } legend` );
+		const tags = findByClass( groupBlocks[ index ], 'hp-tag', label ).map( ( tag ) => tag.text );
+		assert(
+			tags.join( '|' ) === group.tags.join( '|' ),
+			`Skill group "${ group.legend }" tags must be [${ group.tags.join( '; ' ) }], got [${ tags.join( '; ' ) }].`
+		);
+	} );
+
+	const secondColumnHeadings = findHeadings( secondColumn, label );
+	assert(
+		secondColumnHeadings.map( ( heading ) => `${ heading.level }:${ heading.text }` ).join( '|' ) === '3:AI Leaders|3:Education',
+		'The second Foundations column must contain H3 AI Leaders followed by H3 Education.'
+	);
+	const note = findByClass( secondColumn, 'hp-about-foundations__note', label );
 	assert( note.length === 1, 'AI Leaders must be one sentence.' );
 	assertExact( note[ 0 ].text, EXPECTED_AI_LEADERS.sentence, 'AI Leaders sentence' );
 	const noteLinks = findLinks( note[ 0 ].inner, label );
@@ -1009,9 +1034,9 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	assertExact( noteLinks[ 0 ].text, EXPECTED_AI_LEADERS.link.text, 'AI Leaders link text' );
 	assertExact( noteLinks[ 0 ].href, EXPECTED_AI_LEADERS.link.href, 'AI Leaders link destination' );
 
-	const degrees = findByClass( foundationColumn, 'hp-edu-card__degree', label );
-	const schools = findByClass( foundationColumn, 'hp-edu-card__school', label );
-	const periods = findByClass( foundationColumn, 'hp-edu-card__period', label );
+	const degrees = findByClass( secondColumn, 'hp-edu-card__degree', label );
+	const schools = findByClass( secondColumn, 'hp-edu-card__school', label );
+	const periods = findByClass( secondColumn, 'hp-edu-card__period', label );
 	assert( degrees.length === 2, `Education must contain exactly two records, got ${ degrees.length }.` );
 	// Without this the loop below dereferences undefined and the verifier
 	// reports a TypeError instead of the labelled failure it exists to give.

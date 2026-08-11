@@ -15,6 +15,7 @@ const {
 	decodeCharacterReferences,
 	extractExactText,
 	extractVisibleText,
+	findHeadings,
 	parseTopLevelBlocks,
 	removeAriaHiddenSubtrees,
 	verifyAboutBody,
@@ -150,8 +151,8 @@ test( 'the reviewed candidate satisfies the complete About body contract', () =>
 	}
 } );
 
-test( 'the expected heading inventory contains one H1 and 20 ordered headings', () => {
-	assert.equal( EXPECTED_HEADINGS.length, 20 );
+test( 'the expected heading inventory contains one H1 and 21 ordered headings', () => {
+	assert.equal( EXPECTED_HEADINGS.length, 21 );
 	assert.equal( EXPECTED_HEADINGS.filter( ( heading ) => heading.level === 1 ).length, 1 );
 	assert.equal( EXPECTED_HEADINGS[ 6 ].text, 'Core AI Contributions' );
 } );
@@ -161,6 +162,40 @@ function mutated( from, to ) {
 	assert.notEqual( output, candidate, `fixture mutation ${ String( from ) } must apply` );
 	return output;
 }
+
+function foundationsBlock( html ) {
+	const block = parseTopLevelBlocks( html ).find(
+		( candidateBlock ) => candidateBlock.attrs?.anchor === 'skills-and-foundations'
+	);
+	assert.ok( block, 'fixture must contain the Skills and Foundations section' );
+	return block;
+}
+
+test( 'Skills and Foundations has exactly two native Columns in mobile reading order', () => {
+	const foundations = foundationsBlock( candidate );
+	const nativeColumns = foundations.outer.match( /<!-- wp:column(?: \{[^\n]*\})? -->/g ) || [];
+	assert.equal( nativeColumns.length, 2 );
+	assert.deepEqual(
+		findHeadings( foundations.outer )
+			.filter( ( heading ) => heading.level === 3 )
+			.map( ( heading ) => heading.text ),
+		[ 'Skills', 'AI Leaders', 'Education' ]
+	);
+} );
+
+test( 'fails when the first native Skills column is removed', () => {
+	const foundations = foundationsBlock( candidate );
+	const withoutSkillsSection = foundations.outer.replace(
+		/<!-- wp:column(?: \{[^\n]*\})? -->\s*<div class="wp-block-column[^">]*">\s*<!-- wp:heading \{"level":3\} -->\s*<h3 class="wp-block-heading">Skills<\/h3>[\s\S]*?<!-- \/wp:column -->\s*/,
+		''
+	);
+	assert.notEqual( withoutSkillsSection, foundations.outer, 'fixture mutation must remove the Skills column' );
+	const withoutSkills = candidate.replace( foundations.outer, withoutSkillsSection );
+	assert.throws(
+		() => verifyAboutBody( withoutSkills ),
+		/exactly two columns|first Foundations column|Skills/
+	);
+} );
 
 test( 'fails when markup is added outside the top-level blocks', () => {
 	// Content between blocks belongs to no section, so no word cap and no
