@@ -120,6 +120,26 @@ test( 'rejects the retired standalone investigation route in any link', () => {
 	);
 } );
 
+test( 'requires attribution-safe security and design feedback wording for PR #749', () => {
+	const safeState = 'Security and design feedback · non-formal';
+	const safeLinkLabel = 'Read the security and design feedback on PR #749';
+	const overclaimed = replaceOnce(
+		replaceOnce(
+			DIGEST,
+			`${ safeState }</td><td><a href="https://github.com/WordPress/ai/pull/749#issuecomment-5010134375">`,
+			'Reproduced · integration-tested · technical feedback (non-formal)</td><td><a href="https://github.com/WordPress/ai/pull/749#issuecomment-5010134375">'
+		),
+		safeLinkLabel,
+		'Read the integration-test feedback on PR #749'
+	);
+
+	assert.doesNotThrow( () => verifyMain( DIGEST, THEME_VERSION, DEPLOYED_COMMIT ) );
+	assert.throws(
+		() => verifyMain( overclaimed, THEME_VERSION, DEPLOYED_COMMIT ),
+		/evidence register/i
+	);
+} );
+
 test( 'rejects evidence context moved to the wrong artifact row', () => {
 	const phrases = [
 		'finite-vector validation and regression coverage',

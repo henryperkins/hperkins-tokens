@@ -45,7 +45,7 @@ const EXPECTED_EVIDENCE_ROWS = [
 	[ 'WordPress/ai-provider-for-openai PR #40', 'Authored · open upstream', [ 'https://github.com/WordPress/ai-provider-for-openai/pull/40' ] ],
 	[ 'WordPress/ai issue #529', 'Reported · fixed upstream by another contributor', [ 'https://github.com/WordPress/ai/issues/529', 'https://github.com/WordPress/ai/pull/593', 'https://github.com/WordPress/ai/releases/tag/1.0.1' ] ],
 	[ 'WordPress/ai issue #732 and PR #757', 'Reproduced · integration-tested · technical feedback (non-formal)', [ 'https://github.com/WordPress/ai/issues/732', 'https://github.com/WordPress/ai/pull/757', 'https://github.com/WordPress/ai/pull/757#issuecomment-4980297831', 'https://github.com/WordPress/ai/pull/757#issuecomment-4981567682' ] ],
-	[ 'WordPress/ai PR #749 feedback', 'Reproduced · integration-tested · technical feedback (non-formal)', [ 'https://github.com/WordPress/ai/pull/749#issuecomment-5010134375' ] ],
+	[ 'WordPress/ai PR #749 feedback', 'Security and design feedback · non-formal', [ 'https://github.com/WordPress/ai/pull/749#issuecomment-5010134375' ] ],
 	[ 'Flavor Agent v0.1.0-rc.3', 'Released owned work · prerelease', [ 'https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0-rc.3' ] ],
 	[ 'Flavor Agent post-RC3 main', 'Merged to owned main · unreleased', [ 'https://github.com/henryperkins/flavor-agent/pull/53', 'https://github.com/henryperkins/flavor-agent/pull/61', 'https://github.com/henryperkins/flavor-agent/pull/74', 'https://github.com/henryperkins/flavor-agent/pull/76' ] ],
 	[ 'AI Provider for Codex v2.1', 'Released owned work', [ 'https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v2.1' ] ],
