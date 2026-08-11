@@ -130,9 +130,30 @@ const checks = [
 	},
 ];
 
+const portfolioOwnershipContract = [
+	'`/one-page-resume/` is the stable visible-link destination.',
+	'The final PDF remains a theme-owned artifact verified directly.',
+	'`about-resume` substitutes only the portrait URL.',
+	'Digest and About database bodies remain canonical; drafts are candidates and snapshots are accepted mirrors.',
+	'Production page/footer writes are separate from a theme deploy.',
+];
+
+const staleAboutAdapterClaim = /about-resume[\s\S]{0,500}substitutes[\s\S]{0,160}portrait\s+and\s+r[\u00e9e]sum[\u00e9e]\s+asset URLs?/i;
+
 for ( const check of checks ) {
 	const filePath = path.join( themeRoot, check.file );
 	const contents = fs.readFileSync( filePath, 'utf8' );
+
+	if ( [ 'readme.txt', 'CLAUDE.md', 'docs/design-system/INDEX.md' ].includes( check.file ) ) {
+		assert(
+			! staleAboutAdapterClaim.test( contents ),
+			`${ check.file } still says the About adapter substitutes portrait and resume asset URLs.`
+		);
+
+		for ( const expected of portfolioOwnershipContract ) {
+			assert( contents.includes( expected ), `${ check.file } is missing portfolio ownership guidance: ${ expected }` );
+		}
+	}
 
 	for ( const expected of check.include ) {
 		assert( contents.includes( expected ), `${ check.file } is missing expected content-contract note: ${ expected }` );
