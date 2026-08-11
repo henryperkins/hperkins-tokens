@@ -97,3 +97,18 @@ test( 'rejects a theme deploy that claims production page or footer writes', () 
 		);
 	}
 } );
+
+test( 'rejects a prescribed CLAUDE unit command that omits either operator regression suite', () => {
+	const documents = readDocuments();
+	for ( const testFile of [
+		'scripts/lib/content-ownership-docs.test.js',
+		'scripts/lib/event-copy-retirement-runbook.test.js',
+	] ) {
+		const mutated = withMutation( documents, 'CLAUDE.md', ( source ) => source.replace( ` ${ testFile }`, '' ) );
+		assert.notEqual( mutated[ 'CLAUDE.md' ], documents[ 'CLAUDE.md' ], `Mutation must remove ${ testFile }.` );
+		assert.throws(
+			() => verifyPortfolioOwnershipDocuments( mutated ),
+			/CLAUDE\.md.*shared-library unit-test command/i
+		);
+	}
+} );

@@ -271,7 +271,33 @@ function assertNoPortfolioContradictions( contents, file ) {
 	}
 }
 
+function verifyClaudeSharedLibraryCommand( contents ) {
+	const marker = '# Unit tests for the shared script libraries. Name every file explicitly';
+	const markerIndex = contents.indexOf( marker );
+	assert( markerIndex !== -1, 'CLAUDE.md is missing its shared-library unit-test command guidance.' );
+	const command = /^node --test .+$/m.exec( contents.slice( markerIndex ) );
+	assert( command, 'CLAUDE.md is missing its shared-library unit-test command.' );
+
+	const files = command[0].split( /\s+/ ).slice( 2 );
+	const requiredSequence = [
+		'scripts/lib/content-integrity.test.js',
+		'scripts/lib/content-ownership-docs.test.js',
+		'scripts/lib/event-copy-retirement-runbook.test.js',
+		'scripts/lib/job-placement-metadata-contract.test.js',
+	];
+	const sequenceStart = files.indexOf( requiredSequence[0] );
+	assert(
+		sequenceStart !== -1
+		&& requiredSequence.every( ( file, index ) => files[ sequenceStart + index ] === file )
+		&& requiredSequence.every( ( file ) => files.filter( ( candidate ) => candidate === file ).length === 1 ),
+		'CLAUDE.md shared-library unit-test command must name both operator regression suites once in the explicit list position.'
+	);
+}
+
 function verifyPortfolioOwnershipDocuments( documents ) {
+	assert( typeof documents[ 'CLAUDE.md' ] === 'string', 'CLAUDE.md was not supplied to the portfolio ownership verifier.' );
+	verifyClaudeSharedLibraryCommand( documents[ 'CLAUDE.md' ] );
+
 	for ( const [ file, specification ] of Object.entries( portfolioDocumentSections ) ) {
 		const contents = documents[ file ];
 		assert( typeof contents === 'string', `${ file } was not supplied to the portfolio ownership verifier.` );

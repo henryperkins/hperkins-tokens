@@ -26,7 +26,17 @@ test( 'accepts the manual retirement source and public verification gates', () =
 } );
 
 test( 'rejects a retirement source gate without style-token verification', () => {
-	const mutated = readRunbook().replace( 'node scripts/verify-style-token-usage.js\n', '' );
+	const mutated = readRunbook().replace( /node scripts\/verify-style-token-usage\.js\r?\n/, '' );
+	assert.throws(
+		() => verifyRetirementRunbook( mutated ),
+		/complete source gate/i
+	);
+} );
+
+test( 'removes style-token verification from a CRLF runbook before checking rejection', () => {
+	const runbook = readRunbook().replace( /\r?\n/g, '\r\n' );
+	const mutated = runbook.replace( /node scripts\/verify-style-token-usage\.js\r?\n/, '' );
+	assert.notEqual( mutated, runbook, 'CRLF mutation must remove the style-token command.' );
 	assert.throws(
 		() => verifyRetirementRunbook( mutated ),
 		/complete source gate/i
