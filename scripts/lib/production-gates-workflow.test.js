@@ -163,11 +163,12 @@ test( 'normalizes pointer media for the production header gate', () => {
 	assert.match( headerVerifier, /Page\.addScriptToEvaluateOnNewDocument/ );
 } );
 
-test( 'runs metadata, About probe, market parity, and production workflow contract tests in CI', () => {
+test( 'runs metadata, Digest, About probe, market parity, and production workflow contract tests in CI', () => {
 	assertSourceUnitTestsAreActive( workflow, [
 		'scripts/lib/about-page-contract.test.js',
 		'scripts/lib/about-page-rendered-probe.test.js',
 		'scripts/lib/about-gravatar-heading.test.js',
+		'scripts/lib/job-placement-digest-source-contract.test.js',
 		'scripts/lib/job-placement-metadata-contract.test.js',
 		'scripts/lib/market-screen-parity.test.js',
 		'scripts/lib/page-content-contract.test.js',

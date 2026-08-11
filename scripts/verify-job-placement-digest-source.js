@@ -110,7 +110,7 @@ function stripMarkup( value ) {
 		.trim();
 }
 
-function getScopedElement( markup, tagName, className ) {
+function getScopedElementMatch( markup, tagName, className ) {
 	const escapedClass = className.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
 	const expression = new RegExp(
 		`<${ tagName }\\b[^>]*class=(['"])[^'"]*\\b${ escapedClass }\\b[^'"]*\\1[^>]*>([\\s\\S]*?)<\\/${ tagName }>`,
@@ -119,7 +119,11 @@ function getScopedElement( markup, tagName, className ) {
 	const match = expression.exec( markup );
 
 	assert( match, `Expected one ${ tagName }.${ className } element.` );
-	return match[ 2 ];
+	return match;
+}
+
+function getScopedElement( markup, tagName, className ) {
+	return getScopedElementMatch( markup, tagName, className )[ 2 ];
 }
 
 function extractLinks( markup ) {
@@ -144,7 +148,12 @@ function extractEvidenceRows( markup ) {
 	return [ ...body[ 1 ].matchAll( /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi ) ].map( ( row ) => {
 		const cells = [ ...row[ 1 ].matchAll( /<(?:th|td)\b[^>]*>([\s\S]*?)<\/(?:th|td)>/gi ) ].map( ( cell ) => cell[ 1 ] );
 		assert( cells.length === 3, 'Each evidence-register row must contain exactly three cells.' );
-		return [ stripMarkup( cells[ 0 ] ), stripMarkup( cells[ 1 ] ), extractLinks( cells[ 2 ] ).map( ( link ) => link[ 1 ] ) ];
+		return [
+			stripMarkup( cells[ 0 ] ),
+			stripMarkup( cells[ 1 ] ),
+			extractLinks( cells[ 2 ] ).map( ( link ) => link[ 1 ] ),
+			stripMarkup( cells[ 2 ] ),
+		];
 	} );
 }
 
@@ -198,7 +207,8 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 
 	const hero = getScopedElement( markup, 'section', 'hp-digest__hero' );
 	assert( extractLinks( hero ).length === 0, 'The digest hero must not retain the old action rail.' );
-	const wcusPanel = getScopedElement( markup, 'section', 'hp-wcus-callout' );
+	const wcusPanelMatch = getScopedElementMatch( markup, 'section', 'hp-wcus-callout' );
+	const wcusPanel = wcusPanelMatch[ 2 ];
 	for ( const required of [
 		'<p class="hp-page-hero__eyebrow">WORDCAMP US 2026 · PHOENIX</p>',
 		'<h2 class="wp-block-heading">I’ll be at WordCamp US.</h2>',
@@ -210,9 +220,16 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 		JSON.stringify( extractLinks( wcusPanel ) ) === JSON.stringify( WCUS_ACTIONS ),
 		`The WCUS panel actions must match the approved ordered contract: ${ JSON.stringify( WCUS_ACTIONS ) }.`
 	);
+	const whySection = /<section\b[^>]*\bid=(['"])why-support-engineer-now\1[^>]*>/i.exec( markup );
+	assert( whySection, 'Main digest draft must contain #why-support-engineer-now.' );
+	const betweenWcusAndWhy = markup.slice(
+		wcusPanelMatch.index + wcusPanelMatch[ 0 ].length,
+		whySection.index
+	);
 	assert(
-		markup.indexOf( 'hp-wcus-callout hp-action-panel' ) < markup.indexOf( 'id="why-support-engineer-now"' ),
-		'The WCUS panel must appear immediately before Why Support Engineer now.'
+		whySection.index > wcusPanelMatch.index &&
+			betweenWcusAndWhy.replace( /<!--\s*\/?wp:[\s\S]*?-->/g, '' ).trim() === '',
+		'The WCUS panel must be the immediate HTML sibling before Why Support Engineer now.'
 	);
 	assert(
 		markup.includes( 'Published 13 Jul 2026 · Last verified 10 Aug 2026' ),
@@ -248,16 +265,21 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 
 	assert( getClassCount( markup, 'hp-proof-card' ) === 3, 'Main digest draft must contain exactly three primary proof cards.' );
 
+	const evidenceRows = extractEvidenceRows( markup );
 	assert(
-		JSON.stringify( extractEvidenceRows( markup ) ) === JSON.stringify( EXPECTED_EVIDENCE_ROWS ),
+		JSON.stringify( evidenceRows.map( ( row ) => row.slice( 0, 3 ) ) ) === JSON.stringify( EXPECTED_EVIDENCE_ROWS ),
 		'The evidence register must match the approved twelve-row artifact, state, and permalink contract.'
 	);
-	for ( const required of [
-		'finite-vector validation and regression coverage',
-		'model-aware sampling compatibility and tests',
-		'governed apply/undo, schema hardening, and canonical target authorization',
+	for ( const [ artifact, required ] of [
+		[ 'WordPress/php-ai-client issue #262 and PR #263', 'finite-vector validation and regression coverage' ],
+		[ 'WordPress/ai-provider-for-openai PR #40', 'model-aware sampling compatibility and tests' ],
+		[ 'Flavor Agent post-RC3 main', 'governed apply/undo, schema hardening, and canonical target authorization' ],
 	] ) {
-		assert( markup.includes( required ), `Main digest evidence register is missing required context: ${ required }` );
+		const row = evidenceRows.find( ( candidate ) => candidate[ 0 ] === artifact );
+		assert(
+			row && row[ 3 ].includes( required ),
+			`Evidence context for ${ artifact } is missing required copy: ${ required }`
+		);
 	}
 	assert(
 		markup.includes( `https://github.com/henryperkins/hperkins-tokens/releases/tag/v${ themeVersion }` ),
@@ -269,6 +291,16 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 	);
 	assert( ! /profiles\.wordpress\.org/i.test( markup ), 'The evidence register must use immutable contribution evidence.' );
 	assert( countMatches( markup, /href=(['"])\/one-page-resume\/\1/g ) === 2, 'The candidate must expose the semantic résumé route in the WCUS and closing actions.' );
+	assert(
+		! extractLinks( markup ).some( ( link ) => {
+			try {
+				return new URL( link[ 1 ], 'https://digest-candidate.invalid/' ).pathname === '/root-cause-investigation/';
+			} catch {
+				return false;
+			}
+		} ),
+		'Main digest draft must not link the retired standalone root-cause route.'
+	);
 
 	for ( const forbidden of FORBIDDEN_DIGEST_COPY ) {
 		assert( ! markup.includes( forbidden ), `Main digest draft contains forbidden or stale copy: ${ forbidden }` );
@@ -341,9 +373,13 @@ function main() {
 	console.log( 'Job Placement Digest reviewed source contract verified.' );
 }
 
-try {
-	main();
-} catch ( error ) {
-	console.error( error.message );
-	process.exit( 1 );
+if ( require.main === module ) {
+	try {
+		main();
+	} catch ( error ) {
+		console.error( error.message );
+		process.exit( 1 );
+	}
 }
+
+module.exports = { verifyMain };
