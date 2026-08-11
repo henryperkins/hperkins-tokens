@@ -2,6 +2,7 @@ const test = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
+const themeJson = require( '../../theme.json' );
 
 const {
 	BUNDLES,
@@ -34,7 +35,7 @@ const DIGEST_TABLET_CONTRACTS = [
 		atContext: DIGEST_TABLET_CONTEXT,
 		declarations: {
 			'max-inline-size': 'none',
-			'font-size': 'var(--wp--preset--font-size--3xl)',
+			'font-size': 'var(--wp--preset--font-size--3-xl)',
 		},
 	},
 	{
@@ -48,13 +49,14 @@ const DIGEST_TABLET_CONTRACTS = [
 		declarations: {
 			'margin-block-start': 'var(--wp--preset--spacing--5)',
 			padding: 'var(--wp--preset--spacing--5)',
+			'padding-block-start': 'var(--wp--preset--spacing--4)',
 		},
 	},
 	{
 		selector: '.hp-wcus-callout > h2',
 		atContext: DIGEST_TABLET_CONTEXT,
 		declarations: {
-			'font-size': 'var(--wp--preset--font-size--2xl)',
+			'font-size': 'var(--wp--preset--font-size--2-xl)',
 			'margin-block-start': 'var(--wp--preset--spacing--4)',
 		},
 	},
@@ -64,6 +66,32 @@ const DIGEST_TABLET_CONTRACTS = [
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--4)' },
 	},
 ];
+
+function generatedFontPresetName( slug ) {
+	return `--wp--preset--font-size--${ slug.replace( /^(\d+)(?=[a-z])/i, '$1-' ).toLowerCase() }`;
+}
+
+function assertFontPresetReferencesResolve( contracts, config ) {
+	const fontSizes = config?.settings?.typography?.fontSizes ?? [];
+	const generatedPresets = new Map(
+		fontSizes.map( ( preset ) => [ generatedFontPresetName( preset.slug ), preset.size ] )
+	);
+	const references = new Set();
+	for ( const contract of contracts ) {
+		for ( const value of Object.values( contract.declarations ) ) {
+			for ( const match of value.matchAll( /var\((--wp--preset--font-size--[a-z0-9-]+)\)/g ) ) {
+				references.add( match[ 1 ] );
+			}
+		}
+	}
+	assert.notEqual( references.size, 0, 'Digest tablet contracts must reference generated font presets.' );
+	for ( const reference of references ) {
+		assert(
+			generatedPresets.has( reference ) && generatedPresets.get( reference ),
+			`${ reference } must resolve to a font-size preset declared in theme.json.`
+		);
+	}
+}
 
 function mutateDeclaration( css, contract, property, expected ) {
 	const rule = parseRules( css ).find( ( candidate ) =>
@@ -120,6 +148,16 @@ test( 'native proof-grid items neutralize WordPress flow margins', () => {
 } );
 
 test( 'Digest tablet fold uses a bounded token-based compact treatment', () => {
+	assert.doesNotThrow( () => assertFontPresetReferencesResolve( DIGEST_TABLET_CONTRACTS, themeJson ) );
+	const missingTokenTheme = structuredClone( themeJson );
+	missingTokenTheme.settings.typography.fontSizes = missingTokenTheme.settings.typography.fontSizes.filter(
+		( preset ) => preset.slug !== '3xl'
+	);
+	assert.throws(
+		() => assertFontPresetReferencesResolve( DIGEST_TABLET_CONTRACTS, missingTokenTheme ),
+		/--wp--preset--font-size--3-xl.*theme\.json/
+	);
+
 	for ( const contract of DIGEST_TABLET_CONTRACTS ) {
 		assert.doesNotThrow( () => assertRuleDeclarations( pagesCss, contract ) );
 		for ( const [ property, expected ] of Object.entries( contract.declarations ) ) {
@@ -130,6 +168,17 @@ test( 'Digest tablet fold uses a bounded token-based compact treatment', () => {
 			);
 		}
 	}
+
+	const calloutContract = DIGEST_TABLET_CONTRACTS.find( ( contract ) => contract.selector === '.hp-wcus-callout' );
+	const withoutTopPadding = pagesCss.replace(
+		/\n\s*padding-block-start:\s*var\(--wp--preset--spacing--4\);/,
+		''
+	);
+	assert.notEqual( withoutTopPadding, pagesCss, 'The rail-affecting top-padding removal must change the stylesheet.' );
+	assert.throws(
+		() => assertRuleDeclarations( withoutTopPadding, calloutContract ),
+		/hp-wcus-callout|padding-block-start/
+	);
 } );
 
 test( 'parseRules returns top-level rules with original offsets', () => {

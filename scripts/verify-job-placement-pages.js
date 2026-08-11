@@ -217,7 +217,7 @@ function verifySourceContracts() {
 			atContext: '@media (min-width: 601px) and (max-width: 781px)',
 			declarations: {
 				'max-inline-size': 'none',
-				'font-size': 'var(--wp--preset--font-size--3xl)',
+				'font-size': 'var(--wp--preset--font-size--3-xl)',
 			},
 		},
 		{
@@ -231,13 +231,14 @@ function verifySourceContracts() {
 			declarations: {
 				'margin-block-start': 'var(--wp--preset--spacing--5)',
 				padding: 'var(--wp--preset--spacing--5)',
+				'padding-block-start': 'var(--wp--preset--spacing--4)',
 			},
 		},
 		{
 			selector: '.hp-wcus-callout > h2',
 			atContext: '@media (min-width: 601px) and (max-width: 781px)',
 			declarations: {
-				'font-size': 'var(--wp--preset--font-size--2xl)',
+				'font-size': 'var(--wp--preset--font-size--2-xl)',
 				'margin-block-start': 'var(--wp--preset--spacing--4)',
 			},
 		},
