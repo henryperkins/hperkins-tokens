@@ -64,6 +64,28 @@ function assertVerificationTransport( url, label, requireLocal ) {
 	assert( url.protocol === 'https:', 'Public résumé verification requires HTTPS.' );
 }
 
+function assertSafeFetchUrl( value, expectedOrigin, options = {} ) {
+	const label = options.label || 'Fetch URL';
+	const requireLocal = options.requireLocal === true;
+	const url = value instanceof URL ? value : parseUrl( value, label );
+	const expected = expectedOrigin instanceof URL
+		? expectedOrigin
+		: parseUrl( expectedOrigin, 'Expected fetch origin' );
+
+	assert( ! url.hash, `${ label } must not include a fragment.` );
+	assert( ! url.username && ! url.password, `${ label } must not include credentials.` );
+	assertVerificationTransport( url, label, requireLocal );
+	assert( url.origin === expected.origin, `${ label } must stay on the expected origin.` );
+	if ( options.allowedPaths ) {
+		assert(
+			options.allowedPaths.includes( url.pathname ),
+			`${ label } must use an allowed résumé path.`
+		);
+	}
+
+	return url;
+}
+
 function validateRedirectChain( steps, requestedUrl, expectedOrigin, options = { strict: true } ) {
 	assert( Array.isArray( steps ) && steps.length > 0, 'Redirect chain must include at least one response.' );
 
@@ -198,18 +220,44 @@ function verifySource() {
 	assert( read( 'parts/footer.html' ).includes( 'One-page résumé PDF' ), 'Footer must retain the one-page résumé label.' );
 }
 
-async function collectChain( requestedUrl, method ) {
+async function collectChain( requestedUrl, method, options = {} ) {
+	const fetchImpl = options.fetchImpl || globalThis.fetch;
+	assert( typeof fetchImpl === 'function', 'A fetch implementation is required.' );
+	const requireLocal = options.requireLocal === true;
+	const expected = parseUrl(
+		options.expectedOrigin || parseUrl( requestedUrl, 'Requested URL' ).origin,
+		'Expected fetch origin'
+	);
+	assert( ! expected.hash && ! expected.username && ! expected.password, 'Expected fetch origin must not include a fragment or credentials.' );
+	assertVerificationTransport( expected, 'Expected fetch origin', requireLocal );
+	const initial = assertSafeFetchUrl( requestedUrl, expected, {
+		allowedPaths: [ RESUME_PATH ],
+		label: 'Initial résumé request URL',
+		requireLocal,
+	} );
 	const steps = [];
-	let current = requestedUrl;
+	const fetchedUrls = new Set();
+	let current = initial.href;
 	for ( let index = 0; index < 4; index++ ) {
+		assert( ! fetchedUrls.has( current ), `Redirect loop repeats fetch URL: ${ current }` );
+		fetchedUrls.add( current );
 		let response;
 		try {
-			response = await fetch( current, { method, redirect: 'manual' } );
+			response = await fetchImpl( current, { method, redirect: 'manual' } );
 		} catch ( cause ) {
 			throw new Error( `${ method } ${ current } failed: ${ cause.message }`, { cause } );
 		}
 		const rawLocation = response.headers.get( 'location' );
-		const location = rawLocation ? new URL( rawLocation, current ).href : null;
+		let location = null;
+		if ( rawLocation ) {
+			const resolved = assertSafeFetchUrl( new URL( rawLocation, current ), expected, {
+				allowedPaths: [ RESUME_PATH, PDF_PATH ],
+				label: `Redirect ${ index + 1 } destination`,
+				requireLocal,
+			} );
+			assert( ! fetchedUrls.has( resolved.href ), `Redirect loop repeats fetch URL: ${ resolved.href }` );
+			location = resolved.href;
+		}
 		const step = {
 			requestUrl: current,
 			status: response.status,
@@ -231,7 +279,10 @@ async function collectChain( requestedUrl, method ) {
 
 async function verifyHttpMethod( origin, method, options ) {
 	const requestedUrl = new URL( `${ RESUME_PATH }?utm_source=wcus`, origin ).href;
-	const steps = await collectChain( requestedUrl, method );
+	const steps = await collectChain( requestedUrl, method, {
+		expectedOrigin: origin,
+		requireLocal: options.requireLocal,
+	} );
 	const result = validateRedirectChain( steps, requestedUrl, origin, options );
 	assert( result.themeRedirects === 1, `${ method } must contain exactly one theme redirect.` );
 	if ( method === 'GET' ) {
@@ -247,15 +298,27 @@ function acceptedSnapshotsPublished() {
 	].every( ( file ) => visibleHrefs( read( file ) ).includes( RESUME_PATH ) );
 }
 
-async function verifyRenderedLinks( origin ) {
-	if ( ! acceptedSnapshotsPublished() ) {
+async function verifyRenderedLinks( origin, options = {} ) {
+	const snapshotsPublished = options.snapshotsPublished ?? acceptedSnapshotsPublished();
+	if ( ! snapshotsPublished ) {
 		console.log( 'candidate prepared; accepted snapshots still prepublication' );
 		return;
 	}
+	const fetchImpl = options.fetchImpl || globalThis.fetch;
+	assert( typeof fetchImpl === 'function', 'A fetch implementation is required.' );
+	const requireLocal = options.requireLocal === true;
+	const expected = parseUrl( origin, 'Expected rendered-page origin' );
+	assertVerificationTransport( expected, 'Expected rendered-page origin', requireLocal );
 
 	for ( const pathname of [ '/', '/about/', '/job-placement-digest/' ] ) {
-		const url = new URL( pathname, origin ).href;
-		const response = await fetch( url );
+		const url = assertSafeFetchUrl( new URL( pathname, origin ), expected, {
+			allowedPaths: [ pathname ],
+			label: `Rendered-page probe ${ pathname }`,
+			requireLocal,
+		} ).href;
+		const response = await fetchImpl( url, { redirect: 'manual' } );
+		const location = response.headers.get( 'location' );
+		assert( ! location, `${ url } returned redirect ${ response.status }; refusing to follow its Location.` );
 		assert( response.ok, `${ url } returned ${ response.status } while checking rendered résumé links.` );
 		const hrefs = visibleHrefs( await response.text() );
 		assert( hrefs.includes( RESUME_PATH ), `${ url } has no rendered ${ RESUME_PATH } link.` );
@@ -290,7 +353,7 @@ async function main() {
 		getSteps.at( -2 ).location === headSteps.at( -2 ).location,
 		'GET and HEAD must redirect to the same versioned PDF URL.'
 	);
-	await verifyRenderedLinks( origin );
+	await verifyRenderedLinks( origin, { requireLocal } );
 	const mode = requireLocal ? 'strict local' : ( strict ? 'strict public' : 'diagnostic public' );
 	console.log( `Resume route ${ mode } verification passed at ${ origin } for GET and HEAD.` );
 }
@@ -302,4 +365,4 @@ if ( require.main === module ) {
 	} );
 }
 
-module.exports = { validateRedirectChain, visibleHrefs };
+module.exports = { collectChain, validateRedirectChain, verifyRenderedLinks, visibleHrefs };

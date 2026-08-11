@@ -1,7 +1,33 @@
 const test = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
 
-const { validateRedirectChain, visibleHrefs } = require( '../verify-resume-route' );
+const {
+	collectChain,
+	validateRedirectChain,
+	verifyRenderedLinks,
+	visibleHrefs,
+} = require( '../verify-resume-route' );
+
+function mockResponse( {
+	status = 200,
+	location = null,
+	redirectBy = null,
+	contentType = 'text/html; charset=UTF-8',
+	body = '',
+} = {} ) {
+	const values = new Map( [
+		[ 'location', location ],
+		[ 'x-redirect-by', redirectBy ],
+		[ 'content-type', contentType ],
+	] );
+	return {
+		status,
+		ok: status >= 200 && status < 300,
+		headers: { get: ( name ) => values.get( name.toLowerCase() ) || null },
+		arrayBuffer: async () => Buffer.from( body ),
+		text: async () => body,
+	};
+}
 
 test( 'visibleHrefs returns actual anchors and ignores commented links', () => {
 	assert.equal( typeof visibleHrefs, 'function', 'resume route must expose its anchor parser for mutation coverage' );
@@ -9,6 +35,145 @@ test( 'visibleHrefs returns actual anchors and ignores commented links', () => {
 		visibleHrefs( '<!-- <a href="/one-page-resume/">comment only</a> --><p><a href="/about/">About</a></p><!-- <a href="/retired.pdf">retired</a> -->' ),
 		[ '/about/' ]
 	);
+} );
+
+test( 'collectChain validates every local redirect destination before issuing its fetch', async () => {
+	const requested = 'http://localhost:8882/one-page-resume/?utm_source=wcus';
+	const unsafeDestinations = [
+		'http://192.168.1.25/latest/meta-data/',
+		'http://169.254.169.254/latest/meta-data/',
+		'https://example.com/resume.pdf',
+		'http://localhost:9999/one-page-resume/',
+		'http://user:pass@localhost:8882/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf?v=123',
+		'http://localhost:8882/wp-admin/profile.php',
+		requested,
+	];
+
+	for ( const location of unsafeDestinations ) {
+		const calls = [];
+		const fetchImpl = async ( url, init ) => {
+			calls.push( { url, init } );
+			return mockResponse( {
+				status: 302,
+				location,
+				redirectBy: 'hperkins-tokens',
+			} );
+		};
+
+		await assert.rejects(
+			() => collectChain( requested, 'GET', {
+				expectedOrigin: 'http://localhost:8882',
+				fetchImpl,
+				requireLocal: true,
+			} ),
+			/loopback|origin|credentials|path|loop/i,
+			location
+		);
+		assert.deepEqual(
+			calls.map( ( call ) => call.url ),
+			[ requested ],
+			`unsafe redirect destination was requested: ${ location }`
+		);
+		assert.equal( calls[0].init.redirect, 'manual' );
+	}
+} );
+
+test( 'collectChain rejects an unsafe initial local URL before issuing any fetch', async () => {
+	const calls = [];
+	await assert.rejects(
+		() => collectChain( 'http://169.254.169.254/one-page-resume/', 'HEAD', {
+			expectedOrigin: 'http://localhost:8882',
+			fetchImpl: async ( url ) => {
+				calls.push( url );
+				return mockResponse();
+			},
+			requireLocal: true,
+		} ),
+		/loopback|origin/i
+	);
+	assert.deepEqual( calls, [] );
+} );
+
+test( 'collectChain follows a guarded loopback chain with manual redirects', async () => {
+	const requested = 'http://127.0.0.1:8882/one-page-resume/?utm_source=wcus';
+	const pdf = 'http://127.0.0.1:8882/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf?v=123';
+	const calls = [];
+	const fetchImpl = async ( url, init ) => {
+		calls.push( { url, init } );
+		if ( url === requested ) {
+			return mockResponse( { status: 302, location: pdf, redirectBy: 'hperkins-tokens' } );
+		}
+		return mockResponse( { contentType: 'application/pdf', body: '%PDF-1.7' } );
+	};
+
+	const steps = await collectChain( requested, 'GET', {
+		expectedOrigin: 'http://127.0.0.1:8882',
+		fetchImpl,
+		requireLocal: true,
+	} );
+	assert.deepEqual( calls.map( ( call ) => call.url ), [ requested, pdf ] );
+	assert.ok( calls.every( ( call ) => call.init.redirect === 'manual' ) );
+	assert.equal( steps.at( -1 ).bodyPrefix, '%PDF-' );
+	assert.deepEqual(
+		validateRedirectChain( steps, requested, 'http://127.0.0.1:8882', { strict: true, requireLocal: true } ),
+		{ themeRedirects: 1, platformPreflights: 0 }
+	);
+} );
+
+test( 'collectChain preserves guarded public GET and HEAD chains', async () => {
+	const requested = 'https://hperkins.blog/one-page-resume/?utm_source=wcus';
+	const pdf = 'https://hperkins.blog/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf?v=123';
+
+	for ( const method of [ 'GET', 'HEAD' ] ) {
+		const calls = [];
+		const steps = await collectChain( requested, method, {
+			expectedOrigin: 'https://hperkins.blog',
+			fetchImpl: async ( url, init ) => {
+				calls.push( { url, init } );
+				return url === requested
+					? mockResponse( { status: 302, location: pdf, redirectBy: 'hperkins-tokens' } )
+					: mockResponse( { contentType: 'application/pdf', body: '%PDF-1.7' } );
+			},
+		} );
+
+		assert.deepEqual( calls.map( ( call ) => call.url ), [ requested, pdf ] );
+		assert.ok( calls.every( ( call ) => call.init.method === method && call.init.redirect === 'manual' ) );
+		assert.equal( steps.at( -1 ).bodyPrefix, method === 'GET' ? '%PDF-' : undefined );
+		assert.doesNotThrow( () => validateRedirectChain( steps, requested, 'https://hperkins.blog' ) );
+	}
+} );
+
+test( 'rendered-link probes request every page with automatic redirects disabled', async () => {
+	const calls = [];
+	await verifyRenderedLinks( 'https://hperkins.blog', {
+		fetchImpl: async ( url, init ) => {
+			calls.push( { url, init } );
+			return mockResponse( { body: '<a href="/one-page-resume/">Résumé</a>' } );
+		},
+		snapshotsPublished: true,
+	} );
+
+	assert.deepEqual(
+		calls.map( ( call ) => new URL( call.url ).pathname ),
+		[ '/', '/about/', '/job-placement-digest/' ]
+	);
+	assert.ok( calls.every( ( call ) => call.init.redirect === 'manual' ) );
+} );
+
+test( 'rendered-link probes never follow an external Location', async () => {
+	const calls = [];
+	await assert.rejects(
+		() => verifyRenderedLinks( 'https://hperkins.blog', {
+			fetchImpl: async ( url, init ) => {
+				calls.push( { url, init } );
+				return mockResponse( { status: 302, location: 'https://example.com/capture' } );
+			},
+			snapshotsPublished: true,
+		} ),
+		/redirect|302/i
+	);
+	assert.equal( calls.length, 1 );
+	assert.equal( calls[0].init.redirect, 'manual' );
 } );
 
 test( 'accepts exactly one theme-owned 302 to the same-origin PDF', () => {
