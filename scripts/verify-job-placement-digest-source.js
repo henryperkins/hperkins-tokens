@@ -246,7 +246,7 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 		'Why Support Engineer now must immediately follow the hero-contained WCUS panel.'
 	);
 	assert(
-		markup.includes( 'Published 13 Jul 2026 · Last verified 10 Aug 2026' ),
+		markup.includes( 'Published 13 Jul 2026 · Last verified 11 Aug 2026' ),
 		'Main digest draft must use the approved publication-verification date.'
 	);
 

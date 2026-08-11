@@ -14,6 +14,8 @@ const DIGEST = fs.readFileSync(
 ).replace( /\r\n/g, '\n' );
 const THEME_VERSION = '0.3.53';
 const DEPLOYED_COMMIT = '43d9ef603a6715b23af0b4fdce6076010e4b824a';
+const CURRENT_PUBLICATION_DATELINE = 'Published 13 Jul 2026 · Last verified 11 Aug 2026';
+const STALE_PUBLICATION_DATELINE = 'Published 13 Jul 2026 · Last verified 10 Aug 2026';
 
 function replaceOnce( value, search, replacement ) {
 	assert.notEqual( value.indexOf( search ), -1, `Mutation fixture is missing: ${ search }` );
@@ -83,6 +85,27 @@ test( 'requires the WCUS panel and recruiter actions inside the Digest hero', ()
 	assert.throws(
 		() => verifyMain( outsideHero, THEME_VERSION, DEPLOYED_COMMIT ),
 		/WCUS panel and its recruiter actions must be contained by the Digest hero/
+	);
+} );
+
+test( 'requires the Task 10 publication-verification date and rejects the stale date', () => {
+	assert(
+		DIGEST.includes( CURRENT_PUBLICATION_DATELINE ),
+		'The candidate must use the 11 Aug 2026 publication-verification date.'
+	);
+	const currentDate = DIGEST.replace(
+		/Published 13 Jul 2026 · Last verified (?:10|11) Aug 2026/,
+		CURRENT_PUBLICATION_DATELINE
+	);
+	const staleDate = DIGEST.replace(
+		/Published 13 Jul 2026 · Last verified (?:10|11) Aug 2026/,
+		STALE_PUBLICATION_DATELINE
+	);
+
+	assert.doesNotThrow( () => verifyMain( currentDate, THEME_VERSION, DEPLOYED_COMMIT ) );
+	assert.throws(
+		() => verifyMain( staleDate, THEME_VERSION, DEPLOYED_COMMIT ),
+		/publication-verification date/
 	);
 } );
 

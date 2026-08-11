@@ -1,6 +1,6 @@
 # WordPress GitHub Activity Audit
 
-**Window:** 2026-07-01 00:00 through 2026-08-10 22:02 America/Chicago
+**Window:** 2026-07-01 00:00 through 2026-08-11 03:42:16.933 America/Chicago
 
 **Account:** [`henryperkins`](https://github.com/henryperkins)
 
@@ -36,10 +36,10 @@ This read-only refresh extends the discoverable activity window from July 1 thro
 |---|---|---|
 | [Flavor Agent PR #77 — Harden docs corpus validation, deletion guards, and settlement waiting](https://github.com/henryperkins/flavor-agent/pull/77) | Authored by `henryperkins`; open, unmerged, non-draft; created `2026-08-11T06:29:06Z`; updated `2026-08-11T06:35:59Z`; base `master` | **Owned work · open/in development.** Substantive corpus-validation and deletion-safety work, but neither merged nor released. Preserve in this full inventory; do not displace RC3 or merged post-RC3 proof on recruiter surfaces. |
 | [Flavor Agent PR #78 — Add Gutenberg opt-in to WP 7.0 harness and fix design-token resolution](https://github.com/henryperkins/flavor-agent/pull/78) | Authored by `henryperkins`; open, unmerged, non-draft; created `2026-08-11T06:57:45Z`; updated `2026-08-11T07:27:01Z`; base `master` | **Owned WordPress/Gutenberg work · open/in development.** Substantive WordPress 7.0/Gutenberg harness, package-export-aware design-token resolution, and abilities-bridge compatibility work. Recruiter-relevant, but lower-state than the selected released/merged evidence; do not add it to the candidates or résumé while it remains open. |
-| [Agent Skills skill-audit/WP-Bench integration commit `2817235`](https://github.com/henryperkins/agent-skills/commit/2817235c29d1e20afb23eb3fecbcf2317896bc69) | Authored and committed by Henry Perkins at `2026-08-11T01:10:53Z`; public on default branch `trunk` | **Owned maintained distribution · default-branch work.** The previously local audit and WP-Bench integration documents are now public default-branch evidence. |
-| [Agent Skills plugin-metadata/CI commit `ff67695`](https://github.com/henryperkins/agent-skills/commit/ff6769576e96f554b1929665311d0fb3b39019a0) | Authored and committed by Henry Perkins at `2026-08-11T01:47:04Z`; public on `trunk`; branch `release/plugin-1.2.0` points to the same commit; GitHub Releases remains empty and no release tag was found | **Owned maintained distribution · default-branch metadata 1.2.0 · no GitHub release/tag.** “Plugin metadata 1.2.0” remains distinct from “released 1.2.0” and does not replace stronger released evidence. |
-| [Roadmaptrac refresh-prompt census correction `16dc64e`](https://github.com/henryperkins/roadmaptrac/commit/16dc64e3d6d6f66827a27aef68ebca08bd346b2f) | Authored and committed by Henry Perkins at `2026-08-11T01:41:50Z`; public on default branch `main` | **Active evidence tooling · no release.** Post-census prompt-documentation maintenance; it does not supersede the pinned census implementation. |
-| [Roadmaptrac portable-path correction `0d4726a`](https://github.com/henryperkins/roadmaptrac/commit/0d4726a4ea73d2ab46c1e6f62ca35102e5278512) | Authored and committed by Henry Perkins at `2026-08-11T01:44:24Z`; public on `main`; no Roadmaptrac release exists | **Active evidence tooling · no release.** A lower-signal prompt portability fix; retain the stronger census commit on recruiter surfaces. |
+| [Agent Skills commit `2817235` — docs: add skill audit and WP-Bench integration notes](https://github.com/henryperkins/agent-skills/commit/2817235c29d1e20afb23eb3fecbcf2317896bc69) | Authored and committed by Henry Perkins at `2026-08-11T01:10:53Z`; public on default branch `trunk` | **Owned maintained distribution · default-branch work.** The previously local audit and WP-Bench integration documents are now public default-branch evidence. |
+| [Agent Skills commit `ff67695` — Release plugin 1.2.0 and gate version staleness in CI](https://github.com/henryperkins/agent-skills/commit/ff6769576e96f554b1929665311d0fb3b39019a0) | Authored and committed by Henry Perkins at `2026-08-11T01:47:04Z`; public on `trunk`; branch `release/plugin-1.2.0` points to the same commit; GitHub Releases remains empty and no release tag was found | **Owned maintained distribution · default-branch metadata 1.2.0 · no GitHub release/tag.** “Plugin metadata 1.2.0” remains distinct from “released 1.2.0” and does not replace stronger released evidence. |
+| [Roadmaptrac commit `16dc64e` — Finish updating the refresh prompt for the issue census](https://github.com/henryperkins/roadmaptrac/commit/16dc64e3d6d6f66827a27aef68ebca08bd346b2f) | Authored and committed by Henry Perkins at `2026-08-11T01:41:50Z`; public on default branch `main` | **Active evidence tooling · no release.** Post-census prompt-documentation maintenance; it does not supersede the pinned census implementation. |
+| [Roadmaptrac commit `0d4726a` — Drop the stale hardcoded path from the refresh prompt](https://github.com/henryperkins/roadmaptrac/commit/0d4726a4ea73d2ab46c1e6f62ca35102e5278512) | Authored and committed by Henry Perkins at `2026-08-11T01:44:24Z`; public on `main`; no Roadmaptrac release exists | **Active evidence tooling · no release.** A lower-signal prompt portability fix; retain the stronger census commit on recruiter surfaces. |
 
 ### Re-resolved cited evidence
 
@@ -61,7 +61,7 @@ The authenticated July-to-retrieval contribution collection, paginated authored 
 
 Noise and exclusions remain deliberate: `community-forums#64`, Candidary, Pattern-Like, Gemini-Plato, and other adjacent application events are not WordPress implementation; WP-Bench branch pushes remain agent-authored fork evidence already confined to this audit; Henry's comments/review event on his own Flavor Agent #78 do not become independent upstream-review proof; branch creation and plugin metadata do not create a release; repository sync/fork/watch events remain non-achievements. Restricted activity is still unmappable and excluded from claims.
 
-Taxonomy conclusion: the new items are open owned work, public default-branch distribution work without a release, or unreleased prompt-documentation maintenance. None is stronger than the candidate's authored-upstream, merged, or released proof. No Job Placement Digest, About candidate, DOCX, PDF, or verifier-literal change is required for this refresh.
+Taxonomy conclusion: the new items are open owned work, public default-branch distribution work without a release, or unreleased prompt-documentation maintenance. None is stronger than the candidate's authored-upstream, merged, or released proof, so no evidence selection, About candidate, DOCX, or PDF change is required. The Job Placement Digest's publication-verification dateline and its exact verifier literal advance to 11 Aug 2026 under the Task 4 freshness contract.
 
 ## Method And Coverage
 
@@ -69,12 +69,12 @@ The pass used authenticated GitHub GraphQL, issue/PR search, commit search, repo
 
 Account-level discovery returned:
 
-- 1,266 contribution-collection entries: 1,150 commits, 101 pull requests, 1 issue, 3 qualifying reviews, 8 repository creations, and 3 restricted contributions.
-- 120 authored issue/PR search results: 119 pull requests and 1 issue. The 18-PR difference demonstrates that the contribution graph is eligibility-filtered rather than a complete activity log.
-- 1,145 authored commit-search results.
+- 1,269 contribution-collection entries: 1,150 commits, 103 pull requests, 1 issue, 3 qualifying reviews, 8 repository creations, and 4 restricted contributions.
+- 122 authored issue/PR search results: 121 pull requests and 1 issue. The 18-PR difference demonstrates that the contribution graph is eligibility-filtered rather than a complete activity log.
+- 1,150 authored commit-search results.
 - The Events API maximum of 300 records, with August 1 as the oldest returned event. Events therefore cannot reconstruct the full July timeline.
 
-The three restricted contributions cannot be mapped formally by the API and are excluded from portfolio claims. Repository syncs, watches/stars, exact forks, and adjacent non-WordPress applications are recorded separately rather than presented as implementation evidence.
+The four restricted contributions cannot be mapped formally by the API and are excluded from portfolio claims. Repository syncs, watches/stars, exact forks, and adjacent non-WordPress applications are recorded separately rather than presented as implementation evidence.
 
 ### Status vocabulary
 
