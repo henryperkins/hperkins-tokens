@@ -16,6 +16,7 @@ const path = require( 'node:path' );
 const { findHeadings, findLinks, extractExactText } = require( './lib/about-page-contract' );
 const { assertKnownOptions, selectDigestSource } = require( './lib/page-phase-contract' );
 const { getOrigin } = require( './lib/site-url' );
+const { assertRuleDeclarations } = require( './lib/style-coverage' );
 
 const ROOT = path.join( __dirname, '..' );
 const ARGV = process.argv.slice( 2 );
@@ -143,10 +144,6 @@ function verifySourceContracts() {
 	}
 
 	for ( const expected of [
-		'.hp-wcus-callout {',
-		'.hp-wcus-callout__actions {',
-		'.hp-debug-proof__grid {',
-		'.hp-debug-proof__item {',
 		'.hp-digest__primary-actions.hp-action-rail {',
 		'.hp-digest__primary-actions.hp-action-rail:not(.hp-wcus-callout__actions) {',
 		'grid-template-columns: repeat(4, minmax(0, 1fr));',
@@ -156,6 +153,51 @@ function verifySourceContracts() {
 		'min-inline-size: 48rem;',
 	] ) {
 		assert( pageCss.includes( expected ), `assets/imladris-pages.css is missing recruiter-page contract: ${ expected }` );
+	}
+	for ( const contract of [
+		{
+			selector: '.hp-wcus-callout',
+			declarations: {
+				'margin-block-start': 'var(--wp--preset--spacing--6)',
+				padding: 'var(--wp--preset--spacing--6)',
+				'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
+				background: 'color-mix(in srgb, var(--wp--preset--color--parchment-100) 88%, var(--wp--preset--color--gold-100))',
+			},
+		},
+		{ selector: '.hp-wcus-callout__actions', declarations: { 'grid-template-columns': 'repeat(3, minmax(0, 1fr))' } },
+		{
+			selector: '.hp-debug-proof__grid',
+			declarations: {
+				display: 'grid',
+				'grid-template-columns': 'repeat(2, minmax(0, 1fr))',
+				gap: 'var(--wp--preset--spacing--4)',
+				margin: 'var(--wp--preset--spacing--5) 0 0',
+			},
+		},
+		{
+			selector: '.hp-debug-proof__item',
+			declarations: {
+				'min-inline-size': '0',
+				'padding-block-start': 'var(--wp--preset--spacing--3)',
+				'border-block-start': '2px solid var(--wp--preset--color--river-500)',
+			},
+		},
+		{
+			selector: '.hp-debug-proof__item dt',
+			declarations: {
+				color: 'var(--wp--preset--color--green-700)',
+				'font-family': 'var(--wp--preset--font-family--mono)',
+				'font-size': 'var(--wp--preset--font-size--xs)',
+				'font-weight': '700',
+				'letter-spacing': '0.06em',
+				'text-transform': 'uppercase',
+			},
+		},
+		{ selector: '.hp-debug-proof__item dd', declarations: { margin: 'var(--wp--preset--spacing--2) 0 0', 'overflow-wrap': 'anywhere' } },
+		{ selector: '.hp-wcus-callout__actions', atContext: '@media (max-width: 781px)', declarations: { 'grid-template-columns': 'minmax(0, 1fr)' } },
+		{ selector: '.hp-debug-proof__grid', atContext: '@media (max-width: 781px)', declarations: { 'grid-template-columns': 'minmax(0, 1fr)' } },
+	] ) {
+		assertRuleDeclarations( pageCss, contract );
 	}
 	if ( DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
 		assert( DIGEST_EXPECTATIONS.wcusActions.length === 3, 'Selected Digest WCUS callout must expose exactly three ordered actions.' );

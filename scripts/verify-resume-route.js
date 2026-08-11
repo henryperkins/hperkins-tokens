@@ -25,6 +25,9 @@ function parseUrl( value, label ) {
 }
 
 function hasOnlyVersionQuery( url ) {
+	if ( url.hash || url.username || url.password ) {
+		return false;
+	}
 	const entries = [ ...url.searchParams.entries() ];
 	if ( entries.length !== 1 || entries[0][0] !== 'v' ) {
 		return false;
@@ -34,6 +37,9 @@ function hasOnlyVersionQuery( url ) {
 }
 
 function hasDiagnosticPreflightQuery( location, requested ) {
+	if ( location.hash || location.username || location.password || requested.hash || requested.username || requested.password ) {
+		return false;
+	}
 	const inbound = [ ...requested.searchParams.entries() ];
 	const forwarded = [ ...location.searchParams.entries() ];
 	if ( forwarded.length !== inbound.length + 1 ) {
@@ -51,7 +57,11 @@ function validateRedirectChain( steps, requestedUrl, expectedOrigin, options = {
 
 	const strict = options.strict !== false;
 	const requested = parseUrl( requestedUrl, 'Requested URL' );
-	const origin = parseUrl( expectedOrigin, 'Expected origin' ).origin;
+	const expected = parseUrl( expectedOrigin, 'Expected origin' );
+	assert( ! expected.hash && ! expected.username && ! expected.password, 'Expected origin must not include a fragment or credentials.' );
+	const origin = expected.origin;
+	assert( ! requested.hash, 'Requested URL must not include a fragment.' );
+	assert( ! requested.username && ! requested.password, 'Requested URL must not include credentials.' );
 	assert( requested.protocol === 'https:', 'Public résumé verification requires HTTPS.' );
 	assert( requested.origin === origin, 'Requested URL must use the expected origin.' );
 	assert( requested.pathname === RESUME_PATH, `Requested URL must use ${ RESUME_PATH }.` );
@@ -64,6 +74,8 @@ function validateRedirectChain( steps, requestedUrl, expectedOrigin, options = {
 
 	for ( const [ index, step ] of steps.entries() ) {
 		const request = parseUrl( step.requestUrl, `Step ${ index + 1 } request URL` );
+		assert( ! request.hash, `Step ${ index + 1 } request URL must not include a fragment.` );
+		assert( ! request.username && ! request.password, `Step ${ index + 1 } request URL must not include credentials.` );
 		assert( request.protocol === 'https:', `Step ${ index + 1 } must use HTTPS.` );
 		assert( request.origin === origin, `Step ${ index + 1 } must stay on the expected origin.` );
 		assert( ! seenRequestUrls.has( request.href ), `Redirect loop repeats request URL: ${ request.href }` );
@@ -87,6 +99,8 @@ function validateRedirectChain( steps, requestedUrl, expectedOrigin, options = {
 
 		assert( typeof step.location === 'string' && step.location.length > 0, `Redirect step ${ index + 1 } is missing a Location.` );
 		const location = parseUrl( step.location, `Step ${ index + 1 } Location` );
+		assert( ! location.hash, `Step ${ index + 1 } Location must not include a fragment.` );
+		assert( ! location.username && ! location.password, `Step ${ index + 1 } Location must not include credentials.` );
 		previousLocation = location.href;
 
 		if ( step.status === 307 && step.redirectBy === 'WordPress' ) {
@@ -128,8 +142,11 @@ function assertIncludes( file, values ) {
 }
 
 function visibleHrefs( source ) {
-	return [ ...source.matchAll( /\bhref=(?:"([^"]*)"|'([^']*)')/gi ) ]
-		.map( ( match ) => match[ 1 ] || match[ 2 ] );
+	const html = String( source || '' ).replace( /<!--[\s\S]*?-->/g, '' );
+	return [ ...html.matchAll( /<a\b([^>]*)>/gi ) ].flatMap( ( anchor ) => {
+		const href = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec( anchor[ 1 ] );
+		return href ? [ href[ 1 ] || href[ 2 ] ] : [];
+	} );
 }
 
 function assertSemanticResumeLinks( file ) {
@@ -264,4 +281,4 @@ if ( require.main === module ) {
 	} );
 }
 
-module.exports = { validateRedirectChain };
+module.exports = { validateRedirectChain, visibleHrefs };

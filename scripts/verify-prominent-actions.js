@@ -9,6 +9,7 @@ const path = require( 'node:path' );
 const { findHeadings } = require( './lib/about-page-contract' );
 const { assertKnownOptions, selectAboutSource, selectDigestSource } = require( './lib/page-phase-contract' );
 const { getOrigin } = require( './lib/site-url' );
+const { assertRuleDeclarations } = require( './lib/style-coverage' );
 
 const THEME_ROOT = path.join( __dirname, '..' );
 const ARGV = process.argv.slice( 2 );
@@ -127,11 +128,26 @@ function verifySourceContracts() {
 		assert( css.includes( expected ), `style.css is missing expected contract: ${ expected }` );
 	}
 	if ( DIGEST_BODY.includes( 'hp-wcus-callout' ) ) {
-		assert( pageCss.includes( '.hp-wcus-callout {' ), 'assets/imladris-pages.css is missing .hp-wcus-callout presentation.' );
-		assert( pageCss.includes( '.hp-wcus-callout__actions {' ), 'assets/imladris-pages.css is missing .hp-wcus-callout__actions layout.' );
+		assertRuleDeclarations( pageCss, {
+			selector: '.hp-wcus-callout',
+			declarations: {
+				padding: 'var(--wp--preset--spacing--6)',
+				'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
+			},
+		} );
+		assertRuleDeclarations( pageCss, {
+			selector: '.hp-wcus-callout__actions',
+			declarations: { 'grid-template-columns': 'repeat(3, minmax(0, 1fr))' },
+		} );
 	}
 	if ( read( ABOUT_SOURCE ).includes( 'hp-about-wcus' ) ) {
-		assert( pageCss.includes( '.hp-about-wcus {' ), 'assets/imladris-pages.css is missing .hp-about-wcus presentation.' );
+		assertRuleDeclarations( pageCss, {
+			selector: '.hp-about-wcus',
+			declarations: {
+				padding: 'var(--wp--preset--spacing--4)',
+				'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
+			},
+		} );
 	}
 
 	for ( const file of RAIL_FILES ) {

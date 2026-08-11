@@ -12,7 +12,29 @@ const {
 	classesInMarkup,
 	patternSlugsIn,
 	expandPatternChain,
+	assertRuleDeclarations,
 } = require( './style-coverage' );
+
+test( 'assertRuleDeclarations rejects comment-only, empty, wrong-value, and wrong-media CSS', () => {
+	assert.equal( typeof assertRuleDeclarations, 'function', 'style coverage must expose declaration-aware rule validation' );
+	const contract = {
+		selector: '.hp-example',
+		atContext: '@media (max-width: 781px)',
+		declarations: { 'grid-template-columns': 'minmax(0, 1fr)' },
+	};
+	assert.doesNotThrow( () => assertRuleDeclarations(
+		'@media (max-width: 781px) { .hp-example { grid-template-columns: minmax(0, 1fr); } }',
+		contract
+	) );
+	for ( const css of [
+		'/* @media (max-width: 781px) { .hp-example { grid-template-columns: minmax(0, 1fr); } } */',
+		'@media (max-width: 781px) { .hp-example {} }',
+		'@media (max-width: 781px) { .hp-example { grid-template-columns: repeat(2, 1fr); } }',
+		'@media (max-width: 782px) { .hp-example { grid-template-columns: minmax(0, 1fr); } }',
+	] ) {
+		assert.throws( () => assertRuleDeclarations( css, contract ), /hp-example|grid-template-columns|781px/ );
+	}
+} );
 
 test( 'parseRules returns top-level rules with original offsets', () => {
 	const css = '.a { color: red; }\n.b { color: blue; }';

@@ -97,6 +97,43 @@ test( 'derives rendered copy from the selected About body', () => {
 	assert.equal( expectations.heroActionLabels[ 0 ], 'Selected phase action' );
 } );
 
+test( 'rejects a WCUS callout nested inside an action rail', () => {
+	const source = fs.readFileSync(
+		path.join( themeRoot, 'content', 'page-drafts', 'about.html' ),
+		'utf8'
+	);
+	const nested = source
+		.replace(
+			'<div class="wp-block-group hp-about-wcus">',
+			'<div class="hp-action-rail"><div class="wp-block-group hp-about-wcus">'
+		)
+		.replace(
+			'<!-- /wp:buttons --></div>\n<!-- /wp:group -->',
+			'<!-- /wp:buttons --></div>\n<!-- /wp:group --></div>'
+		);
+	assert.notEqual( nested, source, 'ancestor mutation must apply' );
+	assert.throws(
+		() => deriveRenderedExpectations( nested, { label: 'nested WCUS fixture' } ),
+		/outside.*hp-action-rail|ancestor/i
+	);
+} );
+
+test( 'requires the WCUS action link to use one core Button wrapper', () => {
+	const source = fs.readFileSync(
+		path.join( themeRoot, 'content', 'page-drafts', 'about.html' ),
+		'utf8'
+	);
+	const plainAnchor = source.replace(
+		'<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/contact/">Start a conversation</a></div>',
+		'<div class="not-a-button is-style-secondary"><a href="/contact/">Start a conversation</a></div>'
+	);
+	assert.notEqual( plainAnchor, source, 'plain-anchor mutation must apply' );
+	assert.throws(
+		() => deriveRenderedExpectations( plainAnchor, { label: 'plain WCUS action fixture' } ),
+		/exactly one.*wp-block-button|core Button/i
+	);
+} );
+
 test( 'runs selected-body and CSS contracts in source-only mode without an origin', () => {
 	const result = spawnSync(
 		process.execPath,

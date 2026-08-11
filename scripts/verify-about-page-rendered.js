@@ -38,6 +38,7 @@ const {
 	verifyCssOwnership,
 } = require( './lib/about-page-contract' );
 const { assertKnownOptions, selectAboutSource } = require( './lib/page-phase-contract' );
+const { assertRuleDeclarations } = require( './lib/style-coverage' );
 
 const THEME_ROOT = path.join( __dirname, '..' );
 const ARGV = process.argv.slice( 2 );
@@ -100,6 +101,8 @@ function findBalancedElementsByClass( html, className, label ) {
 			inner: html.slice( open.index + open[ 0 ].length, closing.index ),
 			open: open[ 0 ],
 			outer: html.slice( open.index, closing.index + closing[ 0 ].length ),
+			start: open.index,
+			end: closing.index + closing[ 0 ].length,
 		} );
 	}
 
@@ -155,10 +158,16 @@ function deriveRenderedExpectations( html, { label = 'selected About body' } = {
 			findBalancedElementsByClass( html, 'hp-about-hero__copy', label )[ 0 ]?.inner.includes( wcus.outer ),
 			`${ label } must place .hp-about-wcus inside .hp-about-hero__copy.`
 		);
-		assert( ! wcus.outer.includes( 'hp-action-rail' ), `${ label } .hp-about-wcus must stay outside hp-action-rail.` );
-		const wcusAction = findBalancedElementsByClass( wcus.inner, 'hp-about-wcus__action', label )[ 0 ];
-		assert( wcusAction, `${ label } .hp-about-wcus has no .hp-about-wcus__action.` );
-		wcusActions = findLinks( wcusAction.inner, label );
+		const actionRails = findBalancedElementsByClass( html, 'hp-action-rail', label );
+		assert(
+			! actionRails.some( ( rail ) => rail.start < wcus.end && rail.end > wcus.start ),
+			`${ label } .hp-about-wcus and its action must stay outside any hp-action-rail ancestor or descendant.`
+		);
+		const wcusActionElements = findBalancedElementsByClass( wcus.inner, 'hp-about-wcus__action', label );
+		assert( wcusActionElements.length === 1, `${ label } .hp-about-wcus must contain exactly one .hp-about-wcus__action.` );
+		const buttons = findBalancedElementsByClass( wcusActionElements[ 0 ].inner, 'wp-block-button', label );
+		assert( buttons.length === 1, `${ label } .hp-about-wcus__action must contain exactly one core Button .wp-block-button.` );
+		wcusActions = findLinks( buttons[ 0 ].inner, label );
 		assert( wcusActions.length === 1, `${ label } .hp-about-wcus must expose exactly one action.` );
 		assert( coreAi, `${ label } with a WCUS callout has no .hp-about-core-ai section.` );
 		assert(
@@ -191,13 +200,32 @@ function verifySourceContracts( selectedAboutBody, pageCss, label ) {
 		pageCss
 	);
 	if ( expectations.wcusActionLabels.length > 0 ) {
-		for ( const expected of [
-			'.hp-about-wcus {',
-			'.hp-about-wcus__label {',
-			'.hp-about-wcus__copy,',
-			'.hp-about-wcus__action {',
+		for ( const contract of [
+			{
+				selector: '.hp-about-wcus',
+				declarations: {
+					'margin-block-start': 'var(--wp--preset--spacing--4)',
+					padding: 'var(--wp--preset--spacing--4)',
+					'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
+					background: 'color-mix(in srgb, var(--wp--preset--color--parchment-100) 90%, var(--wp--preset--color--gold-100))',
+				},
+			},
+			{
+				selector: '.hp-about-wcus__label',
+				declarations: {
+					margin: '0',
+					color: 'var(--wp--preset--color--green-700)',
+					'font-family': 'var(--wp--preset--font-family--mono)',
+					'font-size': 'var(--wp--preset--font-size--xs)',
+					'font-weight': '700',
+					'letter-spacing': '0.06em',
+					'text-transform': 'uppercase',
+				},
+			},
+			{ selector: '.hp-about-wcus__copy', declarations: { 'margin-block-start': 'var(--wp--preset--spacing--3)' } },
+			{ selector: '.hp-about-wcus__action', declarations: { 'margin-block-start': 'var(--wp--preset--spacing--3)' } },
 		] ) {
-			assert( pageCss.includes( expected ), `assets/imladris-pages.css is missing About WCUS contract: ${ expected }` );
+			assertRuleDeclarations( pageCss, contract );
 		}
 	}
 	console.log( 'About rendered-page source contracts verified.' );
@@ -459,7 +487,7 @@ function buildInspectionExpression( opts ) {
 		out.signals = Array.from(content.querySelectorAll('.hp-about-impact .hp-signal')).map(rect);
 		const wcus = content.querySelector('.hp-about-hero__copy .hp-about-wcus');
 		out.wcus = wcus ? {
-			insideActionRail: !!wcus.closest('.hp-action-rail'),
+			insideActionRail: wcus.matches('.hp-action-rail') || !!wcus.closest('.hp-action-rail') || !!wcus.querySelector('.hp-action-rail'),
 			actions: Array.from(wcus.querySelectorAll('.hp-about-wcus__action .wp-block-button__link')).map((link) => {
 				const bounds = link.getBoundingClientRect();
 				const range = document.createRange();
