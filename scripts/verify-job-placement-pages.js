@@ -112,6 +112,8 @@ const PAGES = [
 const VIEWPORTS = [
 	{ name: 'desktop-1440', width: 1440, height: 1000 },
 	{ name: 'desktop-1024', width: 1024, height: 1000 },
+	{ name: 'compact-upper-1023', width: 1023, height: 1000 },
+	{ name: 'small-laptop-782', width: 782, height: 1000 },
 	{ name: 'tablet-768', width: 768, height: 1000 },
 	{ name: 'mobile-390', width: 390, height: 1000 },
 	{ name: 'mobile-320', width: 320, height: 1000 },
@@ -209,12 +211,12 @@ function verifySourceContracts() {
 		{ selector: '.hp-debug-proof__grid', atContext: '@media (max-width: 781px)', declarations: { 'grid-template-columns': 'minmax(0, 1fr)' } },
 		{
 			selector: '.hp-digest-template',
-			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
 			declarations: { 'padding-block-start': 'var(--wp--preset--spacing--5) !important' },
 		},
 		{
 			selector: '.hp-digest__hero h1',
-			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
 			declarations: {
 				'max-inline-size': 'none',
 				'font-size': 'var(--wp--preset--font-size--3-xl)',
@@ -222,12 +224,12 @@ function verifySourceContracts() {
 		},
 		{
 			selector: '.hp-category-bar',
-			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
 			declarations: { 'margin-block': 'var(--wp--preset--spacing--3)' },
 		},
 		{
 			selector: '.hp-wcus-callout',
-			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
 			declarations: {
 				'margin-block-start': 'var(--wp--preset--spacing--5)',
 				padding: 'var(--wp--preset--spacing--5)',
@@ -236,7 +238,7 @@ function verifySourceContracts() {
 		},
 		{
 			selector: '.hp-wcus-callout > h2',
-			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
 			declarations: {
 				'font-size': 'var(--wp--preset--font-size--2-xl)',
 				'margin-block-start': 'var(--wp--preset--spacing--4)',
@@ -244,7 +246,7 @@ function verifySourceContracts() {
 		},
 		{
 			selector: '.hp-wcus-callout > p:not(.hp-page-hero__eyebrow)',
-			atContext: '@media (min-width: 601px) and (max-width: 781px)',
+			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
 			declarations: { 'margin-block-start': 'var(--wp--preset--spacing--4)' },
 		},
 	] ) {

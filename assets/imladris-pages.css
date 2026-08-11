@@ -629,11 +629,13 @@ p.hp-contact-form__hint {
   }
 }
 
-/* The WCUS actions become one touch-friendly column below 782px. On the
-   tablet-only band, tighten the surrounding hero rhythm by one token step so
-   all three actions remain in the first 1000px without shrinking their 44px
-   targets. Desktop composition and the <=600px phone treatment stay intact. */
-@media (min-width: 601px) and (max-width: 781px) {
+/* The WCUS actions become one touch-friendly column below 782px; their
+   separate layout rule preserves three columns from 782px upward. Through the
+   small-laptop band, keep the surrounding hero rhythm compact so all three
+   actions remain in the first 1000px without shrinking their 44px targets.
+   Full desktop composition at 1024px+ and the <=600px phone treatment stay
+   intact. */
+@media (min-width: 601px) and (max-width: 1023px) {
   .hp-digest-template {
     padding-block-start: var(--wp--preset--spacing--5) !important;
   }

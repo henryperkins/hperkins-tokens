@@ -23,16 +23,16 @@ const pagesCss = fs.readFileSync(
 	'utf8'
 ).replace( /\r\n/g, '\n' );
 
-const DIGEST_TABLET_CONTEXT = '@media (min-width: 601px) and (max-width: 781px)';
+const DIGEST_COMPACT_CONTEXT = '@media (min-width: 601px) and (max-width: 1023px)';
 const DIGEST_TABLET_CONTRACTS = [
 	{
 		selector: '.hp-digest-template',
-		atContext: DIGEST_TABLET_CONTEXT,
+		atContext: DIGEST_COMPACT_CONTEXT,
 		declarations: { 'padding-block-start': 'var(--wp--preset--spacing--5) !important' },
 	},
 	{
 		selector: '.hp-digest__hero h1',
-		atContext: DIGEST_TABLET_CONTEXT,
+		atContext: DIGEST_COMPACT_CONTEXT,
 		declarations: {
 			'max-inline-size': 'none',
 			'font-size': 'var(--wp--preset--font-size--3-xl)',
@@ -40,12 +40,12 @@ const DIGEST_TABLET_CONTRACTS = [
 	},
 	{
 		selector: '.hp-category-bar',
-		atContext: DIGEST_TABLET_CONTEXT,
+		atContext: DIGEST_COMPACT_CONTEXT,
 		declarations: { 'margin-block': 'var(--wp--preset--spacing--3)' },
 	},
 	{
 		selector: '.hp-wcus-callout',
-		atContext: DIGEST_TABLET_CONTEXT,
+		atContext: DIGEST_COMPACT_CONTEXT,
 		declarations: {
 			'margin-block-start': 'var(--wp--preset--spacing--5)',
 			padding: 'var(--wp--preset--spacing--5)',
@@ -54,7 +54,7 @@ const DIGEST_TABLET_CONTRACTS = [
 	},
 	{
 		selector: '.hp-wcus-callout > h2',
-		atContext: DIGEST_TABLET_CONTEXT,
+		atContext: DIGEST_COMPACT_CONTEXT,
 		declarations: {
 			'font-size': 'var(--wp--preset--font-size--2-xl)',
 			'margin-block-start': 'var(--wp--preset--spacing--4)',
@@ -62,7 +62,7 @@ const DIGEST_TABLET_CONTRACTS = [
 	},
 	{
 		selector: '.hp-wcus-callout > p:not(.hp-page-hero__eyebrow)',
-		atContext: DIGEST_TABLET_CONTEXT,
+		atContext: DIGEST_COMPACT_CONTEXT,
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--4)' },
 	},
 ];
@@ -147,7 +147,7 @@ test( 'native proof-grid items neutralize WordPress flow margins', () => {
 	);
 } );
 
-test( 'Digest tablet fold uses a bounded token-based compact treatment', () => {
+test( 'Digest tablet and small-laptop fold use a bounded token-based compact treatment', () => {
 	assert.doesNotThrow( () => assertFontPresetReferencesResolve( DIGEST_TABLET_CONTRACTS, themeJson ) );
 	const missingTokenTheme = structuredClone( themeJson );
 	missingTokenTheme.settings.typography.fontSizes = missingTokenTheme.settings.typography.fontSizes.filter(
@@ -178,6 +178,16 @@ test( 'Digest tablet fold uses a bounded token-based compact treatment', () => {
 	assert.throws(
 		() => assertRuleDeclarations( withoutTopPadding, calloutContract ),
 		/hp-wcus-callout|padding-block-start/
+	);
+
+	const wrongUpperBound = pagesCss.replace(
+		DIGEST_COMPACT_CONTEXT,
+		'@media (min-width: 601px) and (max-width: 1024px)'
+	);
+	assert.notEqual( wrongUpperBound, pagesCss, 'The compact-band boundary mutation must change the stylesheet.' );
+	assert.throws(
+		() => assertRuleDeclarations( wrongUpperBound, calloutContract ),
+		/hp-wcus-callout|601px|1023px/
 	);
 } );
 
