@@ -13,6 +13,14 @@ function escapeRegExp( value ) {
 	return value.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
 }
 
+function assertActiveSourceCommand( sourceJob, command ) {
+	assert.match(
+		sourceJob,
+		new RegExp( `^[ \\t]*run:[ \\t]*${ escapeRegExp( command ) }[ \\t]*\\r?$`, 'm' ),
+		`${ command } is not an active workflow line.`
+	);
+}
+
 function assertSourceUnitTestsAreActive( workflowSource, testFiles ) {
 	const sourceJobStart = workflowSource.indexOf( '\n  verify:' );
 	const deployedJobStart = workflowSource.indexOf( '\n  deployed-content:' );
@@ -92,12 +100,27 @@ test( 'includes the research appendix in the rendered typography route matrix', 
 
 test( 'runs the recruiter rendered-page source half on every branch', () => {
 	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
-	assert.match( sourceJob, /node scripts\/verify-job-placement-pages\.js --source-only --drafts/ );
+	assertActiveSourceCommand( sourceJob, 'node scripts/verify-job-placement-pages.js --source-only --drafts' );
 } );
 
 test( 'runs the prominent-actions source contract on every branch', () => {
 	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
-	assert.match( sourceJob, /node scripts\/verify-prominent-actions\.js --source-only --drafts/ );
+	assertActiveSourceCommand( sourceJob, 'node scripts/verify-prominent-actions.js --source-only --drafts' );
+} );
+
+test( 'does not count commented phase commands as active source gates', () => {
+	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
+	for ( const command of [
+		'node scripts/verify-job-placement-pages.js --source-only --drafts',
+		'node scripts/verify-prominent-actions.js --source-only --drafts',
+	] ) {
+		const commentedSourceJob = sourceJob.replace( `run: ${ command }`, `# run: ${ command }` );
+		assert.notEqual( commentedSourceJob, sourceJob, `Commented-line mutation did not apply for ${ command }.` );
+		assert.throws(
+			() => assertActiveSourceCommand( commentedSourceJob, command ),
+			/not an active workflow line/
+		);
+	}
 } );
 
 test( 'normalizes pointer media for the production header gate', () => {
