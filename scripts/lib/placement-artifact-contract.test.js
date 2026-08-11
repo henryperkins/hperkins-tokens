@@ -1,0 +1,126 @@
+const assert = require( 'node:assert/strict' );
+const fs = require( 'node:fs' );
+const path = require( 'node:path' );
+const test = require( 'node:test' );
+
+const { openZip } = require( './zip-archive' );
+const {
+	compactText,
+	unescapePdfString,
+	xmlAttributes,
+	xmlText,
+} = require( '../verify-placement-artifacts' );
+
+const themeRoot = path.join( __dirname, '..', '..' );
+const docxPath = path.join( themeRoot, 'assets', 'documents', 'henry-perkins-wordpress-support-engineer-resume.docx' );
+const pdfPath = path.join( themeRoot, 'assets', 'documents', 'henry-perkins-wordpress-support-engineer-resume.pdf' );
+
+const REQUIRED_RESUME_COPY = [
+	'WORDCAMP US 2026 — Phoenix, Aug 16–19 · Selected to staff the Core AI booth',
+	'WordPress/ai PR #501',
+	'WordPress/php-ai-client PR #263',
+	'WordPress/ai-provider-for-openai PR #40',
+	'Issue #529',
+	'maintainer authored PR #593',
+	'Issue #732',
+	'Anubhav Anand authored PR #757',
+	'Flavor Agent',
+	'v0.1.0-rc.3',
+	'unreleased',
+	'AI Provider for Codex',
+	'HPerkins Tokens',
+];
+
+const FORBIDDEN_RESUME_COPY = [
+	'as of Jul 30, 2026',
+	'54 commits ahead',
+	'30 contracts',
+	'35 contracts',
+	'my PR #593',
+	'my PR #757',
+	'final v0.1.0',
+];
+
+const REQUIRED_IMMUTABLE_URLS = [
+	'https://github.com/WordPress/php-ai-client/pull/263',
+	'https://github.com/WordPress/ai-provider-for-openai/pull/40',
+	'https://github.com/WordPress/ai/pull/593',
+	'https://github.com/WordPress/ai/releases/tag/1.0.1',
+	'https://github.com/WordPress/ai/pull/757',
+	'https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0-rc.3',
+	'https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v2.1',
+	'https://github.com/henryperkins/hperkins-tokens/releases/tag/v0.3.53',
+];
+
+function docxHyperlinkSequence( archive ) {
+	const relationships = new Map();
+	const relationshipSource = archive.text( 'word/_rels/document.xml.rels' );
+	for ( const match of relationshipSource.matchAll( /<Relationship\b([^>]*?)(?:\/>|>)/g ) ) {
+		const attributes = xmlAttributes( match[1] );
+		if ( attributes.TargetMode === 'External' && /\/hyperlink$/.test( attributes.Type || '' ) ) {
+			relationships.set( attributes.Id, attributes.Target );
+		}
+	}
+
+	const urls = [];
+	for ( const match of archive.text( 'word/document.xml' ).matchAll( /<w:hyperlink\b([^>]*)>/g ) ) {
+		const relationshipId = xmlAttributes( match[1] )[ 'r:id' ];
+		if ( relationshipId && relationships.has( relationshipId ) ) {
+			urls.push( relationships.get( relationshipId ) );
+		}
+	}
+	return urls;
+}
+
+function pdfUriSequence( source ) {
+	const urls = [];
+	const pattern = /\/URI\s*(?:\(((?:\\[\s\S]|[^\\)])*)\)|<([\da-f\s]+)>)/gi;
+	for ( const match of source.matchAll( pattern ) ) {
+		urls.push(
+			match[1] !== undefined
+				? unescapePdfString( match[1] )
+				: Buffer.from( match[2].replace( /\s/g, '' ), 'hex' ).toString( 'utf8' )
+		);
+	}
+	return urls;
+}
+
+test( 'resume carries the approved current WCUS and evidence copy', () => {
+	const archive = openZip( docxPath );
+	const text = compactText( xmlText( archive.text( 'word/document.xml' ) ) );
+
+	for ( const requiredCopy of REQUIRED_RESUME_COPY ) {
+		assert.ok( text.includes( requiredCopy ), `resume is missing: ${ requiredCopy }` );
+	}
+	for ( const forbiddenCopy of FORBIDDEN_RESUME_COPY ) {
+		assert.ok( ! text.includes( forbiddenCopy ), `resume retains forbidden copy: ${ forbiddenCopy }` );
+	}
+} );
+
+test( 'DOCX and PDF expose the same ordered external hyperlinks including duplicates', () => {
+	const archive = openZip( docxPath );
+	const docxUrls = docxHyperlinkSequence( archive );
+	const pdfUrls = pdfUriSequence( fs.readFileSync( pdfPath ).toString( 'latin1' ) );
+
+	for ( const requiredUrl of REQUIRED_IMMUTABLE_URLS ) {
+		assert.ok( docxUrls.includes( requiredUrl ), `DOCX is missing ${ requiredUrl }` );
+	}
+	assert.deepEqual( pdfUrls, docxUrls );
+} );
+
+test( 'PDF is a tagged, searchable, one-page document with semantic headings', () => {
+	const source = fs.readFileSync( pdfPath ).toString( 'latin1' );
+	const pageCounts = [ ...source.matchAll( /\/Type\s*\/Pages\b([\s\S]*?)endobj/g ) ]
+		.map( ( match ) => match[1].match( /\/Count\s+(\d+)/ ) )
+		.filter( Boolean )
+		.map( ( match ) => Number( match[1] ) );
+
+	assert.ok( pageCounts.length > 0 );
+	assert.ok( pageCounts.every( ( count ) => count === 1 ), `page counts: ${ pageCounts.join( ', ' ) }` );
+	assert.match( source, /\/ToUnicode\b/ );
+	assert.match( source, /\/MarkInfo\b/ );
+	assert.match( source, /\/Marked\s+true\b/ );
+	assert.match( source, /\/StructTreeRoot\b/ );
+	assert.match( source, /\/H1\b/ );
+	assert.ok( ( source.match( /\/H2\b/g ) || [] ).length >= 4 );
+} );

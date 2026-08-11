@@ -35,3 +35,16 @@ test( 'link verification reports every result before failing the batch', async (
 	assert.equal( messages.length, 3 );
 	assert( messages.some( ( message ) => message.includes( 'broken - temporary network failure' ) ) );
 } );
+
+test( 'link verification does not discard duplicate annotation targets', async () => {
+	const visited = [];
+	await verifyLinks(
+		[ 'https://example.test/repeated', 'https://example.test/repeated' ],
+		async ( url ) => {
+			visited.push( url );
+			return { url, status: 200, finalUrl: url };
+		},
+		() => {}
+	);
+	assert.deepEqual( visited, [ 'https://example.test/repeated', 'https://example.test/repeated' ] );
+} );

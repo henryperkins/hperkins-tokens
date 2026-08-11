@@ -33,6 +33,30 @@ const approvedColumns = [
 ];
 const supportPostingUrl = 'https://job-boards.greenhouse.io/automatticcareers/jobs/7875064';
 const providerVersion = '2.1';
+const REQUIRED_RESUME_COPY = [
+	'WORDCAMP US 2026 — Phoenix, Aug 16–19 · Selected to staff the Core AI booth',
+	'WordPress/ai PR #501',
+	'WordPress/php-ai-client PR #263',
+	'WordPress/ai-provider-for-openai PR #40',
+	'Issue #529',
+	'maintainer authored PR #593',
+	'Issue #732',
+	'Anubhav Anand authored PR #757',
+	'Flavor Agent',
+	'v0.1.0-rc.3',
+	'unreleased',
+	'AI Provider for Codex',
+	'HPerkins Tokens',
+];
+const FORBIDDEN_RESUME_COPY = [
+	'as of Jul 30, 2026',
+	'54 commits ahead',
+	'30 contracts',
+	'35 contracts',
+	'my PR #593',
+	'my PR #757',
+	'final v0.1.0',
+];
 
 function assert( condition, message ) {
 	if ( ! condition ) {
@@ -116,6 +140,25 @@ function externalRelationships( archive ) {
 	return urls;
 }
 
+function externalHyperlinkSequence( archive ) {
+	const relationships = new Map();
+	const relationshipSource = archive.text( 'word/_rels/document.xml.rels' );
+	for ( const match of relationshipSource.matchAll( /<Relationship\b([^>]*?)(?:\/>|>)/g ) ) {
+		const attributes = xmlAttributes( match[1] );
+		if ( attributes.TargetMode === 'External' && /\/hyperlink$/.test( attributes.Type || '' ) ) {
+			relationships.set( attributes.Id, attributes.Target );
+		}
+	}
+
+	const urls = [];
+	for ( const match of archive.text( 'word/document.xml' ).matchAll( /<w:hyperlink\b([^>]*)>/g ) ) {
+		const relationshipId = xmlAttributes( match[1] )[ 'r:id' ];
+		assert( relationshipId && relationships.has( relationshipId ), 'Résumé DOCX contains an unresolved external hyperlink.' );
+		urls.push( relationships.get( relationshipId ) );
+	}
+	return urls;
+}
+
 function releasedThemeVersion() {
 	// The résumé's HPerkins Tokens entry is a public claim about a SHIPPED
 	// theme, and it links a release tag that --check-links actually fetches, so
@@ -153,14 +196,12 @@ function verifyDocx( path, themeVersion ) {
 	for ( const claim of [
 		'Automattic — Happiness Engineer',
 		'DJ Lee & Voices of Judah',
-		'WordPress/ai PR #501',
-		'Issue #529',
-		'Issue #732',
-		'AI Provider for Codex — Author',
-		'HPerkins Tokens — Author',
-		'Released independently; not merged into WordPress/ai.',
+		...REQUIRED_RESUME_COPY,
 	] ) {
 		assert( text.includes( claim ), `Résumé is missing required evidence: ${ claim }.` );
+	}
+	for ( const forbiddenCopy of FORBIDDEN_RESUME_COPY ) {
+		assert( ! text.includes( forbiddenCopy ), `Résumé contains forbidden stale copy: ${ forbiddenCopy }.` );
 	}
 
 	const providerSection = text.slice(
@@ -196,19 +237,26 @@ function verifyDocx( path, themeVersion ) {
 		assert( ! pattern.test( text ), `Résumé contains forbidden ${ label }.` );
 	}
 
-	const urls = externalRelationships( archive );
-	assert( urls.size >= 12, `Résumé DOCX has only ${ urls.size } unique external links; expected the full evidence set.` );
+	const urls = externalHyperlinkSequence( archive );
+	const uniqueUrls = new Set( urls );
+	assert( uniqueUrls.size >= 12, `Résumé DOCX has only ${ uniqueUrls.size } unique external links; expected the full evidence set.` );
 	for ( const url of urls ) {
 		assert( /^(?:https:\/\/|mailto:)/.test( url ), `Résumé link must use HTTPS or mailto: ${ url }.` );
 	}
 	for ( const requiredUrl of [
 		'https://github.com/WordPress/ai/pull/501',
+		'https://github.com/WordPress/php-ai-client/pull/263',
+		'https://github.com/WordPress/ai-provider-for-openai/pull/40',
 		'https://github.com/WordPress/ai/issues/529',
+		'https://github.com/WordPress/ai/pull/593',
+		'https://github.com/WordPress/ai/releases/tag/1.0.1',
 		'https://github.com/WordPress/ai/issues/732',
+		'https://github.com/WordPress/ai/pull/757',
+		'https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0-rc.3',
 		`https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v${ providerVersion }`,
 		`https://github.com/henryperkins/hperkins-tokens/releases/tag/v${ themeVersion }`,
 	] ) {
-		assert( urls.has( requiredUrl ), `Résumé DOCX is missing required immutable/public link: ${ requiredUrl }.` );
+		assert( uniqueUrls.has( requiredUrl ), `Résumé DOCX is missing required immutable/public link: ${ requiredUrl }.` );
 	}
 
 	return urls;
@@ -259,6 +307,19 @@ function pdfUris( source ) {
 	return urls;
 }
 
+function pdfUriSequence( source ) {
+	const urls = [];
+	const pattern = /\/URI\s*(?:\(((?:\\[\s\S]|[^\\)])*)\)|<([\da-f\s]+)>)/gi;
+	for ( const match of source.matchAll( pattern ) ) {
+		urls.push(
+			match[1] !== undefined
+				? unescapePdfString( match[1] )
+				: Buffer.from( match[2].replace( /\s/g, '' ), 'hex' ).toString( 'utf8' )
+		);
+	}
+	return urls;
+}
+
 function pdfTextOperatorCount( buffer, source ) {
 	let operators = 0;
 	let offset = 0;
@@ -299,10 +360,6 @@ function pdfTextOperatorCount( buffer, source ) {
 	return operators;
 }
 
-function setsEqual( left, right ) {
-	return left.size === right.size && [ ...left ].every( ( item ) => right.has( item ) );
-}
-
 function verifyPdf( path, docxUrls ) {
 	const buffer = readFileSync( path );
 	const source = buffer.toString( 'latin1' );
@@ -330,13 +387,16 @@ function verifyPdf( path, docxUrls ) {
 		textOperators >= 20,
 		`Résumé PDF exposes only ${ textOperators } text-showing operators; it may be flattened or unsearchable.`
 	);
+	assert( /\/MarkInfo\b/.test( source ) && /\/Marked\s+true\b/.test( source ), 'Résumé PDF must declare marked content.' );
+	assert( /\/StructTreeRoot\b/.test( source ), 'Résumé PDF must include a structure tree.' );
+	assert( /\/H1\b/.test( source ), 'Résumé PDF must include an H1 structure tag.' );
+	assert( ( source.match( /\/H2\b/g ) || [] ).length >= 4, 'Résumé PDF must include at least four H2 structure tags.' );
 
-	const urls = pdfUris( source );
-	assert( setsEqual( urls, docxUrls ), [
-		'Résumé PDF and DOCX external-link sets differ.',
-		`DOCX only: ${ [ ...docxUrls ].filter( ( url ) => ! urls.has( url ) ).join( ', ' ) || '<none>' }`,
-		`PDF only: ${ [ ...urls ].filter( ( url ) => ! docxUrls.has( url ) ).join( ', ' ) || '<none>' }`,
-	].join( ' ' ) );
+	const urls = pdfUriSequence( source );
+	assert(
+		urls.length === docxUrls.length && urls.every( ( url, index ) => url === docxUrls[index] ),
+		'Résumé PDF annotation URLs must exactly match DOCX hyperlink order, including duplicates.'
+	);
 
 	return urls;
 }
@@ -715,7 +775,7 @@ async function main() {
 	const workbookRows = verifyWorkbook( paths[ artifactNames[2] ] );
 	verifyAppendixWorkbookParity( workbookRows, readFileSync( appendixDraftPath, 'utf8' ) );
 	if ( checkLinks ) {
-		await verifyLinks( pdfUrls );
+		await verifyLinks( new Set( pdfUrls ) );
 	}
 
 	console.log( 'verified placement artifact contracts' );
@@ -731,4 +791,17 @@ if ( require.main === module ) {
 	} );
 }
 
-module.exports = { verifyAppendixWorkbookParity, verifyLinks };
+module.exports = {
+	compactText,
+	externalHyperlinkSequence,
+	externalRelationships,
+	pdfUriSequence,
+	pdfUris,
+	unescapePdfString,
+	verifyAppendixWorkbookParity,
+	verifyDocx,
+	verifyLinks,
+	verifyPdf,
+	xmlAttributes,
+	xmlText,
+};
