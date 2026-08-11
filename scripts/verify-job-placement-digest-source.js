@@ -303,6 +303,11 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 			`Evidence context for ${ artifact } is missing required copy: ${ required }`
 		);
 	}
+	const pr749Row = evidenceRows.find( ( candidate ) => candidate[ 0 ] === 'WordPress/ai PR #749 feedback' );
+	assert(
+		pr749Row && pr749Row[ 3 ] === 'Read the security and design feedback on PR #749',
+		'Evidence register context for WordPress/ai PR #749 feedback must use the attribution-safe link label.'
+	);
 	assert(
 		markup.includes( `https://github.com/henryperkins/hperkins-tokens/releases/tag/v${ themeVersion }` ),
 		`Main digest must link the current HPerkins Tokens v${ themeVersion } release.`

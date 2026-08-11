@@ -6,14 +6,16 @@ const path = require( 'node:path' );
 const test = require( 'node:test' );
 
 const { verifyMain } = require( '../verify-job-placement-digest-source' );
+const { readReleaseRecord } = require( './release-record' );
 
 const THEME_ROOT = path.join( __dirname, '..', '..' );
 const DIGEST = fs.readFileSync(
 	path.join( THEME_ROOT, 'content', 'page-drafts', 'job-placement-digest.html' ),
 	'utf8'
 ).replace( /\r\n/g, '\n' );
-const THEME_VERSION = '0.3.53';
-const DEPLOYED_COMMIT = '43d9ef603a6715b23af0b4fdce6076010e4b824a';
+const RELEASE_RECORD = readReleaseRecord( THEME_ROOT );
+const THEME_VERSION = RELEASE_RECORD.version;
+const DEPLOYED_COMMIT = RELEASE_RECORD.deployedCommit;
 const CURRENT_PUBLICATION_DATELINE = 'Published 13 Jul 2026 · Last verified 11 Aug 2026';
 const STALE_PUBLICATION_DATELINE = 'Published 13 Jul 2026 · Last verified 10 Aug 2026';
 
@@ -123,21 +125,24 @@ test( 'rejects the retired standalone investigation route in any link', () => {
 test( 'requires attribution-safe security and design feedback wording for PR #749', () => {
 	const safeState = 'Security and design feedback · non-formal';
 	const safeLinkLabel = 'Read the security and design feedback on PR #749';
-	const overclaimed = replaceOnce(
-		replaceOnce(
-			DIGEST,
-			`${ safeState }</td><td><a href="https://github.com/WordPress/ai/pull/749#issuecomment-5010134375">`,
-			'Reproduced · integration-tested · technical feedback (non-formal)</td><td><a href="https://github.com/WordPress/ai/pull/749#issuecomment-5010134375">'
-		),
+	const unsafeState = replaceOnce(
+		DIGEST,
+		`${ safeState }</td><td><a href="https://github.com/WordPress/ai/pull/749#issuecomment-5010134375">`,
+		'Reproduced · integration-tested · technical feedback (non-formal)</td><td><a href="https://github.com/WordPress/ai/pull/749#issuecomment-5010134375">'
+	);
+	const unsafeLabel = replaceOnce(
+		DIGEST,
 		safeLinkLabel,
 		'Read the integration-test feedback on PR #749'
 	);
 
 	assert.doesNotThrow( () => verifyMain( DIGEST, THEME_VERSION, DEPLOYED_COMMIT ) );
-	assert.throws(
-		() => verifyMain( overclaimed, THEME_VERSION, DEPLOYED_COMMIT ),
-		/evidence register/i
-	);
+	for ( const mutant of [ unsafeState, unsafeLabel ] ) {
+		assert.throws(
+			() => verifyMain( mutant, THEME_VERSION, DEPLOYED_COMMIT ),
+			/evidence register/i
+		);
+	}
 } );
 
 test( 'rejects evidence context moved to the wrong artifact row', () => {

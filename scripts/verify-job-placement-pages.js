@@ -14,6 +14,7 @@ const os = require( 'node:os' );
 const path = require( 'node:path' );
 
 const { findHeadings, findLinks, extractExactText, parseTopLevelBlocks } = require( './lib/about-page-contract' );
+const { DIGEST_TABLET_CONTRACTS } = require( './lib/job-placement-page-style-contracts' );
 const { getClassCount } = require( './lib/page-markup-contract' );
 const { assertKnownOptions, selectDigestSource } = require( './lib/page-phase-contract' );
 const { getOrigin } = require( './lib/site-url' );
@@ -209,46 +210,7 @@ function verifySourceContracts() {
 		{ selector: '.hp-debug-proof__item :is(dt, dd) > p', declarations: { margin: '0' } },
 		{ selector: '.hp-wcus-callout__actions', atContext: '@media (max-width: 781px)', declarations: { 'grid-template-columns': 'minmax(0, 1fr)' } },
 		{ selector: '.hp-debug-proof__grid', atContext: '@media (max-width: 781px)', declarations: { 'grid-template-columns': 'minmax(0, 1fr)' } },
-		{
-			selector: '.hp-digest-template',
-			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
-			declarations: { 'padding-block-start': 'var(--wp--preset--spacing--5) !important' },
-		},
-		{
-			selector: '.hp-digest__hero h1',
-			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
-			declarations: {
-				'max-inline-size': 'none',
-				'font-size': 'var(--wp--preset--font-size--3-xl)',
-			},
-		},
-		{
-			selector: '.hp-category-bar',
-			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
-			declarations: { 'margin-block': 'var(--wp--preset--spacing--3)' },
-		},
-		{
-			selector: '.hp-wcus-callout',
-			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
-			declarations: {
-				'margin-block-start': 'var(--wp--preset--spacing--5)',
-				padding: 'var(--wp--preset--spacing--5)',
-				'padding-block-start': 'var(--wp--preset--spacing--4)',
-			},
-		},
-		{
-			selector: '.hp-wcus-callout > h2',
-			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
-			declarations: {
-				'font-size': 'var(--wp--preset--font-size--2-xl)',
-				'margin-block-start': 'var(--wp--preset--spacing--4)',
-			},
-		},
-		{
-			selector: '.hp-wcus-callout > p:not(.hp-page-hero__eyebrow)',
-			atContext: '@media (min-width: 601px) and (max-width: 1023px)',
-			declarations: { 'margin-block-start': 'var(--wp--preset--spacing--4)' },
-		},
+		...DIGEST_TABLET_CONTRACTS,
 	] ) {
 		assertRuleDeclarations( pageCss, contract );
 	}
@@ -556,9 +518,9 @@ function assertPageMetrics( result, page, viewport ) {
 		assert( result.primaryActions.inHero, `${ context } first-screen action rail is outside the recruiter hero.` );
 		assert( result.primaryActions.top >= -1, `${ context } first-screen rail begins above the viewport.` );
 		// Phone height is intentionally not part of the requested matrix (the
-		// four controls stack, so a 320px-wide device can be 568px or 1000px
+		// selected primary actions stack, so a 320px-wide device can be 568px or 1000px
 		// tall). At tablet/desktop widths, the fixed verification height is a
-		// useful literal fold and all four actions must clear it.
+		// useful literal fold and every selected action must clear it.
 		if ( viewport.width >= 768 ) {
 			assert(
 				result.primaryActions.bottom <= viewport.height + 1,
@@ -605,6 +567,8 @@ function assertPageMetrics( result, page, viewport ) {
 			assert( result.rootCauseFragment.hash === '#root-cause-investigation', `${ context } did not retain the root-cause fragment hash.` );
 			assert( result.rootCauseFragment.focused, `${ context } did not focus the root-cause proof section.` );
 			assert( result.rootCauseFragment.tabindex === '-1', `${ context } did not keep fragment focus programmatic-only.` );
+			assert( result.rootCauseFragment.headerPresent, `${ context } is missing the masthead used by the fragment-clearance contract.` );
+			assert( result.rootCauseFragment.headerPosition === 'sticky', `${ context } masthead is ${ result.rootCauseFragment.headerPosition || 'missing' }, not sticky.` );
 			assert(
 				result.rootCauseFragment.targetTop >= result.rootCauseFragment.headerBottom - 1 &&
 					result.rootCauseFragment.targetTop < viewport.height,
@@ -790,7 +754,7 @@ async function inspectPage( cdp, page, viewport ) {
 			const closing = document.querySelector('.hp-digest-cta');
 			const anchor = document.getElementById('resume-keyword-bank');
 			const hero = document.querySelector('.hp-digest__hero');
-			const wcus = hero?.querySelector(':scope > .hp-wcus-callout');
+			const wcus = hero?.querySelector('.hp-wcus-callout');
 			const wcusActionsRoot = wcus?.querySelector('.hp-wcus-callout__actions');
 			const proofItems = Array.from(document.querySelectorAll('#root-cause-investigation .hp-debug-proof__item')).map((item) => {
 				const bounds = item.getBoundingClientRect();
@@ -858,7 +822,9 @@ async function inspectPage( cdp, page, viewport ) {
 					focused: document.activeElement === target,
 					tabindex: target?.getAttribute('tabindex') || null,
 					targetTop: target?.getBoundingClientRect().top ?? null,
-					headerBottom: header?.getBoundingClientRect().bottom ?? 0,
+					headerPresent: !!header,
+					headerPosition: header ? getComputedStyle(header).position : null,
+					headerBottom: header?.getBoundingClientRect().bottom ?? null,
 				};
 			})()` );
 			const finalOutline = await evaluate( cdp, sessionId, `Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')` );

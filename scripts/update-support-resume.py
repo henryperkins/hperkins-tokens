@@ -243,6 +243,34 @@ def assert_minimum_body_size(document, floor=9.5):
     return minimum
 
 
+def assert_resume_event_contract(document, floor=8.5):
+    event_paragraphs = [
+        paragraph for paragraph in document.paragraphs
+        if paragraph.style.name == "Resume Event"
+    ]
+    if len(event_paragraphs) != 1:
+        raise ValueError(f"Résumé must contain exactly one Resume Event paragraph; found {len(event_paragraphs)}")
+
+    paragraph = event_paragraphs[0]
+    visible_text = "".join(
+        node.text or "" for node in paragraph._p.xpath(".//w:t")
+    )
+    if visible_text != EVENT:
+        raise ValueError("Resume Event paragraph does not match the approved WCUS event copy")
+
+    sizes = [
+        effective_run_size(document, paragraph, run_element)
+        for run_element in paragraph._p.xpath(".//w:r")
+        if any(node.text for node in run_element.xpath(".//w:t"))
+    ]
+    if not sizes or any(size is None for size in sizes):
+        raise ValueError("Cannot resolve the Resume Event effective font size")
+    minimum = min(sizes)
+    if minimum < floor:
+        raise ValueError(f"Resume Event text falls below {floor:.1f}pt: {minimum:.1f}pt")
+    return minimum
+
+
 def canonical_docx_bytes(document):
     source = io.BytesIO()
     document.save(source)
@@ -312,8 +340,12 @@ def main():
     for paragraph in list(document.paragraphs):
         paragraph._element.getparent().remove(paragraph._element)
 
-    for index, (style_name, segments) in enumerate(RESUME):
+    for style_name, segments in RESUME:
         paragraph = document.add_paragraph(style=style_name)
+        paragraph_text = "".join(visible_text for visible_text, _url in segments)
+        is_summary = style_name == "Normal" and paragraph_text.startswith("PHP · JavaScript")
+        is_contact = style_name == "Normal" and paragraph_text.startswith("Chicago, IL")
+        is_target = style_name == "Normal" and paragraph_text.startswith("TARGET: SUPPORT ENGINEER")
         if style_name == "Heading 1":
             copy_paragraph_format(first_paragraph, paragraph)
         elif style_name == "Heading 2":
@@ -349,11 +381,11 @@ def main():
                 run.font.color.rgb = RGBColor.from_string("9A7530")
             elif style_name == "Resume Body":
                 apply_run_properties(run, label_run_properties if segment_index == 0 and " — " in visible_text else body_run_properties)
-            elif index == 1:
+            elif is_summary:
                 run.font.bold = True
-            elif index == 2:
+            elif is_contact:
                 run.font.color.rgb = RGBColor.from_string("525D6B")
-            elif index == 4 and visible_text.startswith("TARGET: SUPPORT ENGINEER"):
+            elif is_target and visible_text.startswith("TARGET: SUPPORT ENGINEER"):
                 prefix, remainder = visible_text.split(" — ", 1)
                 run.text = prefix
                 run.font.bold = True
@@ -370,6 +402,7 @@ def main():
     document.core_properties.title = TITLE
     document.core_properties.author = AUTHOR
 
+    assert_resume_event_contract(document)
     assert_minimum_body_size(document)
     output = canonical_docx_bytes(document)
     changed = DOCX_PATH.read_bytes() != output
@@ -380,6 +413,7 @@ def main():
 
     reopened = Document(DOCX_PATH)
     visible_text = " ".join(paragraph.text for paragraph in reopened.paragraphs)
+    assert_resume_event_contract(reopened)
     minimum_body_size = assert_minimum_body_size(reopened)
     print(f"updated={str(changed).lower()}")
     print(f"sections={len(reopened.sections)}")

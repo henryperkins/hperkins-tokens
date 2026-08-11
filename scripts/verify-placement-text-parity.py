@@ -19,7 +19,24 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCX_PATH = ROOT / "assets" / "documents" / "henry-perkins-wordpress-support-engineer-resume.docx"
 PDF_PATH = ROOT / "assets" / "documents" / "henry-perkins-wordpress-support-engineer-resume.pdf"
 EVENT = "WORDCAMP US 2026 — Phoenix, Aug 16–19 · Selected to staff the Core AI booth"
-FORBIDDEN = ("as of Jul 30, 2026", "54 commits ahead", "30 contracts", "35 contracts")
+FORBIDDEN = (
+    (re.compile(r"as of Jul 30, 2026"), "as of Jul 30, 2026"),
+    (re.compile(r"54 commits ahead"), "54 commits ahead"),
+    (re.compile(r"\b30 contracts\b"), "30 contracts"),
+    (re.compile(r"\b35 contracts\b"), "35 contracts"),
+)
+
+
+def require(condition, message):
+    if not condition:
+        raise SystemExit(message)
+
+
+def find_forbidden_copy(value):
+    for pattern, label in FORBIDDEN:
+        if pattern.search(value):
+            return label
+    return None
 
 
 def normalize(value):
@@ -73,10 +90,15 @@ def normalize_word_pdf(path):
     reader = PdfReader(path)
     writer = PdfWriter()
     writer.clone_document_from_reader(reader)
-    with tempfile.NamedTemporaryFile(dir=path.parent, suffix=".pdf", delete=False) as stream:
-        temporary = Path(stream.name)
-        writer.write(stream)
-    temporary.replace(path)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile(dir=path.parent, suffix=".pdf", delete=False) as stream:
+            temporary = Path(stream.name)
+            writer.write(stream)
+        temporary.replace(path)
+    finally:
+        if temporary is not None and temporary.exists():
+            temporary.unlink()
     print("normalized_word_pdf_tags=true")
 
 
@@ -85,13 +107,20 @@ def verify():
     pdf_text, pdf_urls, pdf_pages = pdf_text_and_urls(PDF_PATH)
     pdf_bytes = PDF_PATH.read_bytes()
 
-    assert docx_text == pdf_text, "DOCX and PDF normalized visible text differ"
-    assert pdf_pages == 1, f"PDF has {pdf_pages} pages"
-    assert docx_urls == pdf_urls, "DOCX and PDF external-link order differs"
-    assert EVENT in docx_text, "WCUS event line is absent"
-    assert all(term not in docx_text for term in FORBIDDEN), "stale résumé copy remains"
-    assert b"/MarkInfo" in pdf_bytes and b"/Marked true" in pdf_bytes
-    assert b"/StructTreeRoot" in pdf_bytes and b"/H1" in pdf_bytes and pdf_bytes.count(b"/H2") >= 4
+    require(docx_text == pdf_text, "DOCX and PDF normalized visible text differ")
+    require(pdf_pages == 1, f"PDF has {pdf_pages} pages")
+    require(docx_urls == pdf_urls, "DOCX and PDF external-link order differs")
+    require(EVENT in docx_text, "WCUS event line is absent")
+    forbidden = find_forbidden_copy(docx_text)
+    require(forbidden is None, f"stale résumé copy remains: {forbidden}")
+    require(
+        b"/MarkInfo" in pdf_bytes and b"/Marked true" in pdf_bytes,
+        "PDF is missing marked-content metadata",
+    )
+    require(
+        b"/StructTreeRoot" in pdf_bytes and b"/H1" in pdf_bytes and pdf_bytes.count(b"/H2") >= 4,
+        "PDF is missing the required semantic heading structure",
+    )
 
     print(f"normalized_text_characters={len(docx_text)}")
     print(f"external_link_annotations={len(pdf_urls)}")

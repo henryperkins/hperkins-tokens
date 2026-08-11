@@ -4,6 +4,7 @@ const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 
 const { PAGE_CONTRACTS } = require( './lib/page-content-contract' );
+const { SOURCE_UNIT_TEST_FILES } = require( './lib/source-unit-test-files' );
 
 const themeRoot = path.join( __dirname, '..' );
 
@@ -161,7 +162,7 @@ const portfolioOperatorCommands = [
 
 const retirementSourceGateCommands = [
 	'Get-ChildItem -Recurse -Filter *.php | ForEach-Object { php -l $_.FullName; if ($LASTEXITCODE -ne 0) { throw "PHP lint failed: $($_.FullName)" } }',
-	'node --test scripts/lib/about-page-contract.test.js scripts/lib/about-page-rendered-probe.test.js scripts/lib/about-gravatar-heading.test.js scripts/lib/content-integrity.test.js scripts/lib/content-ownership-docs.test.js scripts/lib/event-copy-retirement-runbook.test.js scripts/lib/job-placement-metadata-contract.test.js scripts/lib/market-screen-parity.test.js scripts/lib/navigation-content-contract.test.js scripts/lib/page-content-contract.test.js scripts/lib/page-markup-contract.test.js scripts/lib/page-phase-contract.test.js scripts/lib/placement-artifact-contract.test.js scripts/lib/placement-artifact-links.test.js scripts/lib/production-gates-workflow.test.js scripts/lib/release-record.test.js scripts/lib/resume-route-contract.test.js scripts/lib/site-url.test.js scripts/lib/style-coverage.test.js scripts/lib/wp-cli.test.js scripts/lib/zip-archive.test.js',
+	`node --test ${ SOURCE_UNIT_TEST_FILES.join( ' ' ) }`,
 	'node scripts/verify-placement-artifacts.js',
 	'node scripts/verify-header.js --source-only',
 	'node scripts/verify-typography.js --source-only',
@@ -189,13 +190,48 @@ const retirementPublicVerificationCommands = [
 	'node scripts/verify-typography.js',
 ];
 
+function linesOutsideFences( contents ) {
+	const lines = [];
+	let inFence = false;
+	for ( const match of contents.matchAll( /[^\r\n]*(?:\r?\n|$)/g ) ) {
+		if ( match[ 0 ] === '' ) {
+			break;
+		}
+		const line = match[ 0 ].replace( /\r?\n$/, '' );
+		const trimmed = line.trim();
+		if ( /^```/.test( trimmed ) ) {
+			inFence = ! inFence;
+		} else if ( ! inFence ) {
+			lines.push( {
+				line,
+				trimmed,
+				start: match.index,
+				end: match.index + match[ 0 ].length,
+			} );
+		}
+	}
+	return lines;
+}
+
 function sectionAfterHeading( contents, heading, nextHeading, file ) {
-	const start = contents.indexOf( heading );
-	assert( start !== -1, `${ file } is missing its required operating section: ${ heading }` );
-	const bodyStart = start + heading.length;
-	const remainder = contents.slice( bodyStart );
-	const next = remainder.search( nextHeading );
-	return next === -1 ? remainder : remainder.slice( 0, next );
+	const lines = linesOutsideFences( contents );
+	const headings = lines.filter( ( candidate ) => candidate.trimmed === heading );
+	assert( headings.length === 1, `${ file } must contain exactly one required operating section: ${ heading }` );
+	const bodyStart = headings[ 0 ].end;
+	const next = lines.find( ( candidate ) => {
+		nextHeading.lastIndex = 0;
+		return candidate.start >= bodyStart && nextHeading.test( candidate.line );
+	} );
+	return contents.slice( bodyStart, next ? next.start : contents.length );
+}
+
+function sectionBeforeMarker( contents, marker, file ) {
+	const matches = [ ...contents.matchAll( new RegExp(
+		marker.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ),
+		'g'
+	) ) ];
+	assert( matches.length === 1, `${ file } must contain exactly one ${ marker } marker.` );
+	return contents.slice( 0, matches[ 0 ].index );
 }
 
 function powerShellCommands( section ) {
@@ -234,7 +270,12 @@ function assertOrderedPatterns( value, patterns, message ) {
 }
 
 function sentences( contents ) {
-	return contents.replace( /\r?\n/g, ' ' ).match( /[^.!?]+[.!?]+/g ) || [];
+	const protectedDot = '\u0000';
+	return ( contents
+		.replace( /\r?\n/g, ' ' )
+		.replace( /\.(?=\S)/g, protectedDot )
+		.match( /[^.!?]+(?:[.!?]+|$)/g ) || [] )
+		.map( ( sentence ) => sentence.replaceAll( protectedDot, '.' ) );
 }
 
 function assertNoPortfolioContradictions( contents, file ) {
@@ -247,7 +288,7 @@ function assertNoPortfolioContradictions( contents, file ) {
 		if (
 			/(?:about-resume|About adapter|the adapter)/i.test( sentence )
 			&& /(?:rewrite|replace|substitut)/i.test( sentence )
-			&& /r[\u00e9e]sum[\u00e9e]/i.test( sentence )
+			&& /(?<!about-)r[\u00e9e]sum[\u00e9e]\s+(?:asset|action|link|URL)s?\b/i.test( sentence )
 			&& ! /(?:does not|do not|never|portrait-only|only (?:the|its|one|exactly))/i.test( sentence )
 		) {
 			throw new Error( `${ file } contains contradictory About adapter guidance: ${ sentence.trim() }` );
@@ -266,7 +307,7 @@ function assertNoPortfolioContradictions( contents, file ) {
 			/snapshot/i.test( sentence )
 			&& /(?:refresh|promote|change|write)/i.test( sentence )
 			&& /before[\s\S]*(?:publish|production)/i.test( sentence )
-			&& ! /(?:do not|not changed|must not|never)/i.test( sentence )
+			&& ! /(?:does not|doesn't|do not|not changed|must not|never)/i.test( sentence )
 		) {
 			throw new Error( `${ file } reverses the snapshot publication order: ${ sentence.trim() }` );
 		}
@@ -281,18 +322,9 @@ function verifyClaudeSharedLibraryCommand( contents ) {
 	assert( command, 'CLAUDE.md is missing its shared-library unit-test command.' );
 
 	const files = command[0].split( /\s+/ ).slice( 2 );
-	const requiredSequence = [
-		'scripts/lib/content-integrity.test.js',
-		'scripts/lib/content-ownership-docs.test.js',
-		'scripts/lib/event-copy-retirement-runbook.test.js',
-		'scripts/lib/job-placement-metadata-contract.test.js',
-	];
-	const sequenceStart = files.indexOf( requiredSequence[0] );
 	assert(
-		sequenceStart !== -1
-		&& requiredSequence.every( ( file, index ) => files[ sequenceStart + index ] === file )
-		&& requiredSequence.every( ( file ) => files.filter( ( candidate ) => candidate === file ).length === 1 ),
-		'CLAUDE.md shared-library unit-test command must name both operator regression suites once in the explicit list position.'
+		JSON.stringify( files ) === JSON.stringify( SOURCE_UNIT_TEST_FILES ),
+		'CLAUDE.md shared-library unit-test command must exactly match the active CI test inventory.'
 	);
 }
 
@@ -304,7 +336,10 @@ function verifyPortfolioOwnershipDocuments( documents ) {
 		const contents = documents[ file ];
 		assert( typeof contents === 'string', `${ file } was not supplied to the portfolio ownership verifier.` );
 		const section = sectionAfterHeading( contents, specification.heading, specification.nextHeading, file );
-		assertNoPortfolioContradictions( contents, file );
+		const contradictionScope = file === 'readme.txt'
+			? sectionBeforeMarker( contents, '== Changelog ==', file )
+			: contents;
+		assertNoPortfolioContradictions( contradictionScope, file );
 
 		assertMatches(
 			section,
@@ -385,6 +420,11 @@ function verifyRetirementRunbook( contents ) {
 		/Do not add cron, scheduled code, or any date-driven content mutation\./i,
 		'Retirement runbook must prohibit automated date-driven mutation.'
 	);
+	assertMatches(
+		contents,
+		/runbook prepares source changes only\.\s+It neither authorizes nor performs a\s+production page\/footer write, snapshot promotion, theme deployment, or route\s+retirement\./i,
+		'Retirement runbook must keep source preparation separate from write, promotion, deployment, and route-retirement authority.'
+	);
 
 	const sourceGate = sectionAfterHeading(
 		contents,
@@ -447,8 +487,11 @@ function main() {
 		}
 	}
 
-	const readmeCurrentContract = fs.readFileSync( path.join( themeRoot, 'readme.txt' ), 'utf8' )
-		.split( '== Changelog ==' )[ 0 ];
+	const readmeCurrentContract = sectionBeforeMarker(
+		fs.readFileSync( path.join( themeRoot, 'readme.txt' ), 'utf8' ),
+		'== Changelog ==',
+		'readme.txt'
+	);
 	assert(
 		! /plato[- ]artifacts/i.test( readmeCurrentContract ),
 		'readme.txt still advertises the retired Plato Artifacts page in its current theme contract.'
@@ -481,6 +524,7 @@ if ( require.main === module ) {
 }
 
 module.exports = {
+	sectionBeforeMarker,
 	verifyPortfolioOwnershipDocuments,
 	verifyRetirementRunbook,
 };

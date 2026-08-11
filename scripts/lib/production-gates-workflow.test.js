@@ -4,6 +4,8 @@ const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 const vm = require( 'node:vm' );
 
+const { SOURCE_UNIT_TEST_FILES } = require( './source-unit-test-files' );
+
 const themeRoot = path.join( __dirname, '..', '..' );
 const workflow = fs.readFileSync( path.join( themeRoot, '.github', 'workflows', 'verify.yml' ), 'utf8' );
 const headerVerifier = fs.readFileSync( path.join( themeRoot, 'scripts', 'verify-header.js' ), 'utf8' );
@@ -48,6 +50,18 @@ function assertSourceUnitTestsAreActive( workflowSource, testFiles ) {
 			`Workflow unit-test run block is missing an active ${ testFile } command line.`
 		);
 	}
+}
+
+function sourceUnitTestInventory( workflowSource ) {
+	const sourceJobStart = workflowSource.indexOf( '\n  verify:' );
+	const deployedJobStart = workflowSource.indexOf( '\n  deployed-content:' );
+	const sourceJob = workflowSource.slice( sourceJobStart, deployedJobStart );
+	const stepStart = sourceJob.indexOf( '\n      - name: Script library unit tests' );
+	const nextStep = sourceJob.indexOf( '\n      - name:', stepStart + 1 );
+	const unitTestStep = sourceJob.slice( stepStart, nextStep );
+
+	return [ ...unitTestStep.matchAll( /^\s*(scripts\/lib\/[^\s\\]+\.test\.js)(?:\s+\\)?\s*$/gm ) ]
+		.map( ( match ) => match[ 1 ] );
 }
 
 test( 'runs the production gates on a daily schedule', () => {
@@ -186,6 +200,29 @@ test( 'runs metadata, Digest, About probe, market parity, and production workflo
 		'scripts/lib/resume-route-contract.test.js',
 		'scripts/lib/support-resume-cleanup.test.js',
 	] );
+} );
+
+test( 'keeps the active CI unit-test inventory in exact canonical parity', () => {
+	const onDisk = fs.readdirSync( __dirname )
+		.filter( ( name ) => name.endsWith( '.test.js' ) )
+		.sort()
+		.map( ( name ) => `scripts/lib/${ name }` );
+	assert.deepEqual( [ ...SOURCE_UNIT_TEST_FILES ].sort(), onDisk );
+	assert.deepEqual( sourceUnitTestInventory( workflow ), SOURCE_UNIT_TEST_FILES );
+
+	const missing = workflow.replace( /^\s*scripts\/lib\/journal-route-discovery\.test\.js\s+\\\s*\r?\n/m, '' );
+	assert.notEqual( missing, workflow, 'Missing-file mutation must apply.' );
+	assert.notDeepEqual( sourceUnitTestInventory( missing ), SOURCE_UNIT_TEST_FILES );
+
+	const extra = workflow.replace(
+		'            scripts/lib/zip-archive.test.js',
+		[
+			'            scripts/lib/zip-archive.test.js \\',
+			'            scripts/lib/unlisted.test.js',
+		].join( '\n' )
+	);
+	assert.notEqual( extra, workflow, 'Extra-file mutation must apply.' );
+	assert.notDeepEqual( sourceUnitTestInventory( extra ), SOURCE_UNIT_TEST_FILES );
 } );
 
 test( 'runs the ownership-docs and event-retirement regression suites as active CI commands', () => {

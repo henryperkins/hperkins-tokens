@@ -25,6 +25,9 @@ const DIGEST_SOURCE = selectDigestSource( ARGV );
 // patterns/about-resume.php is a thin adapter over the snapshot and carries
 // no rail/panel markup of its own (it is asserted clean below).
 const ABOUT_SOURCE = selectAboutSource( { drafts: USE_DRAFTS } );
+const ACTION_RAIL_CLASSES = [ 'wp-block-buttons', 'hp-action-rail' ];
+const ACTION_RAIL_SELECTOR = '.wp-block-buttons.hp-action-rail';
+const MALFORMED_ACTION_RAIL_SELECTOR = '.hp-action-rail:not(.wp-block-buttons)';
 // The proof-first About body (marked by its hp-about-nav landmark) carries a
 // hero rail plus a closing invitation; the previous body has one rail and no
 // panel. Deriving the expectation from the selected source keeps every phase
@@ -68,7 +71,7 @@ if ( ! DIGEST_CLOSING_HEADING ) {
 }
 const DIGEST_ACTION_COUNTS = {
 	railCount: classLists( DIGEST_BODY ).filter( ( classes ) =>
-		[ 'wp-block-buttons', 'hp-action-rail' ].every( ( className ) => classes.includes( className ) )
+		ACTION_RAIL_CLASSES.every( ( className ) => classes.includes( className ) )
 	).length,
 	panelCount: classLists( DIGEST_BODY ).filter( ( classes ) =>
 		[ 'hp-action-panel', 'is-closing' ].every( ( className ) => classes.includes( className ) )
@@ -152,7 +155,7 @@ function verifySourceContracts() {
 
 	for ( const file of RAIL_FILES ) {
 		assert(
-			hasClassSet( read( file ), [ 'wp-block-buttons', 'hp-action-rail' ] ),
+			hasClassSet( read( file ), ACTION_RAIL_CLASSES ),
 			`${ file } is missing hp-action-rail on its core Buttons wrapper.`
 		);
 	}
@@ -349,7 +352,7 @@ async function inspectPage( cdp, page, viewport ) {
 				};
 			};
 
-			const rails = Array.from(document.querySelectorAll('.hp-action-rail')).map((rail) => {
+			const rails = Array.from(document.querySelectorAll('${ ACTION_RAIL_SELECTOR }')).map((rail) => {
 				const style = getComputedStyle(rail);
 				return {
 					rect: rect(rail),
@@ -378,7 +381,7 @@ async function inspectPage( cdp, page, viewport ) {
 			// preventScroll, so focusing cannot shift the measured geometry.
 			// Every link in every rail must expose the keyboard ring — on the
 			// About page that iterates both the hero and closing rails.
-			const railElements = Array.from(document.querySelectorAll('.hp-action-rail'));
+			const railElements = Array.from(document.querySelectorAll('${ ACTION_RAIL_SELECTOR }'));
 			railElements.forEach((railElement, railIndex) => {
 				Array.from(railElement.querySelectorAll('.wp-block-button__link')).forEach((link, linkIndex) => {
 					try {
@@ -401,6 +404,7 @@ async function inspectPage( cdp, page, viewport ) {
 				scrollWidth: document.documentElement.scrollWidth,
 				rails,
 				panels,
+				malformedRailCount: document.querySelectorAll('${ MALFORMED_ACTION_RAIL_SELECTOR }').length,
 				compactLeakCount: document.querySelectorAll(
 					'.hp-site-subscribe.hp-action-rail, .hp-site-subscribe.hp-action-panel'
 				).length,
@@ -497,6 +501,10 @@ async function verifyLiveContracts() {
 				assert(
 					result.rails.length === page.railCount,
 					`${ result.url } renders ${ result.rails.length } action rails at ${ viewport.width }px; expected ${ page.railCount }.`
+				);
+				assert(
+					result.malformedRailCount === 0,
+					`${ result.url } renders ${ result.malformedRailCount } hp-action-rail elements outside a core Buttons wrapper.`
 				);
 				assert(
 					result.panels.length === page.panelCount,

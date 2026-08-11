@@ -3,6 +3,10 @@ const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 const themeJson = require( '../../theme.json' );
+const {
+	DIGEST_COMPACT_CONTEXT,
+	DIGEST_TABLET_CONTRACTS,
+} = require( './job-placement-page-style-contracts' );
 
 const {
 	BUNDLES,
@@ -22,50 +26,6 @@ const pagesCss = fs.readFileSync(
 	path.join( __dirname, '..', '..', 'assets', 'imladris-pages.css' ),
 	'utf8'
 ).replace( /\r\n/g, '\n' );
-
-const DIGEST_COMPACT_CONTEXT = '@media (min-width: 601px) and (max-width: 1023px)';
-const DIGEST_TABLET_CONTRACTS = [
-	{
-		selector: '.hp-digest-template',
-		atContext: DIGEST_COMPACT_CONTEXT,
-		declarations: { 'padding-block-start': 'var(--wp--preset--spacing--5) !important' },
-	},
-	{
-		selector: '.hp-digest__hero h1',
-		atContext: DIGEST_COMPACT_CONTEXT,
-		declarations: {
-			'max-inline-size': 'none',
-			'font-size': 'var(--wp--preset--font-size--3-xl)',
-		},
-	},
-	{
-		selector: '.hp-category-bar',
-		atContext: DIGEST_COMPACT_CONTEXT,
-		declarations: { 'margin-block': 'var(--wp--preset--spacing--3)' },
-	},
-	{
-		selector: '.hp-wcus-callout',
-		atContext: DIGEST_COMPACT_CONTEXT,
-		declarations: {
-			'margin-block-start': 'var(--wp--preset--spacing--5)',
-			padding: 'var(--wp--preset--spacing--5)',
-			'padding-block-start': 'var(--wp--preset--spacing--4)',
-		},
-	},
-	{
-		selector: '.hp-wcus-callout > h2',
-		atContext: DIGEST_COMPACT_CONTEXT,
-		declarations: {
-			'font-size': 'var(--wp--preset--font-size--2-xl)',
-			'margin-block-start': 'var(--wp--preset--spacing--4)',
-		},
-	},
-	{
-		selector: '.hp-wcus-callout > p:not(.hp-page-hero__eyebrow)',
-		atContext: DIGEST_COMPACT_CONTEXT,
-		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--4)' },
-	},
-];
 
 function generatedFontPresetName( slug ) {
 	return `--wp--preset--font-size--${ slug.replace( /^(\d+)(?=[a-z])/i, '$1-' ).toLowerCase() }`;
@@ -119,6 +79,10 @@ test( 'assertRuleDeclarations rejects comment-only, empty, wrong-value, and wron
 		'@media (max-width: 781px) { .hp-example { grid-template-columns: minmax(0, 1fr); } }',
 		contract
 	) );
+	assert.doesNotThrow( () => assertRuleDeclarations(
+		'@media   ( max-width:781px ) { .hp-example { grid-template-columns: minmax(0, 1fr); } }',
+		contract
+	) );
 	for ( const css of [
 		'/* @media (max-width: 781px) { .hp-example { grid-template-columns: minmax(0, 1fr); } } */',
 		'@media (max-width: 781px) { .hp-example {} }',
@@ -170,16 +134,22 @@ test( 'Digest tablet and small-laptop fold use a bounded token-based compact tre
 	}
 
 	const calloutContract = DIGEST_TABLET_CONTRACTS.find( ( contract ) => contract.selector === '.hp-wcus-callout' );
-	const withoutTopPadding = pagesCss.replace(
-		/\n\s*padding-block-start:\s*var\(--wp--preset--spacing--4\);/,
-		''
+	const withoutTopPadding = mutateDeclaration(
+		pagesCss,
+		calloutContract,
+		'padding-block-start',
+		'var(--wp--preset--spacing--4)'
 	);
-	assert.notEqual( withoutTopPadding, pagesCss, 'The rail-affecting top-padding removal must change the stylesheet.' );
 	assert.throws(
 		() => assertRuleDeclarations( withoutTopPadding, calloutContract ),
 		/hp-wcus-callout|padding-block-start/
 	);
 
+	assert.equal(
+		pagesCss.split( DIGEST_COMPACT_CONTEXT ).length - 1,
+		1,
+		'The compact-band boundary mutation requires one exact source context.'
+	);
 	const wrongUpperBound = pagesCss.replace(
 		DIGEST_COMPACT_CONTEXT,
 		'@media (min-width: 601px) and (max-width: 1024px)'

@@ -4,6 +4,7 @@ const test = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
 
 const {
+	sectionBeforeMarker,
 	verifyPortfolioOwnershipDocuments,
 } = require( '../verify-content-ownership-docs' );
 
@@ -28,6 +29,24 @@ function withMutation( documents, file, mutate ) {
 	};
 }
 
+function replaceOnce( source, search, replacement, label ) {
+	const mutated = source.replace( search, replacement );
+	assert.notEqual( mutated, source, `Mutation must change ${ label }.` );
+	return mutated;
+}
+
+function addCurrentGuidance( source, file, guidance ) {
+	if ( file === 'readme.txt' ) {
+		return replaceOnce(
+			source,
+			'== Changelog ==',
+			`${ guidance }\n\n== Changelog ==`,
+			`${ file } current guidance`
+		);
+	}
+	return `${ source }\n${ guidance }\n`;
+}
+
 test( 'accepts the independently structured portfolio operating sections', () => {
 	assert.equal( typeof verifyPortfolioOwnershipDocuments, 'function' );
 	assert.doesNotThrow( () => verifyPortfolioOwnershipDocuments( readDocuments() ) );
@@ -36,9 +55,11 @@ test( 'accepts the independently structured portfolio operating sections', () =>
 test( 'rejects a weakened rendered-About command in every operator document', () => {
 	const documents = readDocuments();
 	for ( const file of documentFiles ) {
-		const mutated = withMutation( documents, file, ( source ) => source.replace(
+		const mutated = withMutation( documents, file, ( source ) => replaceOnce(
+			source,
 			'node scripts/verify-about-page-rendered.js --require-local --drafts',
-			'node scripts/verify-about-page-rendered.js --drafts'
+			'node scripts/verify-about-page-rendered.js --drafts',
+			`${ file } rendered About command`
 		) );
 		assert.throws(
 			() => verifyPortfolioOwnershipDocuments( mutated ),
@@ -51,9 +72,11 @@ test( 'rejects local typography or resume commands without their explicit local 
 	const documents = readDocuments();
 	for ( const file of documentFiles ) {
 		for ( const command of [ 'verify-typography', 'verify-resume-route' ] ) {
-			const mutated = withMutation( documents, file, ( source ) => source.replace(
+			const mutated = withMutation( documents, file, ( source ) => replaceOnce(
+				source,
 				`node scripts/${ command }.js --require-local`,
-				`node scripts/${ command }.js`
+				`node scripts/${ command }.js`,
+				`${ file } ${ command } command`
 			) );
 			assert.throws(
 				() => verifyPortfolioOwnershipDocuments( mutated ),
@@ -66,8 +89,10 @@ test( 'rejects local typography or resume commands without their explicit local 
 test( 'rejects a reworded claim that the About adapter rewrites resume actions', () => {
 	const documents = readDocuments();
 	for ( const file of documentFiles ) {
-		const mutated = withMutation( documents, file, ( source ) => (
-			`${ source }\nThe About adapter rewrites the portrait plus every resume action URL.\n`
+		const mutated = withMutation( documents, file, ( source ) => addCurrentGuidance(
+			source,
+			file,
+			'The About adapter rewrites the portrait plus every resume action URL.'
 		) );
 		assert.throws(
 			() => verifyPortfolioOwnershipDocuments( mutated ),
@@ -94,6 +119,7 @@ test( 'rejects snapshot promotion before publication', () => {
 	};
 	for ( const file of documentFiles ) {
 		const mutated = withMutation( documents, file, mutations[ file ] );
+		assert.notEqual( mutated[ file ], documents[ file ], `Mutation must change ${ file } snapshot guidance.` );
 		assert.throws(
 			() => verifyPortfolioOwnershipDocuments( mutated ),
 			new RegExp( `${ file.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ) }.*snapshot`, 'i' )
@@ -101,11 +127,54 @@ test( 'rejects snapshot promotion before publication', () => {
 	}
 } );
 
+test( 'anchors operating-section headings to real lines outside prose and fences', () => {
+	const documents = readDocuments();
+	const claude = documents[ 'CLAUDE.md' ];
+	const decoy = 'The section named ### WCUS portfolio ownership and phase gate appears below.\n\n```text\n### WCUS portfolio ownership and phase gate\n```\n\n';
+	const mutated = { ...documents, 'CLAUDE.md': `${ decoy }${ claude }` };
+	assert.doesNotThrow( () => verifyPortfolioOwnershipDocuments( mutated ) );
+} );
+
+test( 'detects contradictory guidance when dotted tokens appear inside the sentence', () => {
+	const documents = readDocuments();
+	for ( const sentence of [
+		'The About adapter in about-resume.php rewrites every resume URL.',
+		'A theme deploy of v0.3.58 updates production database-owned bodies.',
+		'A theme deploy documented at https://example.test/guide updates production database-owned bodies.',
+	] ) {
+		const mutated = { ...documents, 'CLAUDE.md': `${ documents[ 'CLAUDE.md' ] }\n${ sentence }\n` };
+		assert.throws( () => verifyPortfolioOwnershipDocuments( mutated ), /contradictory/i );
+	}
+} );
+
+test( 'accepts does-not negation in snapshot publication guidance', () => {
+	const documents = readDocuments();
+	const mutated = {
+		...documents,
+		'CLAUDE.md': `${ documents[ 'CLAUDE.md' ] }\nA snapshot refresh does not happen before the production body is published.\n`,
+	};
+	assert.doesNotThrow( () => verifyPortfolioOwnershipDocuments( mutated ) );
+} );
+
+test( 'requires exactly one changelog marker before slicing the current contract', () => {
+	assert.equal( sectionBeforeMarker( 'current\n== Changelog ==\nhistory', '== Changelog ==', 'readme.txt' ), 'current\n' );
+	assert.throws(
+		() => sectionBeforeMarker( 'current only', '== Changelog ==', 'readme.txt' ),
+		/readme\.txt.*exactly one.*Changelog/i
+	);
+	assert.throws(
+		() => sectionBeforeMarker( 'current\n== Changelog ==\none\n== Changelog ==\ntwo', '== Changelog ==', 'readme.txt' ),
+		/readme\.txt.*exactly one.*Changelog/i
+	);
+} );
+
 test( 'rejects a theme deploy that claims production page or footer writes', () => {
 	const documents = readDocuments();
 	for ( const file of documentFiles ) {
-		const mutated = withMutation( documents, file, ( source ) => (
-			`${ source }\nA theme deploy updates the production Digest, About, and database-owned footer bodies.\n`
+		const mutated = withMutation( documents, file, ( source ) => addCurrentGuidance(
+			source,
+			file,
+			'A theme deploy updates the production Digest, About, and database-owned footer bodies.'
 		) );
 		assert.throws(
 			() => verifyPortfolioOwnershipDocuments( mutated ),
