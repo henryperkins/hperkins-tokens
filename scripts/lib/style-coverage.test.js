@@ -1,5 +1,7 @@
 const test = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
+const fs = require( 'node:fs' );
+const path = require( 'node:path' );
 
 const {
 	BUNDLES,
@@ -14,6 +16,11 @@ const {
 	expandPatternChain,
 	assertRuleDeclarations,
 } = require( './style-coverage' );
+
+const pagesCss = fs.readFileSync(
+	path.join( __dirname, '..', '..', 'assets', 'imladris-pages.css' ),
+	'utf8'
+).replace( /\r\n/g, '\n' );
 
 test( 'assertRuleDeclarations rejects comment-only, empty, wrong-value, and wrong-media CSS', () => {
 	assert.equal( typeof assertRuleDeclarations, 'function', 'style coverage must expose declaration-aware rule validation' );
@@ -34,6 +41,24 @@ test( 'assertRuleDeclarations rejects comment-only, empty, wrong-value, and wron
 	] ) {
 		assert.throws( () => assertRuleDeclarations( css, contract ), /hp-example|grid-template-columns|781px/ );
 	}
+} );
+
+test( 'native proof-grid items neutralize WordPress flow margins', () => {
+	const contract = {
+		selector: '.hp-debug-proof__grid > .hp-debug-proof__item',
+		declarations: { 'margin-block': '0' },
+	};
+	assert.doesNotThrow( () => assertRuleDeclarations( pagesCss, contract ) );
+
+	const mutant = pagesCss.replace(
+		/\.hp-debug-proof__grid > \.hp-debug-proof__item\s*\{[\s\S]*?\}\s*/,
+		''
+	);
+	assert.notEqual( mutant, pagesCss, 'The reset-removal mutation must change the stylesheet.' );
+	assert.throws(
+		() => assertRuleDeclarations( mutant, contract ),
+		/hp-debug-proof__grid|margin-block/
+	);
 } );
 
 test( 'parseRules returns top-level rules with original offsets', () => {

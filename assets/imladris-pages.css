@@ -454,6 +454,10 @@ p.hp-contact-form__hint {
   margin: var(--wp--preset--spacing--5) 0 0;
 }
 
+.hp-debug-proof__grid > .hp-debug-proof__item {
+  margin-block: 0;
+}
+
 .hp-debug-proof__item {
   min-inline-size: 0;
   padding-block-start: var(--wp--preset--spacing--3);

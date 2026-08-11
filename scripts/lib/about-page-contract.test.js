@@ -197,6 +197,16 @@ test( 'serializes the in-page navigation as editable native blocks', () => {
 	assert.match( blocks[ 2 ].outer, /<!-- wp:list \{"className":"hp-about-nav__list"\} -->/ );
 } );
 
+test( 'rejects a nested Custom HTML block anywhere in the candidate', () => {
+	const strapline = '<p class="hp-about-hero__strapline">For teams building stuff with tokens.</p>\n<!-- /wp:paragraph -->';
+	const nestedHtml = mutated(
+		strapline,
+		`${ strapline }\n\n<!-- wp:html -->\n<span aria-hidden="true"></span>\n<!-- /wp:html -->`
+	);
+
+	assert.throws( () => verifyAboutBody( nestedHtml ), /core\/html|Custom HTML/i );
+} );
+
 test( 'fails when any WordCamp US status fact or action drifts', () => {
 	for ( const [ from, to ] of [
 		[ 'WordCamp US 2026', 'WordCamp US 2027' ],

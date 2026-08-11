@@ -487,6 +487,15 @@ function countRenderedText( text ) {
 const BLOCK_DELIMITER =
 	/<!--\s*(\/)?wp:([a-z][a-z0-9_/-]*)\s*(\{[\s\S]*?\})?\s*(\/)?-->/g;
 
+function assertNoCoreHtmlBlocks( html, label = 'About body' ) {
+	for ( const match of html.matchAll( BLOCK_DELIMITER ) ) {
+		const [ , closing, name ] = match;
+		if ( ! closing && name === 'html' ) {
+			throw new Error( `${ label } must not contain core/html blocks, including nested blocks.` );
+		}
+	}
+}
+
 function parseTopLevelBlocks( html ) {
 	const blocks = [];
 	let open = null;
@@ -676,6 +685,7 @@ function findSectionBlock( blocks, anchor ) {
  */
 function verifyAboutBody( html, { label = 'About body' } = {} ) {
 	assertNoForbiddenMarkup( html, label );
+	assertNoCoreHtmlBlocks( html, label );
 
 	const blocks = parseTopLevelBlocks( html );
 
@@ -773,8 +783,6 @@ function verifyAboutBody( html, { label = 'About body' } = {} ) {
 
 	// --- on-this-page navigation --------------------------------------------
 	assert( navBlock.name === 'group', 'The page navigation must be one native core Group block.' );
-	const htmlBlocks = blocks.filter( ( block ) => block.name === 'html' );
-	assert( htmlBlocks.length === 0, `${ label } must not contain core/html blocks.` );
 	assertExact( navBlock.attrs.tagName, 'nav', 'Navigation Group tag name' );
 	assertExact( navBlock.attrs.ariaLabel, 'On this page', 'Navigation Group aria label' );
 	assert(

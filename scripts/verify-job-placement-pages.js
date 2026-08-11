@@ -182,6 +182,7 @@ function verifySourceContracts() {
 				'border-block-start': '2px solid var(--wp--preset--color--river-500)',
 			},
 		},
+		{ selector: '.hp-debug-proof__grid > .hp-debug-proof__item', declarations: { 'margin-block': '0' } },
 		{
 			selector: '.hp-debug-proof__item dt',
 			declarations: {
