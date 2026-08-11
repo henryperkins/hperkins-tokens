@@ -270,6 +270,19 @@ node scripts/verify-about-page-rendered.js --require-local --drafts
 node scripts/verify-placement-artifacts.js --check-links
 ```
 
+For the Task 9 local browser pass, the HTTP-capable modes must be selected
+explicitly and refuse any origin except localhost or an IP loopback:
+
+```powershell
+node scripts/verify-typography.js --require-local
+node scripts/verify-resume-route.js --require-local
+```
+
+The typography local mode quarantines only filesystem-like local fixture
+permalinks and still fails unless it can audit a valid same-origin single-post
+route. The public/default modes remain unquarantined, and the resume-route
+default remains HTTPS-only.
+
 The source-only and `--drafts` checks validate unpublished candidates. The
 unflagged résumé-route check proves the public redirect and final PDF response;
 the artifact link check continues to inspect the PDF directly. None of these

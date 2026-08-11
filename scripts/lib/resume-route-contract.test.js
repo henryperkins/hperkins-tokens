@@ -32,6 +32,74 @@ test( 'accepts exactly one theme-owned 302 to the same-origin PDF', () => {
 	assert.equal( result.platformPreflights, 0 );
 } );
 
+test( 'permits HTTP only for an explicitly required loopback run', () => {
+	const requested = 'http://localhost:8882/one-page-resume/?utm_source=wcus';
+	const pdf = 'http://localhost:8882/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf?v=123';
+	const steps = [
+		{ requestUrl: requested, status: 302, location: pdf, redirectBy: 'hperkins-tokens', contentType: 'text/html; charset=UTF-8' },
+		{ requestUrl: pdf, status: 200, location: null, redirectBy: null, contentType: 'application/pdf' },
+	];
+
+	assert.throws(
+		() => validateRedirectChain( steps, requested, 'http://localhost:8882' ),
+		/Public.*HTTPS/
+	);
+	assert.deepEqual(
+		validateRedirectChain( steps, requested, 'http://localhost:8882', { strict: true, requireLocal: true } ),
+		{ themeRedirects: 1, platformPreflights: 0 }
+	);
+	assert.throws(
+		() => validateRedirectChain( steps, requested, 'http://localhost:8882', { strict: false, requireLocal: true } ),
+		/strict|diagnostic/
+	);
+} );
+
+test( 'the local opt-in refuses non-loopback HTTP and keeps the PDF contract strict', () => {
+	const requested = 'http://192.168.1.25/one-page-resume/?utm_source=wcus';
+	const pdf = 'http://192.168.1.25/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf?v=123';
+	const steps = [
+		{ requestUrl: requested, status: 302, location: pdf, redirectBy: 'hperkins-tokens', contentType: 'text/html' },
+		{ requestUrl: pdf, status: 200, location: null, redirectBy: null, contentType: 'application/pdf' },
+	];
+
+	assert.throws(
+		() => validateRedirectChain( steps, requested, 'http://192.168.1.25', { strict: true, requireLocal: true } ),
+		/localhost|loopback/
+	);
+
+	const localRequested = requested.replaceAll( '192.168.1.25', '[::1]:8882' );
+	const localPdf = pdf.replaceAll( '192.168.1.25', '[::1]:8882' );
+	const wrongType = [
+		{ requestUrl: localRequested, status: 302, location: localPdf, redirectBy: 'hperkins-tokens', contentType: 'text/html' },
+		{ requestUrl: localPdf, status: 200, location: null, redirectBy: null, contentType: 'text/html' },
+	];
+	assert.throws(
+		() => validateRedirectChain( wrongType, localRequested, 'http://[::1]:8882', { strict: true, requireLocal: true } ),
+		/application\/pdf/
+	);
+} );
+
+test( 'local mode changes only transport and retains query, loop, and same-origin enforcement', () => {
+	const requested = 'http://127.0.0.1:8882/one-page-resume/?utm_source=wcus';
+	const pdf = 'http://127.0.0.1:8882/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf?v=123';
+	const options = { strict: true, requireLocal: true };
+
+	assert.throws( () => validateRedirectChain( [
+		{ requestUrl: requested, status: 302, location: `${ pdf }&utm_source=wcus`, redirectBy: 'hperkins-tokens', contentType: 'text/html' },
+		{ requestUrl: `${ pdf }&utm_source=wcus`, status: 200, location: null, redirectBy: null, contentType: 'application/pdf' },
+	], requested, 'http://127.0.0.1:8882', options ), /query|v/ );
+
+	assert.throws( () => validateRedirectChain( [
+		{ requestUrl: requested, status: 302, location: 'http://localhost:8882/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf?v=123', redirectBy: 'hperkins-tokens', contentType: 'text/html' },
+	], requested, 'http://127.0.0.1:8882', options ), /origin/ );
+
+	assert.throws( () => validateRedirectChain( [
+		{ requestUrl: requested, status: 302, location: pdf, redirectBy: 'hperkins-tokens', contentType: 'text/html' },
+		{ requestUrl: pdf, status: 302, location: pdf, redirectBy: 'hperkins-tokens', contentType: 'text/html' },
+		{ requestUrl: pdf, status: 200, location: null, redirectBy: null, contentType: 'application/pdf' },
+	], requested, 'http://127.0.0.1:8882', options ), /loop/ );
+} );
+
 test( 'rejects a loop, a permanent redirect, a foreign origin, or inbound query propagation', () => {
 	assert.throws( () => validateRedirectChain( [
 		{ requestUrl: 'https://hperkins.blog/one-page-resume/', status: 302, location: 'https://hperkins.blog/one-page-resume/', redirectBy: 'hperkins-tokens', contentType: 'text/html' },

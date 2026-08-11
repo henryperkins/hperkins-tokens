@@ -4,6 +4,7 @@ const assert = require( 'node:assert/strict' );
 const {
 	assertMatchingSiteUrl,
 	getOrigin,
+	isLoopbackOrigin,
 	normalizeSiteUrl,
 	resolveSiteUrl,
 } = require( './site-url' );
@@ -100,4 +101,26 @@ test( 'resolveSiteUrl keeps subdirectory installs intact', () => {
 		resolveSiteUrl( 'http://localhost:8882/wp/', '/wp-admin/admin-post.php' ).href,
 		'http://localhost:8882/wp/wp-admin/admin-post.php'
 	);
+} );
+
+test( 'recognizes only web origins on localhost or the IP loopback ranges', () => {
+	for ( const origin of [
+		'http://localhost:8882',
+		'https://localhost',
+		'http://127.0.0.1:8882',
+		'http://127.42.9.3',
+		'http://[::1]:8882',
+	] ) {
+		assert.equal( isLoopbackOrigin( origin ), true, origin );
+	}
+
+	for ( const origin of [
+		'http://192.168.1.25',
+		'https://hperkins.blog',
+		'http://localhost.example.com',
+		'ftp://localhost',
+		'not a URL',
+	] ) {
+		assert.equal( isLoopbackOrigin( origin ), false, origin );
+	}
 } );

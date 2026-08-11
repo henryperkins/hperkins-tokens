@@ -1392,11 +1392,11 @@ Expected: both candidate/database hashes match; `--check` writes nothing.
 node scripts/verify-job-placement-pages.js --drafts
 node scripts/verify-about-page-rendered.js --require-local --drafts
 node scripts/verify-prominent-actions.js --drafts
-node scripts/verify-typography.js
-node scripts/verify-resume-route.js
+node scripts/verify-typography.js --require-local
+node scripts/verify-resume-route.js --require-local
 ```
 
-Expected: all approved widths pass; strict local route is one 302; no horizontal overflow, heading skip, small target, missing focus, or stale direct résumé link appears.
+Expected: all approved widths pass; the explicitly local route is one strict theme-owned 302; no horizontal overflow, heading skip, small target, missing focus, malformed filesystem-like fixture navigation, or stale direct résumé link appears. Both `--require-local` modes refuse non-loopback origins; the public/default commands remain HTTPS-only and unquarantined.
 
 - [ ] **Step 6: Capture and inspect deliberate screenshots**
 

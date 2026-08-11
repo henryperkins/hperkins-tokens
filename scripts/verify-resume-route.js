@@ -3,7 +3,7 @@
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 
-const { getOrigin } = require( './lib/site-url' );
+const { getOrigin, isLoopbackOrigin } = require( './lib/site-url' );
 
 const ROOT = path.join( __dirname, '..' );
 const RESUME_PATH = '/one-page-resume/';
@@ -52,17 +52,32 @@ function hasDiagnosticPreflightQuery( location, requested ) {
 	return inbound.every( ( entry ) => forwarded.some( ( candidate ) => candidate[ 0 ] === entry[ 0 ] && candidate[ 1 ] === entry[ 1 ] ) );
 }
 
+function assertVerificationTransport( url, label, requireLocal ) {
+	if ( requireLocal ) {
+		assert(
+			isLoopbackOrigin( url.href ),
+			`${ label } must use localhost or a loopback IP in --require-local mode.`
+		);
+		return;
+	}
+
+	assert( url.protocol === 'https:', 'Public résumé verification requires HTTPS.' );
+}
+
 function validateRedirectChain( steps, requestedUrl, expectedOrigin, options = { strict: true } ) {
 	assert( Array.isArray( steps ) && steps.length > 0, 'Redirect chain must include at least one response.' );
 
 	const strict = options.strict !== false;
+	const requireLocal = options.requireLocal === true;
+	assert( ! ( requireLocal && ! strict ), 'Local résumé verification is strict and cannot enable diagnostic preflights.' );
 	const requested = parseUrl( requestedUrl, 'Requested URL' );
 	const expected = parseUrl( expectedOrigin, 'Expected origin' );
 	assert( ! expected.hash && ! expected.username && ! expected.password, 'Expected origin must not include a fragment or credentials.' );
+	assertVerificationTransport( expected, 'Expected origin', requireLocal );
 	const origin = expected.origin;
 	assert( ! requested.hash, 'Requested URL must not include a fragment.' );
 	assert( ! requested.username && ! requested.password, 'Requested URL must not include credentials.' );
-	assert( requested.protocol === 'https:', 'Public résumé verification requires HTTPS.' );
+	assertVerificationTransport( requested, 'Requested URL', requireLocal );
 	assert( requested.origin === origin, 'Requested URL must use the expected origin.' );
 	assert( requested.pathname === RESUME_PATH, `Requested URL must use ${ RESUME_PATH }.` );
 
@@ -76,7 +91,7 @@ function validateRedirectChain( steps, requestedUrl, expectedOrigin, options = {
 		const request = parseUrl( step.requestUrl, `Step ${ index + 1 } request URL` );
 		assert( ! request.hash, `Step ${ index + 1 } request URL must not include a fragment.` );
 		assert( ! request.username && ! request.password, `Step ${ index + 1 } request URL must not include credentials.` );
-		assert( request.protocol === 'https:', `Step ${ index + 1 } must use HTTPS.` );
+		assertVerificationTransport( request, `Step ${ index + 1 } request URL`, requireLocal );
 		assert( request.origin === origin, `Step ${ index + 1 } must stay on the expected origin.` );
 		assert( ! seenRequestUrls.has( request.href ), `Redirect loop repeats request URL: ${ request.href }` );
 		seenRequestUrls.add( request.href );
@@ -214,10 +229,10 @@ async function collectChain( requestedUrl, method ) {
 	throw new Error( `${ method } résumé route exceeded the four-response diagnostic limit.` );
 }
 
-async function verifyHttpMethod( origin, method, strict ) {
+async function verifyHttpMethod( origin, method, options ) {
 	const requestedUrl = new URL( `${ RESUME_PATH }?utm_source=wcus`, origin ).href;
 	const steps = await collectChain( requestedUrl, method );
-	const result = validateRedirectChain( steps, requestedUrl, origin, { strict } );
+	const result = validateRedirectChain( steps, requestedUrl, origin, options );
 	assert( result.themeRedirects === 1, `${ method } must contain exactly one theme redirect.` );
 	if ( method === 'GET' ) {
 		assert( steps.at( -1 ).bodyPrefix === '%PDF-', `Final GET body begins ${ JSON.stringify( steps.at( -1 ).bodyPrefix ) }, not %PDF-.` );
@@ -254,24 +269,30 @@ async function verifyRenderedLinks( origin ) {
 async function main() {
 	const argv = process.argv.slice( 2 );
 	for ( const option of argv ) {
-		assert( [ '--source-only', '--diagnostic' ].includes( option ), `Unknown option: ${ option }.` );
+		assert( [ '--source-only', '--diagnostic', '--require-local' ].includes( option ), `Unknown option: ${ option }.` );
 	}
+	const diagnostic = argv.includes( '--diagnostic' );
+	const requireLocal = argv.includes( '--require-local' );
+	assert( ! ( diagnostic && requireLocal ), '--diagnostic and --require-local are mutually exclusive.' );
 	verifySource();
 	if ( argv.includes( '--source-only' ) ) {
 		console.log( 'Resume route source verification passed: footer and both candidates use the semantic route.' );
 		return;
 	}
 
-	const strict = ! argv.includes( '--diagnostic' );
+	const strict = ! diagnostic;
 	const origin = getOrigin();
-	const getSteps = await verifyHttpMethod( origin, 'GET', strict );
-	const headSteps = await verifyHttpMethod( origin, 'HEAD', strict );
+	assertVerificationTransport( parseUrl( origin, 'HPERKINS_ORIGIN' ), 'HPERKINS_ORIGIN', requireLocal );
+	const options = { strict, requireLocal };
+	const getSteps = await verifyHttpMethod( origin, 'GET', options );
+	const headSteps = await verifyHttpMethod( origin, 'HEAD', options );
 	assert(
 		getSteps.at( -2 ).location === headSteps.at( -2 ).location,
 		'GET and HEAD must redirect to the same versioned PDF URL.'
 	);
 	await verifyRenderedLinks( origin );
-	console.log( `Resume route ${ strict ? 'strict' : 'diagnostic' } verification passed at ${ origin } for GET and HEAD.` );
+	const mode = requireLocal ? 'strict local' : ( strict ? 'strict public' : 'diagnostic public' );
+	console.log( `Resume route ${ mode } verification passed at ${ origin } for GET and HEAD.` );
 }
 
 if ( require.main === module ) {

@@ -155,6 +155,8 @@ const portfolioOperatorCommands = [
 	'node scripts/verify-about-page-source.js --drafts',
 	'node scripts/verify-about-page-rendered.js --require-local --drafts',
 	'node scripts/verify-placement-artifacts.js --check-links',
+	'node scripts/verify-typography.js --require-local',
+	'node scripts/verify-resume-route.js --require-local',
 ];
 
 const retirementSourceGateCommands = [

@@ -47,6 +47,22 @@ test( 'rejects a weakened rendered-About command in every operator document', ()
 	}
 } );
 
+test( 'rejects local typography or resume commands without their explicit local guard', () => {
+	const documents = readDocuments();
+	for ( const file of documentFiles ) {
+		for ( const command of [ 'verify-typography', 'verify-resume-route' ] ) {
+			const mutated = withMutation( documents, file, ( source ) => source.replace(
+				`node scripts/${ command }.js --require-local`,
+				`node scripts/${ command }.js`
+			) );
+			assert.throws(
+				() => verifyPortfolioOwnershipDocuments( mutated ),
+				new RegExp( `${ file.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ) }.*command`, 'i' )
+			);
+		}
+	}
+} );
+
 test( 'rejects a reworded claim that the About adapter rewrites resume actions', () => {
 	const documents = readDocuments();
 	for ( const file of documentFiles ) {

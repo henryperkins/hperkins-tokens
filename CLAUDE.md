@@ -49,7 +49,7 @@ node scripts/verify-job-placement-pages.js      # recruiter main + appendix at 1
 node scripts/verify-header.js                    # Condensed Council source + eight-width geometry, interaction, focus, reduced-motion, router cleanup, and screenshot checks (--source-only for the static half)
 node scripts/verify-journal-polish.js           # /essays/ masthead clamp + overflow at 390/320px; fallback plate-crop variety
 node scripts/verify-about-page-rendered.js      # /about/ proof-first rendered contract at 1440/1024/768/390/320 plus 895/896, 781/782, 600/601 boundary probes: heading inventory, named nav landmark + keyboard fragment activation and router-scroll focus, 24px nav/action targets, 2×2 work grid / 3-col capabilities, 2fr/1fr foundations split, two rails + one closing panel at 44px, no whole-card anchors or card-level hover, canonical source/rendered word-count parity, screenshots. --require-local runs it against the matching local install (needs HPERKINS_WP_PATH + non-production HPERKINS_ORIGIN)
-node scripts/verify-typography.js               # site-wide typography contract: single H1, no heading skips, text floors, 68ch prose measure, four approved families, no synthetic Marcellus bold, bounded contrast, overflow at 320–1440px, SVG effective text size (--report to audit without failing; --source-only for the static half)
+node scripts/verify-typography.js               # site-wide typography contract: single H1, no heading skips, text floors, 68ch prose measure, four approved families, no synthetic Marcellus bold, bounded contrast, overflow at 320–1440px, SVG effective text size. --require-local is loopback-only and may quarantine only filesystem-like local fixture permalinks; it still requires a valid single-post route. --report audits without failing; --source-only runs the static half.
 #
 # WP-CLI / HTTP / file checks (no Chrome):
 node scripts/verify-content-ownership.js        # page-body ownership plus exact menu-237 identity/shape and content/nav-snapshots/nav-237.html parity (wp-cli)
@@ -98,6 +98,13 @@ node scripts/verify-prominent-actions.js --source-only --drafts
 node scripts/verify-about-page-source.js --drafts
 node scripts/verify-about-page-rendered.js --require-local --drafts
 node scripts/verify-placement-artifacts.js --check-links
+```
+
+For Task 9 local rendering, keep the public commands above unchanged and opt in explicitly to the loopback-only verifier modes:
+
+```powershell
+node scripts/verify-typography.js --require-local
+node scripts/verify-resume-route.js --require-local
 ```
 
 These checks prepare and verify candidates; they do not promote them. Do not change accepted snapshots before the corresponding database bodies are explicitly approved, published, freshly re-read, and proven equal. A theme deploy may publish the route, CSS, adapter, footer source, and final PDF artifact, but it does not write the production Digest or About body or the database-owned footer override.

@@ -91,6 +91,19 @@ node scripts/verify-about-page-rendered.js --require-local --drafts
 node scripts/verify-placement-artifacts.js --check-links
 ```
 
+The Task 9 local browser pass uses explicit loopback-only modes; the unflagged
+public commands above retain their stricter production behavior:
+
+```powershell
+node scripts/verify-typography.js --require-local
+node scripts/verify-resume-route.js --require-local
+```
+
+Typography may quarantine only filesystem-like local fixture permalinks in
+that mode and must still select a valid same-origin single post. The local
+resume pass permits HTTP without relaxing redirect, query, loop, same-origin,
+PDF-body, or content-type enforcement.
+
 The `--source-only --drafts` and local rendered checks prove candidate wiring;
 they do not make a candidate accepted or deployed. Do not change accepted
 snapshots before publication. After an explicit production write approval,
