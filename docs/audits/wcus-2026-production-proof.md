@@ -35,7 +35,7 @@ Fresh strict verification on 12 Aug 2026 established the same chain for GET and 
 /one-page-resume/?utm_source=wcus
   302 Found
   X-Redirect-By: hperkins-tokens
-  Location: /wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf?v=1786482656
+  Location: https://hperkins.blog/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf?v=1786482656
 
 final URL
   200 OK
