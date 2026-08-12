@@ -12,12 +12,14 @@ function mockResponse( {
 	status = 200,
 	location = null,
 	redirectBy = null,
+	hostHeader = null,
 	contentType = 'text/html; charset=UTF-8',
 	body = '',
 } = {} ) {
 	const values = new Map( [
 		[ 'location', location ],
 		[ 'x-redirect-by', redirectBy ],
+		[ 'host-header', hostHeader ],
 		[ 'content-type', contentType ],
 	] );
 	return {
@@ -160,6 +162,41 @@ test( 'rendered-link probes request every page with automatic redirects disabled
 	assert.ok( calls.every( ( call ) => call.init.redirect === 'manual' ) );
 } );
 
+test( 'rendered-link probes follow one guarded WordPress cache preflight and normalize its propagated key', async () => {
+	const version = '0b3b97fa6688';
+	const calls = [];
+	await verifyRenderedLinks( 'https://hperkins.blog', {
+		fetchImpl: async ( url, init ) => {
+			calls.push( { url, init } );
+			const parsed = new URL( url );
+			if ( ! parsed.search ) {
+				return mockResponse( {
+					status: 307,
+					location: `${ parsed.pathname }?v=${ version }`,
+					hostHeader: 'WordPress.com',
+				} );
+			}
+			return mockResponse( {
+				body: `<a href="/one-page-resume/?v=${ version }">Résumé</a>`,
+			} );
+		},
+		snapshotsPublished: true,
+	} );
+
+	assert.deepEqual(
+		calls.map( ( call ) => call.url ),
+		[
+			'https://hperkins.blog/',
+			`https://hperkins.blog/?v=${ version }`,
+			'https://hperkins.blog/about/',
+			`https://hperkins.blog/about/?v=${ version }`,
+			'https://hperkins.blog/job-placement-digest/',
+			`https://hperkins.blog/job-placement-digest/?v=${ version }`,
+		]
+	);
+	assert.ok( calls.every( ( call ) => call.init.redirect === 'manual' ) );
+} );
+
 test( 'rendered-link probes never follow an external Location', async () => {
 	const calls = [];
 	await assert.rejects(
@@ -174,6 +211,53 @@ test( 'rendered-link probes never follow an external Location', async () => {
 	);
 	assert.equal( calls.length, 1 );
 	assert.equal( calls[0].init.redirect, 'manual' );
+} );
+
+test( 'rendered-link probes reject malformed or unowned cache preflights before a second fetch', async () => {
+	for ( const candidate of [
+		{ status: 302, location: '/?v=0b3b97fa6688', hostHeader: 'WordPress.com' },
+		{ status: 307, location: '/about/?v=0b3b97fa6688', hostHeader: 'WordPress.com' },
+		{ status: 307, location: '/?v=0b3b97fa6688&extra=1', hostHeader: 'WordPress.com' },
+		{ status: 307, location: '/?v=not-hex', hostHeader: 'WordPress.com' },
+		{ status: 307, location: '/?v=0b3b97fa6688', hostHeader: 'other' },
+		{ status: 307, location: '/?v=0b3b97fa6688', hostHeader: 'WordPress.com', redirectBy: 'other' },
+	] ) {
+		const calls = [];
+		await assert.rejects(
+			() => verifyRenderedLinks( 'https://hperkins.blog', {
+				fetchImpl: async ( url, init ) => {
+					calls.push( { url, init } );
+					return mockResponse( candidate );
+				},
+				snapshotsPublished: true,
+			} ),
+			/307|path|query|WordPress|owned/i
+		);
+		assert.equal( calls.length, 1, JSON.stringify( candidate ) );
+	}
+} );
+
+test( 'rendered-link probes accept the optional WordPress owner header and reject a second redirect', async () => {
+	const version = '0b3b97fa6688';
+	const calls = [];
+	await assert.rejects(
+		() => verifyRenderedLinks( 'https://hperkins.blog', {
+			fetchImpl: async ( url, init ) => {
+				calls.push( { url, init } );
+				const parsed = new URL( url );
+				return mockResponse( {
+					status: 307,
+					location: `${ parsed.pathname }?v=${ version }`,
+					hostHeader: 'WordPress.com',
+					redirectBy: 'WordPress',
+				} );
+			},
+			snapshotsPublished: true,
+		} ),
+		/second redirect/i
+	);
+	assert.equal( calls.length, 2 );
+	assert.ok( calls.every( ( call ) => call.init.redirect === 'manual' ) );
 } );
 
 test( 'accepts exactly one theme-owned 302 to the same-origin PDF', () => {

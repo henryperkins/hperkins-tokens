@@ -17,7 +17,7 @@ const { findHeadings, findLinks, extractExactText, parseTopLevelBlocks } = requi
 const { DIGEST_TABLET_CONTRACTS } = require( './lib/job-placement-page-style-contracts' );
 const { getClassCount } = require( './lib/page-markup-contract' );
 const { assertKnownOptions, selectDigestSource } = require( './lib/page-phase-contract' );
-const { getOrigin } = require( './lib/site-url' );
+const { getOrigin, stripWpcomCacheVersionFromRenderedHref } = require( './lib/site-url' );
 const { assertRuleDeclarations } = require( './lib/style-coverage' );
 
 const ROOT = path.join( __dirname, '..' );
@@ -483,13 +483,14 @@ async function pressKey( cdp, sessionId, key ) {
 	await wait( 40 );
 }
 
-function assertActions( actual, expected, context ) {
+function assertActions( actual, expected, context, documentUrl ) {
 	assert( actual.length === expected.length, `${ context } has ${ actual.length } actions; expected ${ expected.length }.` );
 	for ( let index = 0; index < expected.length; index++ ) {
 		const action = actual[ index ];
 		const contract = expected[ index ];
+		const renderedHref = stripWpcomCacheVersionFromRenderedHref( action.href, documentUrl );
 		assert( action.text === contract.text, `${ context } action ${ index + 1 } is "${ action.text }"; expected "${ contract.text }".` );
-		assert( action.href === contract.href, `${ context } "${ action.text }" points to ${ action.href}; expected ${ contract.href}.` );
+		assert( renderedHref === contract.href, `${ context } "${ action.text }" points to ${ action.href}; expected ${ contract.href}.` );
 		assert( action.height >= 44, `${ context } "${ action.text }" is ${ action.height}px high; expected at least 44px.` );
 	}
 }
@@ -514,7 +515,7 @@ function assertPageMetrics( result, page, viewport ) {
 
 	if ( page.name === 'digest' ) {
 		assert( result.primaryActions, `${ context } is missing the first-screen action rail.` );
-		assertActions( result.primaryActions.actions, DIGEST_EXPECTATIONS.primaryActions, `${ context } first-screen rail` );
+		assertActions( result.primaryActions.actions, DIGEST_EXPECTATIONS.primaryActions, `${ context } first-screen rail`, result.url );
 		assert( result.primaryActions.inHero, `${ context } first-screen action rail is outside the recruiter hero.` );
 		assert( result.primaryActions.top >= -1, `${ context } first-screen rail begins above the viewport.` );
 		// Phone height is intentionally not part of the requested matrix (the
@@ -530,10 +531,10 @@ function assertPageMetrics( result, page, viewport ) {
 		assert( result.closing, `${ context } is missing the composed closing panel.` );
 		assert( result.closing.eyebrow === DIGEST_EXPECTATIONS.closingEyebrow, `${ context } has the wrong closing eyebrow.` );
 		assert( result.closing.heading === DIGEST_EXPECTATIONS.closingHeading, `${ context } has the wrong closing heading.` );
-		assertActions( result.closing.actions, DIGEST_EXPECTATIONS.closingActions, `${ context } closing panel` );
+		assertActions( result.closing.actions, DIGEST_EXPECTATIONS.closingActions, `${ context } closing panel`, result.url );
 		if ( DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
 			assert( result.wcus, `${ context } is missing the hero-contained .hp-wcus-callout.` );
-			assertActions( result.wcus.actions, DIGEST_EXPECTATIONS.wcusActions, `${ context } WCUS callout` );
+			assertActions( result.wcus.actions, DIGEST_EXPECTATIONS.wcusActions, `${ context } WCUS callout`, result.url );
 			assert( result.wcus.actions.every( ( action ) => action.textContained ), `${ context } clips a WCUS action label.` );
 			if ( viewport.width >= 782 ) {
 				assert(

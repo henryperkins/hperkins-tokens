@@ -7,6 +7,7 @@ const {
 	isLoopbackOrigin,
 	normalizeSiteUrl,
 	resolveSiteUrl,
+	stripWpcomCacheVersionFromRenderedHref,
 } = require( './site-url' );
 
 test( 'normalizes case, default ports, and trailing slashes', () => {
@@ -101,6 +102,44 @@ test( 'resolveSiteUrl keeps subdirectory installs intact', () => {
 		resolveSiteUrl( 'http://localhost:8882/wp/', '/wp-admin/admin-post.php' ).href,
 		'http://localhost:8882/wp/wp-admin/admin-post.php'
 	);
+} );
+
+test( 'strips only the current WordPress.com cache version from rendered same-origin paths', () => {
+	const documentUrl = 'https://hperkins.blog/about/?v=0b3b97fa6688';
+
+	assert.equal(
+		stripWpcomCacheVersionFromRenderedHref?.(
+			'/contact/?v=0b3b97fa6688',
+			documentUrl
+		),
+		'/contact/'
+	);
+	assert.equal(
+		stripWpcomCacheVersionFromRenderedHref?.(
+			'https://hperkins.blog/work/?v=0b3b97fa6688',
+			documentUrl
+		),
+		'https://hperkins.blog/work/'
+	);
+	assert.equal(
+		stripWpcomCacheVersionFromRenderedHref?.(
+			'/contact/?preview=1&v=0b3b97fa6688',
+			documentUrl
+		),
+		'/contact/?preview=1'
+	);
+
+	for ( const href of [
+		'/contact/?v=different',
+		'https://example.com/contact/?v=0b3b97fa6688',
+		'#contact',
+		'contact/?v=0b3b97fa6688',
+	] ) {
+		assert.equal(
+			stripWpcomCacheVersionFromRenderedHref?.( href, documentUrl ),
+			href
+		);
+	}
 } );
 
 test( 'recognizes only web origins on localhost or the IP loopback ranges', () => {

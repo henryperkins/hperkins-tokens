@@ -23,9 +23,23 @@
 <!-- /wp:button -->
 
 <!-- wp:button {"className":"is-style-secondary"} -->
-<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf">View résumé (PDF)</a></div>
+<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/one-page-resume/">View résumé (PDF)</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons -->
+
+<!-- wp:group {"className":"hp-about-wcus","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-about-wcus"><!-- wp:paragraph {"className":"hp-about-wcus__label"} -->
+<p class="hp-about-wcus__label">WordCamp US 2026 · Phoenix · Aug 16–19</p>
+<!-- /wp:paragraph -->
+<!-- wp:paragraph {"className":"hp-about-wcus__copy"} -->
+<p class="hp-about-wcus__copy">I’ll be there, and I’ve been selected to staff the Core AI booth.</p>
+<!-- /wp:paragraph -->
+<!-- wp:buttons {"className":"hp-about-wcus__action"} -->
+<div class="wp-block-buttons hp-about-wcus__action"><!-- wp:button {"className":"is-style-secondary"} -->
+<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/contact/">Start a conversation</a></div>
 <!-- /wp:button --></div>
 <!-- /wp:buttons --></div>
+<!-- /wp:group --></div>
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"hp-about-hero__portrait","layout":{"type":"default"}} -->
@@ -68,11 +82,39 @@
 <!-- /wp:group --></div>
 <!-- /wp:group -->
 
-<!-- wp:html -->
-<nav class="hp-about-nav" aria-label="On this page"><p class="hp-about-nav__label">On this page</p><ul class="hp-about-nav__list"><li><a href="#selected-work">Work</a></li><li><a href="#core-ai-contributions">Contributions</a></li><li><a href="#capabilities">Capabilities</a></li><li><a href="#selected-experience">Experience</a></li><li><a href="#skills-and-foundations">Skills</a></li><li><a href="#contact">Contact</a></li></ul></nav>
-<!-- /wp:html -->
+<!-- wp:group {"tagName":"nav","ariaLabel":"On this page","className":"hp-about-nav","layout":{"type":"default"}} -->
+<nav class="wp-block-group hp-about-nav" aria-label="On this page"><!-- wp:paragraph {"className":"hp-about-nav__label"} -->
+<p class="hp-about-nav__label">On this page</p>
+<!-- /wp:paragraph -->
 
-<!-- wp:group {"tagName":"section","anchor":"selected-work","align":"wide","className":"hp-about-work","layout":{"type":"default"}} -->
+<!-- wp:list {"className":"hp-about-nav__list"} -->
+<ul class="wp-block-list hp-about-nav__list"><!-- wp:list-item -->
+<li><a href="#selected-work">Work</a></li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><a href="#core-ai-contributions">Contributions</a></li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><a href="#capabilities">Capabilities</a></li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><a href="#selected-experience">Experience</a></li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><a href="#skills-and-foundations">Skills</a></li>
+<!-- /wp:list-item -->
+
+<!-- wp:list-item -->
+<li><a href="#contact">Contact</a></li>
+<!-- /wp:list-item --></ul>
+<!-- /wp:list --></nav>
+<!-- /wp:group -->
+
+<!-- wp:group {"tagName":"section","align":"wide","className":"hp-about-work","layout":{"type":"default"},"anchor":"selected-work"} -->
 <section class="wp-block-group alignwide hp-about-work" id="selected-work"><!-- wp:paragraph {"className":"hp-eyebrow"} -->
 <p class="hp-eyebrow">Public proof</p>
 <!-- /wp:paragraph -->
@@ -222,7 +264,7 @@
 
 <!-- wp:column {"className":"hp-work-card"} -->
 <div class="wp-block-column hp-work-card"><!-- wp:heading {"level":3,"className":"hp-work-card__title"} -->
-<h3 class="wp-block-heading hp-work-card__title">Tableu</h3>
+<h3 class="wp-block-heading hp-work-card__title">Tableau</h3>
 <!-- /wp:heading -->
 
 <!-- wp:paragraph {"className":"hp-work-card__status"} -->
@@ -253,18 +295,18 @@
 
 <!-- wp:group {"className":"hp-work-card__actions","layout":{"type":"flex","flexWrap":"wrap"}} -->
 <div class="wp-block-group hp-work-card__actions"><!-- wp:paragraph -->
-<p><a href="https://tarot.lakefrontdev.com/">Open Tableu live application</a></p>
+<p><a href="https://tarot.lakefrontdev.com/">Open Tableau live application</a></p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph -->
-<p><a href="https://github.com/henryperkins/tarot">View Tableu source</a></p>
+<p><a href="https://github.com/henryperkins/tarot">View Tableau source</a></p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:column --></div>
 <!-- /wp:columns --></section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","anchor":"core-ai-contributions","align":"wide","className":"hp-about-core-ai hp-evidence-board","layout":{"type":"default"}} -->
+<!-- wp:group {"tagName":"section","align":"wide","className":"hp-about-core-ai hp-evidence-board","layout":{"type":"default"},"anchor":"core-ai-contributions"} -->
 <section class="wp-block-group alignwide hp-about-core-ai hp-evidence-board" id="core-ai-contributions"><!-- wp:group {"className":"hp-evidence-board__header","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-evidence-board__header"><!-- wp:paragraph {"className":"hp-evidence-board__kicker"} -->
 <p class="hp-evidence-board__kicker">Externally verified WordPress AI work</p>
@@ -282,49 +324,63 @@
 <!-- wp:group {"className":"hp-evidence-board__rows","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-evidence-board__rows"><!-- wp:group {"className":"hp-evidence-row is-status-merged is-kind-docs","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-evidence-row is-status-merged is-kind-docs"><!-- wp:paragraph {"className":"hp-evidence-row__label"} -->
-<p class="hp-evidence-row__label">WordPress/ai PR #501 · merged May 18, 2026</p>
+<p class="hp-evidence-row__label">WordPress/ai PR #501 · authored and merged</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-evidence-row__title"} -->
-<p class="hp-evidence-row__title"><a href="https://github.com/WordPress/ai/pull/501">Experiment documentation credited in AI Plugin 1.0.0</a></p>
+<p class="hp-evidence-row__title"><a href="https://github.com/WordPress/ai/pull/501">Experiment documentation merged upstream</a></p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-evidence-row__meta"} -->
-<p class="hp-evidence-row__meta">Authored Content Resizing and Title Generation experiment docs; the 1.0.0 release notes list PR #501 under Various documentation updates.</p>
+<p class="hp-evidence-row__meta">Authored the Content Resizing and Title Generation experiment documentation; merged May 18, 2026.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"hp-evidence-row is-status-merged is-kind-issue","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-evidence-row is-status-merged is-kind-issue"><!-- wp:paragraph {"className":"hp-evidence-row__label"} -->
-<p class="hp-evidence-row__label">WordPress/ai issue #529 · fixed in 1.0.1</p>
+<p class="hp-evidence-row__label">WordPress/ai issue #529 · report fixed by a maintainer</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-evidence-row__title"} -->
-<p class="hp-evidence-row__title"><a href="https://github.com/WordPress/ai/issues/529">Guidelines content-type defect reported and fixed upstream</a></p>
+<p class="hp-evidence-row__title"><a href="https://github.com/WordPress/ai/issues/529">Issue #529</a> / <a href="https://github.com/WordPress/ai/pull/593">Maintainer PR #593</a> / <a href="https://github.com/WordPress/ai/releases/tag/1.0.1">WordPress AI 1.0.1</a></p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-evidence-row__meta"} -->
-<p class="hp-evidence-row__meta">Reported the defect; a maintainer fixed it in PR #593, and AI Plugin 1.0.1 records the change.</p>
+<p class="hp-evidence-row__meta">Reported and reproduced the Guidelines content-type defect; a maintainer fixed it and WordPress AI 1.0.1 shipped it.</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:group {"className":"hp-evidence-row is-status-review is-kind-source","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-evidence-row is-status-review is-kind-source"><!-- wp:paragraph {"className":"hp-evidence-row__label"} -->
+<p class="hp-evidence-row__label">Open upstream code · PRs #263 and #40</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-evidence-row__title"} -->
+<p class="hp-evidence-row__title"><a href="https://github.com/WordPress/php-ai-client/issues/262">php-ai-client issue #262</a> / <a href="https://github.com/WordPress/php-ai-client/pull/263">php-ai-client PR #263</a> / <a href="https://github.com/WordPress/ai-provider-for-openai/pull/40">ai-provider-for-openai PR #40</a></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"className":"hp-evidence-row__meta"} -->
+<p class="hp-evidence-row__meta">Authored finite-vector validation and regression coverage in #263, and model-aware sampling compatibility with tests in #40; both remain open upstream.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
 <!-- wp:group {"className":"hp-evidence-row is-status-review is-kind-review","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-evidence-row is-status-review is-kind-review"><!-- wp:paragraph {"className":"hp-evidence-row__label"} -->
-<p class="hp-evidence-row__label">Current state · request logging and agent skills</p>
+<p class="hp-evidence-row__label">WordPress/ai issue #732 · report, integration test, technical feedback</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-evidence-row__title"} -->
-<p class="hp-evidence-row__title"><a href="https://github.com/WordPress/ai/issues/732">Issue #732</a> / <a href="https://github.com/WordPress/ai/pull/757">PR #757</a> / <a href="https://github.com/WordPress/agent-skills/pull/49">agent-skills PR #49</a></p>
+<p class="hp-evidence-row__title"><a href="https://github.com/WordPress/ai/issues/732">Issue #732</a> / <a href="https://github.com/WordPress/ai/pull/757#issuecomment-4980297831">PR #757 test result</a> / <a href="https://github.com/WordPress/ai/pull/757#issuecomment-4981567682">Ownership proposal</a></p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-evidence-row__meta"} -->
-<p class="hp-evidence-row__meta">Filed the sidecar/custom-transport request-logging issue; PR #757 remains open and unmerged. Authored WordPress 7.0+ AI Client, Connectors, AI Plugin, Abilities, and MCP guidance in PR #49; it closed without merge on July 18, 2026.</p>
+<p class="hp-evidence-row__meta">Authored the report and reproduction. Anubhav Anand authored PR #757; Henry integration-tested it and supplied non-formal technical feedback.</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group --></section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","anchor":"capabilities","align":"wide","className":"hp-about-capabilities","layout":{"type":"default"}} -->
+<!-- wp:group {"tagName":"section","align":"wide","className":"hp-about-capabilities","layout":{"type":"default"},"anchor":"capabilities"} -->
 <section class="wp-block-group alignwide hp-about-capabilities" id="capabilities"><!-- wp:paragraph {"className":"hp-eyebrow"} -->
 <p class="hp-eyebrow">Capabilities</p>
 <!-- /wp:paragraph -->
@@ -370,7 +426,7 @@
 <!-- /wp:columns --></section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","anchor":"selected-experience","align":"wide","className":"hp-about-experience","layout":{"type":"default"}} -->
+<!-- wp:group {"tagName":"section","align":"wide","className":"hp-about-experience","layout":{"type":"default"},"anchor":"selected-experience"} -->
 <section class="wp-block-group alignwide hp-about-experience" id="selected-experience"><!-- wp:paragraph {"className":"hp-eyebrow"} -->
 <p class="hp-eyebrow">Selected résumé</p>
 <!-- /wp:paragraph -->
@@ -478,11 +534,11 @@
 <!-- /wp:group -->
 
 <!-- wp:paragraph {"className":"hp-work__footer"} -->
-<p class="hp-work__footer">Full chronology, including earlier roles, is in the <a href="/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf">PDF résumé</a>.</p>
+<p class="hp-work__footer">Full chronology, including earlier roles, is in the <a href="/one-page-resume/">PDF résumé</a>.</p>
 <!-- /wp:paragraph --></section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","anchor":"skills-and-foundations","align":"wide","className":"hp-about-foundations","layout":{"type":"default"}} -->
+<!-- wp:group {"tagName":"section","align":"wide","className":"hp-about-foundations","layout":{"type":"default"},"anchor":"skills-and-foundations"} -->
 <section class="wp-block-group alignwide hp-about-foundations" id="skills-and-foundations"><!-- wp:heading -->
 <h2 class="wp-block-heading">Skills and Foundations</h2>
 <!-- /wp:heading -->
@@ -624,8 +680,8 @@
 <!-- /wp:group --></div>
 <!-- /wp:column -->
 
-<!-- wp:column -->
-<div class="wp-block-column"><!-- wp:heading {"level":3} -->
+<!-- wp:column {"className":"is-style-default","layout":{"type":"default"}} -->
+<div class="wp-block-column is-style-default"><!-- wp:heading {"level":3} -->
 <h3 class="wp-block-heading">AI Leaders</h3>
 <!-- /wp:heading -->
 
@@ -674,8 +730,8 @@
 <!-- /wp:columns --></section>
 <!-- /wp:group -->
 
-<!-- wp:group {"tagName":"section","anchor":"contact","className":"hp-about-closing hp-action-panel is-closing","layout":{"type":"default"}} -->
-<section class="wp-block-group hp-about-closing hp-action-panel is-closing" id="contact"><!-- wp:paragraph {"className":"hp-eyebrow"} -->
+<!-- wp:group {"tagName":"section","className":"hp-about-closing hp-action-panel is-closing","layout":{"type":"default"},"anchor":"contact"} -->
+<section id="contact" class="wp-block-group hp-about-closing hp-action-panel is-closing"><!-- wp:paragraph {"className":"hp-eyebrow"} -->
 <p class="hp-eyebrow">Work together</p>
 <!-- /wp:paragraph -->
 
@@ -693,7 +749,11 @@
 <!-- /wp:button -->
 
 <!-- wp:button {"className":"is-style-secondary"} -->
-<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf">View résumé (PDF)</a></div>
+<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/one-page-resume/">View résumé (PDF)</a></div>
 <!-- /wp:button --></div>
 <!-- /wp:buttons --></section>
 <!-- /wp:group -->
+
+<!-- wp:paragraph -->
+<p></p>
+<!-- /wp:paragraph -->

@@ -60,10 +60,55 @@ function resolveSiteUrl( origin, relativePath ) {
 	return new URL( `${ base }/${ relativePath.replace( /^\/+/, '' ) }` );
 }
 
+function stripWpcomCacheVersionFromRenderedHref( value, documentUrl ) {
+	if ( typeof value !== 'string' ) {
+		return value;
+	}
+
+	let document;
+	let target;
+	try {
+		document = new URL( documentUrl );
+		target = new URL( value, document );
+	} catch {
+		return value;
+	}
+
+	const documentVersions = document.searchParams.getAll( 'v' );
+	const version = documentVersions.length === 1 ? documentVersions[ 0 ] : '';
+	if (
+		! /^[0-9a-f]+$/i.test( version ) ||
+		target.origin !== document.origin ||
+		target.searchParams.getAll( 'v' ).length !== 1 ||
+		target.searchParams.get( 'v' ) !== version
+	) {
+		return value;
+	}
+
+	// The production page bodies use root-relative or absolute web links. Keep
+	// their authored representation while removing only WordPress.com's
+	// matching cache-preflight key; other query keys remain visible to the
+	// caller's exact comparison.
+	target.searchParams.delete( 'v' );
+	const path = `${ target.pathname }${ target.search }${ target.hash }`;
+	if ( /^https?:\/\//i.test( value ) ) {
+		return `${ target.origin }${ path }`;
+	}
+	if ( value.startsWith( '//' ) ) {
+		return `//${ target.host }${ path }`;
+	}
+	if ( value.startsWith( '/' ) ) {
+		return path;
+	}
+
+	return value;
+}
+
 module.exports = {
 	assertMatchingSiteUrl,
 	getOrigin,
 	isLoopbackOrigin,
 	normalizeSiteUrl,
 	resolveSiteUrl,
+	stripWpcomCacheVersionFromRenderedHref,
 };

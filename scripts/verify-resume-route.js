@@ -3,7 +3,11 @@
 const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 
-const { getOrigin, isLoopbackOrigin } = require( './lib/site-url' );
+const {
+	getOrigin,
+	isLoopbackOrigin,
+	stripWpcomCacheVersionFromRenderedHref,
+} = require( './lib/site-url' );
 
 const ROOT = path.join( __dirname, '..' );
 const RESUME_PATH = '/one-page-resume/';
@@ -316,11 +320,38 @@ async function verifyRenderedLinks( origin, options = {} ) {
 			label: `Rendered-page probe ${ pathname }`,
 			requireLocal,
 		} ).href;
-		const response = await fetchImpl( url, { redirect: 'manual' } );
+		let documentUrl = url;
+		let response = await fetchImpl( documentUrl, { redirect: 'manual' } );
 		const location = response.headers.get( 'location' );
-		assert( ! location, `${ url } returned redirect ${ response.status }; refusing to follow its Location.` );
+		if ( location ) {
+			assert( ! requireLocal, `${ url } returned an unexpected redirect in local verification.` );
+			assert( response.status === 307, `${ url } returned redirect ${ response.status }; expected the WordPress cache preflight to use 307.` );
+			assert( response.headers.get( 'host-header' ) === 'WordPress.com', `${ url } redirect is not served by WordPress.com.` );
+			assert(
+				[ null, 'WordPress' ].includes( response.headers.get( 'x-redirect-by' ) ),
+				`${ url } redirect declares a non-WordPress owner.`
+			);
+			const destination = assertSafeFetchUrl( new URL( location, documentUrl ), expected, {
+				allowedPaths: [ pathname ],
+				label: `Rendered-page cache preflight ${ pathname }`,
+				requireLocal,
+			} );
+			assert( destination.pathname === pathname, `${ url } cache preflight changed the page path.` );
+			assert(
+				hasDiagnosticPreflightQuery( destination, new URL( documentUrl ) ),
+				`${ url } cache preflight may only append one v=<hex> query key.`
+			);
+			documentUrl = destination.href;
+			response = await fetchImpl( documentUrl, { redirect: 'manual' } );
+			assert(
+				! response.headers.get( 'location' ),
+				`${ documentUrl } returned a second redirect; refusing to follow its Location.`
+			);
+		}
 		assert( response.ok, `${ url } returned ${ response.status } while checking rendered résumé links.` );
-		const hrefs = visibleHrefs( await response.text() );
+		const hrefs = visibleHrefs( await response.text() ).map( ( href ) =>
+			stripWpcomCacheVersionFromRenderedHref( href, documentUrl )
+		);
 		assert( hrefs.includes( RESUME_PATH ), `${ url } has no rendered ${ RESUME_PATH } link.` );
 		assert(
 			hrefs.every( ( href ) => ! [ PDF_PATH, OLD_UPLOAD_PATH ].includes( new URL( href, url ).pathname ) ),
