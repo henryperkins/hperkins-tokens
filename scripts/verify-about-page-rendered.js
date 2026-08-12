@@ -25,7 +25,12 @@ const fsPromises = require( 'node:fs/promises' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
 
-const { assertMatchingSiteUrl, getOrigin, normalizeSiteUrl } = require( './lib/site-url' );
+const {
+	assertMatchingSiteUrl,
+	getOrigin,
+	normalizeSiteUrl,
+	stripWpcomCacheVersionFromRenderedHref,
+} = require( './lib/site-url' );
 const {
 	ABOUT_WORD_RANGE,
 	countVisibleWords,
@@ -410,7 +415,7 @@ function buildInspectionExpression( opts ) {
 	// One self-contained battery. Only the OPTS literal is interpolated.
 	return `(async () => {
 		const OPTS = ${ JSON.stringify( opts ) };
-		const out = { violations: [] };
+		const out = { violations: [], pageUrl: location.href };
 		const rect = (el) => {
 			const value = el.getBoundingClientRect();
 			return { left: value.left, top: value.top, right: value.right, bottom: value.bottom, width: value.width, height: value.height };
@@ -780,8 +785,12 @@ function verifyContent( result, viewport, expectations ) {
 		);
 		project.actions.forEach( ( expectedAction, actionIndex ) => {
 			const action = card.actions[ actionIndex ];
+			const renderedHref = stripWpcomCacheVersionFromRenderedHref(
+				action.href,
+				result.pageUrl
+			);
 			assert(
-				action.text === expectedAction.text && action.href === expectedAction.href,
+				action.text === expectedAction.text && renderedHref === expectedAction.href,
 				`${ label }: "${ project.title }" action ${ actionIndex + 1 } is "${ action.text }" → ${ action.href }.`
 			);
 			assert(

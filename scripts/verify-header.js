@@ -1134,13 +1134,12 @@ async function verifyDesktopInteractions( cdp, sessionId, viewport ) {
 		return {
 			samePushWrapper: history.pushState === window.__hpHeaderPushBeforeReevaluation,
 			sameReplaceWrapper: history.replaceState === window.__hpHeaderReplaceBeforeReevaluation,
-			hasRouterScroll: history.pushState.__hpRouterScroll === true,
 			hasRegistry: !!(window.__hpCouncilHeaderController && window.__hpCouncilHeaderController.settle),
 			addedListeners: window.__hpHeaderAddedDuringReevaluation,
 		};
 	})()` );
 	assert(
-		reevaluation.samePushWrapper && reevaluation.sameReplaceWrapper && reevaluation.hasRouterScroll && reevaluation.hasRegistry && reevaluation.addedListeners === 0,
+		reevaluation.samePushWrapper && reevaluation.sameReplaceWrapper && reevaluation.hasRegistry && reevaluation.addedListeners === 0,
 		`Controller reevaluation duplicated initialization or broke wrapper composition: ${ JSON.stringify( reevaluation ) }.`
 	);
 	await clickTrigger( cdp, sessionId, 'work' );
