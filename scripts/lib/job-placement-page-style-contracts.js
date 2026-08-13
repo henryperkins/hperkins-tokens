@@ -99,7 +99,130 @@ const DIGEST_COMPACT_CONTRACTS = [
 	},
 ];
 
-const DIGEST_LOWER_CONTRACTS = [];
+const DIGEST_LOWER_CONTRACTS = [
+	{
+		selector: '.hp-fit-ledger',
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--6)' },
+	},
+	{
+		selector: '.hp-incident-card',
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--6)' },
+	},
+	{
+		selector: '.hp-evidence-ledger',
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--6)' },
+	},
+	{
+		selector: '.hp-digest-closing-zone',
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--9)' },
+	},
+	{
+		selector: '.hp-digest-editorial-split',
+		atContext: DIGEST_EDITORIAL_CONTEXT,
+		declarations: {
+			display: 'grid',
+			'grid-template-columns': 'minmax(12rem, 0.7fr) minmax(0, 1.3fr)',
+			gap: 'var(--wp--preset--spacing--8)',
+			'align-items': 'start',
+		},
+	},
+	{
+		selector: '.hp-digest-closing-zone',
+		atContext: DIGEST_EDITORIAL_CONTEXT,
+		declarations: {
+			display: 'grid',
+			'grid-template-columns': 'repeat(2, minmax(0, 1fr))',
+			gap: 'var(--wp--preset--spacing--6)',
+			'align-items': 'start',
+		},
+	},
+	{
+		selector: '.hp-digest-section',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--7)' },
+	},
+	{
+		selector: '.hp-fit-ledger',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--5)' },
+	},
+	{
+		selector: '.hp-incident-card',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--5)' },
+	},
+	{
+		selector: '.hp-evidence-ledger',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--5)' },
+	},
+	{
+		selector: '.hp-digest-closing-zone',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--7)' },
+	},
+	{
+		selector: '.hp-digest-closing-zone > .hp-digest-cta',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--5) !important' },
+	},
+	{
+		selector: '.hp-proof-cards > .hp-proof-card.is-style-hperkins-proof-card',
+		atContext: DIGEST_PHONE_CONTEXT,
+		declarations: { padding: 'var(--wp--preset--spacing--4)' },
+	},
+	{
+		selector: '.hp-incident-card',
+		atContext: DIGEST_PHONE_CONTEXT,
+		declarations: { padding: 'var(--wp--preset--spacing--4)' },
+	},
+	{
+		selector: '.wp-block-table.hp-evidence-table tbody tr',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: {
+			display: 'grid',
+			'grid-template-columns': 'repeat(2, minmax(0, 1fr))',
+			gap: 'var(--wp--preset--spacing--2) var(--wp--preset--spacing--4)',
+		},
+	},
+	{
+		selector: '.wp-block-table.hp-evidence-table tbody td:nth-of-type(1)',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: {
+			'grid-column': '2',
+			'margin-block-start': '0',
+			'text-align': 'end',
+		},
+	},
+	{
+		selector: '.wp-block-table.hp-evidence-table tbody td:nth-of-type(2)',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: {
+			'grid-column': '1 / -1',
+			'margin-block-start': '0',
+			'padding-block-start': 'var(--wp--preset--spacing--2)',
+		},
+	},
+	{
+		selector: '.wp-block-table.hp-evidence-table tbody tr',
+		atContext: DIGEST_PHONE_CONTEXT,
+		declarations: { padding: 'var(--wp--preset--spacing--4)' },
+	},
+	{
+		selector: '.wp-block-table.hp-evidence-table tbody tr',
+		atContext: DIGEST_STACK_CONTEXT,
+		declarations: { 'grid-template-columns': 'minmax(0, 1fr)' },
+	},
+	{
+		selector: '.wp-block-table.hp-evidence-table tbody td:nth-of-type(1)',
+		atContext: DIGEST_STACK_CONTEXT,
+		declarations: {
+			'grid-column': '1',
+			'margin-block-start': 'var(--wp--preset--spacing--2)',
+			'text-align': 'start',
+		},
+	},
+];
 
 // Remove in Task 4 after verify-job-placement-pages.js imports the new arrays.
 const DIGEST_TABLET_CONTRACTS = DIGEST_COMPACT_CONTRACTS;

@@ -6,6 +6,7 @@ const themeJson = require( '../../theme.json' );
 const {
 	DIGEST_COMPACT_CONTEXT,
 	DIGEST_COMPACT_CONTRACTS,
+	DIGEST_LOWER_CONTRACTS,
 	DIGEST_NARROW_CONTEXT,
 	DIGEST_OPENING_CONTRACTS,
 	DIGEST_PHONE_CONTEXT,
@@ -182,6 +183,24 @@ test( 'Digest phone row gap wins the overlapping narrow cascade', () => {
 	assert.throws(
 		() => assertDigestPhoneRowGapWinsCascade( laterNarrowOverride ),
 		/phone row-gap rule must follow|spacing--4/
+	);
+} );
+
+test( 'Digest lower-page hierarchy and evidence records are declaration-pinned', () => {
+	for ( const contract of DIGEST_LOWER_CONTRACTS ) {
+		assert.doesNotThrow( () => assertRuleDeclarations( pagesCss, contract ) );
+		for ( const [ property, expected ] of Object.entries( contract.declarations ) ) {
+			const mutant = mutateDeclaration( pagesCss, contract, property, expected );
+			assert.throws(
+				() => assertRuleDeclarations( mutant, contract ),
+				/Digest|hp-|margin|padding|grid|gap|align/
+			);
+		}
+	}
+
+	assert(
+		!/\.wp-block-table\.hp-evidence-table tbody td(?:\[[^\]]+\]|:[^{,\s]+)*::before/.test( pagesCss ),
+		'The narrow Digest evidence register must not repeat State or Direct evidence labels in every row.'
 	);
 } );
 
