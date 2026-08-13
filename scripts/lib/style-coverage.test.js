@@ -4,6 +4,7 @@ const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 const themeJson = require( '../../theme.json' );
 const {
+	DIGEST_ACCEPTED_ACTION_CONTRACTS,
 	DIGEST_COMPACT_CONTEXT,
 	DIGEST_COMPACT_CONTRACTS,
 	DIGEST_LOWER_CONTRACTS,
@@ -70,6 +71,19 @@ function mutateDeclaration( css, contract, property, expected ) {
 	const mutant = source.replace( declaration, `${ property }: initial;` );
 	assert.notEqual( mutant, source, `Mutation must replace ${ property } for ${ contract.selector }.` );
 	return `${ css.slice( 0, rule.start ) }${ mutant }${ css.slice( rule.end ) }`;
+}
+
+function ruleForContract( css, contract ) {
+	return parseRules( css ).find( ( candidate ) =>
+		candidate.atContext === ( contract.atContext ?? null ) &&
+			normalizeSelectors( candidate.prelude ).includes( contract.selector )
+	);
+}
+
+function removeContractRule( css, contract ) {
+	const rule = ruleForContract( css, contract );
+	assert( rule, `Removal fixture is missing ${ contract.selector } in ${ contract.atContext }.` );
+	return `${ css.slice( 0, rule.start ) }${ css.slice( rule.end ) }`;
 }
 
 function declarationValue( rule, property ) {
@@ -173,6 +187,52 @@ test( 'Digest opening uses the approved token-based event-first topology', () =>
 	assert.throws(
 		() => assertRuleDeclarations( wrongUpperBound, DIGEST_COMPACT_CONTRACTS[ 0 ] ),
 		/601px|1023px|hp-digest-template/
+	);
+} );
+
+test( 'accepted Digest actions keep three desktop columns and one narrow column', () => {
+	const contracts = DIGEST_ACCEPTED_ACTION_CONTRACTS;
+
+	for ( const contract of contracts ) {
+		assert.doesNotThrow( () => assertRuleDeclarations( pagesCss, contract ) );
+		const mutant = mutateDeclaration(
+			pagesCss,
+			contract,
+			'grid-template-columns',
+			contract.declarations[ 'grid-template-columns' ]
+		);
+		assert.throws(
+			() => assertRuleDeclarations( mutant, contract ),
+			/hp-wcus-callout__actions|grid-template-columns|781px/
+		);
+		assert.throws(
+			() => assertRuleDeclarations( removeContractRule( pagesCss, contract ), contract ),
+			/hp-wcus-callout__actions|grid-template-columns|781px/
+		);
+	}
+
+	const baseRule = ruleForContract( pagesCss, contracts[ 0 ] );
+	const eventRule = ruleForContract( pagesCss, {
+		selector: '.hp-wcus-callout--event-first .hp-wcus-callout__actions',
+	} );
+	assert(
+		baseRule.end <= eventRule.start,
+		'The generic accepted action topology must precede the more-specific event-first override.'
+	);
+
+	const baseInMedia = `${ pagesCss.slice( 0, baseRule.start ) }@media (min-width: 1px) { ${ pagesCss.slice( baseRule.start, baseRule.end ) } }${ pagesCss.slice( baseRule.end ) }`;
+	assert.throws(
+		() => assertRuleDeclarations( baseInMedia, contracts[ 0 ] ),
+		/hp-wcus-callout__actions|grid-template-columns/
+	);
+
+	const wrongNarrowContext = pagesCss.replace(
+		DIGEST_NARROW_CONTEXT,
+		'@media (max-width: 782px)'
+	);
+	assert.throws(
+		() => assertRuleDeclarations( wrongNarrowContext, contracts[ 1 ] ),
+		/hp-wcus-callout__actions|grid-template-columns|781px/
 	);
 } );
 

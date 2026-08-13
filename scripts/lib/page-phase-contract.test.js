@@ -168,11 +168,17 @@ test( 'Digest text resize proof requires three visible actions with nonempty fou
 } );
 
 test( 'default recruiter source acceptance pins the complete shared WCUS presentation', () => {
-	const recruiter = fs.readFileSync(
-		path.join( themeRoot, 'scripts', 'verify-job-placement-pages.js' ),
-		'utf8'
+	const sourceContracts = sourceBetween(
+		readRecruiterVerifier(),
+		'function verifySourceContracts',
+		'function verifyStackedLedgerLabels'
 	);
-	const defaultContract = /\} else \{\s*assertRuleDeclarations\( pageCss, \{\s*selector: '\.hp-wcus-callout',\s*declarations: \{([\s\S]*?)\r?\n\s*\},\r?\n\s*\} \);/.exec( recruiter );
+	const defaultBranch = sourceBetween(
+		sourceContracts,
+		'} else {',
+		'\n\t}\n\tfor ( const contract of ['
+	);
+	const defaultContract = /assertRuleDeclarations\( pageCss, \{\s*selector: '\.hp-wcus-callout',\s*declarations: \{([\s\S]*?)\r?\n\s*\},\r?\n\s*\} \);/.exec( defaultBranch );
 
 	assert( defaultContract, 'Default recruiter source acceptance has no generic WCUS callout contract.' );
 	assert.match(
@@ -183,4 +189,49 @@ test( 'default recruiter source acceptance pins the complete shared WCUS present
 		defaultContract[ 1 ],
 		/background: 'color-mix\(in srgb, var\(--wp--preset--color--parchment-100\) 88%, var\(--wp--preset--color--gold-100\)\)'/
 	);
+} );
+
+test( 'both default Digest source branches apply the shared accepted-action topology', () => {
+	for ( const verifier of [
+		'verify-job-placement-pages.js',
+		'verify-prominent-actions.js',
+	] ) {
+		const source = fs.readFileSync( path.join( themeRoot, 'scripts', verifier ), 'utf8' );
+		const sourceContracts = sourceBetween(
+			source,
+			'function verifySourceContracts',
+			verifier === 'verify-job-placement-pages.js'
+				? 'function verifyStackedLedgerLabels'
+				: 'function wait'
+		);
+
+		assert.match(
+			source,
+			/const \{[\s\S]*DIGEST_ACCEPTED_ACTION_CONTRACTS[\s\S]*\} = require\( '\.\/lib\/job-placement-page-style-contracts' \);/,
+			`${ verifier } must import the shared accepted-action topology.`
+		);
+		assert.match(
+			sourceContracts,
+			/\} else \{\s*for \( const contract of DIGEST_ACCEPTED_ACTION_CONTRACTS \) \{\s*assertRuleDeclarations\( pageCss, contract \);\s*\}/,
+			`${ verifier } default branch must apply every shared accepted-action contract.`
+		);
+	}
+} );
+
+test( '390px evidence must clear the taller metadata cell', () => {
+	const assertion = sourceBetween(
+		sourceBetween(
+			readRecruiterVerifier(),
+			'function assertPageMetrics',
+			'async function inspectDisclosures'
+		),
+		'if ( viewport.width === 390 )',
+		'if ( viewport.width === 320 )'
+	);
+
+	assert.match(
+		assertion,
+		/Math\.max\( result\.evidenceRecord\.title\.bottom, result\.evidenceRecord\.state\.bottom \) - 1/
+	);
+	assert.doesNotMatch( assertion, /Math\.min\(/ );
 } );

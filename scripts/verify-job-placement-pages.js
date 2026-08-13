@@ -15,6 +15,7 @@ const path = require( 'node:path' );
 
 const { findHeadings, findLinks, extractExactText, parseTopLevelBlocks } = require( './lib/about-page-contract' );
 const {
+	DIGEST_ACCEPTED_ACTION_CONTRACTS,
 	DIGEST_COMPACT_CONTRACTS,
 	DIGEST_LOWER_CONTRACTS,
 	DIGEST_OPENING_CONTRACTS,
@@ -214,6 +215,9 @@ function verifySourceContracts() {
 			assertRuleDeclarations( pageCss, contract );
 		}
 	} else {
+		for ( const contract of DIGEST_ACCEPTED_ACTION_CONTRACTS ) {
+			assertRuleDeclarations( pageCss, contract );
+		}
 		assertRuleDeclarations( pageCss, {
 			selector: '.hp-wcus-callout',
 			declarations: {
@@ -806,7 +810,7 @@ function assertPageMetrics( result, page, viewport ) {
 				);
 				assert(
 					result.evidenceRecord.directEvidence.top >=
-						Math.min( result.evidenceRecord.title.bottom, result.evidenceRecord.state.bottom ) - 1,
+						Math.max( result.evidenceRecord.title.bottom, result.evidenceRecord.state.bottom ) - 1,
 					context + ' does not place direct evidence after title and state.'
 				);
 			}

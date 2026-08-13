@@ -5,6 +5,18 @@ const DIGEST_PHONE_CONTEXT = '@media (max-width: 600px)';
 const DIGEST_EDITORIAL_CONTEXT = '@media (min-width: 1024px)';
 const DIGEST_STACK_CONTEXT = '@media (max-width: 359px)';
 
+const DIGEST_ACCEPTED_ACTION_CONTRACTS = [
+	{
+		selector: '.hp-wcus-callout__actions',
+		declarations: { 'grid-template-columns': 'repeat(3, minmax(0, 1fr))' },
+	},
+	{
+		selector: '.hp-wcus-callout__actions',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: { 'grid-template-columns': 'minmax(0, 1fr)' },
+	},
+];
+
 const DIGEST_OPENING_CONTRACTS = [
 	{
 		selector: '.hp-digest__hero.hp-page-hero',
@@ -225,6 +237,7 @@ const DIGEST_LOWER_CONTRACTS = [
 ];
 
 module.exports = {
+	DIGEST_ACCEPTED_ACTION_CONTRACTS,
 	DIGEST_COMPACT_CONTEXT,
 	DIGEST_COMPACT_CONTRACTS,
 	DIGEST_EDITORIAL_CONTEXT,

@@ -7,6 +7,7 @@ const os = require( 'node:os' );
 const path = require( 'node:path' );
 
 const { findHeadings } = require( './lib/about-page-contract' );
+const { DIGEST_ACCEPTED_ACTION_CONTRACTS } = require( './lib/job-placement-page-style-contracts' );
 const { assertKnownOptions, selectAboutSource, selectDigestSource } = require( './lib/page-phase-contract' );
 const { getOrigin } = require( './lib/site-url' );
 const { assertRuleDeclarations } = require( './lib/style-coverage' );
@@ -160,6 +161,9 @@ function verifySourceContracts() {
 			},
 		} );
 	} else {
+		for ( const contract of DIGEST_ACCEPTED_ACTION_CONTRACTS ) {
+			assertRuleDeclarations( pageCss, contract );
+		}
 		assertRuleDeclarations( pageCss, {
 			selector: '.hp-wcus-callout',
 			declarations: {

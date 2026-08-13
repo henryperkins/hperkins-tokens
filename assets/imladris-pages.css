@@ -407,6 +407,10 @@ p.hp-contact-form__hint {
   margin-block-start: 0;
 }
 
+.hp-wcus-callout__actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .hp-wcus-callout--event-first .hp-wcus-callout__actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -727,6 +731,10 @@ p.hp-contact-form__hint {
    these selectors makes them (0,2,2) so they win wherever they are placed.
    ------------------------------------------------------------------------ */
 @media (max-width: 781px) {
+  .hp-wcus-callout__actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .hp-wcus-callout--event-first {
     grid-template-columns: minmax(0, 1fr);
     column-gap: 0;
