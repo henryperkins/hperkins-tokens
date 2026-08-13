@@ -60,14 +60,23 @@ test( 'prominent-action source mode reads the selected absolute draft paths acro
 	assert.match( result.stdout, /prominent action source contracts verified/ );
 } );
 
-test( 'rendered recruiter probes align containment, masthead, and rail membership with source contracts', () => {
-	const recruiter = fs.readFileSync( path.join( themeRoot, 'scripts', 'verify-job-placement-pages.js' ), 'utf8' );
-	assert.match( recruiter, /hero\?\.querySelector\('\.hp-wcus-callout'\)/ );
-	assert.doesNotMatch( recruiter, /querySelector\(':scope > \.hp-wcus-callout'\)/ );
-	assert.match( recruiter, /headerPresent/ );
-	assert.match( recruiter, /headerPosition/ );
+test( 'rendered recruiter probes keep snapshot and event-first draft phases distinct', () => {
+	const recruiter = fs.readFileSync(
+		path.join( themeRoot, 'scripts', 'verify-job-placement-pages.js' ),
+		'utf8'
+	);
+	assert.match( recruiter, /requireEventFirst: USE_DRAFTS/ );
+	assert.match( recruiter, /if \( requireEventFirst \)/ );
+	assert.match( recruiter, /document\.querySelector\('main \.hp-wcus-callout'\)/ );
+	assert.match( recruiter, /primaryRail\.closest\('\.hp-wcus-callout'\)/ );
+	assert.doesNotMatch( recruiter, /hero\?\.querySelector\('\.hp-wcus-callout'\)/ );
+	assert.match( recruiter, /evidenceFragment/ );
+	assert.match( recruiter, /zoom-200-from-1024/ );
 
-	const prominent = fs.readFileSync( path.join( themeRoot, 'scripts', 'verify-prominent-actions.js' ), 'utf8' );
+	const prominent = fs.readFileSync(
+		path.join( themeRoot, 'scripts', 'verify-prominent-actions.js' ),
+		'utf8'
+	);
 	assert.match( prominent, /\.wp-block-buttons\.hp-action-rail/ );
 	assert.match( prominent, /\.hp-action-rail:not\(\.wp-block-buttons\)/ );
 } );

@@ -224,9 +224,6 @@ const DIGEST_LOWER_CONTRACTS = [
 	},
 ];
 
-// Remove in Task 4 after verify-job-placement-pages.js imports the new arrays.
-const DIGEST_TABLET_CONTRACTS = DIGEST_COMPACT_CONTRACTS;
-
 module.exports = {
 	DIGEST_COMPACT_CONTEXT,
 	DIGEST_COMPACT_CONTRACTS,
@@ -236,6 +233,5 @@ module.exports = {
 	DIGEST_OPENING_CONTRACTS,
 	DIGEST_PHONE_CONTEXT,
 	DIGEST_STACK_CONTEXT,
-	DIGEST_TABLET_CONTRACTS,
 	DIGEST_WIDE_CONTEXT,
 };
