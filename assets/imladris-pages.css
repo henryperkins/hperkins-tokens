@@ -312,8 +312,13 @@ p.hp-contact-form__hint {
    ========================================================================= */
 .hp-digest__hero.hp-page-hero {
   max-inline-size: var(--wp--style--global--wide-size, 72rem);
+  margin-block-start: 0;
   border-bottom: 0;
   padding-bottom: 0;
+}
+
+.hp-wcus-callout--event-first + .hp-digest__hero {
+  margin-block-start: var(--wp--preset--spacing--6);
 }
 
 .hp-digest-template {
@@ -328,7 +333,7 @@ p.hp-contact-form__hint {
 
 .hp-digest__support-line {
   max-inline-size: var(--wp--custom--measure--prose);
-  margin: var(--wp--preset--spacing--4) 0 0;
+  margin: var(--wp--preset--spacing--3) 0 0;
   font-family: var(--wp--preset--font-family--label);
   font-size: var(--wp--preset--font-size--sm);
   line-height: 1.5;
@@ -337,7 +342,7 @@ p.hp-contact-form__hint {
 
 .hp-digest__current-role {
   max-inline-size: var(--wp--custom--measure--prose);
-  margin: var(--wp--preset--spacing--5) 0 0;
+  margin: var(--wp--preset--spacing--4) 0 0;
   padding-inline-start: var(--wp--preset--spacing--4);
   line-height: var(--wp--custom--leading--relaxed);
   color: var(--wp--custom--text--strong);
@@ -345,7 +350,7 @@ p.hp-contact-form__hint {
 }
 
 .hp-digest__dateline {
-  margin: var(--wp--preset--spacing--4) 0 0;
+  margin: var(--wp--preset--spacing--3) 0 0;
   font-family: var(--wp--preset--font-family--mono);
   font-size: var(--wp--preset--font-size--xs);
   line-height: 1.45;
@@ -353,30 +358,54 @@ p.hp-contact-form__hint {
 }
 
 .hp-category-bar {
-  margin-block: var(--wp--preset--spacing--4);
+  margin-block: var(--wp--preset--spacing--3);
 }
 
-.hp-wcus-callout {
-  margin-block-start: var(--wp--preset--spacing--6);
+.hp-wcus-callout--event-first {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 0;
+  row-gap: var(--wp--preset--spacing--5);
+  align-items: stretch;
+  max-inline-size: var(--wp--style--global--wide-size, 72rem);
+  margin-block-start: 0;
   padding: var(--wp--preset--spacing--6);
   border-inline-start: 0.25rem solid var(--wp--preset--color--gold-600);
-  background: color-mix(in srgb, var(--wp--preset--color--parchment-100) 88%, var(--wp--preset--color--gold-100));
+  background: var(--wp--custom--surface--raised);
 }
 
-.hp-wcus-callout__actions {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.hp-wcus-callout--event-first .hp-wcus-callout__copy {
+  min-inline-size: 0;
 }
 
-/* Four first-screen actions share one compact rail. Grid keeps long labels
-   inside their cells rather than letting one button force page overflow. */
+.hp-wcus-callout--event-first .hp-wcus-callout__title {
+  max-inline-size: 18ch;
+  margin: var(--wp--preset--spacing--4) 0 0;
+  font-family: var(--wp--preset--font-family--display);
+  font-size: var(--wp--preset--font-size--2-xl);
+  line-height: var(--wp--custom--leading--snug);
+  color: var(--wp--custom--text--strong);
+}
+
+.hp-wcus-callout--event-first .hp-wcus-callout__copy > p:last-child {
+  max-inline-size: var(--wp--custom--measure--prose);
+  margin: var(--wp--preset--spacing--4) 0 0;
+  line-height: var(--wp--custom--leading--relaxed);
+}
+
 .hp-digest__primary-actions.hp-action-rail {
   display: grid;
   width: 100%;
   margin-block-start: 0;
 }
 
-.hp-digest__primary-actions.hp-action-rail:not(.hp-wcus-callout__actions) {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+.hp-wcus-callout--event-first .hp-wcus-callout__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--wp--preset--spacing--4);
+  width: 100%;
+  align-self: stretch;
 }
 
 .hp-digest__primary-actions .wp-block-button,
@@ -389,6 +418,14 @@ p.hp-contact-form__hint {
   padding-inline: var(--wp--preset--spacing--3);
   text-align: center;
   overflow-wrap: anywhere;
+}
+
+@media (min-width: 782px) {
+  .hp-wcus-callout--event-first {
+    grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 0.65fr);
+    column-gap: var(--wp--preset--spacing--6);
+    row-gap: 0;
+  }
 }
 
 .hp-digest-section,
@@ -581,10 +618,6 @@ p.hp-contact-form__hint {
 }
 
 @media (max-width: 960px) {
-  .hp-digest__primary-actions.hp-action-rail:not(.hp-wcus-callout__actions) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .hp-proof-cards.wp-block-columns {
     flex-wrap: wrap !important;
   }
@@ -600,8 +633,13 @@ p.hp-contact-form__hint {
     max-inline-size: none;
   }
 
-  .hp-digest__primary-actions.hp-action-rail:not(.hp-wcus-callout__actions) {
-    grid-template-columns: minmax(0, 1fr);
+  .hp-wcus-callout--event-first {
+    row-gap: var(--wp--preset--spacing--4);
+    padding: var(--wp--preset--spacing--4);
+  }
+
+  .hp-wcus-callout--event-first .hp-wcus-callout__title {
+    max-inline-size: none;
   }
 
   .hp-proof-cards > .hp-proof-card {
@@ -629,12 +667,8 @@ p.hp-contact-form__hint {
   }
 }
 
-/* The WCUS actions become one touch-friendly column below 782px; their
-   separate layout rule preserves three columns from 782px upward. Through the
-   small-laptop band, keep the surrounding hero rhythm compact so all three
-   actions remain in the first 1000px without shrinking their 44px targets.
-   Full desktop composition at 1024px+ and the <=600px phone treatment stay
-   intact. */
+/* Compact laptops reduce shell and hero type without changing the event-first
+   two-column topology above 781px. */
 @media (min-width: 601px) and (max-width: 1023px) {
   .hp-digest-template {
     padding-block-start: var(--wp--preset--spacing--5) !important;
@@ -645,23 +679,8 @@ p.hp-contact-form__hint {
     font-size: var(--wp--preset--font-size--3-xl);
   }
 
-  .hp-category-bar {
-    margin-block: var(--wp--preset--spacing--3);
-  }
-
-  .hp-wcus-callout {
-    margin-block-start: var(--wp--preset--spacing--5);
+  .hp-wcus-callout--event-first {
     padding: var(--wp--preset--spacing--5);
-    padding-block-start: var(--wp--preset--spacing--4);
-  }
-
-  .hp-wcus-callout > h2 {
-    margin-block-start: var(--wp--preset--spacing--4);
-    font-size: var(--wp--preset--font-size--2-xl);
-  }
-
-  .hp-wcus-callout > p:not(.hp-page-hero__eyebrow) {
-    margin-block-start: var(--wp--preset--spacing--4);
   }
 }
 
@@ -686,7 +705,12 @@ p.hp-contact-form__hint {
    these selectors makes them (0,2,2) so they win wherever they are placed.
    ------------------------------------------------------------------------ */
 @media (max-width: 781px) {
-  .hp-wcus-callout__actions,
+  .hp-wcus-callout--event-first {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+    row-gap: var(--wp--preset--spacing--5);
+  }
+
   .hp-debug-proof__grid {
     grid-template-columns: minmax(0, 1fr);
   }

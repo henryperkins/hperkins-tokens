@@ -130,17 +130,42 @@ function verifySourceContracts() {
 	] ) {
 		assert( css.includes( expected ), `style.css is missing expected contract: ${ expected }` );
 	}
-	if ( DIGEST_BODY.includes( 'hp-wcus-callout' ) ) {
+	if ( USE_DRAFTS ) {
+		assertRuleDeclarations( pageCss, {
+			selector: '.hp-wcus-callout--event-first',
+			declarations: {
+				display: 'grid',
+				'grid-template-columns': 'minmax(0, 1fr)',
+				'column-gap': '0',
+				'row-gap': 'var(--wp--preset--spacing--5)',
+				padding: 'var(--wp--preset--spacing--6)',
+				'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
+			},
+		} );
+		assertRuleDeclarations( pageCss, {
+			selector: '.hp-wcus-callout--event-first .hp-wcus-callout__actions',
+			declarations: {
+				display: 'grid',
+				'grid-template-columns': 'minmax(0, 1fr)',
+				gap: 'var(--wp--preset--spacing--4)',
+			},
+		} );
+		assertRuleDeclarations( pageCss, {
+			selector: '.hp-wcus-callout--event-first',
+			atContext: '@media (min-width: 782px)',
+			declarations: {
+				'grid-template-columns': 'minmax(0, 1.35fr) minmax(16rem, 0.65fr)',
+				'column-gap': 'var(--wp--preset--spacing--6)',
+				'row-gap': '0',
+			},
+		} );
+	} else {
 		assertRuleDeclarations( pageCss, {
 			selector: '.hp-wcus-callout',
 			declarations: {
 				padding: 'var(--wp--preset--spacing--6)',
 				'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
 			},
-		} );
-		assertRuleDeclarations( pageCss, {
-			selector: '.hp-wcus-callout__actions',
-			declarations: { 'grid-template-columns': 'repeat(3, minmax(0, 1fr))' },
 		} );
 	}
 	if ( read( ABOUT_SOURCE ).includes( 'hp-about-wcus' ) ) {

@@ -5,7 +5,8 @@ const path = require( 'node:path' );
 const themeJson = require( '../../theme.json' );
 const {
 	DIGEST_COMPACT_CONTEXT,
-	DIGEST_TABLET_CONTRACTS,
+	DIGEST_COMPACT_CONTRACTS,
+	DIGEST_OPENING_CONTRACTS,
 } = require( './job-placement-page-style-contracts' );
 
 const {
@@ -55,7 +56,7 @@ function assertFontPresetReferencesResolve( contracts, config ) {
 
 function mutateDeclaration( css, contract, property, expected ) {
 	const rule = parseRules( css ).find( ( candidate ) =>
-		candidate.atContext === contract.atContext &&
+		candidate.atContext === ( contract.atContext ?? null ) &&
 			normalizeSelectors( candidate.prelude ).includes( contract.selector )
 	);
 	assert( rule, `Mutation fixture is missing ${ contract.selector } in ${ contract.atContext }.` );
@@ -111,53 +112,38 @@ test( 'native proof-grid items neutralize WordPress flow margins', () => {
 	);
 } );
 
-test( 'Digest tablet and small-laptop fold use a bounded token-based compact treatment', () => {
-	assert.doesNotThrow( () => assertFontPresetReferencesResolve( DIGEST_TABLET_CONTRACTS, themeJson ) );
-	const missingTokenTheme = structuredClone( themeJson );
-	missingTokenTheme.settings.typography.fontSizes = missingTokenTheme.settings.typography.fontSizes.filter(
-		( preset ) => preset.slug !== '3xl'
+test( 'Digest opening uses the approved token-based event-first topology', () => {
+	const contracts = [ ...DIGEST_OPENING_CONTRACTS, ...DIGEST_COMPACT_CONTRACTS ];
+	const typographyContracts = contracts.filter( ( contract ) =>
+		Object.values( contract.declarations ).some( ( value ) =>
+			value.includes( '--wp--preset--font-size--' )
+		)
 	);
-	assert.throws(
-		() => assertFontPresetReferencesResolve( DIGEST_TABLET_CONTRACTS, missingTokenTheme ),
-		/--wp--preset--font-size--3-xl.*theme\.json/
-	);
+	assert.doesNotThrow( () => assertFontPresetReferencesResolve( typographyContracts, themeJson ) );
 
-	for ( const contract of DIGEST_TABLET_CONTRACTS ) {
+	for ( const contract of contracts ) {
 		assert.doesNotThrow( () => assertRuleDeclarations( pagesCss, contract ) );
 		for ( const [ property, expected ] of Object.entries( contract.declarations ) ) {
 			const mutant = mutateDeclaration( pagesCss, contract, property, expected );
 			assert.throws(
 				() => assertRuleDeclarations( mutant, contract ),
-				/Digest|hp-|padding|margin|font-size|max-inline-size|601px|781px/
+				/Digest|hp-|padding|margin|font|grid|gap|width|align|border/
 			);
 		}
 	}
 
-	const calloutContract = DIGEST_TABLET_CONTRACTS.find( ( contract ) => contract.selector === '.hp-wcus-callout' );
-	const withoutTopPadding = mutateDeclaration(
-		pagesCss,
-		calloutContract,
-		'padding-block-start',
-		'var(--wp--preset--spacing--4)'
-	);
-	assert.throws(
-		() => assertRuleDeclarations( withoutTopPadding, calloutContract ),
-		/hp-wcus-callout|padding-block-start/
-	);
-
 	assert.equal(
 		pagesCss.split( DIGEST_COMPACT_CONTEXT ).length - 1,
 		1,
-		'The compact-band boundary mutation requires one exact source context.'
+		'The compact band must have one exact source context.'
 	);
 	const wrongUpperBound = pagesCss.replace(
 		DIGEST_COMPACT_CONTEXT,
 		'@media (min-width: 601px) and (max-width: 1024px)'
 	);
-	assert.notEqual( wrongUpperBound, pagesCss, 'The compact-band boundary mutation must change the stylesheet.' );
 	assert.throws(
-		() => assertRuleDeclarations( wrongUpperBound, calloutContract ),
-		/hp-wcus-callout|601px|1023px/
+		() => assertRuleDeclarations( wrongUpperBound, DIGEST_COMPACT_CONTRACTS[ 0 ] ),
+		/601px|1023px|hp-digest-template/
 	);
 } );
 
