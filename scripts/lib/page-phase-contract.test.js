@@ -16,12 +16,20 @@ function readRecruiterVerifier() {
 }
 
 function sourceBetween( source, startMarker, endMarker ) {
-	const start = source.indexOf( startMarker );
-	const end = source.indexOf( endMarker, start + startMarker.length );
+	const normalizedSource = source.replace( /\r\n?/g, '\n' );
+	const start = normalizedSource.indexOf( startMarker );
+	const end = normalizedSource.indexOf( endMarker, start + startMarker.length );
 	assert.notEqual( start, -1, `Missing source seam: ${ startMarker }` );
 	assert.notEqual( end, -1, `Missing source seam: ${ endMarker }` );
-	return source.slice( start, end );
+	return normalizedSource.slice( start, end );
 }
+
+test( 'extracts source seams from Windows CRLF checkouts', () => {
+	assert.equal(
+		sourceBetween( 'before\r\ninside\r\nafter', 'before\n', '\nafter' ),
+		'before\ninside'
+	);
+} );
 
 test( 'selects the reviewed Digest candidate only when drafts are explicit', () => {
 	assert.equal(
