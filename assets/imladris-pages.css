@@ -627,46 +627,6 @@ p.hp-contact-form__hint {
   }
 }
 
-@media (max-width: 600px) {
-  .hp-digest__hero h1,
-  .hp-method-hero h1 {
-    max-inline-size: none;
-  }
-
-  .hp-wcus-callout--event-first {
-    row-gap: var(--wp--preset--spacing--4);
-    padding: var(--wp--preset--spacing--4);
-  }
-
-  .hp-wcus-callout--event-first .hp-wcus-callout__title {
-    max-inline-size: none;
-  }
-
-  .hp-proof-cards > .hp-proof-card {
-    flex-basis: 100%;
-  }
-
-  .hp-fit-table :is(th, td) {
-    padding-inline: var(--wp--preset--spacing--3);
-  }
-
-  .hp-fit-table :is(th, td):first-child {
-    inline-size: 42%;
-  }
-
-  .hp-incident-card,
-  .hp-research-note,
-  .wp-block-group.is-style-hperkins-incident-card,
-  .wp-block-group.is-style-hperkins-research-note {
-    padding: var(--wp--preset--spacing--4);
-  }
-
-  .hp-disclosure > summary,
-  .wp-block-details.is-style-hperkins-disclosure > summary {
-    padding-inline: var(--wp--preset--spacing--3);
-  }
-}
-
 /* Compact laptops reduce shell and hero type without changing the event-first
    two-column topology above 781px. */
 @media (min-width: 601px) and (max-width: 1023px) {
@@ -901,6 +861,46 @@ p.hp-contact-form__hint {
 
   .wp-block-table.hp-market-table tbody td:nth-of-type(2) {
     margin-block-start: var(--wp--preset--spacing--2);
+  }
+}
+
+@media (max-width: 600px) {
+  .hp-digest__hero h1,
+  .hp-method-hero h1 {
+    max-inline-size: none;
+  }
+
+  .hp-wcus-callout--event-first {
+    row-gap: var(--wp--preset--spacing--4);
+    padding: var(--wp--preset--spacing--4);
+  }
+
+  .hp-wcus-callout--event-first .hp-wcus-callout__title {
+    max-inline-size: none;
+  }
+
+  .hp-proof-cards > .hp-proof-card {
+    flex-basis: 100%;
+  }
+
+  .hp-fit-table :is(th, td) {
+    padding-inline: var(--wp--preset--spacing--3);
+  }
+
+  .hp-fit-table :is(th, td):first-child {
+    inline-size: 42%;
+  }
+
+  .hp-incident-card,
+  .hp-research-note,
+  .wp-block-group.is-style-hperkins-incident-card,
+  .wp-block-group.is-style-hperkins-research-note {
+    padding: var(--wp--preset--spacing--4);
+  }
+
+  .hp-disclosure > summary,
+  .wp-block-details.is-style-hperkins-disclosure > summary {
+    padding-inline: var(--wp--preset--spacing--3);
   }
 }
 

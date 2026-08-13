@@ -6,7 +6,9 @@ const themeJson = require( '../../theme.json' );
 const {
 	DIGEST_COMPACT_CONTEXT,
 	DIGEST_COMPACT_CONTRACTS,
+	DIGEST_NARROW_CONTEXT,
 	DIGEST_OPENING_CONTRACTS,
+	DIGEST_PHONE_CONTEXT,
 } = require( './job-placement-page-style-contracts' );
 
 const {
@@ -67,6 +69,32 @@ function mutateDeclaration( css, contract, property, expected ) {
 	const mutant = source.replace( declaration, `${ property }: initial;` );
 	assert.notEqual( mutant, source, `Mutation must replace ${ property } for ${ contract.selector }.` );
 	return `${ css.slice( 0, rule.start ) }${ mutant }${ css.slice( rule.end ) }`;
+}
+
+function declarationValue( rule, property ) {
+	const declaration = new RegExp( `(?:^|;)\\s*${ property }\\s*:\\s*([^;]+);` ).exec( rule.body );
+	return declaration?.[ 1 ].replace( /\s+/g, ' ' ).trim();
+}
+
+function assertDigestPhoneRowGapWinsCascade( css ) {
+	const effectiveRule = parseRules( css )
+		.filter( ( rule ) =>
+			normalizeSelectors( rule.prelude ).includes( '.hp-wcus-callout--event-first' ) &&
+				[ DIGEST_NARROW_CONTEXT, DIGEST_PHONE_CONTEXT ].includes( rule.atContext ) &&
+				declarationValue( rule, 'row-gap' )
+		)
+		.at( -1 );
+	assert( effectiveRule, 'Digest phone cascade must declare an event-first row gap.' );
+	assert.equal(
+		effectiveRule.atContext,
+		DIGEST_PHONE_CONTEXT,
+		'The phone row-gap rule must follow any overlapping narrow rule.'
+	);
+	assert.equal(
+		declarationValue( effectiveRule, 'row-gap' ),
+		'var(--wp--preset--spacing--4)',
+		'The effective <=600px event-first row gap must use spacing--4.'
+	);
 }
 
 test( 'assertRuleDeclarations rejects comment-only, empty, wrong-value, and wrong-media CSS', () => {
@@ -144,6 +172,16 @@ test( 'Digest opening uses the approved token-based event-first topology', () =>
 	assert.throws(
 		() => assertRuleDeclarations( wrongUpperBound, DIGEST_COMPACT_CONTRACTS[ 0 ] ),
 		/601px|1023px|hp-digest-template/
+	);
+} );
+
+test( 'Digest phone row gap wins the overlapping narrow cascade', () => {
+	assertDigestPhoneRowGapWinsCascade( pagesCss );
+
+	const laterNarrowOverride = `${ pagesCss }\n${ DIGEST_NARROW_CONTEXT } {\n  .hp-wcus-callout--event-first {\n    row-gap: var(--wp--preset--spacing--5);\n  }\n}\n`;
+	assert.throws(
+		() => assertDigestPhoneRowGapWinsCascade( laterNarrowOverride ),
+		/phone row-gap rule must follow|spacing--4/
 	);
 } );
 
