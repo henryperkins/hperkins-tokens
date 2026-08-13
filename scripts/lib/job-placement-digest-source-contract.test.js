@@ -6,6 +6,7 @@ const path = require( 'node:path' );
 const test = require( 'node:test' );
 
 const { verifyMain } = require( '../verify-job-placement-digest-source' );
+const { parseTopLevelBlocks } = require( './about-page-contract' );
 const { readReleaseRecord } = require( './release-record' );
 
 const THEME_ROOT = path.join( __dirname, '..', '..' );
@@ -24,40 +25,29 @@ function replaceOnce( value, search, replacement ) {
 	return value.replace( search, replacement );
 }
 
-const HERO_CLOSE = '\n</section>\n<!-- /wp:group -->\n\n';
-const WCUS_BLOCK_START = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-wcus-callout hp-action-panel","layout":{"type":"constrained"}} -->';
-const WHY_BLOCK_START = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-digest-section hp-support-now","layout":{"type":"constrained"},"anchor":"why-support-engineer-now"} -->';
-
-function containWcusPanel( value ) {
-	const siblingBoundary = `${ HERO_CLOSE }${ WCUS_BLOCK_START }`;
-	if ( ! value.includes( siblingBoundary ) ) {
-		return value;
-	}
-
-	const wcusStart = value.indexOf( WCUS_BLOCK_START );
-	const whyStart = value.indexOf( WHY_BLOCK_START );
-	assert( whyStart > wcusStart, 'Fixture must place Why Support Engineer after the WCUS panel.' );
-	const wcusBlock = value.slice( wcusStart, whyStart ).trimEnd();
-	const withoutWcus = `${ value.slice( 0, wcusStart ) }${ value.slice( whyStart ) }`;
-	const heroClose = withoutWcus.indexOf( HERO_CLOSE );
-	assert.notEqual( heroClose, -1, 'Fixture must contain the Digest hero closer.' );
-
-	return `${ withoutWcus.slice( 0, heroClose ) }\n\n${ wcusBlock }${ withoutWcus.slice( heroClose ) }`;
+function hasBlockClass( block, className ) {
+	return ( block.attrs.className || '' ).split( /\s+/ ).includes( className );
 }
 
-function moveWcusPanelOutsideHero( value ) {
-	const wcusStart = value.indexOf( WCUS_BLOCK_START );
-	const whyStart = value.indexOf( WHY_BLOCK_START );
-	assert( whyStart > wcusStart, 'Fixture must place Why Support Engineer after the WCUS panel.' );
-	const heroClose = value.lastIndexOf( HERO_CLOSE, whyStart );
-	assert( heroClose > wcusStart, 'Fixture must contain the WCUS panel before the Digest hero closer.' );
-	const wcusBlock = value.slice( wcusStart, heroClose ).trim();
-	const withoutWcus = `${ value.slice( 0, wcusStart ) }${ value.slice( heroClose ) }`;
-	const nextHeroClose = withoutWcus.indexOf( HERO_CLOSE );
-	assert.notEqual( nextHeroClose, -1, 'Fixture must retain the Digest hero closer.' );
-	const afterHero = nextHeroClose + HERO_CLOSE.length;
+function removeEventBlock( value ) {
+	const blocks = parseTopLevelBlocks( value );
+	const event = blocks.find( ( block ) => hasBlockClass( block, 'hp-wcus-callout' ) );
+	assert( event, 'Fixture must contain the top-level WordCamp block.' );
+	return value.slice( 0, event.start ) + value.slice( event.end );
+}
 
-	return `${ withoutWcus.slice( 0, afterHero ) }${ wcusBlock }\n\n${ withoutWcus.slice( afterHero ) }`;
+function moveEventAfterHero( value ) {
+	const blocks = parseTopLevelBlocks( value );
+	const event = blocks.find( ( block ) => hasBlockClass( block, 'hp-wcus-callout' ) );
+	const hero = blocks.find( ( block ) => hasBlockClass( block, 'hp-digest__hero' ) );
+	assert( event && hero && event.end <= hero.start, 'Fixture must put WordCamp before the Digest hero.' );
+	return (
+		value.slice( 0, event.start ) +
+		value.slice( event.end, hero.end ) +
+		'\n\n' +
+		event.outer +
+		value.slice( hero.end )
+	);
 }
 
 test( 'serializes the debugging proof as editable native blocks', () => {
@@ -78,16 +68,84 @@ test( 'serializes the debugging proof as editable native blocks', () => {
 	);
 } );
 
-test( 'requires the WCUS panel and recruiter actions inside the Digest hero', () => {
-	const contained = containWcusPanel( DIGEST );
-	const outsideHero = moveWcusPanelOutsideHero( contained );
-	assert.notEqual( outsideHero, contained, 'Containment mutation must move the WCUS panel.' );
+test( 'requires the native labelled WordCamp aside before the first-heading hero', () => {
+	const blocks = parseTopLevelBlocks( DIGEST );
+	const event = blocks[ 0 ];
+	const hero = blocks[ 1 ];
+	const why = blocks[ 2 ];
 
-	assert.doesNotThrow( () => verifyMain( contained, THEME_VERSION, DEPLOYED_COMMIT ) );
+	assert.equal( event.name, 'group' );
+	assert.equal( event.attrs.tagName, 'aside' );
+	assert.equal( event.attrs.ariaLabel, 'I’ll be at WordCamp US.' );
+	assert( hasBlockClass( event, 'hp-wcus-callout' ) );
+	assert( hasBlockClass( event, 'hp-wcus-callout--event-first' ) );
+	assert( hasBlockClass( hero, 'hp-digest__hero' ) );
+	assert.equal( why.attrs.anchor, 'why-support-engineer-now' );
+	assert.match( event.outer, /<aside\b[^>]*aria-label="I’ll be at WordCamp US\."[^>]*>/ );
+	assert.match( event.outer, /<p class="hp-wcus-callout__title">I’ll be at WordCamp US\.<\/p>/ );
+	assert.doesNotMatch( event.outer, /<h[1-6]\b/ );
+	assert.doesNotMatch( hero.outer, /hp-wcus-callout/ );
+	assert.doesNotThrow( () => verifyMain( DIGEST, THEME_VERSION, DEPLOYED_COMMIT ) );
+
+	const reordered = moveEventAfterHero( DIGEST );
 	assert.throws(
-		() => verifyMain( outsideHero, THEME_VERSION, DEPLOYED_COMMIT ),
-		/WCUS panel and its recruiter actions must be contained by the Digest hero/
+		() => verifyMain( reordered, THEME_VERSION, DEPLOYED_COMMIT ),
+		/WordCamp aside must be the first top-level block/
 	);
+} );
+
+test( 'keeps the evergreen Digest structurally valid when the event block is removed', () => {
+	const evergreen = removeEventBlock( DIGEST );
+	const blocks = parseTopLevelBlocks( evergreen );
+
+	assert( hasBlockClass( blocks[ 0 ], 'hp-digest__hero' ) );
+	assert.equal( blocks[ 1 ].attrs.anchor, 'why-support-engineer-now' );
+	assert.doesNotMatch( evergreen, /hp-wcus-callout/ );
+	assert.doesNotThrow(
+		() => verifyMain(
+			evergreen,
+			THEME_VERSION,
+			DEPLOYED_COMMIT,
+			{ requireEvent: false }
+		)
+	);
+} );
+
+test( 'groups editorial prose and the final two-part close with native blocks', () => {
+	assert.equal(
+		[ ...DIGEST.matchAll( /"className":"hp-digest-section__body"/g ) ].length,
+		2
+	);
+	assert.match( DIGEST, /"className":"hp-digest-section hp-support-now hp-digest-editorial-split"/ );
+	assert.match( DIGEST, /"className":"hp-digest-section hp-theme-governance hp-digest-editorial-split"/ );
+	assert.match( DIGEST, /"className":"hp-digest-closing-zone"/ );
+} );
+
+test( 'preserves the approved event action styles and excludes layout reordering', () => {
+	const event = parseTopLevelBlocks( DIGEST ).find( ( block ) =>
+		hasBlockClass( block, 'hp-wcus-callout--event-first' )
+	);
+	assert( event, 'Fixture must contain the event-first WordCamp block.' );
+	assert.equal(
+		[ ...event.outer.matchAll( /<!-- wp:button -->/g ) ].length,
+		1
+	);
+	assert.equal(
+		[ ...event.outer.matchAll( /<!-- wp:button \{"className":"is-style-secondary"\} -->/g ) ].length,
+		2
+	);
+	assert.match(
+		event.outer,
+		/<!-- wp:button -->[\s\S]*?Start a WordCamp conversation[\s\S]*?<!-- \/wp:button -->/
+	);
+
+	const pagesCss = fs.readFileSync(
+		path.join( THEME_ROOT, 'assets', 'imladris-pages.css' ),
+		'utf8'
+	);
+	for ( const rule of pagesCss.matchAll( /\.hp-(?:wcus-callout|digest)[^{]*\{([^}]*)\}/g ) ) {
+		assert.doesNotMatch( rule[ 1 ], /(?:^|;)\s*order\s*:/ );
+	}
 } );
 
 test( 'requires the Task 10 publication-verification date and rejects the stale date', () => {
@@ -112,7 +170,7 @@ test( 'requires the Task 10 publication-verification date and rejects the stale 
 } );
 
 test( 'rejects the retired standalone investigation route in any link', () => {
-	const themeSection = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-digest-section hp-theme-governance"';
+	const themeSection = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-digest-section hp-theme-governance hp-digest-editorial-split"';
 	const retiredLink = '<!-- wp:paragraph -->\n<p><a href="/root-cause-investigation/">Open the investigation</a></p>\n<!-- /wp:paragraph -->\n\n';
 	const mutant = replaceOnce( DIGEST, themeSection, `${ retiredLink }${ themeSection }` );
 

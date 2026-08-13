@@ -191,7 +191,7 @@ function verifyNoMovingGitHubLinks( label, markup ) {
 	);
 }
 
-function verifyMain( markup, themeVersion, deployedCommit ) {
+function verifyMain( markup, themeVersion, deployedCommit, { requireEvent = true } = {} ) {
 	verifyHeadingContract( 'Main digest draft', markup );
 	verifyNoPublicationPlaceholders( 'Main digest draft', markup );
 	verifyNoMovingGitHubLinks( 'Main digest draft', markup );
@@ -214,36 +214,84 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 	const topLevelBlocks = parseTopLevelBlocks( markup );
 	const hasBlockClass = ( block, className ) =>
 		( block.attrs.className || '' ).split( /\s+/ ).includes( className );
+	const eventIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-wcus-callout' ) );
 	const heroIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-digest__hero' ) );
-	assert( heroIndex !== -1, 'Main digest draft must contain a top-level .hp-digest__hero block.' );
-	const hero = topLevelBlocks[ heroIndex ].outer;
-	assert(
-		getClassCount( hero, 'hp-wcus-callout' ) === 1 &&
-			getClassCount( hero, 'hp-digest__primary-actions' ) === 1,
-		'The WCUS panel and its recruiter actions must be contained by the Digest hero.'
-	);
-	const wcusPanelMatch = getScopedElementMatch( markup, 'section', 'hp-wcus-callout' );
-	const wcusPanel = wcusPanelMatch[ 2 ];
-	for ( const required of [
-		'<p class="hp-page-hero__eyebrow">WORDCAMP US 2026 · PHOENIX</p>',
-		'<h2 class="wp-block-heading">I’ll be at WordCamp US.</h2>',
-		'I’ll be in Phoenix August 16–19, and I’ve been selected to staff the Core AI booth. If you’re hiring for WordPress support engineering, working on WordPress AI, or carrying an interesting incident, come say hello.',
-	] ) {
-		assert( wcusPanel.includes( required ), `The WCUS panel is missing exact event copy: ${ required }` );
-	}
-	assert(
-		JSON.stringify( extractLinks( wcusPanel ) ) === JSON.stringify( WCUS_ACTIONS ),
-		`The WCUS panel actions must match the approved ordered contract: ${ JSON.stringify( WCUS_ACTIONS ) }.`
-	);
-	assert(
-		JSON.stringify( extractLinks( hero ) ) === JSON.stringify( WCUS_ACTIONS ),
-		'The Digest hero must expose only the approved WCUS recruiter actions.'
-	);
 	const whyIndex = topLevelBlocks.findIndex( ( block ) => block.attrs.anchor === 'why-support-engineer-now' );
-	assert( whyIndex !== -1, 'Main digest draft must contain #why-support-engineer-now.' );
+
+	assert( heroIndex !== -1, 'Main digest draft must contain a top-level .hp-digest__hero block.' );
+	assert(
+		whyIndex !== -1,
+		'Main digest draft must contain #why-support-engineer-now.'
+	);
+	assert(
+		getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-wcus-callout' ) === 0,
+		'The Digest hero must not contain the WordCamp aside.'
+	);
+	assert(
+		getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-digest__primary-actions' ) === 0,
+		'The Digest hero must not repeat event actions.'
+	);
+
+	if ( requireEvent ) {
+		assert( eventIndex === 0, 'The WordCamp aside must be the first top-level block.' );
+		assert( heroIndex === 1, 'The Digest hero must immediately follow the WordCamp aside.' );
+		const eventBlock = topLevelBlocks[ eventIndex ];
+		assert( eventBlock.name === 'group', 'The WordCamp aside must remain a native Group block.' );
+		assert( eventBlock.attrs.tagName === 'aside', 'The WordCamp Group must serialize as an aside.' );
+		assert(
+			eventBlock.attrs.ariaLabel === 'I’ll be at WordCamp US.',
+			'The WordCamp aside must have the approved accessible name.'
+		);
+		const wcusPanel = getScopedElementMatch( markup, 'aside', 'hp-wcus-callout' )[ 2 ];
+		for ( const required of [
+			'<p class="hp-page-hero__eyebrow">WORDCAMP US 2026 · PHOENIX</p>',
+			'<p class="hp-wcus-callout__title">I’ll be at WordCamp US.</p>',
+			'I’ll be in Phoenix August 16–19, and I’ve been selected to staff the Core AI booth. If you’re hiring for WordPress support engineering, working on WordPress AI, or carrying an interesting incident, come say hello.',
+		] ) {
+			assert( wcusPanel.includes( required ), 'The WordCamp aside is missing approved event copy.' );
+		}
+		assert(
+			/<aside\b[^>]*aria-label="I’ll be at WordCamp US\."[^>]*>/.test( eventBlock.outer ),
+			'The WordCamp Group markup must serialize the accessible name.'
+		);
+		assert( ! /<h[1-6]\b/i.test( wcusPanel ), 'The WordCamp aside must not introduce a heading before the H1.' );
+		assert(
+			JSON.stringify( extractLinks( wcusPanel ) ) === JSON.stringify( WCUS_ACTIONS ),
+			'The WordCamp aside actions must match the approved ordered contract.'
+		);
+		assert(
+			getClassCount( wcusPanel, 'hp-wcus-callout__copy' ) === 1 &&
+				getClassCount( wcusPanel, 'hp-wcus-callout__actions' ) === 1,
+			'The WordCamp aside must contain one copy column and one action column.'
+		);
+		assert(
+			getClassCount( eventBlock.outer, 'hp-wcus-callout--event-first' ) === 1,
+			'The candidate WordCamp aside must carry its event-first layout modifier.'
+		);
+	} else {
+		assert( eventIndex === -1, 'Event-removal mode requires the WordCamp block to be absent.' );
+		assert( heroIndex === 0, 'After event removal, the Digest hero must become the first top-level block.' );
+	}
+
 	assert(
 		whyIndex === heroIndex + 1,
-		'Why Support Engineer now must immediately follow the hero-contained WCUS panel.'
+		'Why Support Engineer now must immediately follow the Digest hero.'
+	);
+
+	if ( ! requireEvent ) {
+		const openingClasses = [ 'hp-digest__hero', 'hp-support-now' ];
+		assert(
+			openingClasses.every( ( className ) => getClassCount( markup, className ) === 1 ),
+			'Event removal must leave one complete hero followed by the role argument.'
+		);
+	}
+
+	const closingZone = topLevelBlocks.find( ( block ) => hasBlockClass( block, 'hp-digest-closing-zone' ) );
+	assert( closingZone, 'Main digest draft must contain the final hp-digest-closing-zone Group.' );
+	assert(
+		getClassCount( closingZone.outer, 'hp-method-link' ) === 1 &&
+			getClassCount( closingZone.outer, 'hp-digest-cta' ) === 1,
+		'The closing zone must contain exactly one method section and one final invitation.'
 	);
 	assert(
 		markup.includes( 'Published 13 Jul 2026 · Last verified 11 Aug 2026' ),
@@ -317,7 +365,11 @@ function verifyMain( markup, themeVersion, deployedCommit ) {
 		`Main digest must link the deployed commit declared in README.md (${ deployedCommit.slice( 0, 7 ) }).`
 	);
 	assert( ! /profiles\.wordpress\.org/i.test( markup ), 'The evidence register must use immutable contribution evidence.' );
-	assert( countMatches( markup, /href=(['"])\/one-page-resume\/\1/g ) === 2, 'The candidate must expose the semantic résumé route in the WCUS and closing actions.' );
+	const expectedResumeLinks = requireEvent ? 2 : 1;
+	assert(
+		countMatches( markup, /href=(['"])\/one-page-resume\/\1/g ) === expectedResumeLinks,
+		'The candidate must expose the semantic résumé route in every present action group.'
+	);
 	assert(
 		! extractLinks( markup ).some( ( link ) => {
 			try {
