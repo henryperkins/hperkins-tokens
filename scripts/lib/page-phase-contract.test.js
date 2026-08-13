@@ -81,6 +81,26 @@ test( 'rendered recruiter probes keep snapshot and event-first draft phases dist
 	assert.match( prominent, /\.hp-action-rail:not\(\.wp-block-buttons\)/ );
 } );
 
+test( 'event-first Digest acceptance stress-tests 1024px at 200% root text size', () => {
+	const recruiter = fs.readFileSync(
+		path.join( themeRoot, 'scripts', 'verify-job-placement-pages.js' ),
+		'utf8'
+	);
+
+	assert.match(
+		recruiter,
+		/page\.name === 'digest'[\s\S]*DIGEST_EXPECTATIONS\.eventFirst[\s\S]*viewport\.width === 1024[\s\S]*! viewport\.zoomPercent[\s\S]*document\.documentElement\.style\.fontSize = '200%'[\s\S]*metrics\.textResize200 = await evaluate/
+	);
+	assert.match(
+		recruiter,
+		/\.hp-wcus-callout__actions \.wp-block-button__link[\s\S]*actionsContained/
+	);
+	assert.match(
+		recruiter,
+		/if \( result\.textResize200 \)[\s\S]*overflows when root text is resized to 200%[\s\S]*clips an event action when root text is resized to 200%/
+	);
+} );
+
 test( 'default recruiter source acceptance pins the complete shared WCUS presentation', () => {
 	const recruiter = fs.readFileSync(
 		path.join( themeRoot, 'scripts', 'verify-job-placement-pages.js' ),

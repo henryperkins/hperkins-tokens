@@ -560,6 +560,16 @@ function assertPageMetrics( result, page, viewport ) {
 		result.reducedMotion.offenders.length === 0,
 		`${ context } retains visible motion under reduced motion: ${ JSON.stringify( result.reducedMotion.offenders.slice( 0, 8 ) ) }.`
 	);
+	if ( result.textResize200 ) {
+		assert(
+			result.textResize200.scrollWidth <= result.textResize200.clientWidth + 1,
+			context + ' overflows when root text is resized to 200%.'
+		);
+		assert(
+			result.textResize200.actionsContained,
+			context + ' clips an event action when root text is resized to 200%.'
+		);
+	}
 
 	if ( page.name === 'digest' ) {
 		assert( result.primaryActions, `${ context } is missing the first-screen action rail.` );
@@ -1145,6 +1155,30 @@ async function inspectPage( cdp, page, viewport ) {
 				metrics.evidenceFragment.headingOutlineUnchanged =
 					outlineBeforeEvidence === outlineAfterEvidence;
 			}
+		}
+
+		if (
+			page.name === 'digest' &&
+			DIGEST_EXPECTATIONS.eventFirst &&
+			viewport.width === 1024 &&
+			! viewport.zoomPercent
+		) {
+			await evaluate( cdp, sessionId, "document.documentElement.style.fontSize = '200%'" );
+			await wait( 50 );
+			metrics.textResize200 = await evaluate( cdp, sessionId, '(() => {' +
+				'const root = document.documentElement;' +
+				"const actions = Array.from(document.querySelectorAll('.hp-wcus-callout__actions .wp-block-button__link'));" +
+				'return {' +
+					'clientWidth: root.clientWidth,' +
+					'scrollWidth: Math.max(root.scrollWidth, document.body.scrollWidth),' +
+					'actionsContained: actions.every((link) => {' +
+						'const box = link.getBoundingClientRect();' +
+						'const range = document.createRange();' +
+						'range.selectNodeContents(link);' +
+						'return Array.from(range.getClientRects()).every((rect) => rect.left >= box.left - 1 && rect.right <= box.right + 1);' +
+					'}),' +
+				'};' +
+			'})()' );
 		}
 
 		await cdp.send( 'Emulation.setEmulatedMedia', {
