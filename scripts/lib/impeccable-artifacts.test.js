@@ -177,7 +177,7 @@ test( 'rejects a theme.json type-scale step missing from DESIGN.md', ( t ) => {
 test( 'rejects a bare size value smuggled in beside the typography roles', ( t ) => {
 	const root = createFixture( t );
 	const designFile = path.join( root, 'DESIGN.md' );
-	const design = fs.readFileSync( designFile, 'utf8' );
+	const design = fs.readFileSync( designFile, 'utf8' ).replace( /\r\n/g, '\n' );
 	fs.writeFileSync(
 		designFile,
 		replaceOnce( design, '  scale:\n', '  caption: "0.75rem"\n  scale:\n' )
