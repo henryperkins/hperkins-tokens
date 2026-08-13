@@ -8,6 +8,21 @@ const { selectAboutSource, selectDigestSource } = require( './page-phase-contrac
 
 const themeRoot = path.join( __dirname, '..', '..' );
 
+function readRecruiterVerifier() {
+	return fs.readFileSync(
+		path.join( themeRoot, 'scripts', 'verify-job-placement-pages.js' ),
+		'utf8'
+	);
+}
+
+function sourceBetween( source, startMarker, endMarker ) {
+	const start = source.indexOf( startMarker );
+	const end = source.indexOf( endMarker, start + startMarker.length );
+	assert.notEqual( start, -1, `Missing source seam: ${ startMarker }` );
+	assert.notEqual( end, -1, `Missing source seam: ${ endMarker }` );
+	return source.slice( start, end );
+}
+
 test( 'selects the reviewed Digest candidate only when drafts are explicit', () => {
 	assert.equal(
 		selectDigestSource( [ '--drafts' ] ),
@@ -81,24 +96,75 @@ test( 'rendered recruiter probes keep snapshot and event-first draft phases dist
 	assert.match( prominent, /\.hp-action-rail:not\(\.wp-block-buttons\)/ );
 } );
 
-test( 'event-first Digest acceptance stress-tests 1024px at 200% root text size', () => {
-	const recruiter = fs.readFileSync(
-		path.join( themeRoot, 'scripts', 'verify-job-placement-pages.js' ),
-		'utf8'
+test( 'Digest text resize qualification is exact and requires a collected result', () => {
+	const recruiter = readRecruiterVerifier();
+	const qualifier = sourceBetween(
+		recruiter,
+		'function shouldInspectDigestTextResize',
+		'async function inspectDigestTextResize'
+	);
+	const inspectPage = sourceBetween(
+		recruiter,
+		'async function inspectPage',
+		'async function withChrome'
+	);
+	const assertMetrics = sourceBetween(
+		recruiter,
+		'function assertPageMetrics',
+		'async function inspectDisclosures'
 	);
 
 	assert.match(
-		recruiter,
-		/page\.name === 'digest'[\s\S]*DIGEST_EXPECTATIONS\.eventFirst[\s\S]*viewport\.width === 1024[\s\S]*! viewport\.zoomPercent[\s\S]*document\.documentElement\.style\.fontSize = '200%'[\s\S]*metrics\.textResize200 = await evaluate/
+		qualifier,
+		/return page\.name === 'digest' &&\s*DIGEST_EXPECTATIONS\.eventFirst &&\s*viewport\.width === 1024 &&\s*! viewport\.zoomPercent;/
 	);
 	assert.match(
-		recruiter,
-		/\.hp-wcus-callout__actions \.wp-block-button__link[\s\S]*actionsContained/
+		inspectPage,
+		/if \( shouldInspectDigestTextResize\( page, viewport \) \) \{\s*metrics\.textResize200 = await inspectDigestTextResize\( cdp, sessionId \);\s*\}/
 	);
 	assert.match(
-		recruiter,
-		/if \( result\.textResize200 \)[\s\S]*overflows when root text is resized to 200%[\s\S]*clips an event action when root text is resized to 200%/
+		assertMetrics,
+		/if \( shouldInspectDigestTextResize\( page, viewport \) \) \{\s*assert\( result\.textResize200, context \+ ' did not collect the required 200% root-text metrics\.' \);/
 	);
+	assert.doesNotMatch( assertMetrics, /if \( result\.textResize200 \)/ );
+} );
+
+test( 'Digest text resize probe restores the prior inline root size before returning', () => {
+	const probe = sourceBetween(
+		readRecruiterVerifier(),
+		'async function inspectDigestTextResize',
+		'function assertActions'
+	);
+
+	assert.match( probe, /const previousRootFontSize = await evaluate\([\s\S]*document\.documentElement\.style\.fontSize/ );
+	assert.match(
+		probe,
+		/try \{[\s\S]*document\.documentElement\.style\.fontSize = '200%'[\s\S]*return await evaluate[\s\S]*\} finally \{[\s\S]*document\.documentElement\.style\.fontSize = [\s\S]*previousRootFontSize/
+	);
+} );
+
+test( 'Digest text resize proof requires three visible actions with nonempty four-edge-contained text', () => {
+	const recruiter = readRecruiterVerifier();
+	const probe = sourceBetween(
+		recruiter,
+		'async function inspectDigestTextResize',
+		'function assertActions'
+	);
+	const assertMetrics = sourceBetween(
+		recruiter,
+		'function assertPageMetrics',
+		'async function inspectDisclosures'
+	);
+
+	assert.match( probe, /actionCount: actions\.length/ );
+	assert.match( probe, /actionsVisible: actionMetrics\.every\(\( action \) => action\.visible\s*\)/ );
+	assert.match( probe, /actionsHaveTextRects: actionMetrics\.every\(\( action \) => action\.textRectCount > 0\s*\)/ );
+	assert.match( probe, /rect\.left >= box\.left - 1 &&\s*rect\.right <= box\.right \+ 1 &&\s*rect\.top >= box\.top - 1 &&\s*rect\.bottom <= box\.bottom \+ 1/ );
+	assert.match( assertMetrics, /result\.textResize200\.actionCount === 3/ );
+	assert.match( assertMetrics, /result\.textResize200\.actionCount === DIGEST_EXPECTATIONS\.wcusActions\.length/ );
+	assert.match( assertMetrics, /result\.textResize200\.actionsVisible/ );
+	assert.match( assertMetrics, /result\.textResize200\.actionsHaveTextRects/ );
+	assert.match( assertMetrics, /result\.textResize200\.actionsContained/ );
 } );
 
 test( 'default recruiter source acceptance pins the complete shared WCUS presentation', () => {

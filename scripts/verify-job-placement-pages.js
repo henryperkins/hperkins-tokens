@@ -531,6 +531,64 @@ async function pressKey( cdp, sessionId, key ) {
 	await wait( 40 );
 }
 
+function shouldInspectDigestTextResize( page, viewport ) {
+	return page.name === 'digest' &&
+		DIGEST_EXPECTATIONS.eventFirst &&
+		viewport.width === 1024 &&
+		! viewport.zoomPercent;
+}
+
+async function inspectDigestTextResize( cdp, sessionId ) {
+	const previousRootFontSize = await evaluate(
+		cdp,
+		sessionId,
+		'document.documentElement.style.fontSize'
+	);
+	try {
+		await evaluate( cdp, sessionId, "document.documentElement.style.fontSize = '200%'" );
+		await wait( 50 );
+		return await evaluate( cdp, sessionId, `(() => {
+			const root = document.documentElement;
+			const actions = Array.from(document.querySelectorAll('.hp-wcus-callout__actions .wp-block-button__link'));
+			const actionMetrics = actions.map((link) => {
+				const box = link.getBoundingClientRect();
+				const range = document.createRange();
+				range.selectNodeContents(link);
+				const textRects = Array.from(range.getClientRects());
+				const style = getComputedStyle(link);
+				return {
+					visible: style.display !== 'none' &&
+						style.visibility !== 'hidden' &&
+						link.getClientRects().length > 0 &&
+						box.width > 0 &&
+						box.height > 0,
+					textRectCount: textRects.length,
+					contained: textRects.length > 0 && textRects.every((rect) =>
+						rect.left >= box.left - 1 &&
+						rect.right <= box.right + 1 &&
+						rect.top >= box.top - 1 &&
+						rect.bottom <= box.bottom + 1
+					),
+				};
+			});
+			return {
+				clientWidth: root.clientWidth,
+				scrollWidth: Math.max(root.scrollWidth, document.body.scrollWidth),
+				actionCount: actions.length,
+				actionsVisible: actionMetrics.every(( action ) => action.visible),
+				actionsHaveTextRects: actionMetrics.every(( action ) => action.textRectCount > 0),
+				actionsContained: actionMetrics.every(( action ) => action.contained),
+			};
+		})()` );
+	} finally {
+		await evaluate(
+			cdp,
+			sessionId,
+			`document.documentElement.style.fontSize = ${ JSON.stringify( previousRootFontSize ) }`
+		);
+	}
+}
+
 function assertActions( actual, expected, context, documentUrl ) {
 	assert( actual.length === expected.length, `${ context } has ${ actual.length } actions; expected ${ expected.length }.` );
 	for ( let index = 0; index < expected.length; index++ ) {
@@ -560,7 +618,24 @@ function assertPageMetrics( result, page, viewport ) {
 		result.reducedMotion.offenders.length === 0,
 		`${ context } retains visible motion under reduced motion: ${ JSON.stringify( result.reducedMotion.offenders.slice( 0, 8 ) ) }.`
 	);
-	if ( result.textResize200 ) {
+	if ( shouldInspectDigestTextResize( page, viewport ) ) {
+		assert( result.textResize200, context + ' did not collect the required 200% root-text metrics.' );
+		assert(
+			result.textResize200.actionCount === 3,
+			context + ` found ${ result.textResize200.actionCount } event actions at 200% root text; expected exactly 3.`
+		);
+		assert(
+			result.textResize200.actionCount === DIGEST_EXPECTATIONS.wcusActions.length,
+			context + ' changed the expected event action count at 200% root text.'
+		);
+		assert(
+			result.textResize200.actionsVisible,
+			context + ' hides an event action at 200% root text.'
+		);
+		assert(
+			result.textResize200.actionsHaveTextRects,
+			context + ' renders an event action without measurable text at 200% root text.'
+		);
 		assert(
 			result.textResize200.scrollWidth <= result.textResize200.clientWidth + 1,
 			context + ' overflows when root text is resized to 200%.'
@@ -1157,28 +1232,8 @@ async function inspectPage( cdp, page, viewport ) {
 			}
 		}
 
-		if (
-			page.name === 'digest' &&
-			DIGEST_EXPECTATIONS.eventFirst &&
-			viewport.width === 1024 &&
-			! viewport.zoomPercent
-		) {
-			await evaluate( cdp, sessionId, "document.documentElement.style.fontSize = '200%'" );
-			await wait( 50 );
-			metrics.textResize200 = await evaluate( cdp, sessionId, '(() => {' +
-				'const root = document.documentElement;' +
-				"const actions = Array.from(document.querySelectorAll('.hp-wcus-callout__actions .wp-block-button__link'));" +
-				'return {' +
-					'clientWidth: root.clientWidth,' +
-					'scrollWidth: Math.max(root.scrollWidth, document.body.scrollWidth),' +
-					'actionsContained: actions.every((link) => {' +
-						'const box = link.getBoundingClientRect();' +
-						'const range = document.createRange();' +
-						'range.selectNodeContents(link);' +
-						'return Array.from(range.getClientRects()).every((rect) => rect.left >= box.left - 1 && rect.right <= box.right + 1);' +
-					'}),' +
-				'};' +
-			'})()' );
+		if ( shouldInspectDigestTextResize( page, viewport ) ) {
+			metrics.textResize200 = await inspectDigestTextResize( cdp, sessionId );
 		}
 
 		await cdp.send( 'Emulation.setEmulatedMedia', {
