@@ -45,18 +45,29 @@ test( 'rejects a record that disagrees with its own links', () => {
 	assert.throws( () => parseReleaseRecord( README, '' ), /must declare the current theme Version/ );
 } );
 
-test( 'the checked-in record parses, and both public artifacts read it from here', () => {
+test( 'the checked-in record parses, and the remaining release-claim artifact reads it from here', () => {
 	const record = readReleaseRecord( themeRoot );
 
 	assert.match( record.version, /^\d+\.\d+\.\d+$/ );
 	assert.match( record.deployedCommit, /^[0-9a-f]{40}$/ );
 
-	for ( const verifier of [ 'verify-job-placement-digest-source.js', 'verify-placement-artifacts.js' ] ) {
-		const source = fs.readFileSync( path.join( themeRoot, 'scripts', verifier ), 'utf8' );
-		assert.match(
-			source,
-			/require\( '\.\/lib\/release-record' \)/,
-			`${ verifier } must read the released version from the shared record, not from style.css.`
-		);
-	}
+	const artifactVerifier = fs.readFileSync(
+		path.join( themeRoot, 'scripts', 'verify-placement-artifacts.js' ),
+		'utf8'
+	);
+	assert.match(
+		artifactVerifier,
+		/require\( '\.\/lib\/release-record' \)/,
+		'verify-placement-artifacts.js must read the released version from the shared record, not from style.css.'
+	);
+
+	const digestVerifier = fs.readFileSync(
+		path.join( themeRoot, 'scripts', 'verify-job-placement-digest-source.js' ),
+		'utf8'
+	);
+	assert.doesNotMatch(
+		digestVerifier,
+		/require\( '\.\/lib\/release-record' \)/,
+		'The compact Digest has no theme-release claim and must not retain its former release-record dependency.'
+	);
 } );

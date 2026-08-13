@@ -2,7 +2,6 @@ const DIGEST_COMPACT_CONTEXT = '@media (min-width: 601px) and (max-width: 1023px
 const DIGEST_WIDE_CONTEXT = '@media (min-width: 782px)';
 const DIGEST_NARROW_CONTEXT = '@media (max-width: 781px)';
 const DIGEST_PHONE_CONTEXT = '@media (max-width: 600px)';
-const DIGEST_EDITORIAL_CONTEXT = '@media (min-width: 1024px)';
 const DIGEST_STACK_CONTEXT = '@media (max-width: 359px)';
 
 const DIGEST_ACCEPTED_ACTION_CONTRACTS = [
@@ -125,27 +124,38 @@ const DIGEST_LOWER_CONTRACTS = [
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--6)' },
 	},
 	{
-		selector: '.hp-digest-closing-zone',
-		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--9)' },
+		selector: '.hp-digest-brief > p',
+		declarations: { 'max-inline-size': 'var(--wp--custom--measure--prose)' },
 	},
 	{
-		selector: '.hp-digest-editorial-split',
-		atContext: DIGEST_EDITORIAL_CONTEXT,
+		selector: '.hp-digest-brief__columns.wp-block-columns',
 		declarations: {
-			display: 'grid',
-			'grid-template-columns': 'minmax(12rem, 0.7fr) minmax(0, 1.3fr)',
-			gap: 'var(--wp--preset--spacing--8)',
 			'align-items': 'start',
+			gap: 'var(--wp--preset--spacing--6)',
+			'margin-block-start': 'var(--wp--preset--spacing--5)',
 		},
 	},
 	{
-		selector: '.hp-digest-closing-zone',
-		atContext: DIGEST_EDITORIAL_CONTEXT,
+		selector: '.hp-digest-brief__columns > .wp-block-column',
+		declarations: { 'min-inline-size': '0' },
+	},
+	{
+		selector: '.hp-digest-brief__columns h3',
+		declarations: { 'margin-block-start': '0' },
+	},
+	{
+		selector: '.hp-digest-brief__columns ul',
 		declarations: {
-			display: 'grid',
-			'grid-template-columns': 'repeat(2, minmax(0, 1fr))',
-			gap: 'var(--wp--preset--spacing--6)',
-			'align-items': 'start',
+			'margin-block-end': '0',
+			'padding-inline-start': 'var(--wp--preset--spacing--5)',
+		},
+	},
+	{
+		selector: '.hp-digest-brief__gap',
+		declarations: {
+			'margin-block-start': 'var(--wp--preset--spacing--5)',
+			'padding-block-start': 'var(--wp--preset--spacing--4)',
+			'border-block-start': '1px solid var(--wp--custom--border--hair)',
 		},
 	},
 	{
@@ -167,16 +177,6 @@ const DIGEST_LOWER_CONTRACTS = [
 		selector: '.hp-evidence-ledger',
 		atContext: DIGEST_NARROW_CONTEXT,
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--5)' },
-	},
-	{
-		selector: '.hp-digest-closing-zone',
-		atContext: DIGEST_NARROW_CONTEXT,
-		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--7)' },
-	},
-	{
-		selector: '.hp-digest-closing-zone > .hp-digest-cta',
-		atContext: DIGEST_NARROW_CONTEXT,
-		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--5) !important' },
 	},
 	{
 		selector: '.hp-proof-cards > .hp-proof-card.is-style-hperkins-proof-card',
@@ -240,7 +240,6 @@ module.exports = {
 	DIGEST_ACCEPTED_ACTION_CONTRACTS,
 	DIGEST_COMPACT_CONTEXT,
 	DIGEST_COMPACT_CONTRACTS,
-	DIGEST_EDITORIAL_CONTEXT,
 	DIGEST_LOWER_CONTRACTS,
 	DIGEST_NARROW_CONTEXT,
 	DIGEST_OPENING_CONTRACTS,

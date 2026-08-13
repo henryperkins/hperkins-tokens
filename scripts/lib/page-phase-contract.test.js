@@ -93,7 +93,10 @@ test( 'rendered recruiter probes keep snapshot and event-first draft phases dist
 	assert.match( recruiter, /document\.querySelector\('main \.hp-wcus-callout'\)/ );
 	assert.match( recruiter, /primaryRail\.closest\('\.hp-wcus-callout'\)/ );
 	assert.doesNotMatch( recruiter, /hero\?\.querySelector\('\.hp-wcus-callout'\)/ );
-	assert.match( recruiter, /evidenceFragment/ );
+	assert.match( recruiter, /supportBrief/ );
+	assert.match( recruiter, /documentHeight/ );
+	assert.match( recruiter, /DIGEST_HEIGHT_BUDGETS/ );
+	assert.match( recruiter, /'event\|hero\|brief'/ );
 	assert.match( recruiter, /zoom-200-from-1024/ );
 
 	const prominent = fs.readFileSync(

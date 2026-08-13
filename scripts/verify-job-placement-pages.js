@@ -68,6 +68,8 @@ function deriveDigestExpectations( html, { requireEventFirst = false } = {} ) {
 	const eventIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-wcus-callout' ) );
 	const heroIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-digest__hero' ) );
 	const whyIndex = topLevelBlocks.findIndex( ( block ) => block.attrs.anchor === 'why-support-engineer-now' );
+	const supportBriefIndex = topLevelBlocks.findIndex( ( block ) => block.attrs.anchor === 'support-brief' );
+	const briefProofs = findWpBlocksByClass( html, 'list', 'hp-digest-brief__proofs' )[ 0 ] || null;
 
 	assert( h1, 'Selected Digest body has no H1.' );
 	assert( primaryRail, 'Selected Digest body has no primary action rail.' );
@@ -78,7 +80,8 @@ function deriveDigestExpectations( html, { requireEventFirst = false } = {} ) {
 		const event = topLevelBlocks[ eventIndex ];
 		assert( eventIndex === 0, 'Selected Digest body must begin with the WordCamp aside.' );
 		assert( heroIndex === 1, 'Selected Digest hero must immediately follow the WordCamp aside.' );
-		assert( whyIndex === 2, 'Why Support Engineer now must immediately follow the Digest hero.' );
+		assert( supportBriefIndex === 2, 'The support brief must immediately follow the Digest hero.' );
+		assert( topLevelBlocks.length === 4, 'The selected recruiter brief must contain four top-level blocks.' );
 		assert( event.attrs.tagName === 'aside', 'Selected Digest WordCamp Group must serialize as an aside.' );
 		assert(
 			event.attrs.ariaLabel === 'I’ll be at WordCamp US.',
@@ -102,7 +105,12 @@ function deriveDigestExpectations( html, { requireEventFirst = false } = {} ) {
 		assert( whyIndex === heroIndex + 1, 'Accepted Digest snapshot has the wrong section order.' );
 	}
 	assert( wcusActions, 'Selected Digest WordCamp aside has no .hp-wcus-callout__actions.' );
-	assert( rootCauseSection, 'Selected Digest body has no #root-cause-investigation section.' );
+	if ( requireEventFirst ) {
+		assert( briefProofs, 'Selected Digest recruiter brief has no proof list.' );
+		assert( ! rootCauseSection, 'Selected Digest recruiter brief must not repeat the long-form root-cause section.' );
+	} else {
+		assert( rootCauseSection, 'Accepted Digest body has no #root-cause-investigation section.' );
+	}
 
 	const proofLabels = rootCauseSection
 		? [ ...rootCauseSection[ 1 ].matchAll( /<div\b[^>]*\bhp-debug-proof__item\b[^>]*>[\s\S]*?<dt\b[^>]*>[\s\S]*?<p\b[^>]*>([^<]+)<\/p>[\s\S]*?<\/dt>/gi ) ]
@@ -117,6 +125,7 @@ function deriveDigestExpectations( html, { requireEventFirst = false } = {} ) {
 		closingEyebrow: extractExactText( eyebrows.at( -1 )[ 1 ], { label: 'selected Digest closing eyebrow' } ),
 		closingHeading: headings.filter( ( heading ) => heading.level === 2 ).at( -1 ).text,
 		wcusActions: findLinks( wcusActions, 'selected Digest WCUS actions' ),
+		briefProofs: briefProofs ? findLinks( briefProofs, 'selected Digest proof list' ) : [],
 		proofLabels,
 	};
 }
@@ -138,6 +147,22 @@ const DIGEST_VIEWPORTS = [
 	{ name: 'mobile-320', width: 320, height: 1000, mobile: true },
 	{ name: 'zoom-200-from-1024', width: 512, height: 500, mobile: false, zoomPercent: 200 },
 ];
+
+// These ceilings are approximately half the accepted snapshot's measured
+// document height at the three directly comparable widths, with interpolated
+// allowances for the breakpoint probes between them. The zoom-equivalent probe
+// has its own reflow contract and is intentionally excluded from length gating.
+const DIGEST_HEIGHT_BUDGETS = {
+	'desktop-1440': 3350,
+	'desktop-1024': 3500,
+	'compact-upper-1023': 3700,
+	'event-wide-782': 4200,
+	'event-linear-781': 4400,
+	'tablet-768': 4500,
+	'phone-boundary-600': 5000,
+	'mobile-390': 6000,
+	'mobile-320': 6500,
+};
 
 const APPENDIX_VIEWPORTS = [
 	{ name: 'desktop-1440', width: 1440, height: 1000, mobile: false },
@@ -266,10 +291,14 @@ function verifySourceContracts() {
 	}
 	if ( DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
 		assert( DIGEST_EXPECTATIONS.wcusActions.length === 3, 'Selected Digest WCUS callout must expose exactly three ordered actions.' );
-		assert(
-			DIGEST_EXPECTATIONS.proofLabels.join( '|' ) === 'Signal|Diagnosis|Constraint|Result',
-			`Selected Digest proof order is ${ DIGEST_EXPECTATIONS.proofLabels.join( ', ' ) }; expected Signal, Diagnosis, Constraint, Result.`
-		);
+		if ( DIGEST_EXPECTATIONS.eventFirst ) {
+			assert( DIGEST_EXPECTATIONS.briefProofs.length === 3, 'Selected recruiter brief must expose exactly three proof links.' );
+		} else {
+			assert(
+				DIGEST_EXPECTATIONS.proofLabels.join( '|' ) === 'Signal|Diagnosis|Constraint|Result',
+				`Selected Digest proof order is ${ DIGEST_EXPECTATIONS.proofLabels.join( ', ' ) }; expected Signal, Diagnosis, Constraint, Result.`
+			);
+		}
 	}
 
 	verifyStackedLedgerLabels( pageCss );
@@ -605,6 +634,17 @@ function assertActions( actual, expected, context, documentUrl ) {
 	}
 }
 
+function assertLinks( actual, expected, context, documentUrl ) {
+	assert( actual.length === expected.length, `${ context } has ${ actual.length } links; expected ${ expected.length }.` );
+	for ( let index = 0; index < expected.length; index++ ) {
+		const link = actual[ index ];
+		const contract = expected[ index ];
+		const renderedHref = stripWpcomCacheVersionFromRenderedHref( link.href, documentUrl );
+		assert( link.text === contract.text, `${ context } link ${ index + 1 } is "${ link.text }"; expected "${ contract.text }".` );
+		assert( renderedHref === contract.href, `${ context } "${ link.text }" points to ${ link.href}; expected ${ contract.href}.` );
+	}
+}
+
 function assertPageMetrics( result, page, viewport ) {
 	const context = `${ result.url } at ${ viewport.width }px`;
 	assert( result.pathname === page.route, `${ context } resolved to unexpected path ${ result.pathname}.` );
@@ -666,8 +706,8 @@ function assertPageMetrics( result, page, viewport ) {
 			);
 			assert( result.eventLandmark.beforeH1, context + ' does not put the WordCamp landmark before the H1.' );
 			assert(
-				result.mainOpening.join( '|' ) === 'event|hero|why',
-				context + ' does not keep event, hero, and role argument in one visual/source order.'
+				result.mainOpening.join( '|' ) === 'event|hero|brief',
+				context + ' does not keep event, hero, and recruiter brief in one visual/source order.'
 			);
 			assert( result.primaryActions.inEvent, context + ' first-screen actions are outside the WordCamp landmark.' );
 			assert( result.primaryActions.top >= -1, context + ' first-screen actions begin above the viewport.' );
@@ -732,14 +772,14 @@ function assertPageMetrics( result, page, viewport ) {
 			}
 
 			if ( viewport.width === 1024 && ! viewport.zoomPercent ) {
-				assert( result.opening.hero && result.opening.why, context + ' is missing opening-section geometry.' );
+				assert( result.opening.hero && result.opening.brief, context + ' is missing opening-section geometry.' );
 				assert(
 					result.opening.hero.bottom <= viewport.height + 1,
 					context + ' does not keep the complete role proposition in the first 1000px.'
 				);
 				assert(
-					result.opening.why.top <= viewport.height + 64,
-					context + ' does not begin Why Support Engineer now near the 1024x1000 fold.'
+					result.opening.brief.top <= viewport.height + 64,
+					context + ' does not begin the recruiter brief near the 1024x1000 fold.'
 				);
 			}
 
@@ -754,52 +794,46 @@ function assertPageMetrics( result, page, viewport ) {
 				);
 			}
 
-			assert(
-				result.editorialSplits.every( ( split ) => split.heading && split.body ),
-				context + ' is missing editorial split geometry.'
-			);
-			assert(
-				result.closingZone && result.closingZone.method && result.closingZone.panel,
-				context + ' is missing closing-zone geometry.'
-			);
-			if ( viewport.width >= 1024 ) {
-				for ( const split of result.editorialSplits ) {
-					assert( split.heading.right <= split.body.left + 2, context + ' loses an editorial heading rail.' );
-				}
-				assert( result.proofCards.length === 3, context + ' does not render three proof cards.' );
+			assert( result.supportBrief, context + ' is missing the compact support brief.' );
+			assert( result.supportBrief.fit && result.supportBrief.proof, context + ' is missing support-brief column geometry.' );
+			assert( result.supportBrief.fitItemCount === 3, context + ' does not render three working-style points.' );
+			assert( result.supportBrief.proofItemCount === 3, context + ' does not render three selected proofs.' );
+			assertLinks( result.supportBrief.proofLinks, DIGEST_EXPECTATIONS.briefProofs, `${ context } selected proofs`, result.url );
+			assert( result.longformCount === 0, context + ' still renders a removed long-form Digest section.' );
+			if ( viewport.width >= 782 ) {
 				assert(
-					result.proofCards.every( ( card ) => Math.abs( card.top - result.proofCards[ 0 ].top ) <= 2 ),
-					context + ' does not keep the proof cards in one row.'
-				);
-				for ( let index = 1; index < result.proofCards.length; index++ ) {
-					const gap = result.proofCards[ index ].left - result.proofCards[ index - 1 ].right;
-					assert(
-						Math.abs( gap - 16 ) <= 2,
-						context + ' does not keep a 16px gap between proof cards.'
-					);
-				}
-				assert(
-					result.closingZone.method.right <= result.closingZone.panel.left + 2,
-					context + ' does not render the method and invitation as a two-column close.'
-				);
-				assert( result.debugProofItems.length === 4, context + ' does not render four debug proof items.' );
-				assert(
-					Math.abs( result.debugProofItems[ 0 ].top - result.debugProofItems[ 1 ].top ) <= 2 &&
-						Math.abs( result.debugProofItems[ 2 ].top - result.debugProofItems[ 3 ].top ) <= 2 &&
-						result.debugProofItems[ 2 ].top >= result.debugProofItems[ 0 ].bottom - 1,
-					context + ' does not keep Signal, Diagnosis, Constraint, and Result in a 2x2 grid.'
+					result.supportBrief.fit.right <= result.supportBrief.proof.left + 2,
+					context + ' does not keep working style and proof in two scan-friendly columns.'
 				);
 			} else {
-				for ( const split of result.editorialSplits ) {
-					assert(
-						split.body.top >= split.heading.bottom - 1,
-						context + ' does not return an editorial split to semantic linear order.'
-					);
-				}
 				assert(
-					result.closingZone.panel.top >= result.closingZone.method.bottom - 1,
-					context + ' does not stack the final invitation after the method.'
+					result.supportBrief.proof.top >= result.supportBrief.fit.bottom - 1,
+					context + ' does not stack selected proof after working style.'
 				);
+			}
+			if ( ! viewport.zoomPercent ) {
+				const heightBudget = DIGEST_HEIGHT_BUDGETS[ viewport.name ];
+				assert( heightBudget, context + ' has no recruiter-brief height budget.' );
+				assert(
+					result.documentHeight <= heightBudget,
+					`${ context } is ${ result.documentHeight }px tall; recruiter-brief budget is ${ heightBudget }px.`
+				);
+			}
+		} else {
+			if ( viewport.width >= 782 ) {
+				assert(
+					result.wcus.actions.every( ( action ) => Math.abs( action.top - result.wcus.actions[ 0 ].top ) <= 2 ) &&
+						result.wcus.actions.every( ( action, index ) => index === 0 || action.left > result.wcus.actions[ index - 1 ].left ),
+					`${ context } does not keep the three WCUS actions in ordered columns.`
+				);
+			} else {
+				for ( let index = 0; index < result.wcus.actions.length; index++ ) {
+					const action = result.wcus.actions[ index ];
+					assert( action.width >= result.wcus.rail.width - 12, `${ context } WCUS action ${ index + 1 } does not fill its stacked row.` );
+					if ( index > 0 ) {
+						assert( action.top >= result.wcus.actions[ index - 1 ].bottom - 1, `${ context } WCUS action ${ index + 1 } does not stack below action ${ index }.` );
+					}
+				}
 			}
 
 			if ( viewport.width === 390 ) {
@@ -824,57 +858,32 @@ function assertPageMetrics( result, page, viewport ) {
 				);
 			}
 
-			assert( result.evidenceFragment, context + ' did not exercise the evidence fragment.' );
-			assert( result.evidenceFragment.hash === '#evidence-register', context + ' did not activate the evidence fragment.' );
-			assert( result.evidenceFragment.focused, context + ' did not focus the evidence register.' );
-			assert( result.evidenceFragment.tabindex === '-1', context + ' made evidence fragment focus persistent.' );
-			assert( result.evidenceFragment.headingOutlineUnchanged, context + ' changed the heading outline during evidence focus.' );
+			assert( result.proofItems.length === 4, `${ context } renders ${ result.proofItems.length } root-cause proof items; expected 4.` );
 			assert(
-				result.evidenceFragment.targetTop >= result.evidenceFragment.headerBottom - 1 &&
-					result.evidenceFragment.targetTop < viewport.height,
-				context + ' did not scroll the evidence register clear of the sticky header.'
+				result.proofItems.map( ( item ) => item.label ).join( '|' ) === DIGEST_EXPECTATIONS.proofLabels.join( '|' ),
+				`${ context } changes the Signal → Diagnosis → Constraint → Result proof order.`
 			);
-		} else if ( viewport.width >= 782 ) {
-			assert(
-				result.wcus.actions.every( ( action ) => Math.abs( action.top - result.wcus.actions[ 0 ].top ) <= 2 ) &&
-					result.wcus.actions.every( ( action, index ) => index === 0 || action.left > result.wcus.actions[ index - 1 ].left ),
-				`${ context } does not keep the three WCUS actions in ordered columns.`
-			);
-		} else {
-			for ( let index = 0; index < result.wcus.actions.length; index++ ) {
-				const action = result.wcus.actions[ index ];
-				assert( action.width >= result.wcus.rail.width - 12, `${ context } WCUS action ${ index + 1 } does not fill its stacked row.` );
-				if ( index > 0 ) {
-					assert( action.top >= result.wcus.actions[ index - 1 ].bottom - 1, `${ context } WCUS action ${ index + 1 } does not stack below action ${ index }.` );
+			if ( viewport.width < 782 ) {
+				for ( let index = 1; index < result.proofItems.length; index++ ) {
+					assert(
+						result.proofItems[ index ].top >= result.proofItems[ index - 1 ].bottom - 1,
+						`${ context } does not stack proof item ${ index + 1 } below item ${ index }.`
+					);
 				}
 			}
+			assert( result.rootCauseFragment, `${ context } did not exercise #root-cause-investigation.` );
+			assert( result.rootCauseFragment.hash === '#root-cause-investigation', `${ context } did not retain the root-cause fragment hash.` );
+			assert( result.rootCauseFragment.focused, `${ context } did not focus the root-cause proof section.` );
+			assert( result.rootCauseFragment.tabindex === '-1', `${ context } did not keep fragment focus programmatic-only.` );
+			assert( result.rootCauseFragment.headerPresent, `${ context } is missing the masthead used by the fragment-clearance contract.` );
+			assert( result.rootCauseFragment.headerPosition === 'sticky', `${ context } masthead is ${ result.rootCauseFragment.headerPosition || 'missing' }, not sticky.` );
+			assert(
+				result.rootCauseFragment.targetTop >= result.rootCauseFragment.headerBottom - 1 &&
+					result.rootCauseFragment.targetTop < viewport.height,
+				`${ context } did not scroll the root-cause proof section clear of the sticky header.`
+			);
+			assert( result.rootCauseFragment.headingOutlineUnchanged, `${ context } changed the heading outline during fragment focus.` );
 		}
-
-		assert( result.proofItems.length === 4, `${ context } renders ${ result.proofItems.length } root-cause proof items; expected 4.` );
-		assert(
-			result.proofItems.map( ( item ) => item.label ).join( '|' ) === DIGEST_EXPECTATIONS.proofLabels.join( '|' ),
-			`${ context } changes the Signal → Diagnosis → Constraint → Result proof order.`
-		);
-		if ( viewport.width < 782 ) {
-			for ( let index = 1; index < result.proofItems.length; index++ ) {
-				assert(
-					result.proofItems[ index ].top >= result.proofItems[ index - 1 ].bottom - 1,
-					`${ context } does not stack proof item ${ index + 1 } below item ${ index }.`
-				);
-			}
-		}
-		assert( result.rootCauseFragment, `${ context } did not exercise #root-cause-investigation.` );
-		assert( result.rootCauseFragment.hash === '#root-cause-investigation', `${ context } did not retain the root-cause fragment hash.` );
-		assert( result.rootCauseFragment.focused, `${ context } did not focus the root-cause proof section.` );
-		assert( result.rootCauseFragment.tabindex === '-1', `${ context } did not keep fragment focus programmatic-only.` );
-		assert( result.rootCauseFragment.headerPresent, `${ context } is missing the masthead used by the fragment-clearance contract.` );
-		assert( result.rootCauseFragment.headerPosition === 'sticky', `${ context } masthead is ${ result.rootCauseFragment.headerPosition || 'missing' }, not sticky.` );
-		assert(
-			result.rootCauseFragment.targetTop >= result.rootCauseFragment.headerBottom - 1 &&
-				result.rootCauseFragment.targetTop < viewport.height,
-			`${ context } did not scroll the root-cause proof section clear of the sticky header.`
-		);
-		assert( result.rootCauseFragment.headingOutlineUnchanged, `${ context } changed the heading outline during fragment focus.` );
 	} else {
 		assert( result.fragment, `${ context } is missing #resume-keyword-bank.` );
 		assert( result.fragment.tagName === 'SECTION', `${ context } assigns #resume-keyword-bank to ${ result.fragment.tagName}, not SECTION.` );
@@ -1071,12 +1080,10 @@ async function inspectPage( cdp, page, viewport ) {
 			const wcusCopy = wcus?.querySelector('.hp-wcus-callout__copy');
 			const wcusActionsRoot = wcus?.querySelector('.hp-wcus-callout__actions');
 			const why = document.getElementById('why-support-engineer-now');
-			const editorialSplits = Array.from(document.querySelectorAll('.hp-digest-editorial-split'));
-			const proofCards = Array.from(document.querySelectorAll('.hp-proof-cards > .hp-proof-card'));
+			const supportBrief = document.getElementById('support-brief');
+			const briefFit = supportBrief?.querySelector('.hp-digest-brief__fit');
+			const briefProof = supportBrief?.querySelector('.hp-digest-brief__proof');
 			const debugProofItems = Array.from(document.querySelectorAll('#root-cause-investigation .hp-debug-proof__item'));
-			const closingZone = document.querySelector('.hp-digest-closing-zone');
-			const method = closingZone?.querySelector('.hp-method-link');
-			const closingPanel = closingZone?.querySelector('.hp-digest-cta');
 			const firstEvidenceRow = document.querySelector('.hp-evidence-table tbody tr');
 			const eventLinks = Array.from(wcusActionsRoot?.querySelectorAll('a') || []);
 			const focusables = Array.from(document.querySelectorAll('main a[href], main button:not([disabled]), main summary'))
@@ -1096,6 +1103,7 @@ async function inspectPage( cdp, page, viewport ) {
 				pathname: location.pathname,
 				clientWidth: document.documentElement.clientWidth,
 				scrollWidth: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+				documentHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
 				h1s: Array.from(document.querySelectorAll('h1')).map((heading) => heading.textContent.trim().replace(/\\s+/g, ' ')),
 				firstHeadingLevel: headings[0]?.level || null,
 				headingSkips,
@@ -1113,6 +1121,7 @@ async function inspectPage( cdp, page, viewport ) {
 						if (element.matches('.hp-wcus-callout')) return 'event';
 						if (element.matches('.hp-digest__hero')) return 'hero';
 						if (element.matches('#why-support-engineer-now')) return 'why';
+						if (element.matches('#support-brief')) return 'brief';
 						return element.className || element.tagName;
 					}),
 				primaryActions: primaryRail ? {
@@ -1137,20 +1146,20 @@ async function inspectPage( cdp, page, viewport ) {
 				opening: {
 					hero: rect(hero),
 					why: rect(why),
+					brief: rect(supportBrief),
 				},
-				editorialSplits: editorialSplits.map((section) => ({
-					heading: rect(section.querySelector(':scope > h2')),
-					body: rect(section.querySelector(':scope > .hp-digest-section__body')),
-				})),
-				proofCards: proofCards.map((card) => rect(card)),
-				debugProofItems: debugProofItems.map((item) => ({
-					label: item.querySelector('dt')?.textContent.trim() || '',
-					...rect(item),
-				})),
-				closingZone: closingZone ? {
-					method: rect(method),
-					panel: rect(closingPanel),
+				supportBrief: supportBrief ? {
+					section: rect(supportBrief),
+					fit: rect(briefFit),
+					proof: rect(briefProof),
+					fitItemCount: briefFit?.querySelectorAll('li').length || 0,
+					proofItemCount: briefProof?.querySelectorAll('li').length || 0,
+					proofLinks: Array.from(briefProof?.querySelectorAll('a') || []).map((link) => ({
+						text: link.textContent.trim().replace(/\\s+/g, ' '),
+						href: link.getAttribute('href'),
+					})),
 				} : null,
+				longformCount: document.querySelectorAll('.hp-fit-ledger, .hp-incident-card, .hp-theme-governance, .hp-evidence-ledger, .hp-method-link').length,
 				evidenceRecord: firstEvidenceRow ? {
 					title: rect(firstEvidenceRow.querySelector('th')),
 					state: rect(firstEvidenceRow.querySelector('td:nth-of-type(1)')),
@@ -1180,7 +1189,11 @@ async function inspectPage( cdp, page, viewport ) {
 				);
 			}
 		}
-		if ( page.name === 'digest' && DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
+		if (
+			page.name === 'digest' &&
+			DIGEST_EXPECTATIONS.wcusActions.length > 0 &&
+			! DIGEST_EXPECTATIONS.eventFirst
+		) {
 			const initialOutline = await evaluate( cdp, sessionId, `Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')` );
 			await evaluate( cdp, sessionId, `location.hash = 'root-cause-investigation'` );
 			await wait( 100 );
@@ -1199,41 +1212,6 @@ async function inspectPage( cdp, page, viewport ) {
 			})()` );
 			const finalOutline = await evaluate( cdp, sessionId, `Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')` );
 			metrics.rootCauseFragment.headingOutlineUnchanged = initialOutline === finalOutline;
-
-			if ( DIGEST_EXPECTATIONS.eventFirst ) {
-				const outlineBeforeEvidence = await evaluate(
-					cdp,
-					sessionId,
-					"Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')"
-				);
-				const hasEvidenceAction = await evaluate( cdp, sessionId, '(() => {' +
-					"location.hash = '';" +
-					"const action = document.querySelector('.hp-wcus-callout__actions a[href=\"#evidence-register\"]');" +
-					'action?.focus();' +
-					'return !!action;' +
-				'})()' );
-				assert( hasEvidenceAction, `${ url } has no event action targeting #evidence-register.` );
-				await pressKey( cdp, sessionId, 'Enter' );
-				await wait( 100 );
-				metrics.evidenceFragment = await evaluate( cdp, sessionId, '(() => {' +
-					"const target = document.getElementById('evidence-register');" +
-					"const header = document.querySelector('header.wp-block-template-part');" +
-					'return {' +
-						'hash: location.hash,' +
-						'focused: document.activeElement === target,' +
-						"tabindex: target?.getAttribute('tabindex') || null," +
-						'targetTop: target?.getBoundingClientRect().top ?? null,' +
-						'headerBottom: header?.getBoundingClientRect().bottom ?? null,' +
-					'};' +
-				'})()' );
-				const outlineAfterEvidence = await evaluate(
-					cdp,
-					sessionId,
-					"Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')"
-				);
-				metrics.evidenceFragment.headingOutlineUnchanged =
-					outlineBeforeEvidence === outlineAfterEvidence;
-			}
 		}
 
 		if ( shouldInspectDigestTextResize( page, viewport ) ) {
@@ -1324,8 +1302,12 @@ async function verifyRenderedContracts() {
 			for ( const viewport of page.viewports ) {
 				const result = await inspectPage( cdp, page, viewport );
 				assertPageMetrics( result, page, viewport );
+				const heightSummary =
+					page.name === 'digest' && DIGEST_EXPECTATIONS.eventFirst && ! viewport.zoomPercent
+						? `, document height ${ result.documentHeight }px/${ DIGEST_HEIGHT_BUDGETS[ viewport.name ] }px budget`
+						: '';
 				console.log(
-					`verified ${ result.url } at ${ viewport.width }px: one H1, sequential outline, no document overflow, reduced motion`
+					`verified ${ result.url } at ${ viewport.width }px: one H1, sequential outline, no document overflow, reduced motion${ heightSummary }`
 				);
 			}
 		}
