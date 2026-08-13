@@ -8,8 +8,8 @@ name: Verify
 #
 # The source job runs only checks that are true without a site: PHP syntax,
 # script unit tests, the `--source-only` halves of the header and typography
-# contracts, the docs-ownership contract, and release-version agreement across
-# style.css and readme.txt.
+# contracts, the docs-ownership and Impeccable artifact contracts, and
+# release-version agreement across style.css and readme.txt.
 #
 # The source job stays database-independent. After a main or release-tag push,
 # and on the daily schedule, the second job calls the read-only production
@@ -80,6 +80,7 @@ jobs:
             scripts/lib/content-integrity.test.js \
             scripts/lib/content-ownership-docs.test.js \
             scripts/lib/event-copy-retirement-runbook.test.js \
+            scripts/lib/impeccable-artifacts.test.js \
             scripts/lib/job-placement-digest-source-contract.test.js \
             scripts/lib/job-placement-metadata-contract.test.js \
             scripts/lib/journal-route-discovery.test.js \
@@ -137,6 +138,9 @@ jobs:
 
       - name: Content-ownership docs contract
         run: node scripts/verify-content-ownership-docs.js
+
+      - name: Impeccable artifact contract
+        run: node scripts/verify-impeccable-artifacts.js
 
       - name: Release version agreement
         run: |

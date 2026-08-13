@@ -1,0 +1,20 @@
+{
+  "hook": {
+    "enabled": true,
+    "limits": {
+      "maxFindings": 5,
+      "maxChars": 8000
+    }
+  },
+  "detector": {
+    "ignoreFiles": [
+      "assets/artifacts/**"
+    ],
+    "extensions": [
+      {
+        "ext": ".php",
+        "engine": "html"
+      }
+    ]
+  }
+}

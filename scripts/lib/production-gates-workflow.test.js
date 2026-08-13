@@ -129,6 +129,11 @@ test( 'runs the resume-route source contract on every branch', () => {
 	assert.doesNotMatch( sourceJob, /^\s*run:\s*node scripts\/verify-resume-route\.js\s*$/m );
 } );
 
+test( 'runs the Impeccable artifact contract on every branch', () => {
+	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
+	assertActiveSourceCommand( sourceJob, 'node scripts/verify-impeccable-artifacts.js' );
+} );
+
 test( 'does not count commented phase commands as active source gates', () => {
 	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
 	for ( const command of [

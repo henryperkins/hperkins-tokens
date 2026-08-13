@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.58
+Stable tag: 0.3.59
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -380,6 +380,22 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.59 =
+* Snapped the /how-this-was-built/ build report onto the governed token
+  system: every font-size in the block now names a theme.json step, and its
+  inline-code, swatch, and stats corners use the rounded scale. Section
+  titles move 14px to 15px, the standfirst 20px to 22px, the lede 18px to
+  19px, section headings 23px to 22px, specimen titles 20px to 19px, the
+  stat figures to the fluid 24-36px step, and the epigraph 16px to 17px.
+* Moved the Condensed Council panel copy and both search fields off 14px to
+  the 15px step DESIGN.md sets as the floor for explanatory and control
+  text, raised the search keyboard hint from an undocumented 8px to the 12px
+  floor, moved the brand name off 18px to the 19px step, and moved the desktop
+  menu corner off an 8px literal to the 7px control corner on the rounded scale.
+* Recorded the page-title type role (the fluid 40-64px step behind the h1
+  element style) and the enumerated type ramp in DESIGN.md, and pinned both
+  against theme.json in scripts/verify-impeccable-artifacts.js.
 
 = 0.3.58 =
 * Added the stable semantic `/one-page-resume/` route and its guarded source,

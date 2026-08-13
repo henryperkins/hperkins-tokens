@@ -50,6 +50,7 @@ const SUB_FLOOR_TYPE = {
 	'.hp-council-work-panel__eyebrow': 9,
 	'.hp-council-digest-cue': 8,
 };
+const SEARCH_HINT_SIZE = 12;
 const DRAWER_LEGEND_SIZE = 13;
 const DRAWER_LABELS = [
 	'Work',
@@ -904,11 +905,13 @@ async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
 			left: value.left, right: value.right, width: value.width,
 			actionsRight: actions.right,
 			focused: document.activeElement === panel.querySelector('input[type="search"]'),
+			hintSize: parseFloat(getComputedStyle(panel.querySelector('kbd')).fontSize),
 		};
 	})()` );
 	assert( approximately( search.width, 278 ), `${ viewport.name } search panel is ${ search.width }px; expected 278px.` );
 	assert( approximately( search.right, search.actionsRight ), `${ viewport.name } search panel is not right-anchored.` );
 	assert( search.focused, `${ viewport.name } search input did not receive focus.` );
+	assert( approximately( search.hintSize, SEARCH_HINT_SIZE, 0.1 ), `${ viewport.name } search keyboard hint is ${ search.hintSize }px; expected the ${ SEARCH_HINT_SIZE }px text floor.` );
 	assert( search.left >= -1 && search.right <= initial.clientWidth + 1, `${ viewport.name } search panel exceeds the viewport.` );
 	if ( viewport.name === 'desktop-1440' ) {
 		await capture( cdp, sessionId, captureDir, 'desktop-1440-search-open', viewport );

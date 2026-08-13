@@ -73,6 +73,10 @@ const checks = [
 			'verify-about-page-source.js',
 			'verify-about-page-rendered.js',
 			'.hp-about-template` selector anymore',
+			'PRODUCT.md',
+			'DESIGN.md',
+			'.impeccable/design.json',
+			'verify-impeccable-artifacts.js',
 		],
 		exclude: [
 			/page-ai-enablement\.html is a \*\*shadow template\*\*/i,
@@ -105,6 +109,15 @@ const checks = [
 			'thin accepted-snapshot adapter',
 			'About page layer in `assets/imladris-pages.css`',
 			'not the deployed body until it passes review and controlled promotion',
+			// Impeccable authority chain: which artifact owns which decision, plus
+			// the two contracts the artifact verifier pins on top of the mapping.
+			'PRODUCT.md',
+			'.impeccable/design.json',
+			'scripts/verify-impeccable-artifacts.js',
+			'never hand-edited',
+			'typography.scale',
+			'detector.ignoreFiles',
+			'assets/artifacts/**',
 		],
 		exclude: [
 			/\*\*Shadow template\*\* over live page 175/i,

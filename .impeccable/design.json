@@ -1,0 +1,487 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-13T03:33:20.3462492Z",
+  "title": "Design System: HPerkins Tokens / Imladris",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Evergreen",
+        "canonical": "#2E4A3A",
+        "tonalRamp": ["#1C2E24", "#24402F", "#2E4A3A", "#3A5C49", "#4E7459", "#BCD0BF", "#DCE8DD", "#EDF3ED"]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Evergreen Hover",
+        "canonical": "#24402F",
+        "tonalRamp": ["#1C2E24", "#24402F", "#2E4A3A", "#3A5C49", "#4E7459", "#BCD0BF", "#DCE8DD", "#EDF3ED"]
+      },
+      "primary-press": {
+        "role": "primary",
+        "displayName": "Evergreen Press",
+        "canonical": "#1C2E24",
+        "tonalRamp": ["#1C2E24", "#24402F", "#2E4A3A", "#3A5C49", "#4E7459", "#BCD0BF", "#DCE8DD", "#EDF3ED"]
+      },
+      "primary-subtle": {
+        "role": "primary",
+        "displayName": "Evergreen Wash",
+        "canonical": "#EDF3ED",
+        "tonalRamp": ["#1C2E24", "#24402F", "#2E4A3A", "#3A5C49", "#4E7459", "#BCD0BF", "#DCE8DD", "#EDF3ED"]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Bruinen River",
+        "canonical": "#3F6E89",
+        "tonalRamp": ["#1E3040", "#2C4D63", "#3F6E89", "#5E8CA6", "#83A9BC", "#BAD2DF", "#DCE9F0", "#F1F6F8"]
+      },
+      "secondary-light": {
+        "role": "secondary",
+        "displayName": "Bruinen River Light",
+        "canonical": "#BAD2DF",
+        "tonalRamp": ["#1E3040", "#2C4D63", "#3F6E89", "#5E8CA6", "#83A9BC", "#BAD2DF", "#DCE9F0", "#F1F6F8"]
+      },
+      "secondary-subtle": {
+        "role": "secondary",
+        "displayName": "Bruinen River Wash",
+        "canonical": "#DCE9F0",
+        "tonalRamp": ["#1E3040", "#2C4D63", "#3F6E89", "#5E8CA6", "#83A9BC", "#BAD2DF", "#DCE9F0", "#F1F6F8"]
+      },
+      "tertiary": {
+        "role": "tertiary",
+        "displayName": "Mallorn Gold",
+        "canonical": "#C29A44",
+        "tonalRamp": ["#4B3913", "#6E531B", "#9A7530", "#B08A3A", "#C29A44", "#D2B062", "#EAD9A8", "#F4EBCF"]
+      },
+      "tertiary-hover": {
+        "role": "tertiary",
+        "displayName": "Mallorn Gold Hover",
+        "canonical": "#B08A3A",
+        "tonalRamp": ["#4B3913", "#6E531B", "#9A7530", "#B08A3A", "#C29A44", "#D2B062", "#EAD9A8", "#F4EBCF"]
+      },
+      "tertiary-focus": {
+        "role": "tertiary",
+        "displayName": "Mallorn Gold Focus",
+        "canonical": "#9A7530",
+        "tonalRamp": ["#4B3913", "#6E531B", "#9A7530", "#B08A3A", "#C29A44", "#D2B062", "#EAD9A8", "#F4EBCF"]
+      },
+      "tertiary-deep": {
+        "role": "tertiary",
+        "displayName": "Mallorn Gold Deep",
+        "canonical": "#6E531B",
+        "tonalRamp": ["#4B3913", "#6E531B", "#9A7530", "#B08A3A", "#C29A44", "#D2B062", "#EAD9A8", "#F4EBCF"]
+      },
+      "tertiary-subtle": {
+        "role": "tertiary",
+        "displayName": "Mallorn Gold Wash",
+        "canonical": "#F4EBCF",
+        "tonalRamp": ["#4B3913", "#6E531B", "#9A7530", "#B08A3A", "#C29A44", "#D2B062", "#EAD9A8", "#F4EBCF"]
+      },
+      "page": {
+        "role": "neutral",
+        "displayName": "Parchment Page",
+        "canonical": "#F5EFE1",
+        "tonalRamp": ["#3D382E", "#5F5747", "#817765", "#A69A83", "#C9BDA5", "#DED2B8", "#ECE4D2", "#FAF6EC"]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Parchment Raised",
+        "canonical": "#FAF6EC",
+        "tonalRamp": ["#3D382E", "#5F5747", "#817765", "#A69A83", "#C9BDA5", "#DED2B8", "#ECE4D2", "#FAF6EC"]
+      },
+      "sunken": {
+        "role": "neutral",
+        "displayName": "Parchment Sunken",
+        "canonical": "#ECE4D2",
+        "tonalRamp": ["#3D382E", "#5F5747", "#817765", "#A69A83", "#C9BDA5", "#DED2B8", "#ECE4D2", "#FAF6EC"]
+      },
+      "cool": {
+        "role": "neutral",
+        "displayName": "Mist",
+        "canonical": "#EEF1ED",
+        "tonalRamp": ["#18211B", "#2D3930", "#4F5E53", "#75847A", "#9EAAA2", "#C2CBC4", "#DCE3DD", "#EEF1ED"]
+      },
+      "inverse": {
+        "role": "neutral",
+        "displayName": "Twilight",
+        "canonical": "#1E2730",
+        "tonalRamp": ["#0E1318", "#161D24", "#1E2730", "#283440", "#41505F", "#667482", "#A5AFB7", "#E8ECEF"]
+      },
+      "inverse-deep": {
+        "role": "neutral",
+        "displayName": "Twilight Deep",
+        "canonical": "#161D24",
+        "tonalRamp": ["#0E1318", "#161D24", "#1E2730", "#283440", "#41505F", "#667482", "#A5AFB7", "#E8ECEF"]
+      },
+      "text-strong": {
+        "role": "neutral",
+        "displayName": "Ink Strong",
+        "canonical": "#1B231D",
+        "tonalRamp": ["#1B231D", "#313B33", "#515C52", "#656E64", "#6E7A6E", "#94A095", "#DCE3DD", "#EEF1ED"]
+      },
+      "text-body": {
+        "role": "neutral",
+        "displayName": "Ink Body",
+        "canonical": "#313B33",
+        "tonalRamp": ["#1B231D", "#313B33", "#515C52", "#656E64", "#6E7A6E", "#94A095", "#DCE3DD", "#EEF1ED"]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#515C52",
+        "tonalRamp": ["#1B231D", "#313B33", "#515C52", "#656E64", "#6E7A6E", "#94A095", "#DCE3DD", "#EEF1ED"]
+      },
+      "text-disabled": {
+        "role": "neutral",
+        "displayName": "Ink Disabled",
+        "canonical": "#94A095",
+        "tonalRamp": ["#1B231D", "#313B33", "#515C52", "#656E64", "#6E7A6E", "#94A095", "#DCE3DD", "#EEF1ED"]
+      },
+      "text-inverse": {
+        "role": "neutral",
+        "displayName": "Parchment Inverse Text",
+        "canonical": "#FAF6EC",
+        "tonalRamp": ["#3D382E", "#5F5747", "#817765", "#A69A83", "#C9BDA5", "#DED2B8", "#ECE4D2", "#FAF6EC"]
+      },
+      "border-hair": {
+        "role": "neutral",
+        "displayName": "Parchment Hairline",
+        "canonical": "#DED2B8",
+        "tonalRamp": ["#3D382E", "#5F5747", "#817765", "#A69A83", "#C9BDA5", "#DED2B8", "#ECE4D2", "#FAF6EC"]
+      },
+      "border-soft": {
+        "role": "neutral",
+        "displayName": "Mist Border",
+        "canonical": "#DCE3DD",
+        "tonalRamp": ["#18211B", "#2D3930", "#4F5E53", "#75847A", "#9EAAA2", "#C2CBC4", "#DCE3DD", "#EEF1ED"]
+      },
+      "status-done": {
+        "role": "primary",
+        "displayName": "Evergreen Done",
+        "canonical": "#4E7459",
+        "tonalRamp": ["#1C2E24", "#24402F", "#2E4A3A", "#3A5C49", "#4E7459", "#BCD0BF", "#DCE8DD", "#EDF3ED"]
+      },
+      "status-review": {
+        "role": "tertiary",
+        "displayName": "Mallorn Review",
+        "canonical": "#B7842F",
+        "tonalRamp": ["#453111", "#684918", "#855F1E", "#B7842F", "#CFA052", "#E1BD79", "#F0DAAE", "#FAF3E4"]
+      },
+      "status-pending": {
+        "role": "neutral",
+        "displayName": "Ink Pending",
+        "canonical": "#6E7A6E",
+        "tonalRamp": ["#1B231D", "#313B33", "#515C52", "#656E64", "#6E7A6E", "#94A095", "#DCE3DD", "#EEF1ED"]
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Rust Danger",
+        "canonical": "#9C4A33",
+        "tonalRamp": ["#3F1D16", "#63291F", "#803A2A", "#9C4A33", "#B7654D", "#D58E78", "#EAC1B5", "#F8ECE8"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Council Display",
+        "purpose": "Exceptional hero statements in Cormorant Garamond."
+      },
+      "headline": {
+        "displayName": "Editorial Headline",
+        "purpose": "Major sections and editorial turns."
+      },
+      "title": {
+        "displayName": "Record Title",
+        "purpose": "Cards, evidence groups, and subordinate sections."
+      },
+      "body": {
+        "displayName": "Reading Body",
+        "purpose": "Primary long-form explanation in EB Garamond."
+      },
+      "ui": {
+        "displayName": "Interface Copy",
+        "purpose": "Controls and explanatory interface text at the 17px floor."
+      },
+      "control": {
+        "displayName": "Lapidary Control",
+        "purpose": "Marcellus action labels and high-intent controls."
+      },
+      "label": {
+        "displayName": "Council Label",
+        "purpose": "Compact landmarks, form labels, and navigation metadata."
+      },
+      "mono": {
+        "displayName": "Evidence Mono",
+        "purpose": "Artifacts, identifiers, provenance, and technical data."
+      },
+      "status": {
+        "displayName": "Status Mono",
+        "purpose": "Compact workflow state whose meaning is repeated in text and shape."
+      },
+      "link-control": {
+        "displayName": "Editorial Link Control",
+        "purpose": "Sentence-case EB Garamond actions that remain part of the reading flow."
+      }
+    },
+    "shadows": [
+      {
+        "name": "control-trace",
+        "value": "0 1px 2px rgba(27,35,29,0.06)",
+        "purpose": "Primary buttons and compact subscription controls."
+      },
+      {
+        "name": "register-lift",
+        "value": "0 1px 3px rgba(27,35,29,0.07), 0 1px 2px rgba(27,35,29,0.05)",
+        "purpose": "Action rails and evidence boards."
+      },
+      {
+        "name": "panel-lift",
+        "value": "0 4px 14px rgba(27,35,29,0.08), 0 2px 5px rgba(27,35,29,0.05)",
+        "purpose": "Closing panels and inverse ring cards."
+      },
+      {
+        "name": "overlay-lift",
+        "value": "0 12px 32px rgba(27,35,29,0.12), 0 4px 10px rgba(27,35,29,0.06)",
+        "purpose": "Council menus, search panels, and mobile drawer."
+      },
+      {
+        "name": "feature-lift",
+        "value": "0 24px 60px rgba(22,29,36,0.18), 0 8px 18px rgba(22,29,36,0.08)",
+        "purpose": "Rare large inverse or showcase surfaces."
+      },
+      {
+        "name": "field-inset",
+        "value": "inset 0 1px 2px rgba(27,35,29,0.07)",
+        "purpose": "Quiet depth inside form controls."
+      },
+      {
+        "name": "gilt-edge",
+        "value": "inset 0 0 0 1px rgba(194,154,68,0.38)",
+        "purpose": "Restrained Mallorn edge on signature Twilight plates."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-calm",
+        "value": "cubic-bezier(0.22,0.61,0.36,1)",
+        "purpose": "Default easing for buttons, Council panels, and calm state transitions."
+      },
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16,1,0.3,1)",
+        "purpose": "Decisive entrances that settle without bounce."
+      },
+      {
+        "name": "ease-in-out",
+        "value": "cubic-bezier(0.65,0,0.35,1)",
+        "purpose": "Longer reversible transitions."
+      },
+      {
+        "name": "duration-fast",
+        "value": "140ms",
+        "purpose": "Hover, press, and compact chosen-state feedback."
+      },
+      {
+        "name": "duration-base",
+        "value": "240ms",
+        "purpose": "Ordinary component state changes."
+      },
+      {
+        "name": "duration-slow",
+        "value": "420ms",
+        "purpose": "Larger but still bounded transitions."
+      },
+      {
+        "name": "duration-veil",
+        "value": "700ms",
+        "purpose": "Rare atmospheric veil transitions."
+      }
+    ],
+    "breakpoints": [
+      { "name": "micro-exception", "value": "359px" },
+      { "name": "compact-exception", "value": "400px" },
+      { "name": "component-stack", "value": "600px" },
+      { "name": "content-exception", "value": "680px" },
+      { "name": "council-mobile", "value": "781px" },
+      { "name": "council-desktop", "value": "782px" },
+      { "name": "wide-layout", "value": "56rem" },
+      { "name": "ring-grid", "value": "920px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The default high-intent action: Evergreen, lapidary, and quietly raised.",
+      "html": "<button class=\"ds-button-primary\" type=\"button\">VIEW THE EVIDENCE</button>",
+      "css": ".ds-button-primary { min-height: 44px; padding: 0.72em 1.5em; border: 0; border-radius: 7px; background: var(--wp--custom--brand--default, #2E4A3A); color: var(--wp--custom--text--inverse, #FAF6EC); box-shadow: 0 1px 2px rgba(27,35,29,0.06); font-family: 'HPerkins Marcellus', Optima, 'Palatino Linotype', serif; font-size: 17px; font-weight: 400; line-height: 1.2; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background-color 140ms cubic-bezier(0.22,0.61,0.36,1), transform 140ms cubic-bezier(0.22,0.61,0.36,1); } .ds-button-primary:hover { background: var(--wp--custom--brand--hover, #24402F); } .ds-button-primary:active { background: var(--wp--custom--brand--press, #1C2E24); transform: translateY(0.5px) scale(0.99); } .ds-button-primary:focus-visible { outline: 3px solid var(--wp--preset--color--gold-700, #9A7530); outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A bounded alternative action that stays visually subordinate to Evergreen fill.",
+      "html": "<button class=\"ds-button-secondary\" type=\"button\">READ THE METHOD</button>",
+      "css": ".ds-button-secondary { min-height: 44px; padding: 0.72em 1.5em; border: 0; border-radius: 7px; background: transparent; color: var(--wp--custom--text--link, #2E4A3A); box-shadow: inset 0 0 0 1px var(--wp--custom--border--brand, #3A5C49); font-family: 'HPerkins Marcellus', Optima, 'Palatino Linotype', serif; font-size: 17px; font-weight: 400; line-height: 1.2; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background-color 140ms cubic-bezier(0.22,0.61,0.36,1), transform 140ms cubic-bezier(0.22,0.61,0.36,1); } .ds-button-secondary:hover { background: var(--wp--custom--brand--subtle, #EDF3ED); } .ds-button-secondary:active { transform: translateY(0.5px) scale(0.99); } .ds-button-secondary:focus-visible { outline: 3px solid var(--wp--preset--color--gold-700, #9A7530); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "A quiet control for low-emphasis actions that still need button anatomy.",
+      "html": "<button class=\"ds-button-ghost\" type=\"button\">VIEW DETAILS</button>",
+      "css": ".ds-button-ghost { min-height: 44px; padding: 0.72em 1.5em; border: 0; border-radius: 7px; background: transparent; color: var(--wp--custom--text--link, #2E4A3A); box-shadow: none; font-family: 'HPerkins Marcellus', Optima, 'Palatino Linotype', serif; font-size: 17px; font-weight: 400; line-height: 1.2; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background-color 140ms cubic-bezier(0.22,0.61,0.36,1), transform 140ms cubic-bezier(0.22,0.61,0.36,1); } .ds-button-ghost:hover { background: var(--wp--custom--brand--subtle, #EDF3ED); } .ds-button-ghost:active { transform: translateY(0.5px) scale(0.99); } .ds-button-ghost:focus-visible { outline: 3px solid var(--wp--preset--color--gold-700, #9A7530); outline-offset: 2px; }"
+    },
+    {
+      "name": "Accent Button",
+      "kind": "button",
+      "refersTo": "button-accent",
+      "description": "A rare Mallorn action for a path that is meaningfully distinct from the primary route.",
+      "html": "<button class=\"ds-button-accent\" type=\"button\">OPEN ARTIFACT</button>",
+      "css": ".ds-button-accent { min-height: 44px; padding: 0.72em 1.5em; border: 0; border-radius: 7px; background: var(--wp--custom--accent--default, #C29A44); color: var(--wp--custom--text--strong, #1B231D); box-shadow: 0 1px 2px rgba(27,35,29,0.06); font-family: 'HPerkins Marcellus', Optima, 'Palatino Linotype', serif; font-size: 17px; font-weight: 400; line-height: 1.2; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; transition: background-color 140ms cubic-bezier(0.22,0.61,0.36,1), transform 140ms cubic-bezier(0.22,0.61,0.36,1); } .ds-button-accent:hover { background: var(--wp--custom--accent--hover, #B08A3A); } .ds-button-accent:active { background: var(--wp--custom--accent--press, #9A7530); transform: translateY(0.5px) scale(0.99); } .ds-button-accent:focus-visible { outline: 3px solid var(--wp--preset--color--gold-700, #9A7530); outline-offset: 2px; }"
+    },
+    {
+      "name": "Link Button",
+      "kind": "button",
+      "refersTo": "button-link",
+      "description": "A sentence-case editorial action that reads as part of the document rather than a control plate.",
+      "html": "<a class=\"ds-button-link\" href=\"#evidence\">Review the source record</a>",
+      "css": ".ds-button-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0.72em 0; border-radius: 0; background: transparent; color: var(--wp--custom--text--link, #2E4A3A); box-shadow: none; font-family: 'HPerkins EB Garamond', 'Iowan Old Style', Georgia, serif; font-size: 17px; font-weight: 400; line-height: 1.2; letter-spacing: 0; text-transform: none; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); text-underline-offset: 0.2em; transition: text-decoration-color 140ms ease; } .ds-button-link:hover { text-decoration-color: currentColor; } .ds-button-link:focus-visible { outline: 3px solid var(--wp--preset--color--gold-700, #9A7530); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ledger Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "A labeled Parchment field with inset depth, explicit help, and a structural focus ring.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field__label\">EMAIL</span><span class=\"ds-field__control\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 5h16v14H4z\"></path><path d=\"m4 7 8 6 8-6\"></path></svg><input type=\"email\" placeholder=\"you@domain.com\" aria-describedby=\"ds-field-help\"></span><span class=\"ds-field__helper\" id=\"ds-field-help\">Your address stays private.</span></label>",
+      "css": ".ds-field { display: grid; gap: 8px; max-width: 360px; color: var(--wp--custom--text--body, #313B33); } .ds-field__label { font-family: 'HPerkins Marcellus', Optima, 'Palatino Linotype', serif; font-size: 13px; line-height: 1.5; letter-spacing: 0.04em; text-transform: uppercase; color: var(--wp--custom--text--muted, #515C52); } .ds-field__control { display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1.5px solid var(--wp--preset--color--ink-400, #6E7A6E); border-radius: 7px; background: var(--wp--custom--surface--card, #FAF6EC); box-shadow: inset 0 1px 2px rgba(27,35,29,0.07); color: var(--wp--custom--text--faint, #515C52); } .ds-field__control svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; } .ds-field__control input { flex: 1; min-width: 0; padding: 10px 0; border: 0; outline: 0; background: transparent; color: var(--wp--custom--text--strong, #1B231D); font-family: 'HPerkins EB Garamond', 'Iowan Old Style', Georgia, serif; font-size: 17px; line-height: 1.5; } .ds-field__control:focus-within { border-color: var(--wp--preset--color--gold-700, #9A7530); outline: 2px solid var(--wp--preset--color--gold-700, #9A7530); outline-offset: 2px; } .ds-field__helper { font-family: 'HPerkins EB Garamond', 'Iowan Old Style', Georgia, serif; font-size: 13px; color: var(--wp--custom--text--faint, #515C52); } .ds-field.ds-field--error .ds-field__control { border-color: var(--wp--custom--feedback--danger, #9C4A33); } .ds-field.ds-field--error .ds-field__helper { color: var(--wp--custom--feedback--danger, #9C4A33); }"
+    },
+    {
+      "name": "Council Navigation",
+      "kind": "nav",
+      "refersTo": "council-subscribe",
+      "description": "A quiet centered Council bar with Marcellus labels, an Evergreen star, and a Mallorn position cue.",
+      "html": "<nav class=\"ds-council\" aria-label=\"Primary\"><a class=\"ds-council__brand\" href=\"#home\"><svg class=\"ds-council__star\" viewBox=\"0 0 100 100\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M50 6 59 41 94 50 59 59 50 94 41 59 6 50 41 41Z\"></path><circle cx=\"50\" cy=\"50\" r=\"6\"></circle></svg><span>HENRY PERKINS</span></a><span class=\"ds-council__links\"><a class=\"ds-council__link ds-council__link--active\" href=\"#work\">WORK</a><a class=\"ds-council__link\" href=\"#writing\">WRITING</a><span class=\"ds-council__cue\">DIGEST</span><a class=\"ds-council__link\" href=\"#about\">ABOUT</a></span></nav>",
+      "css": ".ds-council { display: flex; align-items: center; justify-content: space-between; min-height: 68px; padding: 0 24px; border-bottom: 1px solid var(--wp--custom--border--hair, #DED2B8); background: var(--wp--custom--surface--page, #F5EFE1); color: var(--wp--custom--text--body, #313B33); font-family: 'HPerkins Marcellus', Optima, 'Palatino Linotype', serif; } .ds-council__brand { display: inline-flex; align-items: center; gap: 11px; color: var(--wp--custom--text--strong, #1B231D); font-size: 14px; letter-spacing: 0.12em; text-decoration: none; white-space: nowrap; } .ds-council__star { width: 22px; height: 22px; fill: none; stroke: var(--wp--preset--color--green-700, #2E4A3A); stroke-width: 3; stroke-linejoin: round; } .ds-council__star circle { fill: var(--wp--preset--color--green-700, #2E4A3A); stroke: none; } .ds-council__links { display: inline-flex; align-items: center; gap: 24px; } .ds-council__link { position: relative; display: inline-flex; align-items: center; min-height: 44px; color: var(--wp--custom--text--body, #313B33); font-size: 13px; letter-spacing: 0.065em; text-decoration: none; } .ds-council__link:hover { color: var(--wp--custom--text--strong, #1B231D); } .ds-council__link--active::after, .ds-council__link:hover::after { position: absolute; left: 50%; bottom: 5px; width: 26px; height: 1.5px; content: ''; background: var(--wp--preset--color--gold-700, #9A7530); transform: translateX(-50%); } .ds-council__link:focus-visible, .ds-council__brand:focus-visible { outline: 3px solid var(--wp--preset--color--gold-700, #9A7530); outline-offset: 2px; } .ds-council__cue { padding: 3px 5px; border-radius: 2px; background: var(--wp--preset--color--gold-200, #EAD9A8); color: var(--wp--preset--color--gold-800, #6E531B); font-family: 'HPerkins JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace; font-size: 8px; line-height: 1; letter-spacing: 0.08em; }"
+    },
+    {
+      "name": "Review Status Chip",
+      "kind": "chip",
+      "refersTo": "chip-review",
+      "description": "A mono review label with a hollow mark, fixed Mallorn rule, and written state.",
+      "html": "<span class=\"ds-chip ds-chip--review\"><span class=\"ds-chip__dot\" aria-hidden=\"true\"></span>IN REVIEW</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13.6px; border: 1px solid var(--wp--custom--border--hair, #DED2B8); border-left-width: 7px; border-radius: 2px; color: var(--wp--custom--text--strong, #1B231D); font-family: 'HPerkins JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace; font-size: 13px; line-height: 1.4; } .ds-chip--review { border-left-color: var(--wp--custom--status--review, #B7842F); background: var(--wp--custom--surface--review, #F4EBCF); } .ds-chip__dot { width: 7px; height: 7px; border: 1.4px solid currentColor; border-radius: 50%; color: var(--wp--custom--status--review, #B7842F); } .ds-chip--done { border-left-color: var(--wp--custom--status--done, #4E7459); background: var(--wp--custom--surface--done, #EDF3ED); } .ds-chip--done .ds-chip__dot { border-color: var(--wp--custom--status--done, #4E7459); background: var(--wp--custom--status--done, #4E7459); } .ds-chip--pending { border-left-color: var(--wp--custom--status--pending, #6E7A6E); background: var(--wp--custom--surface--pending, #ECE4D2); } .ds-chip--pending .ds-chip__dot { color: var(--wp--custom--status--pending, #6E7A6E); }"
+    },
+    {
+      "name": "Ring Card",
+      "kind": "card",
+      "refersTo": "ring-card",
+      "description": "The signature inverse plate: Twilight, gilt-edged, literary, and evidence-aware.",
+      "html": "<article class=\"ds-ring-card\"><div class=\"ds-ring-card__head\"><span class=\"ds-ring-card__ring\">VILYA</span><span class=\"ds-ring-card__element\">AIR</span></div><div class=\"ds-ring-card__body\"><h3 class=\"ds-ring-card__action\">Clarify</h3><p class=\"ds-ring-card__virtues\">SYSTEMS · EVIDENCE · HANDOFF</p><p class=\"ds-ring-card__description\">Make the state legible, connect the claim to its proof, and leave the next operator a usable record.</p><a class=\"ds-ring-card__cta\" href=\"#artifact\">OPEN THE RECORD</a></div></article>",
+      "css": ".ds-ring-card { position: relative; display: flex; flex-direction: column; justify-content: space-between; min-height: 340px; overflow: hidden; padding: 32px 24px; border-radius: 12px; background: linear-gradient(180deg, rgba(63,110,137,0.13), rgba(20,28,36,0.78)), var(--wp--custom--surface--inverse, #1E2730); color: var(--wp--preset--color--parchment-50, #FAF6EC); box-shadow: 0 4px 14px rgba(27,35,29,0.08), 0 2px 5px rgba(27,35,29,0.05), inset 0 0 0 1px rgba(194,154,68,0.38); } .ds-ring-card__head { display: flex; justify-content: space-between; gap: 16px; font-family: 'HPerkins Marcellus', Optima, 'Palatino Linotype', serif; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; } .ds-ring-card__ring { color: var(--wp--preset--color--river-200, #BAD2DF); } .ds-ring-card__element { color: var(--wp--preset--color--river-200, #BAD2DF); } .ds-ring-card__action { margin: 0 0 10px; color: var(--wp--preset--color--river-400, #5E8CA6); font-family: 'HPerkins Cormorant Garamond', 'Hoefler Text', Georgia, serif; font-size: 44px; font-weight: 500; line-height: 1; letter-spacing: -0.01em; } .ds-ring-card__virtues { margin: 0 0 12px; color: var(--wp--preset--color--river-200, #BAD2DF); font-family: 'HPerkins Marcellus', Optima, 'Palatino Linotype', serif; font-size: 12px; line-height: 1.5; letter-spacing: 0.1em; } .ds-ring-card__description { margin: 0 0 22px; color: var(--wp--preset--color--parchment-50, #FAF6EC); font-family: 'HPerkins EB Garamond', 'Iowan Old Style', Georgia, serif; font-size: 17px; line-height: 1.5; } .ds-ring-card__cta { display: inline-flex; min-height: 44px; align-items: center; color: var(--wp--preset--color--river-200, #BAD2DF); font-family: 'HPerkins Marcellus', Optima, 'Palatino Linotype', serif; font-size: 13px; letter-spacing: 0.08em; text-decoration-color: color-mix(in srgb, currentColor 45%, transparent); text-underline-offset: 4px; } .ds-ring-card__cta:hover { text-decoration-color: currentColor; } .ds-ring-card__cta:focus-visible { outline: 3px solid var(--wp--preset--color--gold-700, #9A7530); outline-offset: 2px; }"
+    },
+    {
+      "name": "Evidence Board",
+      "kind": "custom",
+      "refersTo": "evidence-board",
+      "description": "The Quiet Council Ledger made concrete: claim header, technical grid, and redundant status rows.",
+      "html": "<section class=\"ds-evidence\" aria-labelledby=\"ds-evidence-title\"><header class=\"ds-evidence__header\"><p class=\"ds-evidence__kicker\">EVIDENCE REGISTER</p><h3 class=\"ds-evidence__title\" id=\"ds-evidence-title\">The claim and its inspectable record</h3><p class=\"ds-evidence__summary\">Every material statement points to a source whose state is written plainly.</p></header><div class=\"ds-evidence__rows\"><article class=\"ds-evidence__row ds-evidence__row--done\"><p class=\"ds-evidence__label\"><span class=\"ds-evidence__dot\" aria-hidden=\"true\"></span>VERIFIED</p><h4 class=\"ds-evidence__row-title\"><a href=\"#diff\">Reviewed source diff</a></h4><p class=\"ds-evidence__meta\">Exact head inspected; authorship and release state recorded separately.</p></article><article class=\"ds-evidence__row ds-evidence__row--review\"><p class=\"ds-evidence__label\"><span class=\"ds-evidence__dot\" aria-hidden=\"true\"></span>IN REVIEW</p><h4 class=\"ds-evidence__row-title\"><a href=\"#candidate\">Candidate artifact</a></h4><p class=\"ds-evidence__meta\">Open and inspectable, but not represented as released or deployed.</p></article></div></section>",
+      "css": ".ds-evidence { overflow: hidden; border: 1px solid var(--wp--custom--border--hair, #DED2B8); border-radius: 7px; background: linear-gradient(90deg, rgba(46,74,58,0.08) 1px, transparent 1px), linear-gradient(rgba(78,116,89,0.07) 1px, transparent 1px), var(--wp--custom--surface--card, #FAF6EC); background-size: 32px 32px; color: var(--wp--custom--text--body, #313B33); box-shadow: 0 1px 3px rgba(27,35,29,0.07), 0 1px 2px rgba(27,35,29,0.05); font-family: 'HPerkins EB Garamond', 'Iowan Old Style', Georgia, serif; } .ds-evidence__header { padding: 16px 24px; border-bottom: 1px solid var(--wp--custom--border--hair, #DED2B8); background: rgba(250,246,236,0.94); } .ds-evidence__kicker, .ds-evidence__label { margin: 0; color: var(--wp--custom--text--muted, #515C52); font-family: 'HPerkins JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace; font-size: 12px; line-height: 1.4; letter-spacing: 0.14em; text-transform: uppercase; } .ds-evidence__title { margin: 6px 0 0; color: var(--wp--custom--text--strong, #1B231D); font-family: 'HPerkins Cormorant Garamond', 'Hoefler Text', Georgia, serif; font-size: 22px; font-weight: 600; line-height: 1.25; } .ds-evidence__summary { margin: 8px 0 0; color: var(--wp--custom--text--muted, #515C52); font-size: 15px; line-height: 1.55; } .ds-evidence__row { padding: 16px 24px; border-top: 1px solid var(--wp--custom--border--hair, #DED2B8); border-left: 5px solid var(--wp--custom--status--pending, #6E7A6E); background: rgba(250,246,236,0.92); } .ds-evidence__row:first-child { border-top: 0; } .ds-evidence__row--done { border-left-color: var(--wp--custom--status--done, #4E7459); } .ds-evidence__row--review { border-left-color: var(--wp--custom--status--review, #B7842F); } .ds-evidence__label { display: flex; align-items: center; gap: 7px; } .ds-evidence__dot { width: 7px; height: 7px; border: 1.4px solid currentColor; border-radius: 50%; } .ds-evidence__row--done .ds-evidence__dot { border-color: var(--wp--custom--status--done, #4E7459); background: var(--wp--custom--status--done, #4E7459); color: var(--wp--custom--status--done, #4E7459); } .ds-evidence__row--review .ds-evidence__dot { color: var(--wp--custom--status--review, #B7842F); } .ds-evidence__row-title { margin: 4px 0 0; font-family: 'HPerkins EB Garamond', 'Iowan Old Style', Georgia, serif; font-size: 17px; font-weight: 600; line-height: 1.35; } .ds-evidence__row-title a { color: var(--wp--custom--text--strong, #1B231D); text-decoration-color: color-mix(in srgb, var(--wp--custom--text--link, #2E4A3A) 70%, transparent); text-underline-offset: 3px; } .ds-evidence__row-title a:hover { text-decoration-color: var(--wp--custom--text--link, #2E4A3A); } .ds-evidence__row-title a:focus-visible { outline: 3px solid var(--wp--preset--color--gold-700, #9A7530); outline-offset: 2px; } .ds-evidence__meta { margin: 6px 0 0; color: var(--wp--custom--text--muted, #515C52); font-size: 15px; line-height: 1.5; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Council Ledger",
+    "overview": "Imladris should feel like a quiet council chamber whose working record is open on the table: warm, literate, deliberate, and organized around evidence. The visual system translates the product commitment “Trust is structural.” into visible relationships between claims, states, sources, and next actions. It is editorial enough to reward reading and operational enough to make provenance immediately scannable.\n\nParchment is the persistent field; Ink carries the argument; Evergreen marks identity and primary action; Bruinen River identifies openable evidence; Mallorn Gold signals focus, active navigation, and rare ceremonial emphasis; Twilight creates the inverse plates reserved for signature moments. Typography moves between literary voice and documentary precision without collapsing into either fantasy pastiche or a generic software dashboard.\n\nComponents are restrained evidence instruments. Hairlines, left rules, tonal registers, and redundant status marks do most of the structural work. Ambient shadows appear only where a surface is genuinely raised. The system rejects generic SaaS gloss, neon AI spectacle, unsupported fantasy ornament, and decoration that competes with proof.",
+    "keyCharacteristics": [
+      "Warm parchment fields with disciplined Evergreen action and sparing Mallorn Gold signals.",
+      "Editorial serif hierarchy paired with machine-set labels for state, provenance, and evidence.",
+      "Records and registers whose text, dot shape, rule width, and color communicate together.",
+      "Registered depth: flat documents by default, selectively lifted menus, controls, and feature plates.",
+      "Responsive, keyboard-operable behavior that preserves the repository’s currently verified accessibility contracts without implying broader certification."
+    ],
+    "rules": [
+      {
+        "name": "The Gold Signal Rule",
+        "body": "Mallorn Gold marks focus, active position, review, or a deliberate accent; it does not become a broad decorative fill.",
+        "section": "colors"
+      },
+      {
+        "name": "The Evidence Hue Rule",
+        "body": "Status color is always reinforced by a written state and a filled or hollow mark, fixed-width rule, or both.",
+        "section": "colors"
+      },
+      {
+        "name": "The Parchment Field Rule",
+        "body": "The default experience remains a warm document. Cool Mist and dark Twilight are bounded supporting regions, not competing canvases.",
+        "section": "colors"
+      },
+      {
+        "name": "The Four Voices Rule",
+        "body": "Cormorant speaks titles, EB Garamond explains, Marcellus names and acts, and JetBrains Mono records state. Do not exchange their jobs for novelty.",
+        "section": "typography"
+      },
+      {
+        "name": "The Reading Floor Rule",
+        "body": "Reading copy stays at 19px, controls at 17px, and explanatory evidence at 15px or larger; smaller type is reserved for redundant metadata and the documented Council-header exceptions.",
+        "section": "typography"
+      },
+      {
+        "name": "The One-H1 Rule",
+        "body": "Each rendered page preserves one primary heading and a semantic heading order; visual scale never substitutes for document structure.",
+        "section": "typography"
+      },
+      {
+        "name": "The Register Rhythm Rule",
+        "body": "Align titles, state labels, artifacts, and explanatory copy to the same spacing scale so evidence reads as one record rather than a pile of cards.",
+        "section": "layout"
+      },
+      {
+        "name": "The Mobile Reach Rule",
+        "body": "Interactive controls retain the implemented 44px target floor where pinned; mobile layouts stack before text, controls, or evidence can overflow.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Record Rule",
+        "body": "A document record does not float merely because it is bounded. Add elevation only when the surface changes interaction or stacking context.",
+        "section": "elevation"
+      },
+      {
+        "name": "The One-Level Lift Rule",
+        "body": "Use the smallest shadow that explains the surface. Do not stack ambient shadows to create spectacle.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Calm Motion Rule",
+        "body": "State transitions use 140–240ms calm easing; larger veils may use 420–700ms. Reduced-motion preference removes decorative menu, drawer, and chosen-link animation.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Registered Edge Rule",
+        "body": "Small, repeated records use small corners; broader feature surfaces earn broader corners. Do not round every object to the same generic radius.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Fixed Anatomy Rule",
+        "body": "State changes color, fill, and wording while geometry remains stable. A review item cannot look structurally larger than a completed item.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do treat `theme.json` as the normative source for color, type, spacing, radius, shadow, and motion tokens.",
+      "Do place visible state and inspectable evidence beside material claims.",
+      "Do preserve the four typographic voices and the 44rem reading measure.",
+      "Do reinforce status with words, dot shape, and fixed-width rules in addition to color.",
+      "Do preserve the implemented Gold 700 focus treatments, keyboard-operable disclosures, focus restoration, and reduced-motion behavior.",
+      "Do test containment at the repository’s narrow viewports and let long headings, paths, and labels wrap safely.",
+      "Do distinguish a flat record from a raised overlay through both border and depth treatment."
+    ],
+    "donts": [
+      "Don't introduce arbitrary colors, gradients, type sizes, spacing, or radii outside the governed token system.",
+      "Don't turn Mallorn Gold into a dominant background or decorative wash; its rarity is part of its meaning.",
+      "Don't use generic white floating cards, glossy SaaS controls, neon AI effects, or unsupported fantasy ornament.",
+      "Don't rely on color alone for completion, review, pending, danger, current navigation, or focus.",
+      "Don't wrap compact header, form, or specimen controls in a prominent action rail; the composition is selective and opt-in.",
+      "Don't hide focus outlines, shrink pinned touch targets, or animate past a reduced-motion preference.",
+      "Don't describe these safeguards as comprehensive WCAG certification; they document the accessibility behavior currently verified by this repository."
+    ]
+  }
+}

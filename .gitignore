@@ -18,6 +18,8 @@ vendor/
 .cache/
 coverage/
 .worktrees/
+.impeccable/config.local.json
+.impeccable/hook.cache.json
 
 # Archives/backups
 *.zip

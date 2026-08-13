@@ -19,6 +19,7 @@ There is no package install, Composer install, or asset build. Use the repositor
 - PHP-lint every tracked PHP file.
 - Run `node --test scripts/lib/wp-cli.test.js scripts/lib/site-url.test.js scripts/lib/navigation-content-contract.test.js` for the cross-platform WP-CLI launcher, the runtime-mutation site-URL guard, and the navigation shape that guards the destructive `apply-council-navigation.js` recut (name every file explicitly; the directory form of `node --test` is unreliable on Windows).
 - Run `node scripts/verify-performance-assets.js` for source-only asset checks.
+- Run `node scripts/verify-impeccable-artifacts.js` for the PRODUCT / DESIGN / generated-sidecar contract, `theme.json` token parity, and shared hook configuration. The authority and refresh rules live in `CLAUDE.md` and are not duplicated here.
 - With the local environment variables set, run the relevant database/HTTP verifiers listed in `CLAUDE.md`.
 - Run `git diff --check` before committing.
 

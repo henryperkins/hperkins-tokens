@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.58
+Version: 0.3.59
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -2291,7 +2291,7 @@ samp {
 	min-width: 0;
 	overflow: hidden;
 	font-family: var(--wp--preset--font-family--label);
-	font-size: 18px;
+	font-size: var(--wp--preset--font-size--md);
 	line-height: 1.1;
 	letter-spacing: 0.17em;
 	text-overflow: ellipsis;
@@ -2402,7 +2402,7 @@ samp {
 	inset-inline-start: 50%;
 	background: var(--wp--preset--color--parchment-50);
 	border: 1px solid var(--wp--custom--border--hair);
-	border-radius: 8px;
+	border-radius: var(--wp--custom--radius--md);
 	box-shadow: var(--wp--custom--shadow--lg);
 	transform: translateX(-50%);
 	animation: hp-council-menu-drop 160ms var(--wp--custom--ease--calm);
@@ -2504,7 +2504,7 @@ samp {
 .hp-council-work-panel__title {
 	margin: 0 0 7px;
 	font-family: var(--wp--preset--font-family--display);
-	font-size: 19px;
+	font-size: var(--wp--preset--font-size--md);
 	font-weight: var(--wp--custom--weight--semibold);
 	line-height: 1.15;
 	color: var(--wp--custom--text--strong);
@@ -2512,7 +2512,7 @@ samp {
 
 .hp-council-work-panel__copy {
 	margin: 0 0 18px;
-	font-size: 14px;
+	font-size: var(--wp--preset--font-size--sm);
 	line-height: 1.35;
 	color: var(--wp--custom--text--muted);
 }
@@ -2658,18 +2658,26 @@ samp {
 	border-radius: var(--wp--custom--radius--sm);
 }
 
+/* The size needs `!important` for the same reason the borders below do.
+   Assembler sizes every non-submit input through a four-`:not()` selector
+   that outranks `.hp-council-search-form input` — and points it at
+   `--wp--preset--font-size--small`, a slug this theme's theme.json does not
+   define. An undefined var makes the declaration invalid at computed-value
+   time, so the field fell through to an inherited 13px and every size
+   written here was dead. Losing quietly to a *broken* parent rule is the
+   same failure shape as the focus ring below. */
 .hp-council-search-form input,
 .hp-council-drawer__search input {
 	min-width: 0;
 	flex: 1;
 	font-family: var(--wp--preset--font-family--body);
+	font-size: var(--wp--preset--font-size--sm) !important;
 	color: var(--wp--custom--text--strong);
 }
 
 .hp-council-search-form input {
 	block-size: 36px;
 	padding: 4px;
-	font-size: 14px;
 	background: transparent;
 	border: 0 !important;
 }
@@ -2687,7 +2695,7 @@ samp {
 .hp-council-search-form kbd {
 	padding: 3px 5px;
 	font-family: var(--wp--preset--font-family--mono);
-	font-size: 8px;
+	font-size: var(--wp--preset--font-size--2-xs);
 	text-transform: uppercase;
 	color: var(--wp--custom--text--faint);
 	background: var(--wp--preset--color--parchment-100);
@@ -2913,7 +2921,6 @@ samp {
 	.hp-council-drawer__search input {
 		block-size: 42px;
 		padding: 4px;
-		font-size: 14px;
 		background: transparent;
 		border: 0 !important;
 	}
