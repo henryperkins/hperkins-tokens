@@ -80,3 +80,21 @@ test( 'rendered recruiter probes keep snapshot and event-first draft phases dist
 	assert.match( prominent, /\.wp-block-buttons\.hp-action-rail/ );
 	assert.match( prominent, /\.hp-action-rail:not\(\.wp-block-buttons\)/ );
 } );
+
+test( 'default recruiter source acceptance pins the complete shared WCUS presentation', () => {
+	const recruiter = fs.readFileSync(
+		path.join( themeRoot, 'scripts', 'verify-job-placement-pages.js' ),
+		'utf8'
+	);
+	const defaultContract = /\} else \{\s*assertRuleDeclarations\( pageCss, \{\s*selector: '\.hp-wcus-callout',\s*declarations: \{([\s\S]*?)\r?\n\s*\},\r?\n\s*\} \);/.exec( recruiter );
+
+	assert( defaultContract, 'Default recruiter source acceptance has no generic WCUS callout contract.' );
+	assert.match(
+		defaultContract[ 1 ],
+		/'margin-block-start': 'var\(--wp--preset--spacing--6\)'/
+	);
+	assert.match(
+		defaultContract[ 1 ],
+		/background: 'color-mix\(in srgb, var\(--wp--preset--color--parchment-100\) 88%, var\(--wp--preset--color--gold-100\)\)'/
+	);
+} );
