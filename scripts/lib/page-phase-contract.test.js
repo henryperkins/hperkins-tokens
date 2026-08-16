@@ -127,7 +127,7 @@ test( 'Digest text resize qualification is exact and requires a collected result
 	const assertMetrics = sourceBetween(
 		recruiter,
 		'function assertPageMetrics',
-		'async function inspectDisclosures'
+		'async function inspectLedgers'
 	);
 
 	assert.match(
@@ -169,7 +169,7 @@ test( 'Digest text resize proof requires three visible actions with nonempty fou
 	const assertMetrics = sourceBetween(
 		recruiter,
 		'function assertPageMetrics',
-		'async function inspectDisclosures'
+		'async function inspectLedgers'
 	);
 
 	assert.match( probe, /actionCount: actions\.length/ );
@@ -239,7 +239,7 @@ test( '390px evidence must clear the taller metadata cell', () => {
 		sourceBetween(
 			readRecruiterVerifier(),
 			'function assertPageMetrics',
-			'async function inspectDisclosures'
+			'async function inspectLedgers'
 		),
 		'if ( viewport.width === 390 )',
 		'if ( viewport.width === 320 )'

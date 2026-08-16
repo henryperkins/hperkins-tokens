@@ -15,13 +15,18 @@ const path = require( 'node:path' );
 
 const { findHeadings, findLinks, extractExactText, parseTopLevelBlocks } = require( './lib/about-page-contract' );
 const {
+	APPENDIX_LEDGER_CONTRACTS,
 	DIGEST_ACCEPTED_ACTION_CONTRACTS,
 	DIGEST_COMPACT_CONTRACTS,
 	DIGEST_LOWER_CONTRACTS,
 	DIGEST_OPENING_CONTRACTS,
 } = require( './lib/job-placement-page-style-contracts' );
 const { getClassCount } = require( './lib/page-markup-contract' );
-const { assertKnownOptions, selectDigestSource } = require( './lib/page-phase-contract' );
+const {
+	assertKnownOptions,
+	selectDigestSource,
+	selectPlacementMethodSource,
+} = require( './lib/page-phase-contract' );
 const { getOrigin, stripWpcomCacheVersionFromRenderedHref } = require( './lib/site-url' );
 const { assertRuleDeclarations } = require( './lib/style-coverage' );
 
@@ -32,6 +37,7 @@ const ORIGIN = getOrigin();
 const SOURCE_ONLY = ARGV.includes( '--source-only' );
 const USE_DRAFTS = ARGV.includes( '--drafts' );
 const DIGEST_SOURCE = selectDigestSource( ARGV );
+const APPENDIX_SOURCE = selectPlacementMethodSource( ARGV );
 
 function read( sourcePath ) {
 	const resolved = path.isAbsolute( sourcePath ) ? sourcePath : path.join( ROOT, sourcePath );
@@ -327,6 +333,12 @@ function verifySourceContracts() {
 		);
 	}
 
+	// The appendix ledgers are filtered by the same script as the register, so
+	// the declarations that make filtering safe are pinned the same way.
+	for ( const contract of APPENDIX_LEDGER_CONTRACTS ) {
+		assertRuleDeclarations( pageCss, contract );
+	}
+
 	verifyStackedLedgerLabels( pageCss );
 
 	console.log( 'recruiter rendered-page source contracts verified' );
@@ -366,26 +378,21 @@ function ledgerHeaders( html, className ) {
  * or be as self-evident.
  */
 function verifyStackedLedgerLabels( pageCss ) {
-	const appendix = read( 'content/page-snapshots/placement-method-evidence.html' );
+	const appendix = read( APPENDIX_SOURCE );
 
 	const keyword = ledgerHeaders( appendix, 'hp-keyword-table' );
-	const state = ledgerHeaders( appendix, 'hp-state-table' );
 	const market = ledgerHeaders( appendix, 'hp-market-table' );
 
 	// `instances` are the header rows a single label speaks for; more than one
 	// means every table sharing that unscoped rule must still agree on the name.
 	const contract = [
 		{ table: 'hp-keyword-table', cell: 1, column: 1, scope: '', instances: keyword },
-		// The three disclosures bound their claims in different words, so each
-		// owns its own third-column label.
-		{ table: 'hp-keyword-table', cell: 2, column: 2, scope: '.hp-keyword-disclosure:nth-of-type(1) ', instances: [ keyword[0] ] },
-		{ table: 'hp-keyword-table', cell: 2, column: 2, scope: '.hp-keyword-disclosure:nth-of-type(2) ', instances: [ keyword[1] ] },
-		{ table: 'hp-keyword-table', cell: 2, column: 2, scope: '.hp-keyword-disclosure:nth-of-type(3) ', instances: [ keyword[2] ] },
-		{ table: 'hp-state-table', cell: 1, column: 1, scope: '', instances: state },
-		{ table: 'hp-state-table', cell: 2, column: 2, scope: '', instances: state },
+		// One ledger now, so one boundary label. The standing that used to be
+		// carried by which of three disclosures a row sat in rides in the row
+		// header instead, where the stacked layout shows it without a label.
+		{ table: 'hp-keyword-table', cell: 2, column: 2, scope: '', instances: keyword },
 		{ table: 'hp-market-table', cell: 3, column: 3, scope: '', instances: market },
 		{ table: 'hp-market-table', cell: 4, column: 4, scope: '', instances: market },
-		{ table: 'hp-market-table', cell: 5, column: 5, scope: '', instances: market },
 	];
 
 	for ( const { table, cell, column, scope, instances } of contract ) {
@@ -924,74 +931,152 @@ function assertPageMetrics( result, page, viewport ) {
 		assert( result.fragment.visible, `${ context } assigns #resume-keyword-bank to an empty or hidden element.` );
 		assert( result.fragment.heading === 'The 34-term keyword ledger', `${ context } fragment target does not own the keyword-ledger H2.` );
 		assert( result.fragment.isTarget, `${ context } #resume-keyword-bank does not become the meaningful :target.` );
-		assert( result.disclosures.length === 3, `${ context } renders ${ result.disclosures.length } disclosures; expected 3.` );
-		for ( const disclosure of result.disclosures ) {
-			assert( disclosure.height >= 44, `${ context } ${ disclosure.label } summary is ${ disclosure.height}px high; expected at least 44px.` );
-			assert( disclosure.fullWidth, `${ context } ${ disclosure.label } summary is not a full-width control.` );
-			assert( disclosure.cursor === 'pointer', `${ context } ${ disclosure.label } summary cursor is ${ disclosure.cursor}, not pointer.` );
-			assert( disclosure.focusVisible, `${ context } ${ disclosure.label } summary does not match :focus-visible after keyboard entry.` );
+
+		// Both ledgers publish complete before the filter narrows them, so the
+		// row totals are asserted against the enhancement's own idea of "all"
+		// rather than against whatever happens to be on screen.
+		assert( result.ledgers.length === 2, `${ context } renders ${ result.ledgers.length } filterable ledgers; expected 2.` );
+		for ( const ledger of result.ledgers ) {
 			assert(
-				disclosure.outlineStyle !== 'none' && disclosure.outlineWidth >= 3,
-				`${ context } ${ disclosure.label } summary has no 3px visible keyboard outline.`
+				ledger.rows === ledger.visibleRows,
+				`${ context } ${ ledger.name } opens with ${ ledger.visibleRows } of ${ ledger.rows } rows shown; the ledger must publish complete and filter down from there.`
 			);
-			assert( disclosure.enterOpened, `${ context } Enter did not open ${ disclosure.label }.` );
-			assert( disclosure.spaceClosed, `${ context } Space did not close ${ disclosure.label }.` );
-			assert( disclosure.closedMarker.includes( '+' ), `${ context } ${ disclosure.label } has no collapsed marker.` );
+			assert( ledger.rows === ledger.expectedRows, `${ context } ${ ledger.name } holds ${ ledger.rows } rows; expected ${ ledger.expectedRows }.` );
 			assert(
-				disclosure.openMarker.includes( '−' ) || disclosure.openMarker.includes( '\\2212' ),
-				`${ context } ${ disclosure.label } has no expanded marker.`
+				ledger.standings === ledger.rows,
+				`${ context } ${ ledger.name } states a standing on ${ ledger.standings } of ${ ledger.rows } rows; state may never rest on colour alone.`
 			);
+			assert( ledger.chips.length >= 4, `${ context } ${ ledger.name } offers ${ ledger.chips.length } filters; expected at least 4.` );
+			assert( ledger.group === 'group' && ledger.groupLabel, `${ context } ${ ledger.name } filter row is not a labelled group.` );
+			assert( ledger.statusLive === 'polite', `${ context } ${ ledger.name } filter has no polite status region.` );
+			assert( ledger.chipsSum === ledger.rows, `${ context } ${ ledger.name } chip counts total ${ ledger.chipsSum }, not the ${ ledger.rows } rows published.` );
+			for ( const chip of ledger.chips ) {
+				assert( chip.height >= 44, `${ context } ${ ledger.name } filter "${ chip.label }" is ${ chip.height }px high; expected at least 44px.` );
+				assert( chip.cursor === 'pointer', `${ context } ${ ledger.name } filter "${ chip.label }" cursor is ${ chip.cursor }, not pointer.` );
+				assert( chip.pressed !== null, `${ context } ${ ledger.name } filter "${ chip.label }" does not expose aria-pressed.` );
+			}
+			assert( ledger.focusVisible, `${ context } ${ ledger.name } filter does not match :focus-visible after keyboard entry.` );
+			assert(
+				ledger.outlineStyle !== 'none' && ledger.outlineWidth >= 2,
+				`${ context } ${ ledger.name } filter has no visible keyboard outline.`
+			);
+			assert( ledger.narrowed > 0 && ledger.narrowed < ledger.rows, `${ context } ${ ledger.name } filter did not narrow the ledger.` );
+			assert( ledger.narrowedPressed, `${ context } ${ ledger.name } filter did not mark the held state pressed.` );
+			assert(
+				ledger.narrowedStatus.includes( String( ledger.narrowed ) ),
+				`${ context } ${ ledger.name } status says "${ ledger.narrowedStatus }" while ${ ledger.narrowed } rows are shown.`
+			);
+			assert( ledger.restored === ledger.rows, `${ context } ${ ledger.name } did not restore every row when the filter was released.` );
 		}
 	}
 }
 
-async function inspectDisclosures( cdp, sessionId ) {
-	const count = await evaluate( cdp, sessionId, `document.querySelectorAll('details.hp-disclosure > summary').length` );
-	const disclosures = [];
-	for ( let index = 0; index < count; index++ ) {
-		// Establish keyboard modality before focusing a specific native summary.
+/**
+ * Both appendix ledgers publish complete and are narrowed by an injected filter
+ * row (assets/js/digest-register-filter.js). Nothing here may be read from the
+ * script's own bookkeeping: the row totals, the standing words, and the counts
+ * on the chips are read back off the rendered table, so a filter that hides a
+ * row it never counted fails rather than agreeing with itself.
+ */
+const APPENDIX_LEDGERS = [
+	{ name: 'keyword ledger', root: '.hp-resume-keyword-bank', table: '.hp-keyword-table table', rows: 34, standing: 'th strong' },
+	{ name: 'market screen', root: '.hp-live-states', table: '.hp-market-table table', rows: 20, standing: 'td:nth-of-type(4)' },
+];
+
+async function inspectLedgers( cdp, sessionId ) {
+	const ledgers = [];
+
+	for ( const ledger of APPENDIX_LEDGERS ) {
+		const present = await evaluate( cdp, sessionId, `!!document.querySelector('${ ledger.root } .hp-evidence-filter')` );
+		if ( ! present ) {
+			ledgers.push( { name: ledger.name, rows: 0, visibleRows: 0, expectedRows: ledger.rows, standings: 0, chips: [], chipsSum: 0 } );
+			continue;
+		}
+
+		// Establish keyboard modality before focusing a specific chip.
 		await pressKey( cdp, sessionId, 'Tab' );
-		const closed = await evaluate( cdp, sessionId, `(() => {
-			const summary = document.querySelectorAll('details.hp-disclosure > summary')[${ index }];
-			const details = summary.parentElement;
-			details.open = false;
-			summary.focus();
-			const style = getComputedStyle(summary);
-			const summaryRect = summary.getBoundingClientRect();
-			const detailsRect = details.getBoundingClientRect();
+		const opening = await evaluate( cdp, sessionId, `(() => {
+			const root = document.querySelector('${ ledger.root }');
+			const group = root.querySelector('.hp-evidence-filter');
+			const status = root.querySelector('.hp-evidence-filter__status');
+			const rows = Array.from(root.querySelectorAll('${ ledger.table } tbody tr'));
+			const isShown = (el) => {
+				const style = getComputedStyle(el);
+				return !el.hidden && style.display !== 'none' && style.visibility !== 'hidden' &&
+					el.getClientRects().length > 0;
+			};
+			const chips = Array.from(group.querySelectorAll('.hp-evidence-filter__button'));
+			chips[1].focus();
+			const style = getComputedStyle(chips[1]);
 			return {
-				label: summary.querySelector('span')?.textContent.trim() || summary.textContent.trim(),
-				height: summaryRect.height,
-				// The details border owns one pixel on each side, so a summary that
-				// fills the inner box is two CSS pixels narrower than the outer rect.
-				fullWidth: Math.abs(summaryRect.width - detailsRect.width) <= 2.1,
-				cursor: style.cursor,
-				focusVisible: summary.matches(':focus-visible'),
+				rows: rows.length,
+				visibleRows: rows.filter(isShown).length,
+				standings: rows.filter((row) => {
+					const cell = row.querySelector('${ ledger.standing }');
+					return !!cell && cell.textContent.trim().length > 0;
+				}).length,
+				group: group.getAttribute('role'),
+				groupLabel: group.getAttribute('aria-label'),
+				statusLive: status ? status.getAttribute('aria-live') : null,
+				chips: chips.map((chip) => ({
+					label: chip.textContent.trim(),
+					count: Number(chip.querySelector('.hp-evidence-filter__count').textContent),
+					height: chip.getBoundingClientRect().height,
+					cursor: getComputedStyle(chip).cursor,
+					pressed: chip.getAttribute('aria-pressed'),
+				})),
+				focusVisible: chips[1].matches(':focus-visible'),
 				outlineStyle: style.outlineStyle,
 				outlineWidth: parseFloat(style.outlineWidth) || 0,
-				closedMarker: getComputedStyle(summary, '::after').content,
 			};
 		})()` );
 
+		// The focused chip is the first real state; hold it, then release it.
 		await pressKey( cdp, sessionId, 'Enter' );
-		const opened = await evaluate( cdp, sessionId, `(() => {
-			const summary = document.querySelectorAll('details.hp-disclosure > summary')[${ index }];
+		const narrowed = await evaluate( cdp, sessionId, `(() => {
+			const root = document.querySelector('${ ledger.root }');
+			const rows = Array.from(root.querySelectorAll('${ ledger.table } tbody tr'));
+			const chips = Array.from(root.querySelectorAll('.hp-evidence-filter__button'));
+			const isShown = (el) => {
+				const style = getComputedStyle(el);
+				return !el.hidden && style.display !== 'none' && style.visibility !== 'hidden' &&
+					el.getClientRects().length > 0;
+			};
 			return {
-				open: summary.parentElement.open,
-				marker: getComputedStyle(summary, '::after').content,
+				shown: rows.filter(isShown).length,
+				pressed: chips[1].getAttribute('aria-pressed') === 'true',
+				status: root.querySelector('.hp-evidence-filter__status').textContent,
 			};
 		})()` );
 
-		await pressKey( cdp, sessionId, 'Space' );
-		const closedAgain = await evaluate( cdp, sessionId, `document.querySelectorAll('details.hp-disclosure')[${ index }].open === false` );
-		disclosures.push( {
-			...closed,
-			enterOpened: opened.open,
-			openMarker: opened.marker,
-			spaceClosed: closedAgain,
+		const restored = await evaluate( cdp, sessionId, `(() => {
+			const root = document.querySelector('${ ledger.root }');
+			root.querySelectorAll('.hp-evidence-filter__button')[0].click();
+			const rows = Array.from(root.querySelectorAll('${ ledger.table } tbody tr'));
+			const isShown = (el) => {
+				const style = getComputedStyle(el);
+				return !el.hidden && style.display !== 'none' && style.visibility !== 'hidden' &&
+					el.getClientRects().length > 0;
+			};
+			return rows.filter(isShown).length;
+		})()` );
+
+		ledgers.push( {
+			name: ledger.name,
+			expectedRows: ledger.rows,
+			...opening,
+			// "All" repeats the total, so the states themselves have to add up
+			// to it — a chip counting rows no other chip claims would pass a
+			// simple sum.
+			chipsSum: opening.chips.slice( 1 ).reduce( ( total, chip ) => total + chip.count, 0 ),
+			narrowed: narrowed.shown,
+			narrowedPressed: narrowed.pressed,
+			narrowedStatus: narrowed.status,
+			restored,
 		} );
 	}
-	return disclosures;
+
+	return ledgers;
 }
 
 async function inspectPage( cdp, page, viewport ) {
@@ -1020,9 +1105,9 @@ async function inspectPage( cdp, page, viewport ) {
 		await evaluate( cdp, sessionId, 'document.fonts ? document.fonts.ready : Promise.resolve()' );
 		await wait( 250 );
 
-		let disclosures = [];
+		let ledgers = [];
 		if ( page.name === 'appendix' ) {
-			disclosures = await inspectDisclosures( cdp, sessionId );
+			ledgers = await inspectLedgers( cdp, sessionId );
 		}
 
 		const metrics = await evaluate( cdp, sessionId, `(() => {
@@ -1218,7 +1303,11 @@ async function inspectPage( cdp, page, viewport ) {
 				proofItems,
 				fragment: anchor ? {
 					tagName: anchor.tagName,
-					visible: isVisible(anchor) && !!anchor.querySelector('h2') && !!anchor.querySelector('details'),
+					// Meaningful means the section carries its heading and the
+					// ledger the heading promises — not merely that the anchor
+					// resolves. The ledger used to be three <details>; it is one
+					// table now, so the ledger is what is looked for.
+					visible: isVisible(anchor) && !!anchor.querySelector('h2') && !!anchor.querySelector('.hp-keyword-table table tbody tr'),
 					heading: anchor.querySelector('h2')?.textContent.trim() || null,
 				} : null,
 			};
@@ -1306,7 +1395,7 @@ async function inspectPage( cdp, page, viewport ) {
 		})()` );
 		await cdp.send( 'Emulation.setEmulatedMedia', { media: 'screen', features: [] }, sessionId );
 
-		return { ...metrics, disclosures, reducedMotion };
+		return { ...metrics, ledgers, reducedMotion };
 	} finally {
 		await cdp.send( 'Target.closeTarget', { targetId: target.targetId } );
 	}

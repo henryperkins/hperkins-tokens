@@ -4,6 +4,7 @@ const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 const themeJson = require( '../../theme.json' );
 const {
+	APPENDIX_LEDGER_CONTRACTS,
 	DIGEST_ACCEPTED_ACTION_CONTRACTS,
 	DIGEST_COMPACT_CONTEXT,
 	DIGEST_COMPACT_CONTRACTS,
@@ -400,4 +401,73 @@ test( 'expandPatternChain terminates on a pattern cycle and skips missing files'
 	);
 	assert.equal( collected.length, 3, 'seed plus each pattern exactly once' );
 	assert.equal( classesInMarkup( collected ).has( 'hp-callout' ), true );
+} );
+
+/* --------------------------------------------------------------------------
+   Placement Method appendix ledgers.
+
+   Both appendix ledgers are narrowed by the same injected filter as the Digest
+   register, so the declarations that make filtering safe have to hold. The
+   rendered pass cannot substitute for these: it drives the filter through one
+   ledger at one width, while a missing [hidden] guard only shows up as a row
+   that refuses to leave the flow on a phone, and a missing narrow-layout rule
+   only shows up as a value column too small to read.
+   ----------------------------------------------------------------------- */
+
+test( 'appendix ledger declarations are present in the page sheet', () => {
+	assert( APPENDIX_LEDGER_CONTRACTS.length > 0 );
+	for ( const contract of APPENDIX_LEDGER_CONTRACTS ) {
+		assert.doesNotThrow(
+			() => assertRuleDeclarations( pagesCss, contract ),
+			`missing appendix ledger contract: ${ contract.selector }`
+		);
+	}
+} );
+
+/**
+ * Empty the declaration block that `selector` belongs to. Mutating by property
+ * name alone is not enough: `display: none` occurs dozens of times in this
+ * sheet, so a blind first-match replace edits an unrelated rule and the
+ * contract passes anyway, which is exactly the false confidence these mutation
+ * tests exist to catch.
+ */
+function emptyRuleContaining( css, selector, atContext ) {
+	// Parse rather than string-search. The same selector can appear once per
+	// breakpoint — the market screen's label/value line is declared at ≤781px
+	// and re-declared at ≤600px — and this sheet has several `@media
+	// (max-width: 600px)` blocks, so neither the selector nor the at-rule text
+	// identifies a rule on its own.
+	const rule = parseRules( css ).find(
+		( candidate ) =>
+			normalizeSelectors( candidate.prelude ).includes( selector ) &&
+			( candidate.atContext || null ) === ( atContext || null )
+	);
+	assert( rule, `mutation fixture never found ${ selector } in ${ atContext || 'top level' }` );
+	const open = css.indexOf( '{', rule.start );
+	return css.slice( 0, open + 1 ) + '\n' + css.slice( rule.end - 1 );
+}
+
+test( 'every appendix ledger contract fails when its rule is emptied', () => {
+	for ( const contract of APPENDIX_LEDGER_CONTRACTS ) {
+		const mutated = emptyRuleContaining( pagesCss, contract.selector, contract.atContext );
+		assert.notEqual( mutated, pagesCss, `mutation was a no-op for ${ contract.selector }` );
+		assert.throws(
+			() => assertRuleDeclarations( mutated, contract ),
+			`${ contract.selector } is not actually pinned`
+		);
+	}
+} );
+
+test( 'a filtered-out appendix row leaves the flow at every width', () => {
+	// The narrow layout re-declares rows as display:block, which ties with the
+	// UA sheet's [hidden] rule at equal specificity. Losing the extra class is
+	// invisible on desktop and leaves a "hidden" row rendering on a phone.
+	for ( const table of [ 'hp-keyword-table', 'hp-market-table', 'hp-evidence-table' ] ) {
+		assert.doesNotThrow( () =>
+			assertRuleDeclarations( pagesCss, {
+				selector: `.wp-block-table.${ table } tbody tr[hidden]`,
+				declarations: { display: 'none' },
+			} )
+		);
+	}
 } );

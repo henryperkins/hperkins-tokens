@@ -64,9 +64,49 @@ const STATE_TOKENS = [
 	[ 'released owned work', 'released' ],
 ];
 
+// The appendix's two ledgers classify the same way the register does, from the
+// row's own words. Keyword standing rides in the row header; market state is
+// the merged "current state · screen verdict" cell.
+const STANDING_TOKENS = [
+	[ 'demonstrated', 'demonstrated' ],
+	[ 'partial', 'partial' ],
+	[ 'gap', 'gap' ],
+];
+
+const MARKET_TOKENS = [
+	[ 'fail', 'failed' ],
+	[ 'pass — historical', 'historical' ],
+	[ 'needs verification', 'recheck' ],
+	[ 'needs new screen', 'recheck' ],
+	[ 'not screened', 'recheck' ],
+	[ 'pass', 'live' ],
+];
+
 const REGISTER_ROWS = 12;
 const REGISTER_GROUP_COUNTS = { released: 4, open: 4, unreleased: 4 };
+const KEYWORD_ROWS = 34;
+const KEYWORD_GROUP_COUNTS = { demonstrated: 10, partial: 11, gap: 13 };
+const MARKET_ROWS = 20;
 const PRIMARY_PROOF_MARKER = 'Primary proof · card above';
+
+// The appendix's spine. Same shape as the dossier's: a gold ordinal, a label
+// naming the move, the anchor, and the heading the anchor has to reach.
+const APPENDIX_SECTIONS = [
+	{ ordinal: '01', label: 'The vocabulary', anchor: 'resume-keyword-bank', heading: 'The 34-term keyword ledger' },
+	{ ordinal: '02', label: 'The screen', anchor: 'what-i-optimize-for', heading: 'What I optimize for in my next role' },
+	{ ordinal: '03', label: 'The application', anchor: 'screening-funnel', heading: 'WordPress Job Market Screen' },
+	{ ordinal: '04', label: 'What I took back', anchor: 'delisted-and-overturned', heading: 'Delisted postings and overturned decisions' },
+];
+
+// Structure the merged ledgers replaced. Each of these was a way of splitting
+// one ledger across three objects; leaving one behind means the page states a
+// standing twice, in two vocabularies.
+const RETIRED_APPENDIX_MARKERS = [
+	'hp-disclosure',
+	'hp-keyword-disclosure',
+	'hp-state-table',
+	'hp-overturn-list',
+];
 
 const REDUNDANT_DIGEST_MARKERS = [
 	'hp-digest-section__body',
@@ -169,14 +209,52 @@ function extractLinks( markup ) {
 	] );
 }
 
-function classifyState( text ) {
+function classifyWith( text, tokens ) {
 	const haystack = String( text || '' ).toLowerCase();
-	for ( const [ token, state ] of STATE_TOKENS ) {
+	for ( const [ token, state ] of tokens ) {
 		if ( haystack.includes( token ) ) {
 			return state;
 		}
 	}
 	return null;
+}
+
+function classifyState( text ) {
+	return classifyWith( text, STATE_TOKENS );
+}
+
+function tableRowMarkup( markup, className ) {
+	return [ ...getTableBody( markup, className ).matchAll( /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi ) ].map(
+		( match ) => match[ 1 ]
+	);
+}
+
+// Every ledger row has to classify, and the group totals have to match. A row
+// the script cannot file silently disables the filter for the whole ledger, and
+// a total that has drifted means the page and the research disagree about how
+// many terms or postings there are.
+function verifyLedgerGroups( markup, { className, cellExpression, tokens, expected, label } ) {
+	const counts = Object.fromEntries( Object.keys( expected ).map( ( key ) => [ key, 0 ] ) );
+
+	tableRowMarkup( markup, className ).forEach( ( row, index ) => {
+		const cell = cellExpression.exec( row );
+		assert( cell, `${ label } row ${ index + 1 } must carry a classifying cell.` );
+		const text = stripMarkup( cell[ 1 ] );
+		const group = classifyWith( text, tokens );
+		assert(
+			group && group in counts,
+			`${ label } row ${ index + 1 } reads "${ text }", which the filter cannot classify. ` +
+				'An unclassifiable row disables the filter for the whole ledger.'
+		);
+		counts[ group ] += 1;
+	} );
+
+	for ( const [ group, total ] of Object.entries( expected ) ) {
+		assert(
+			counts[ group ] === total,
+			`${ label } must hold ${ total } ${ group } rows; found ${ counts[ group ] }.`
+		);
+	}
 }
 
 function verifyHeadingContract( label, markup ) {
@@ -207,22 +285,30 @@ function verifyNoMovingGitHubLinks( label, markup ) {
 	);
 }
 
-// The register's state vocabulary lives in two places by necessity — a Node
-// verifier and a browser script that cannot share a module. Keep them equal.
-function verifyRegisterFilterAgreement() {
+// Each ledger's vocabulary lives in two places by necessity — a Node verifier
+// and a browser script that cannot share a module. Keep them equal, in order:
+// the scripts take the first matching token, so a reordering is a behaviour
+// change even when the pairs are identical as a set.
+function verifyLedgerFilterAgreement() {
 	const script = readRequiredFile( registerFilterPath );
-	const block = /var STATE_TOKENS = \[([\s\S]*?)\];/.exec( script );
-	assert( block, 'assets/js/digest-register-filter.js must declare STATE_TOKENS.' );
 
-	const scriptTokens = [ ...block[ 1 ].matchAll( /\[\s*'([^']+)'\s*,\s*'([^']+)'\s*\]/g ) ].map( ( match ) => [
-		match[ 1 ],
-		match[ 2 ],
-	] );
+	for ( const [ name, expected ] of [
+		[ 'STATE_TOKENS', STATE_TOKENS ],
+		[ 'STANDING_TOKENS', STANDING_TOKENS ],
+		[ 'MARKET_TOKENS', MARKET_TOKENS ],
+	] ) {
+		const block = new RegExp( `var ${ name } = \\[([\\s\\S]*?)\\];` ).exec( script );
+		assert( block, `assets/js/digest-register-filter.js must declare ${ name }.` );
 
-	assert(
-		JSON.stringify( scriptTokens ) === JSON.stringify( STATE_TOKENS ),
-		'assets/js/digest-register-filter.js STATE_TOKENS must match this verifier\'s list, in order.'
-	);
+		const scriptTokens = [ ...block[ 1 ].matchAll( /\[\s*'([^']+)'\s*,\s*'([^']+)'\s*\]/g ) ].map(
+			( match ) => [ match[ 1 ], match[ 2 ] ]
+		);
+
+		assert(
+			JSON.stringify( scriptTokens ) === JSON.stringify( expected ),
+			`assets/js/digest-register-filter.js ${ name } must match this verifier's list, in order.`
+		);
+	}
 }
 
 function verifyEvidenceRegister( markup ) {
@@ -403,7 +489,7 @@ function verifyMain( markup, _themeVersion, _deployedCommit, { requireEvent = tr
 
 	// 06 — the complete register, and the filter that can narrow it.
 	verifyEvidenceRegister( markup );
-	verifyRegisterFilterAgreement();
+	verifyLedgerFilterAgreement();
 
 	const closingBlock = topLevelBlocks[ closingIndex ];
 	assert( closingBlock.attrs.tagName === 'section', 'The closing invitation must serialize as a section.' );
@@ -424,18 +510,67 @@ function verifyAppendix( markup ) {
 	verifyNoPublicationPlaceholders( 'Placement Method and Evidence draft', markup );
 	verifyNoMovingGitHubLinks( 'Placement Method and Evidence draft', markup );
 
-	assert( hasMeaningfulFragmentTarget( markup, 'resume-keyword-bank' ), 'The resume-keyword-bank fragment must target the meaningful section, not an empty hidden node.' );
-	assert( getClassCount( markup, 'hp-disclosure' ) === 3, 'The appendix must contain three disclosure components.' );
-	assert( countTableRows( markup, 'hp-keyword-table' ) === 34, 'The appendix must contain all 34 keyword-ledger rows.' );
-	assert( countTableRows( markup, 'hp-market-table' ) === 20, 'The appendix must contain all 20 reconciled market rows.' );
+	// The four kickers are the appendix's spine, and each anchor has to reach a
+	// section that actually holds its heading.
+	const kickers = [ ...markup.matchAll( /<p class="hp-digest-kicker"><strong>(\d\d)<\/strong> · ([^<]+)<\/p>/g ) ];
+	assert(
+		kickers.length === APPENDIX_SECTIONS.length,
+		`The appendix must carry ${ APPENDIX_SECTIONS.length } numbered section kickers; found ${ kickers.length }.`
+	);
+	APPENDIX_SECTIONS.forEach( ( section, index ) => {
+		assert(
+			kickers[ index ][ 1 ] === section.ordinal && kickers[ index ][ 2 ] === section.label,
+			`Appendix section ${ index + 1 } must read "${ section.ordinal } · ${ section.label }"; found "${ kickers[ index ][ 1 ] } · ${ kickers[ index ][ 2 ] }".`
+		);
+		assert(
+			markup.includes( `>${ section.heading }</h2>` ),
+			`The appendix is missing the section heading: ${ section.heading }`
+		);
+		assert(
+			hasMeaningfulFragmentTarget( markup, section.anchor ),
+			`The ${ section.anchor } fragment must target its real section.`
+		);
+	} );
+
+	for ( const marker of RETIRED_APPENDIX_MARKERS ) {
+		assert( ! markup.includes( marker ), `The appendix still contains retired split-ledger structure: ${ marker }` );
+	}
+
+	// 01 — one ledger, every term present, each carrying a standing the filter
+	// can read. The three standings stay distinct without three tables.
+	assert( countTableRows( markup, 'hp-keyword-table' ) === KEYWORD_ROWS, `The appendix must contain all ${ KEYWORD_ROWS } keyword-ledger rows.` );
+	verifyLedgerGroups( markup, {
+		className: 'hp-keyword-table',
+		cellExpression: /<th\b[^>]*>[\s\S]*?<strong>([\s\S]*?)<\/strong>[\s\S]*?<\/th>/i,
+		tokens: STANDING_TOKENS,
+		expected: KEYWORD_GROUP_COUNTS,
+		label: 'The keyword ledger',
+	} );
+
+	// 03 — the screen, whole. Group totals are checked against the workbook in
+	// verify-placement-artifacts.js; here they only have to be classifiable.
+	assert( countTableRows( markup, 'hp-market-table' ) === MARKET_ROWS, `The appendix must contain all ${ MARKET_ROWS } reconciled market rows.` );
+	tableRowMarkup( markup, 'hp-market-table' ).forEach( ( row, index ) => {
+		const cells = [ ...row.matchAll( /<td\b[^>]*>([\s\S]*?)<\/td>/gi ) ];
+		assert( cells.length === 5, `Market row ${ index + 1 } must carry five data cells beside its row header; found ${ cells.length }.` );
+		const state = stripMarkup( cells[ 3 ][ 1 ] );
+		assert(
+			classifyWith( state, MARKET_TOKENS ),
+			`Market row ${ index + 1 } has a State the filter cannot classify: "${ state }".`
+		);
+	} );
+
+	verifyLedgerFilterAgreement();
 
 	for ( const required of [
 		'What I optimize for in my next role',
 		'I favor roles where technical and customer outcomes produce inspectable evidence—code, releases, live systems, documented incidents, or customer-facing artifacts—in addition to narrative reporting.',
-		'A claim has to survive inspection by someone who isn’t me.',
-		'The company name had answered a question about the customer. I overturned it.',
-		'A screen you can’t watch working is a screen you take on faith.',
-		'The AI passed one role because the employer’s brand matched my target ecosystem, even though the customer context did not satisfy my screen. Its own rationale contained the disqualifying evidence. I overturned the result.',
+		'Will the work survive inspection by someone who isn’t me?',
+		'filter the ledger to hold one standing at a time',
+		'filter the screen to hold one state at a time',
+		'an employer-level association overrode row-level evidence about the customer',
+		'The failure was not missing data: the role text and the model’s own rationale both contained the consumer, single-site context that disqualified it. I overturned the result.',
+		'The corrective control is simple: each question must cite the posting evidence that answers it, and an explicit failure cannot be canceled by the company name or the job title.',
 	] ) {
 		assert( markup.includes( required ), `Placement Method and Evidence draft is missing required copy: ${ required }` );
 	}
@@ -479,4 +614,15 @@ if ( require.main === module ) {
 	}
 }
 
-module.exports = { verifyMain, visibleWordCount, classifyState, STATE_TOKENS, SECTIONS };
+module.exports = {
+	verifyMain,
+	verifyAppendix,
+	visibleWordCount,
+	classifyState,
+	classifyWith,
+	STATE_TOKENS,
+	STANDING_TOKENS,
+	MARKET_TOKENS,
+	SECTIONS,
+	APPENDIX_SECTIONS,
+};

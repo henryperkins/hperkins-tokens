@@ -1,25 +1,28 @@
 /**
- * hperkins-tokens — release-state filter for the Job Placement Digest's
- * evidence register.
+ * hperkins-tokens — state filters for the Job Placement Digest's evidence
+ * register and for the Placement Method appendix's two ledgers.
  *
- * The register is a complete, DB-owned table of twelve dated records. This
- * script narrows what is *shown*; it never decides what exists. With no
- * JavaScript the filter row is never built and all twelve rows stay visible,
- * which is the honest default — the page must never depend on script to
- * disclose evidence it claims to publish.
+ * Each ledger is a complete, DB-owned table. This script narrows what is
+ * *shown*; it never decides what exists. With no JavaScript the filter row is
+ * never built and every row stays visible, which is the honest default — a
+ * page must never depend on script to disclose evidence it claims to publish.
  *
- * State is derived from each row's own State cell rather than from a list kept
- * here, so the table stays the single source of truth and a copy edit cannot
- * silently mis-file a record. Classification is all-or-nothing: if any row's
- * state text is not recognised, the enhancement declines to mount and the
- * register renders exactly as it does without JS. A filter that is 11/12
- * correct is worse than no filter, because the reader cannot tell which row
- * was dropped.
+ * State is derived from each row's own classifying cell rather than from a list
+ * of row identities kept here, so the table stays the single source of truth and
+ * a copy edit cannot silently mis-file a record. Classification is
+ * all-or-nothing per ledger: if any row's text is not recognised, that
+ * enhancement declines to mount and the ledger renders exactly as it does
+ * without JS. A filter that is 11/12 correct is worse than no filter, because
+ * the reader cannot tell which row was dropped.
  *
- * Order matters in STATE_TOKENS. "Released owned work · prerelease" is
- * unreleased, not released, so the prerelease test has to run before the
- * released one; likewise "Merged to owned main · unreleased" is unreleased
- * while "Authored · merged upstream" is released.
+ * Order matters in every token list; the first match wins.
+ *   Register — "Released owned work · prerelease" is unreleased, not released,
+ *   so the prerelease test runs before the released one; likewise "Merged to
+ *   owned main · unreleased" is unreleased while "Authored · merged upstream"
+ *   is released.
+ *   Market — a verdict of "Fail" outranks everything, "Pass — historical" has
+ *   to be read before the bare "pass" that it contains, and the three
+ *   needs-a-new-check verdicts are distinct sentences rather than one word.
  *
  * This site runs Gutenberg's full-page Interactivity Router: internal
  * navigations swap the <body> in place, discarding anything injected here.
@@ -31,9 +34,6 @@
  */
 ( function () {
 	'use strict';
-
-	var LEDGER = '.hp-evidence-ledger';
-	var TABLE  = '.hp-evidence-table table';
 
 	// Checked in order; first match wins. See the header note on ordering.
 	var STATE_TOKENS = [
@@ -47,27 +47,84 @@
 		[ 'released owned work', 'released' ]
 	];
 
-	var FILTERS = [
-		{ key: 'all', label: 'All evidence' },
-		{ key: 'released', label: 'Released' },
-		{ key: 'open', label: 'Open upstream' },
-		{ key: 'unreleased', label: 'Merged, unreleased' }
+	var STANDING_TOKENS = [
+		[ 'demonstrated', 'demonstrated' ],
+		[ 'partial', 'partial' ],
+		[ 'gap', 'gap' ]
 	];
 
-	function classify( text ) {
+	var MARKET_TOKENS = [
+		[ 'fail', 'failed' ],
+		[ 'pass — historical', 'historical' ],
+		[ 'needs verification', 'recheck' ],
+		[ 'needs new screen', 'recheck' ],
+		[ 'not screened', 'recheck' ],
+		[ 'pass', 'live' ]
+	];
+
+	var LEDGERS = [
+		{
+			root: '.hp-evidence-ledger',
+			figure: '.hp-evidence-table',
+			// Artifact is the row header; State is the first data cell.
+			cell: 'td',
+			tokens: STATE_TOKENS,
+			noun: 'records',
+			allSuffix: ' · states verified 10 Aug 2026',
+			label: 'Filter the evidence register by release state',
+			filters: [
+				{ key: 'all', label: 'All evidence' },
+				{ key: 'released', label: 'Released' },
+				{ key: 'open', label: 'Open upstream' },
+				{ key: 'unreleased', label: 'Merged, unreleased' }
+			]
+		},
+		{
+			root: '.hp-resume-keyword-bank',
+			figure: '.hp-keyword-table',
+			// The standing word rides in the row header, beside the keyword.
+			cell: 'th strong',
+			tokens: STANDING_TOKENS,
+			noun: 'terms',
+			allSuffix: '',
+			label: 'Filter the keyword ledger by standing',
+			filters: [
+				{ key: 'all', label: 'All terms' },
+				{ key: 'demonstrated', label: 'Demonstrated' },
+				{ key: 'partial', label: 'Partial' },
+				{ key: 'gap', label: 'Gap' }
+			]
+		},
+		{
+			root: '.hp-live-states',
+			figure: '.hp-market-table',
+			// Job title is the row header, so State is the fourth data cell.
+			cell: 'td:nth-of-type(4)',
+			tokens: MARKET_TOKENS,
+			noun: 'rows',
+			// No date claim here. Five of the twenty workbook rows have no Last
+			// checked value, and the derived distribution below the table says so;
+			// a status line asserting the opposite would be read aloud as fact.
+			allSuffix: '',
+			label: 'Filter the market screen by state',
+			filters: [
+				{ key: 'all', label: 'All rows' },
+				{ key: 'live', label: 'Live passes' },
+				{ key: 'historical', label: 'Historical' },
+				{ key: 'recheck', label: 'Needs a new check' },
+				{ key: 'failed', label: 'Screened out' }
+			]
+		}
+	];
+
+	function classify( text, tokens ) {
 		var haystack = String( text || '' ).toLowerCase();
-		for ( var i = 0; i < STATE_TOKENS.length; i++ ) {
-			if ( haystack.indexOf( STATE_TOKENS[ i ][ 0 ] ) !== -1 ) {
-				return STATE_TOKENS[ i ][ 1 ];
+		for ( var i = 0; i < tokens.length; i++ ) {
+			if ( haystack.indexOf( tokens[ i ][ 0 ] ) !== -1 ) {
+				return tokens[ i ][ 1 ];
 			}
 		}
 		return null;
-	}
-
-	function stateCellText( row ) {
-		// Artifact is the row header; State is the first data cell.
-		var cell = row.querySelector( 'td' );
-		return cell ? cell.textContent : '';
 	}
 
 	function el( tag, className ) {
@@ -78,13 +135,14 @@
 		return node;
 	}
 
-	function mount() {
-		var ledger = document.querySelector( LEDGER );
-		if ( ! ledger || ledger.querySelector( '.hp-evidence-filter' ) ) {
+	function mountLedger( ledger ) {
+		var root = document.querySelector( ledger.root );
+		if ( ! root || root.querySelector( '.hp-evidence-filter' ) ) {
 			return;
 		}
 
-		var table = ledger.querySelector( TABLE );
+		var figure = root.querySelector( ledger.figure );
+		var table = figure && figure.querySelector( 'table' );
 		if ( ! table ) {
 			return;
 		}
@@ -97,14 +155,20 @@
 		// Fail closed: classify every row before touching the DOM.
 		var groups = [];
 		for ( var i = 0; i < rows.length; i++ ) {
-			var group = classify( stateCellText( rows[ i ] ) );
+			var cell = rows[ i ].querySelector( ledger.cell );
+			var group = cell ? classify( cell.textContent, ledger.tokens ) : null;
 			if ( ! group ) {
 				return;
 			}
 			groups.push( group );
 		}
 
-		var counts = { all: rows.length, released: 0, open: 0, unreleased: 0 };
+		var counts = { all: rows.length };
+		ledger.filters.forEach( function ( filter ) {
+			if ( filter.key !== 'all' ) {
+				counts[ filter.key ] = 0;
+			}
+		} );
 		rows.forEach( function ( row, index ) {
 			var header = row.querySelector( 'th' );
 			if ( header ) {
@@ -115,7 +179,7 @@
 
 		var group = el( 'div', 'hp-evidence-filter' );
 		group.setAttribute( 'role', 'group' );
-		group.setAttribute( 'aria-label', 'Filter the evidence register by release state' );
+		group.setAttribute( 'aria-label', ledger.label );
 
 		var status = el( 'p', 'hp-evidence-filter__status' );
 		status.setAttribute( 'role', 'status' );
@@ -133,17 +197,17 @@
 				button.setAttribute( 'aria-pressed', button.dataset.state === key ? 'true' : 'false' );
 			} );
 
-			var active = FILTERS.filter( function ( filter ) {
+			var active = ledger.filters.filter( function ( filter ) {
 				return filter.key === key;
 			} )[ 0 ];
 
 			status.textContent = key === 'all'
-				? 'Showing all ' + counts.all + ' records · states verified 10 Aug 2026'
-				: 'Showing ' + counts[ key ] + ' of ' + counts.all + ' records · ' +
+				? 'Showing all ' + counts.all + ' ' + ledger.noun + ledger.allSuffix
+				: 'Showing ' + counts[ key ] + ' of ' + counts.all + ' ' + ledger.noun + ' · ' +
 					active.label.toLowerCase();
 		}
 
-		FILTERS.forEach( function ( filter ) {
+		ledger.filters.forEach( function ( filter ) {
 			var button = el( 'button', 'hp-evidence-filter__button' );
 			button.type = 'button';
 			button.dataset.state = filter.key;
@@ -162,11 +226,14 @@
 			group.appendChild( button );
 		} );
 
-		var figure = ledger.querySelector( '.hp-evidence-table' );
-		ledger.insertBefore( group, figure );
-		ledger.insertBefore( status, figure );
+		root.insertBefore( group, figure );
+		root.insertBefore( status, figure );
 
 		apply( 'all' );
+	}
+
+	function mount() {
+		LEDGERS.forEach( mountLedger );
 	}
 
 	function settle() {
@@ -191,7 +258,7 @@
 		try {
 			window.history[ method ] = wrapped;
 		} catch ( e ) {
-			/* read-only in some sandboxes — the register stays unfiltered. */
+			/* read-only in some sandboxes — the ledgers stay unfiltered. */
 		}
 	}
 

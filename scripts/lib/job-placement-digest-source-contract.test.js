@@ -7,16 +7,22 @@ const test = require( 'node:test' );
 
 const {
 	verifyMain,
+	verifyAppendix,
 	visibleWordCount,
 	classifyState,
 	STATE_TOKENS,
 	SECTIONS,
+	APPENDIX_SECTIONS,
 } = require( '../verify-job-placement-digest-source' );
 const { parseTopLevelBlocks } = require( './about-page-contract' );
 
 const THEME_ROOT = path.join( __dirname, '..', '..' );
 const DIGEST = fs.readFileSync(
 	path.join( THEME_ROOT, 'content', 'page-drafts', 'job-placement-digest.html' ),
+	'utf8'
+).replace( /\r\n/g, '\n' );
+const APPENDIX = fs.readFileSync(
+	path.join( THEME_ROOT, 'content', 'page-drafts', 'placement-method-evidence.html' ),
 	'utf8'
 ).replace( /\r\n/g, '\n' );
 const CURRENT_PUBLICATION_DATELINE = 'Published 13 Jul 2026 · Last verified 11 Aug 2026';
@@ -248,4 +254,83 @@ test( 'never reintroduces a moving branch URL or a publication placeholder', () 
 		'https://github.com/henryperkins/hperkins-tokens/blob/main/theme.json'
 	);
 	assert.throws( () => verifyMain( mutant ), /moving GitHub branch URL/ );
+} );
+
+/* --------------------------------------------------------------------------
+   Placement Method and Evidence appendix.
+
+   The redesign merged three standing-scoped keyword tables into one filterable
+   ledger and merged the market screen's Current state and Screen verdict into
+   one State cell. Both merges move a fact that used to be carried by structure
+   into a word inside the row, so these mutations check that the word is what
+   the contract now depends on.
+   ----------------------------------------------------------------------- */
+
+test( 'the accepted appendix candidate satisfies its own contract', () => {
+	assert.doesNotThrow( () => verifyAppendix( APPENDIX ) );
+} );
+
+test( 'carries the four numbered kickers in order, each reaching its section', () => {
+	APPENDIX_SECTIONS.forEach( ( section ) => {
+		assert.match(
+			APPENDIX,
+			new RegExp( `<strong>${ section.ordinal }</strong> · ${ section.label }` ),
+			`Appendix is missing the ${ section.ordinal } kicker.`
+		);
+	} );
+
+	const mutant = replaceOnce( APPENDIX, '<strong>03</strong> · The application', '<strong>03</strong> · The screen again' );
+	assert.throws( () => verifyAppendix( mutant ), /Appendix section 3 must read "03 · The application"/ );
+} );
+
+test( 'keeps every keyword term and its standing in one ledger', () => {
+	const mutant = replaceOnce( APPENDIX, 'SIEM / log analytics <strong>Gap</strong>', 'SIEM / log analytics <strong>Unclear</strong>' );
+	assert.throws( () => verifyAppendix( mutant ), /the filter cannot classify/ );
+
+	const recount = replaceOnce( APPENDIX, 'Python <strong>Gap</strong>', 'Python <strong>Partial</strong>' );
+	assert.throws( () => verifyAppendix( recount ), /must hold 11 partial rows; found 12/ );
+} );
+
+test( 'rejects a market State cell the filter cannot classify', () => {
+	const mutant = replaceOnce( APPENDIX, '<td>Replaced · Needs new screen</td>', '<td>Replaced</td>' );
+	assert.throws( () => verifyAppendix( mutant ), /has a State the filter cannot classify/ );
+} );
+
+test( 'refuses to bring back the three-disclosure split ledger', () => {
+	const mutant = replaceOnce(
+		APPENDIX,
+		'<!-- wp:table {"hasFixedLayout":false,"className":"hp-keyword-table is-style-hperkins-ledger"} -->',
+		'<!-- wp:details {"className":"hp-disclosure hp-keyword-disclosure"} -->\n<details class="wp-block-details hp-disclosure hp-keyword-disclosure"><summary>Demonstrated</summary></details>\n<!-- /wp:details -->\n\n<!-- wp:table {"hasFixedLayout":false,"className":"hp-keyword-table is-style-hperkins-ledger"} -->'
+	);
+	assert.throws( () => verifyAppendix( mutant ), /retired split-ledger structure: hp-disclosure/ );
+} );
+
+test( 'keeps the screen questions and the overturn admission verbatim', () => {
+	const question = replaceOnce(
+		APPENDIX,
+		'Will the work survive inspection by someone who isn’t me?',
+		'Will the work hold up?'
+	);
+	assert.throws( () => verifyAppendix( question ), /missing required copy: Will the work survive inspection/ );
+
+	const admission = replaceOnce(
+		APPENDIX,
+		'an employer-level association overrode row-level evidence about the customer',
+		'the model weighted the employer too heavily'
+	);
+	assert.throws( () => verifyAppendix( admission ), /missing required copy: an employer-level association/ );
+} );
+
+test( 'keeps the filter cue on both ledgers, so a reader knows the list can narrow', () => {
+	const mutant = replaceOnce(
+		APPENDIX,
+		'filter the screen to hold one state at a time',
+		'states are listed together'
+	);
+	assert.throws( () => verifyAppendix( mutant ), /missing required copy: filter the screen/ );
+} );
+
+test( 'keeps the appendix false-pass employer anonymous', () => {
+	const mutant = replaceOnce( APPENDIX, 'Target-ecosystem employer (anonymized)', 'Happiness Engineer team' );
+	assert.throws( () => verifyAppendix( mutant ), /must anonymize the public false-pass employer/ );
 } );

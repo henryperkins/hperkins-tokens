@@ -24,4 +24,20 @@ function selectAboutSource( { drafts = false, requireLocal = false } = {} ) {
 	return path.join( themeRoot, relative );
 }
 
-module.exports = { assertKnownOptions, selectAboutSource, selectDigestSource };
+// The appendix has the same two phases as the Digest. Source-side contracts
+// that compare the stylesheet against the page body have to read the candidate
+// while a redesign is in review, or the reviewed body and the published mirror
+// hold mutually incompatible shapes and neither can be made to pass.
+function selectPlacementMethodSource( argv = [] ) {
+	const relative = argv.includes( '--drafts' )
+		? 'content/page-drafts/placement-method-evidence.html'
+		: 'content/page-snapshots/placement-method-evidence.html';
+	return path.join( themeRoot, relative );
+}
+
+module.exports = {
+	assertKnownOptions,
+	selectAboutSource,
+	selectDigestSource,
+	selectPlacementMethodSource,
+};

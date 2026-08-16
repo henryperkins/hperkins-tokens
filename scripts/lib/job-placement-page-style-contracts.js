@@ -252,7 +252,49 @@ const DIGEST_LOWER_CONTRACTS = [
 	},
 ];
 
+// The appendix's two ledgers are filtered by the same script as the register,
+// so they need the same declarations to hold. Each of these is load-bearing in
+// a way a rendered pass cannot see on its own: the [hidden] guards decide
+// whether a filtered-out row leaves the flow at phone widths, the standing rule
+// is the redundant second signal beside the standing word, and the narrow
+// label/value grid is what keeps a stacked ledger line readable.
+const APPENDIX_LEDGER_CONTRACTS = [
+	{
+		selector: '.wp-block-table.hp-keyword-table tbody tr[hidden]',
+		declarations: { display: 'none' },
+	},
+	{
+		selector: '.wp-block-table.hp-market-table tbody tr[hidden]',
+		declarations: { display: 'none' },
+	},
+	{
+		selector: '.hp-keyword-table tbody th[data-state="demonstrated"]',
+		declarations: { 'border-inline-start-color': 'var(--wp--custom--status--done)' },
+	},
+	{
+		selector: '.hp-market-table tbody th[data-state="live"]',
+		declarations: { 'border-inline-start-color': 'var(--wp--custom--status--done)' },
+	},
+	{
+		selector: '.hp-market-table tbody th[data-state="failed"]',
+		declarations: { 'border-inline-start-color': 'var(--wp--preset--color--rust)' },
+	},
+	// Below the plate's own breakpoint the label returns above its value. At
+	// 320px the two-column line left an 18px value track beside a 128px label.
+	{
+		selector: '.wp-block-table.hp-market-table tbody td:nth-of-type(n + 3):nth-of-type(-n + 4):not(:empty)',
+		atContext: DIGEST_PHONE_CONTEXT,
+		declarations: { display: 'block' },
+	},
+	{
+		selector: '.hp-method-plate',
+		atContext: DIGEST_PHONE_CONTEXT,
+		declarations: { 'padding-inline': 'var(--wp--preset--spacing--3)' },
+	},
+];
+
 module.exports = {
+	APPENDIX_LEDGER_CONTRACTS,
 	DIGEST_ACCEPTED_ACTION_CONTRACTS,
 	DIGEST_COMPACT_CONTEXT,
 	DIGEST_COMPACT_CONTRACTS,

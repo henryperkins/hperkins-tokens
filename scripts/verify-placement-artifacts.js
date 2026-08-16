@@ -13,6 +13,10 @@ const { inflateSync } = require( 'node:zlib' );
 
 const { openZip } = require( './lib/zip-archive' );
 const { readReleaseRecord } = require( './lib/release-record' );
+// The market screen's state vocabulary is declared once, beside the register's,
+// and asserted there against the browser script. Import it rather than keeping
+// a third copy that can drift from both.
+const { MARKET_TOKENS, classifyWith } = require( './verify-job-placement-digest-source' );
 
 const themeRoot = join( __dirname, '..' );
 const artifactDir = join( themeRoot, 'assets', 'documents' );
@@ -599,40 +603,56 @@ function assertTableValues( expectedRows, actualRows, label, columns ) {
 	}
 }
 
-function funnelSummaryRows( workbookRows ) {
+// The published screen merges the workbook's Current state and Screen verdict
+// into one State cell. The merge is presentation; the workbook stays the
+// seven-column record, so parity projects the workbook onto what the page
+// renders rather than the other way round.
+const marketRenderedColumns = [ 'Job title', 'Company', 'Posting', 'Last checked', 'State', 'Reasoning' ];
+const stateSeparator = ' · ';
+
+function projectWorkbookRow( row ) {
+	return [ row[0], row[1], row[2], row[3], `${ row[4] }${ stateSeparator }${ row[5] }`, row[6] ];
+}
+
+// The funnel that used to be a static seven-row table is now the market
+// filter's chip counts. The derivation stays here: every workbook row must
+// still fall in exactly one bucket, and the buckets still have to add up to the
+// groups the filter offers. Deleting the table did not delete the check.
+function funnelBuckets( workbookRows ) {
 	const dataRows = workbookRows.slice( 1 );
 	const buckets = [
 		{
 			label: 'Current live passes',
-			rule: 'Current state “Live”; verdict “Pass” or “Pass — manual review”',
+			group: 'live',
 			matches: ( row ) => row[4] === 'Live' && [ 'Pass', 'Pass — manual review' ].includes( row[5] ),
 		},
 		{
 			label: 'Verification unresolved',
-			rule: 'Current state “Verification pending” or “Unverified”; verdict “Needs verification”',
+			group: 'recheck',
 			matches: ( row ) => [ 'Verification pending', 'Unverified' ].includes( row[4] ) && row[5] === 'Needs verification',
 		},
 		{
 			label: 'Historical, not-current passes',
-			rule: 'Screen verdict “Pass — historical”',
+			group: 'historical',
 			matches: ( row ) => row[5] === 'Pass — historical',
 		},
 		{
 			label: 'Replaced postings',
-			rule: 'Current state “Replaced”; verdict “Needs new screen”',
+			group: 'recheck',
 			matches: ( row ) => row[4] === 'Replaced' && row[5] === 'Needs new screen',
 		},
 		{
 			label: 'Expired before screening',
-			rule: 'Current state begins “Expired”; verdict “Not screened — expired”',
+			group: 'recheck',
 			matches: ( row ) => row[4].startsWith( 'Expired' ) && row[5] === 'Not screened — expired',
 		},
 		{
 			label: 'Human failures',
-			rule: 'Screen verdict “Fail” or “Fail — overturned”',
+			group: 'failed',
 			matches: ( row ) => [ 'Fail', 'Fail — overturned' ].includes( row[5] ),
 		},
 	];
+	const groups = { live: 0, historical: 0, recheck: 0, failed: 0 };
 	for ( const row of dataRows ) {
 		const matches = buckets.filter( ( bucket ) => bucket.matches( row ) );
 		assert(
@@ -640,16 +660,25 @@ function funnelSummaryRows( workbookRows ) {
 			`Workbook row "${ row[0] }" belongs to ${ matches.length } funnel buckets; expected exactly one. ` +
 			`State/verdict: ${ JSON.stringify( [ row[4], row[5] ] ) }.`
 		);
+		groups[matches[0].group] += 1;
 	}
-	return [
-		[ 'Measure', 'Count', 'Workbook rule' ],
-		[ 'Rows in public ledger', String( dataRows.length ), 'Every row after the seven-column header' ],
-		...buckets.map( ( bucket ) => [
-			bucket.label,
-			String( dataRows.filter( ( row ) => bucket.matches( row ) ).length ),
-			bucket.rule,
-		] ),
-	];
+	return groups;
+}
+
+// The rendered State cell is the only place the merge is visible, so it is the
+// only honest input for the counts the page shows. Classifying it back into the
+// same four groups proves the merge did not lose or move a row.
+function renderedMarketGroups( marketRows ) {
+	const groups = { live: 0, historical: 0, recheck: 0, failed: 0 };
+	marketRows.slice( 1 ).forEach( ( row, index ) => {
+		const group = classifyWith( row[4], MARKET_TOKENS );
+		assert(
+			group,
+			`Appendix market row ${ index + 1 } has a State the filter cannot classify: "${ row[4] }".`
+		);
+		groups[group] += 1;
+	} );
+	return groups;
 }
 
 function lastCheckedSummary( workbookRows ) {
@@ -668,17 +697,60 @@ function lastCheckedSummary( workbookRows ) {
 	return `Last checked distribution: ${ [ ...dated, `not recorded — ${ missing } ${ missing === 1 ? 'row' : 'rows' }` ].join( '; ' ) }.`;
 }
 
+// The hero's three scope chips are counts, and a count on this page is a claim.
+// The funnel table used to be the only derived number checked against the
+// workbook; when it went, the chips became the page's most prominent unchecked
+// arithmetic — and the first draft of them asserted every state was dated when
+// five rows carry no date at all. Derive them here so a chip cannot drift from
+// the ledger it summarizes.
+function verifyAppendixScopeChips( workbookRows, appendixHtml, groups ) {
+	const dataRows = workbookRows.slice( 1 );
+	const dated = dataRows.filter( ( row ) => row[3] !== '' ).length;
+	const overturned = dataRows.filter( ( row ) => row[5] === 'Fail — overturned' ).length;
+	const keywordRows = htmlTableRows( tableSourceByClass( appendixHtml, 'hp-keyword-table' ) ).length - 1;
+
+	const scopeMatch = /<div\b[^>]*class="[^"]*\bhp-method-scope\b[^"]*"[^>]*>([\s\S]*?)<\/div>/i.exec( appendixHtml );
+	assert( scopeMatch, 'Appendix is missing the hero scope bar.' );
+	const chips = [ ...scopeMatch[1].matchAll( /<p\b[^>]*class="[^"]*\bhp-chip\b[^"]*"[^>]*>([\s\S]*?)<\/p>/gi ) ]
+		.map( ( match ) => stripHtml( match[1] ) );
+
+	const expected = [
+		`${ keywordRows } résumé terms audited against five postings`,
+		`${ dataRows.length } market rows screened, ${ dated } with a dated check`,
+		`${ groups.failed } rows failed by hand, ${ overturned } overturning an AI pass`,
+	];
+
+	assert(
+		chips.length === expected.length,
+		`Appendix hero states ${ chips.length } scope chips; expected ${ expected.length }.`
+	);
+	expected.forEach( ( text, index ) => {
+		assert(
+			chips[index] === text,
+			`Appendix scope chip ${ index + 1 } differs. Derived: "${ text }"; appendix: "${ chips[index] }".`
+		);
+	} );
+}
+
 function verifyAppendixWorkbookParity( workbookRows, appendixHtml ) {
 	assert(
 		workbookRows.length > 1 && approvedColumns.every( ( column, index ) => workbookRows[0][index] === column ),
 		'Workbook rows supplied to appendix parity must begin with the seven approved columns.'
 	);
 	const marketRows = htmlTableRows( tableSourceByClass( appendixHtml, 'hp-market-table' ), 2 );
-	assertTableValues( workbookRows, marketRows, 'Appendix market table', approvedColumns );
+	const expectedRows = [ marketRenderedColumns, ...workbookRows.slice( 1 ).map( projectWorkbookRow ) ];
+	assertTableValues( expectedRows, marketRows, 'Appendix market table', marketRenderedColumns );
 
-	const summaryRows = funnelSummaryRows( workbookRows );
-	const appendixSummaryRows = htmlTableRows( tableSourceByClass( appendixHtml, 'hp-state-table' ) );
-	assertTableValues( summaryRows, appendixSummaryRows, 'Appendix funnel table', summaryRows[0] );
+	const expectedGroups = funnelBuckets( workbookRows );
+	const actualGroups = renderedMarketGroups( marketRows );
+	for ( const [ group, expected ] of Object.entries( expectedGroups ) ) {
+		assert(
+			actualGroups[group] === expected,
+			`Appendix market screen shows ${ actualGroups[group] } ${ group } rows; the workbook derives ${ expected }.`
+		);
+	}
+
+	verifyAppendixScopeChips( workbookRows, appendixHtml, expectedGroups );
 
 	const dateSummaryMatch = appendixHtml.match(
 		/<p\b[^>]*class="[^"]*\bhp-market-date-summary\b[^"]*"[^>]*>([\s\S]*?)<\/p>/i

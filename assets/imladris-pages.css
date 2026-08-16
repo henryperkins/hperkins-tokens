@@ -756,18 +756,61 @@ p.hp-contact-form__hint {
   line-height: var(--wp--custom--leading--relaxed);
 }
 
-.hp-method-hero .wp-block-buttons {
-  margin-block-start: var(--wp--preset--spacing--5);
+.hp-method-scope {
+  margin-block: var(--wp--preset--spacing--5) 0;
 }
 
-/* Disclosure/index: the closed row is the index. Open content becomes a
-   lighter internal ledger and retains native Details keyboard behavior. */
-.hp-keyword-disclosure > .hp-keyword-table {
+/* The three standings are defined once, before the ledger that uses them.
+   Each definition carries its own status rule, so the legend teaches the
+   colour and the ledger repeats it — the word is present in both. */
+/* min() caps the track floor at the container: auto-fit bottoms out at one
+   column but the 15rem base is a hard minimum, so without it a viewport
+   narrower than 15rem plus the root padding scrolls the whole document. */
+.hp-standing-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+  gap: var(--wp--preset--spacing--4);
+  margin-block: var(--wp--preset--spacing--5);
+}
+
+.hp-standing-legend__item {
+  min-inline-size: 0;
+  margin-block: 0;
+  padding-inline-start: var(--wp--preset--spacing--4);
+  border-inline-start: var(--hp-rule-entry) solid var(--wp--custom--border--hair);
+}
+
+.hp-standing-legend__item.is-demonstrated {
+  border-inline-start-color: var(--wp--custom--status--done);
+}
+
+.hp-standing-legend__item.is-partial {
+  border-inline-start-color: var(--wp--custom--status--review);
+}
+
+.hp-standing-legend__item.is-gap {
+  border-inline-start-color: var(--wp--custom--status--pending);
+}
+
+.hp-standing-legend__item dt {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  letter-spacing: var(--hp-tracking-label);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--strong);
+}
+
+.hp-standing-legend__item dd {
+  margin: var(--hp-gap-xs) 0 0;
+  color: var(--wp--custom--text--muted);
+}
+
+.hp-standing-legend__item :is(dt, dd) > p {
   margin: 0;
-  background: var(--wp--custom--surface--sunken);
-  border: 0;
-  border-block-start: 1px solid var(--wp--custom--border--hair);
-  border-radius: 0;
+}
+
+.hp-resume-keyword-bank > p {
+  max-inline-size: var(--wp--custom--measure--prose);
 }
 
 .hp-keyword-table table {
@@ -778,6 +821,10 @@ p.hp-contact-form__hint {
   inline-size: 29%;
 }
 
+.hp-keyword-table :is(th, td):nth-child(2) {
+  inline-size: 26%;
+}
+
 .hp-screen-rules > p {
   max-inline-size: var(--wp--custom--measure--prose);
 }
@@ -786,48 +833,157 @@ p.hp-contact-form__hint {
   max-inline-size: var(--wp--custom--measure--prose);
 }
 
-.hp-state-table table {
-  min-inline-size: 42rem;
+/* Q1/Q2/Q3 lead their question from a fixed mono column. The numeral stays
+   inside the heading so it reaches the accessible name — the market screen
+   links these exact strings, and a reader arriving from a failed row has to
+   find the same label they clicked. */
+.hp-numbered-rule h3 {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  column-gap: var(--wp--preset--spacing--3);
+  align-items: baseline;
 }
 
-.hp-state-table :is(th, td):nth-child(2) {
-  inline-size: 8rem;
+.hp-numbered-rule h3 strong {
   font-family: var(--wp--preset--font-family--mono);
-  white-space: nowrap;
+  font-size: var(--wp--preset--font-size--md);
+  font-weight: 400;
+  color: var(--wp--preset--color--gold-700);
 }
 
-.hp-market-table table {
-  min-inline-size: 90rem;
+/* The screen is the page's densest object, so it sits on its own plate rather
+   than on the page ground. */
+.hp-method-plate {
+  padding: var(--wp--preset--spacing--6);
+  border-block: 1px solid var(--wp--custom--border--hair);
+  background: var(--wp--custom--surface--sunken);
 }
 
-.hp-market-table :is(th, td):nth-child(1) {
-  inline-size: 15%;
-}
-
-.hp-market-table :is(th, td):nth-child(2) {
-  inline-size: 12%;
-}
-
-.hp-market-table :is(th, td):nth-child(3) {
-  inline-size: 14%;
-}
-
-.hp-market-table :is(th, td):nth-child(4),
-.hp-market-table :is(th, td):nth-child(5),
-.hp-market-table :is(th, td):nth-child(6) {
-  inline-size: 10%;
-}
-
-.hp-overturn-list {
+.hp-live-states > p {
   max-inline-size: var(--wp--custom--measure--prose);
 }
 
-.hp-overturn-list li + li {
-  margin-block-start: var(--wp--preset--spacing--3);
+.hp-market-note,
+.hp-market-date-summary {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--xs);
+  line-height: var(--wp--custom--leading--relaxed);
+  color: var(--wp--custom--text--muted);
 }
 
-.hp-decision-audit .wp-block-quote {
-  margin-block-start: var(--wp--preset--spacing--6);
+.hp-market-table table {
+  min-inline-size: 74rem;
+}
+
+.hp-market-table :is(th, td):nth-child(1) {
+  inline-size: 16%;
+}
+
+.hp-market-table :is(th, td):nth-child(2) {
+  inline-size: 14%;
+}
+
+.hp-market-table :is(th, td):nth-child(3) {
+  inline-size: 10%;
+}
+
+.hp-market-table :is(th, td):nth-child(4) {
+  inline-size: 9%;
+}
+
+.hp-market-table :is(th, td):nth-child(5) {
+  inline-size: 14%;
+}
+
+/* Both merged fields are machine data, so they are set as machine data: the
+   dated check and the state · verdict pair read in mono, and the separator is
+   the only thing joining two workbook columns into one cell. */
+.hp-market-table tbody :is(td:nth-of-type(3), td:nth-of-type(4)) {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--xs);
+}
+
+.hp-market-table tbody td:nth-of-type(4) {
+  color: var(--wp--custom--text--strong);
+}
+
+/* A workbook cell that is genuinely empty stays genuinely empty in the source,
+   so parity against the published workbook still compares "" to "". The dash
+   is drawn, never stored — an authored em-dash would read back as data. */
+@media (min-width: 782px) {
+  .hp-market-table tbody td:empty::after {
+    content: "—";
+    color: var(--wp--custom--text--faint);
+  }
+}
+
+/* Standing and state rule on each ledger row, matching the register above. The
+   word is already in the row, so the rule is a second, redundant signal —
+   never the only one. Rows carry data-state only once the filter script has
+   classified every row; an unclassified ledger keeps a neutral hairline. */
+.hp-keyword-table tbody th[data-state],
+.hp-market-table tbody th[data-state] {
+  border-inline-start: var(--hp-rule-entry) solid var(--wp--custom--border--hair);
+}
+
+.hp-keyword-table tbody th[data-state="demonstrated"],
+.hp-market-table tbody th[data-state="live"] {
+  border-inline-start-color: var(--wp--custom--status--done);
+}
+
+.hp-keyword-table tbody th[data-state="partial"],
+.hp-market-table tbody th[data-state="recheck"] {
+  border-inline-start-color: var(--wp--custom--status--review);
+}
+
+.hp-keyword-table tbody th[data-state="gap"],
+.hp-market-table tbody th[data-state="historical"] {
+  border-inline-start-color: var(--wp--custom--status--pending);
+}
+
+/* Screened out is the one terminal negative in either ledger, and the status
+   trio has no token for it. Rust is the palette's danger hue and it is only
+   ever the rule, never the word. */
+.hp-market-table tbody th[data-state="failed"] {
+  border-inline-start-color: var(--wp--preset--color--rust);
+}
+
+/* The standing rides in the row header beside the keyword, set as a machine
+   label so the term itself keeps the reading weight. */
+.hp-keyword-table tbody th strong {
+  display: block;
+  margin-block-start: var(--hp-gap-xs);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  font-weight: 400;
+  letter-spacing: var(--hp-tracking-label);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--muted);
+}
+
+/* The narrow layout below re-declares tbody rows as display:block, which would
+   beat the UA sheet's [hidden] rule at equal specificity, so a filtered-out row
+   would keep rendering on a phone. Carry the extra class to win outright at any
+   source order. */
+.wp-block-table.hp-keyword-table tbody tr[hidden],
+.wp-block-table.hp-market-table tbody tr[hidden] {
+  display: none;
+}
+
+/* Filtering hides rows without moving :last-child, so the ledger's own
+   bottom-separator suppression keeps pointing at a row nobody can see and the
+   filtered card draws a doubled hairline against the figure border. Follow the
+   last *visible* row instead: a row with no un-hidden row after it. Browsers
+   without :has() fall back to the unfiltered behaviour, which is the state the
+   original rule was written for. */
+.wp-block-table.hp-evidence-table tbody tr:not([hidden]):not(:has(~ tr:not([hidden]))) > *,
+.wp-block-table.hp-keyword-table tbody tr:not([hidden]):not(:has(~ tr:not([hidden]))) > *,
+.wp-block-table.hp-market-table tbody tr:not([hidden]):not(:has(~ tr:not([hidden]))) > * {
+  border-block-end: 0;
+}
+
+.hp-decision-audit > p {
+  max-inline-size: var(--wp--custom--measure--prose);
 }
 
 @media (max-width: 960px) {
@@ -920,7 +1076,6 @@ p.hp-contact-form__hint {
   /* Each column header is reproduced inside its cell below, so the header row
      would only repeat itself. Keep it in the accessibility tree. */
   .wp-block-table.hp-keyword-table thead,
-  .wp-block-table.hp-state-table thead,
   .wp-block-table.hp-market-table thead,
   .wp-block-table.hp-evidence-table thead {
     position: absolute;
@@ -936,14 +1091,12 @@ p.hp-contact-form__hint {
 
   /* Stacked rows fit, so there is nothing left to scroll. */
   .wp-block-table.hp-keyword-table,
-  .wp-block-table.hp-state-table,
   .wp-block-table.hp-market-table,
   .wp-block-table.hp-evidence-table {
     overflow-x: visible;
   }
 
   .wp-block-table.hp-keyword-table table,
-  .wp-block-table.hp-state-table table,
   .wp-block-table.hp-market-table table,
   .wp-block-table.hp-evidence-table table {
     display: block;
@@ -951,14 +1104,12 @@ p.hp-contact-form__hint {
   }
 
   .wp-block-table.hp-keyword-table tbody,
-  .wp-block-table.hp-state-table tbody,
   .wp-block-table.hp-market-table tbody,
   .wp-block-table.hp-evidence-table tbody {
     display: block;
   }
 
   .wp-block-table.hp-keyword-table tbody :is(tr, th, td),
-  .wp-block-table.hp-state-table tbody :is(tr, th, td),
   .wp-block-table.hp-market-table tbody :is(tr, th, td),
   .wp-block-table.hp-evidence-table tbody :is(tr, th, td) {
     box-sizing: border-box;
@@ -967,23 +1118,25 @@ p.hp-contact-form__hint {
   }
 
   .wp-block-table.hp-keyword-table tbody tr,
-  .wp-block-table.hp-state-table tbody tr,
   .wp-block-table.hp-market-table tbody tr {
     padding: var(--wp--preset--spacing--4);
     border-block-end: 1px solid var(--wp--custom--border--hair);
   }
 
+  /* Stacked rows own the separator themselves, so the last-visible-row rule
+     above has to be repeated against the row rather than its cells. */
   .wp-block-table.hp-keyword-table tbody tr:last-child,
-  .wp-block-table.hp-state-table tbody tr:last-child,
   .wp-block-table.hp-market-table tbody tr:last-child,
-  .wp-block-table.hp-evidence-table tbody tr:last-child {
+  .wp-block-table.hp-evidence-table tbody tr:last-child,
+  .wp-block-table.hp-keyword-table tbody tr:not([hidden]):not(:has(~ tr:not([hidden]))),
+  .wp-block-table.hp-market-table tbody tr:not([hidden]):not(:has(~ tr:not([hidden]))),
+  .wp-block-table.hp-evidence-table tbody tr:not([hidden]):not(:has(~ tr:not([hidden]))) {
     border-block-end: 0;
   }
 
   /* The row owns the padding and the separator now, not the cell. Full-width
      cells wrap at word boundaries; `anywhere` is for narrow table columns. */
   .wp-block-table.hp-keyword-table tbody :is(th, td),
-  .wp-block-table.hp-state-table tbody :is(th, td),
   .wp-block-table.hp-market-table tbody :is(th, td),
   .wp-block-table.hp-evidence-table tbody :is(th, td) {
     padding: 0;
@@ -1027,7 +1180,6 @@ p.hp-contact-form__hint {
   }
 
   .wp-block-table.hp-keyword-table tbody th,
-  .wp-block-table.hp-state-table tbody th,
   .wp-block-table.hp-market-table tbody th,
   .wp-block-table.hp-evidence-table tbody th {
     font-size: var(--wp--preset--font-size--md);
@@ -1035,7 +1187,6 @@ p.hp-contact-form__hint {
   }
 
   .wp-block-table.hp-keyword-table tbody td,
-  .wp-block-table.hp-state-table tbody td,
   .wp-block-table.hp-market-table tbody td,
   .wp-block-table.hp-evidence-table tbody td {
     margin-block-start: var(--wp--preset--spacing--3);
@@ -1043,7 +1194,6 @@ p.hp-contact-form__hint {
 
   /* A workbook cell that is genuinely empty must not leave a naked label. */
   .wp-block-table.hp-keyword-table tbody td:empty,
-  .wp-block-table.hp-state-table tbody td:empty,
   .wp-block-table.hp-market-table tbody td:empty,
   .wp-block-table.hp-evidence-table tbody td:empty {
     display: none;
@@ -1051,7 +1201,6 @@ p.hp-contact-form__hint {
 
   /* The relocated column header, set exactly as the real one. */
   .wp-block-table.hp-keyword-table tbody td::before,
-  .wp-block-table.hp-state-table tbody td::before,
   .wp-block-table.hp-market-table tbody td::before {
     display: block;
     font-family: var(--wp--preset--font-family--label);
@@ -1067,27 +1216,11 @@ p.hp-contact-form__hint {
     content: "Posting signal";
   }
 
-  /* The three disclosures bound their claims in different words — Demonstrated
-     evidence, a Partial claim's exact scope, a Gap's current position — so each
-     carries its own column name rather than a shared approximation. */
-  .hp-keyword-disclosure:nth-of-type(1) .wp-block-table.hp-keyword-table tbody td:nth-of-type(2)::before {
+  /* One ledger, one boundary column: the three disclosures that each bounded
+     their claims in different words are gone, and the standing that used to be
+     carried by which disclosure a row sat in now rides in the row header. */
+  .wp-block-table.hp-keyword-table tbody td:nth-of-type(2)::before {
     content: "Evidence boundary";
-  }
-
-  .hp-keyword-disclosure:nth-of-type(2) .wp-block-table.hp-keyword-table tbody td:nth-of-type(2)::before {
-    content: "Exact boundary";
-  }
-
-  .hp-keyword-disclosure:nth-of-type(3) .wp-block-table.hp-keyword-table tbody td:nth-of-type(2)::before {
-    content: "Current boundary";
-  }
-
-  .wp-block-table.hp-state-table tbody td:nth-of-type(1)::before {
-    content: "Count";
-  }
-
-  .wp-block-table.hp-state-table tbody td:nth-of-type(2)::before {
-    content: "Workbook rule";
   }
 
   .wp-block-table.hp-market-table tbody td:nth-of-type(3)::before {
@@ -1095,26 +1228,18 @@ p.hp-contact-form__hint {
   }
 
   .wp-block-table.hp-market-table tbody td:nth-of-type(4)::before {
-    content: "Current state";
-  }
-
-  .wp-block-table.hp-market-table tbody td:nth-of-type(5)::before {
-    content: "Screen verdict";
+    content: "State";
   }
 
   /* A short value sits beside its label on one ledger line rather than under
-     it, so a twenty-row screen stays scannable. */
-  .wp-block-table.hp-state-table tbody td:nth-of-type(1):not(:empty),
-  .wp-block-table.hp-market-table tbody td:nth-of-type(n + 3):nth-of-type(-n + 5):not(:empty) {
+     it, so a twenty-row screen stays scannable. The reasoning cell is prose and
+     stays full width. */
+  .wp-block-table.hp-market-table tbody td:nth-of-type(n + 3):nth-of-type(-n + 4):not(:empty) {
     display: grid;
     grid-template-columns: 8rem minmax(0, 1fr);
     gap: var(--wp--preset--spacing--3);
     align-items: baseline;
     margin-block-start: var(--wp--preset--spacing--2);
-  }
-
-  .wp-block-table.hp-state-table tbody td:nth-of-type(1) {
-    font-family: var(--wp--preset--font-family--mono);
   }
 
   /* Company and the posting link read as the entry's own subtitle; naming
@@ -1166,6 +1291,20 @@ p.hp-contact-form__hint {
 
   .wp-block-table.hp-evidence-table tbody tr {
     padding: var(--wp--preset--spacing--4);
+  }
+
+  /* The plate's inset is a desktop affordance. On a phone it is subtracted from
+     the same budget the stacked ledger rows are already living on: at 320px the
+     full inset left an 18px value column beside a 128px label. */
+  .hp-method-plate {
+    padding-inline: var(--wp--preset--spacing--3);
+  }
+
+  /* And below the plate's own breakpoint the label goes back above its value.
+     The two-column ledger line is only worth it while the value has room to be
+     read on one line. */
+  .wp-block-table.hp-market-table tbody td:nth-of-type(n + 3):nth-of-type(-n + 4):not(:empty) {
+    display: block;
   }
 
   .hp-disclosure > summary,
