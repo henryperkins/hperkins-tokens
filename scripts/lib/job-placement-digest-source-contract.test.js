@@ -5,7 +5,13 @@ const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 const test = require( 'node:test' );
 
-const { verifyMain, visibleWordCount } = require( '../verify-job-placement-digest-source' );
+const {
+	verifyMain,
+	visibleWordCount,
+	classifyState,
+	STATE_TOKENS,
+	SECTIONS,
+} = require( '../verify-job-placement-digest-source' );
 const { parseTopLevelBlocks } = require( './about-page-contract' );
 
 const THEME_ROOT = path.join( __dirname, '..', '..' );
@@ -25,152 +31,221 @@ function hasBlockClass( block, className ) {
 	return ( block.attrs.className || '' ).split( /\s+/ ).includes( className );
 }
 
+function findBlock( value, className ) {
+	return parseTopLevelBlocks( value ).find( ( block ) => hasBlockClass( block, className ) );
+}
+
 function removeEventBlock( value ) {
-	const blocks = parseTopLevelBlocks( value );
-	const event = blocks.find( ( block ) => hasBlockClass( block, 'hp-wcus-callout' ) );
+	const event = findBlock( value, 'hp-wcus-callout' );
 	assert( event, 'Fixture must contain the top-level WordCamp block.' );
 	return value.slice( 0, event.start ) + value.slice( event.end );
 }
 
-function moveEventAfterHero( value ) {
-	const blocks = parseTopLevelBlocks( value );
-	const event = blocks.find( ( block ) => hasBlockClass( block, 'hp-wcus-callout' ) );
-	const hero = blocks.find( ( block ) => hasBlockClass( block, 'hp-digest__hero' ) );
-	assert( event && hero && event.end <= hero.start, 'Fixture must put WordCamp before the Digest hero.' );
-	return value.slice( 0, event.start ) + value.slice( event.end, hero.end ) + '\n\n' + event.outer + value.slice( hero.end );
+function moveEventBeforeHero( value ) {
+	const event = findBlock( value, 'hp-wcus-callout' );
+	const hero = findBlock( value, 'hp-digest__hero' );
+	assert( event && hero && hero.end <= event.start, 'Fixture must put the hero before WordCamp.' );
+	return value.slice( 0, hero.start ) + event.outer + '\n\n' +
+		value.slice( hero.start, event.start ) + value.slice( event.end );
 }
 
-test( 'keeps the recruiter brief between 250 and 425 visible words with at most eight links', () => {
+test( 'publishes the full dossier rather than a distilled brief', () => {
 	const words = visibleWordCount( DIGEST );
-	const links = [ ...DIGEST.matchAll( /<a\b[^>]*href=/g ) ].length;
 
-	assert( words >= 250, `The recruiter brief contains only ${ words } visible words; expected a substantive brief.` );
-	assert( words <= 425, `The recruiter brief contains ${ words } visible words; expected at most 425.` );
-	assert.equal( links, 8, 'The recruiter brief must expose exactly eight decision-ready links.' );
+	assert( words >= 850, `The dossier contains only ${ words } visible words; expected the full case.` );
 	assert.doesNotThrow( () => verifyMain( DIGEST ) );
 } );
 
-test( 'reduces the page to event, hero, one support brief, and one closing invitation', () => {
+test( 'opens on the H1 and orders hero, WordCamp aside, seven sections, closing invitation', () => {
 	const blocks = parseTopLevelBlocks( DIGEST );
 
-	assert.equal( blocks.length, 4 );
-	assert( hasBlockClass( blocks[ 0 ], 'hp-wcus-callout' ) );
-	assert( hasBlockClass( blocks[ 1 ], 'hp-digest__hero' ) );
-	assert.equal( blocks[ 2 ].attrs.anchor, 'support-brief' );
-	assert( hasBlockClass( blocks[ 2 ], 'hp-digest-brief' ) );
-	assert( hasBlockClass( blocks[ 3 ], 'hp-digest-cta' ) );
-	assert( hasBlockClass( blocks[ 3 ], 'hp-action-panel' ) );
-	assert( hasBlockClass( blocks[ 3 ], 'is-closing' ) );
-	assert.doesNotMatch( DIGEST, /<(?:table|figure)\b/i );
-	assert.doesNotMatch(
-		DIGEST,
-		/hp-(?:fit-table|incident-card|evidence-ledger|theme-governance|method-link|digest-closing-zone)/
-	);
+	assert.equal( blocks.length, 10 );
+	assert( hasBlockClass( blocks[ 0 ], 'hp-digest__hero' ) );
+	assert( hasBlockClass( blocks[ 1 ], 'hp-wcus-callout' ) );
+	assert( hasBlockClass( blocks[ 9 ], 'hp-digest-cta' ) );
+	assert( hasBlockClass( blocks[ 9 ], 'hp-action-panel' ) );
+	assert( hasBlockClass( blocks[ 9 ], 'is-closing' ) );
+
+	// Every anchored section keeps its fragment, in the argued order.
+	const anchors = blocks.map( ( block ) => block.attrs.anchor ).filter( Boolean );
+	assert.deepEqual( anchors, [
+		'wordcamp-us-2026',
+		'why-support-engineer-now',
+		'current-support-fit',
+		'primary-proof',
+		'root-cause-investigation',
+		'theme-governance',
+		'evidence-register',
+	] );
 } );
 
-test( 'keeps the native labelled WordCamp aside before the first-heading hero', () => {
-	const blocks = parseTopLevelBlocks( DIGEST );
-	const event = blocks[ 0 ];
-	const hero = blocks[ 1 ];
-	const brief = blocks[ 2 ];
+test( 'numbers all seven sections and keeps the ordinals in step with their labels', () => {
+	const kickers = [ ...DIGEST.matchAll( /<p class="hp-digest-kicker"><strong>(\d\d)<\/strong> · ([^<]+)<\/p>/g ) ];
+
+	assert.equal( kickers.length, 7 );
+	assert.deepEqual(
+		kickers.map( ( kicker ) => [ kicker[ 1 ], kicker[ 2 ] ] ),
+		SECTIONS.map( ( section ) => [ section.ordinal, section.label ] )
+	);
+
+	const mutant = replaceOnce( DIGEST, '<strong>04</strong> · How I debug', '<strong>05</strong> · How I debug' );
+	assert.throws( () => verifyMain( mutant ), /Section 4 must read "04 · How I debug"/ );
+} );
+
+test( 'keeps the labelled WordCamp aside after the H1 so it never precedes the outline', () => {
+	const event = parseTopLevelBlocks( DIGEST )[ 1 ];
 
 	assert.equal( event.name, 'group' );
 	assert.equal( event.attrs.tagName, 'aside' );
 	assert.equal( event.attrs.ariaLabel, 'I’ll be at WordCamp US.' );
+	assert.equal( event.attrs.anchor, 'wordcamp-us-2026' );
 	assert( hasBlockClass( event, 'hp-wcus-callout--event-first' ) );
-	assert( hasBlockClass( hero, 'hp-digest__hero' ) );
-	assert.equal( brief.attrs.anchor, 'support-brief' );
 	assert.match( event.outer, /<aside\b[^>]*aria-label="I’ll be at WordCamp US\."[^>]*>/ );
-	assert.doesNotMatch( event.outer, /<h[1-6]\b/ );
-	assert.doesNotMatch( hero.outer, /hp-wcus-callout/ );
+	assert.equal( [ ...event.outer.matchAll( /<!-- wp:button -->/g ) ].length, 1 );
 
+	// The aside carries the event's own H2. Ahead of the hero it would open the
+	// document on a second-level heading, which is why the order is pinned.
 	assert.throws(
-		() => verifyMain( moveEventAfterHero( DIGEST ) ),
-		/WordCamp aside must be the first top-level block/
+		() => verifyMain( moveEventBeforeHero( DIGEST ) ),
+		/must begin its heading outline with H1/
 	);
 } );
 
-test( 'keeps the evergreen brief valid when the event block is removed', () => {
+test( 'stays valid when the event block is retired after WordCamp', () => {
 	const evergreen = removeEventBlock( DIGEST );
 	const blocks = parseTopLevelBlocks( evergreen );
 
-	assert.equal( blocks.length, 3 );
+	assert.equal( blocks.length, 9 );
 	assert( hasBlockClass( blocks[ 0 ], 'hp-digest__hero' ) );
-	assert.equal( blocks[ 1 ].attrs.anchor, 'support-brief' );
-	assert( hasBlockClass( blocks[ 2 ], 'hp-digest-cta' ) );
 	assert.doesNotMatch( evergreen, /hp-wcus-callout/ );
 	assert.doesNotThrow( () => verifyMain( evergreen, undefined, undefined, { requireEvent: false } ) );
 } );
 
-test( 'uses native columns and two three-item lists for fit and selected proof', () => {
-	assert.equal( [ ...DIGEST.matchAll( /<!-- wp:column\b/g ) ].length, 2 );
-	assert.equal( [ ...DIGEST.matchAll( /<!-- wp:list \{"className":"hp-digest-brief__(?:list|proofs)"\} -->/g ) ].length, 2 );
-	assert.equal( [ ...DIGEST.matchAll( /<!-- wp:list-item -->/g ) ].length, 6 );
-	assert.equal( [ ...DIGEST.matchAll( /<ul\b[^>]*\bhp-digest-brief__(?:list|proofs)\b/g ) ].length, 2 );
-	assert.match( DIGEST, /WordPress\/ai PR #501<\/a>: documentation I authored, refined through review, and merged upstream\./ );
-	assert.match( DIGEST, /WordPress\/ai issue #732<\/a>:[^<]*another contributor’s proposed fix\./ );
+test( 'holds five proven fit rows and states the gap outside the ledger', () => {
+	assert.match( DIGEST, /<p class="hp-digest-gap"><strong>The gap, named<\/strong>/ );
+
+	const fitTable = /hp-fit-table[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/.exec( DIGEST );
+	assert( fitTable, 'The fit ledger must be a native table.' );
+	assert.equal( [ ...fitTable[ 1 ].matchAll( /<tr>/g ) ].length, 5 );
+	assert.doesNotMatch( fitTable[ 1 ], /gap/i );
+
+	const mutant = replaceOnce(
+		DIGEST,
+		'<p class="hp-digest-gap"><strong>The gap, named</strong>',
+		'<p class="hp-digest-note"><strong>The gap, named</strong>'
+	);
+	assert.throws( () => verifyMain( mutant ), /Expected one p\.hp-digest-gap element/ );
 } );
 
-test( 'preserves the event action hierarchy without CSS reordering', () => {
-	const event = parseTopLevelBlocks( DIGEST )[ 0 ];
-	assert.equal( [ ...event.outer.matchAll( /<!-- wp:button -->/g ) ].length, 1 );
-	assert.equal( [ ...event.outer.matchAll( /<!-- wp:button \{"className":"is-style-secondary"\} -->/g ) ].length, 2 );
-	assert.match( event.outer, /Start a WordCamp conversation[\s\S]*View one-page résumé[\s\S]*Review selected work/ );
+test( 'publishes all twelve register records, four in each release state', () => {
+	const body = /hp-evidence-table[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/.exec( DIGEST );
+	const rows = [ ...body[ 1 ].matchAll( /<tr>([\s\S]*?)<\/tr>/g ) ];
+	assert.equal( rows.length, 12 );
 
-	const pagesCss = fs.readFileSync( path.join( THEME_ROOT, 'assets', 'imladris-pages.css' ), 'utf8' );
-	for ( const rule of pagesCss.matchAll( /\.hp-(?:wcus-callout|digest)[^{]*\{([^}]*)\}/g ) ) {
-		assert.doesNotMatch( rule[ 1 ], /(?:^|;)\s*order\s*:/ );
+	const counts = { released: 0, open: 0, unreleased: 0 };
+	for ( const row of rows ) {
+		const state = /<td[^>]*>([\s\S]*?)<\/td>/.exec( row[ 1 ] )[ 1 ].replace( /<[^>]+>/g, '' );
+		const group = classifyState( state );
+		assert( group, `Register state is unclassifiable: ${ state }` );
+		counts[ group ] += 1;
 	}
+	assert.deepEqual( counts, { released: 4, open: 4, unreleased: 4 } );
+} );
+
+test( 'refuses a register row the filter script could not classify', () => {
+	const mutant = replaceOnce( DIGEST, '<td>Authored · merged upstream</td>', '<td>Somewhere in progress</td>' );
+
+	assert.throws( () => verifyMain( mutant ), /State the filter cannot classify/ );
+} );
+
+test( 'keeps the filter script state vocabulary identical to the verifier', () => {
+	const script = fs.readFileSync(
+		path.join( THEME_ROOT, 'assets', 'js', 'digest-register-filter.js' ),
+		'utf8'
+	);
+	const block = /var STATE_TOKENS = \[([\s\S]*?)\];/.exec( script );
+	assert( block, 'The register filter script must declare STATE_TOKENS.' );
+
+	const scriptTokens = [ ...block[ 1 ].matchAll( /\[\s*'([^']+)'\s*,\s*'([^']+)'\s*\]/g ) ]
+		.map( ( match ) => [ match[ 1 ], match[ 2 ] ] );
+
+	assert.deepEqual( scriptTokens, STATE_TOKENS );
+
+	// Ordering is load-bearing: a prerelease is not a release, and a branch
+	// merged to main is not a shipped one.
+	assert.equal( classifyState( 'Released owned work · prerelease' ), 'unreleased' );
+	assert.equal( classifyState( 'Merged to owned main · unreleased' ), 'unreleased' );
+	assert.equal( classifyState( 'Authored · merged upstream' ), 'released' );
+	assert.equal( classifyState( 'Released owned work' ), 'released' );
+} );
+
+test( 'marks exactly the three records that are argued as proof cards above', () => {
+	assert.equal( [ ...DIGEST.matchAll( /Primary proof · card above/g ) ].length, 3 );
+
+	const mutant = replaceOnce(
+		DIGEST,
+		'<th scope="row">roadmaptrac</th>',
+		'<th scope="row">roadmaptrac <strong>Primary proof · card above</strong></th>'
+	);
+	assert.throws( () => verifyMain( mutant ), /three records argued as proof cards/ );
+} );
+
+test( 'names what each incident artifact verifies, in the approved order', () => {
+	const mutant = replaceOnce(
+		DIGEST,
+		'<p class="hp-artifact__verifies">Henry tested</p>',
+		'<p class="hp-artifact__verifies">Henry authored</p>'
+	);
+
+	assert.throws( () => verifyMain( mutant ), /name what it verifies, in the approved order/ );
+} );
+
+test( 'keeps the request-log ownership split attribution-safe', () => {
+	const mutant = replaceOnce(
+		DIGEST,
+		'I own the report and the integration testing; another contributor owns the fix.',
+		'I own the report, the integration testing, and the fix.'
+	);
+
+	assert.throws( () => verifyMain( mutant ), /ownership split attribution-safe/ );
 } );
 
 test( 'requires the current publication-verification date', () => {
 	assert( DIGEST.includes( CURRENT_PUBLICATION_DATELINE ) );
 	const staleDate = replaceOnce( DIGEST, CURRENT_PUBLICATION_DATELINE, STALE_PUBLICATION_DATELINE );
 
-	assert.doesNotThrow( () => verifyMain( DIGEST ) );
-	assert.throws( () => verifyMain( staleDate ), /missing required brief copy: Published/ );
+	assert.throws( () => verifyMain( staleDate ), /missing required dossier copy: Published/ );
 } );
 
-test( 'rejects the retired investigation route and any ninth link', () => {
-	const closingMarker = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-digest-section hp-action-panel is-closing hp-digest-cta"';
-	const retiredLink = '<!-- wp:paragraph -->\n<p><a href="/root-cause-investigation/">Open the investigation</a></p>\n<!-- /wp:paragraph -->\n\n';
-	const mutant = replaceOnce( DIGEST, closingMarker, `${ retiredLink }${ closingMarker }` );
-
-	assert.throws(
-		() => verifyMain( mutant ),
-		/eight decision-ready links|retired standalone root-cause route|removed long-form structure/
-	);
-} );
-
-test( 'requires attribution-safe wording for the open request-log fix', () => {
-	const mutant = replaceOnce(
-		DIGEST,
-		'another contributor’s proposed fix',
-		'my proposed fix'
-	);
-
-	assert.throws( () => verifyMain( mutant ), /attribution-safe context/ );
-} );
-
-test( 'rejects reintroduced long-form sections and copy', () => {
-	const marker = '<section class="wp-block-group alignwide hp-digest-section hp-digest-brief"';
+test( 'rejects reintroduced recruiter-brief structure', () => {
+	const marker = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-digest-section hp-fit-ledger"';
 	const mutant = replaceOnce(
 		DIGEST,
 		marker,
-		'<section class="wp-block-group alignwide hp-digest-section hp-evidence-ledger" data-retired="true"></section>\n' + marker
+		'<!-- wp:group {"tagName":"section","className":"hp-digest-section hp-digest-brief","anchor":"support-brief"} -->\n<section class="wp-block-group hp-digest-section hp-digest-brief" id="support-brief"></section>\n<!-- /wp:group -->\n\n' + marker
 	);
 
-	assert.throws( () => verifyMain( mutant ), /removed long-form structure: hp-evidence-ledger/ );
+	assert.throws( () => verifyMain( mutant ), /retired brief structure: hp-digest-brief/ );
 } );
 
-test( 'rejects copy growth beyond the recruiter-brief budget', () => {
-	const repeated = Array.from( { length: 150 }, () => 'redundant' ).join( ' ' );
-	const marker = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-digest-section hp-action-panel is-closing hp-digest-cta"';
+test( 'keeps the closing invitation last and its three actions intact', () => {
+	const blocks = parseTopLevelBlocks( DIGEST );
+	const closing = blocks[ blocks.length - 1 ];
+
+	assert.equal( closing.attrs.tagName, 'section' );
+	assert.match( closing.outer, /Contact Henry[\s\S]*View one-page résumé[\s\S]*Review selected WordPress evidence/ );
+
+	const mutant = replaceOnce( DIGEST, 'href="#evidence-register">Review selected WordPress evidence', 'href="/work/">Review selected work' );
+	assert.throws( () => verifyMain( mutant ), /contact, résumé, and the evidence register/ );
+} );
+
+test( 'never reintroduces a moving branch URL or a publication placeholder', () => {
+	assert.doesNotMatch( DIGEST, /https:\/\/github\.com\/[^"'\s]+\/(?:blob|tree)\/(?:main|master)(?:[/#?]|$)/ );
+
 	const mutant = replaceOnce(
 		DIGEST,
-		marker,
-		`<!-- wp:paragraph -->\n<p>${ repeated }</p>\n<!-- /wp:paragraph -->\n\n${ marker }`
+		'https://github.com/henryperkins/hperkins-tokens/blob/c5dc3a1e5dea0d6fd922f15542ee2b2a799f4a29/theme.json',
+		'https://github.com/henryperkins/hperkins-tokens/blob/main/theme.json'
 	);
-
-	assert.throws( () => verifyMain( mutant ), /visible words; the recruiter brief budget is 425/ );
+	assert.throws( () => verifyMain( mutant ), /moving GitHub branch URL/ );
 } );

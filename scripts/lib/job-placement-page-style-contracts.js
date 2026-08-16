@@ -123,40 +123,56 @@ const DIGEST_LOWER_CONTRACTS = [
 		selector: '.hp-evidence-ledger',
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--6)' },
 	},
+	// The kicker is the smallest text on the page. 2xs is exactly 12px — the
+	// site-wide floor — so pinning the token here stops a later "just a bit
+	// smaller" edit from quietly breaching it.
 	{
-		selector: '.hp-digest-brief > p',
-		declarations: { 'max-inline-size': 'var(--wp--custom--measure--prose)' },
-	},
-	{
-		selector: '.hp-digest-brief__columns.wp-block-columns',
+		selector: '.hp-digest-kicker',
 		declarations: {
-			'align-items': 'start',
-			gap: 'var(--wp--preset--spacing--6)',
-			'margin-block-start': 'var(--wp--preset--spacing--5)',
+			'font-size': 'var(--wp--preset--font-size--2-xs)',
+			'text-transform': 'uppercase',
+			color: 'var(--wp--custom--text--faint)',
+		},
+	},
+	// The named gap is a review-status entry on the fixed evidence rule width.
+	// State is rule colour + surface tint + the word "gap"; never colour alone.
+	{
+		selector: '.hp-digest-gap',
+		declarations: {
+			'border-inline-start': 'var(--hp-rule-evidence) solid var(--wp--custom--status--review)',
+			background: 'var(--wp--custom--surface--review)',
+			color: 'var(--wp--custom--on--review)',
 		},
 	},
 	{
-		selector: '.hp-digest-brief__columns > .wp-block-column',
-		declarations: { 'min-inline-size': '0' },
-	},
-	{
-		selector: '.hp-digest-brief__columns h3',
-		declarations: { 'margin-block-start': '0' },
-	},
-	{
-		selector: '.hp-digest-brief__columns ul',
+		selector: '.hp-incident-card .hp-artifacts.wp-block-columns',
 		declarations: {
-			'margin-block-end': '0',
-			'padding-inline-start': 'var(--wp--preset--spacing--5)',
+			display: 'grid',
+			'grid-template-columns': 'repeat(3, minmax(0, 1fr))',
 		},
 	},
 	{
-		selector: '.hp-digest-brief__gap',
+		selector: '.hp-evidence-table tbody th[data-state="released"]',
+		declarations: { 'border-inline-start-color': 'var(--wp--custom--status--done)' },
+	},
+	// A filtered-out row must actually leave the flow at every width. The narrow
+	// layout re-declares rows as display:block, which ties with the UA sheet's
+	// [hidden] rule, so this one carries the extra class to win outright.
+	{
+		selector: '.wp-block-table.hp-evidence-table tbody tr[hidden]',
+		declarations: { display: 'none' },
+	},
+	{
+		selector: '.hp-evidence-filter__button',
 		declarations: {
-			'margin-block-start': 'var(--wp--preset--spacing--5)',
-			'padding-block-start': 'var(--wp--preset--spacing--4)',
-			'border-block-start': '1px solid var(--wp--custom--border--hair)',
+			'min-block-size': '44px',
+			'font-size': 'var(--wp--preset--font-size--2-xs)',
 		},
+	},
+	{
+		selector: '.hp-incident-card .hp-artifacts.wp-block-columns',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: { 'grid-template-columns': 'minmax(0, 1fr)' },
 	},
 	{
 		selector: '.hp-digest-section',

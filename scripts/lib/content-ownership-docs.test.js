@@ -9,11 +9,19 @@ const {
 } = require( '../verify-content-ownership-docs' );
 
 const themeRoot = path.join( __dirname, '..', '..' );
-const documentFiles = [
-	'CLAUDE.md',
+const verifiersSkill = '.claude/skills/verifiers/SKILL.md';
+
+// Documents that own the WCUS phase-gate section and its operator command list.
+// CLAUDE.md handed this role to the skill when the Commands section moved.
+const phaseGateFiles = [
+	verifiersSkill,
 	'readme.txt',
 	'docs/design-system/INDEX.md',
 ];
+
+// Everything supplied to the verifier. CLAUDE.md is still scanned for guidance
+// that contradicts the phase gate, so it stays in the fixture.
+const documentFiles = [ ...phaseGateFiles, 'CLAUDE.md' ];
 
 function readDocuments() {
 	return Object.fromEntries( documentFiles.map( ( file ) => [
@@ -54,7 +62,7 @@ test( 'accepts the independently structured portfolio operating sections', () =>
 
 test( 'rejects a weakened rendered-About command in every operator document', () => {
 	const documents = readDocuments();
-	for ( const file of documentFiles ) {
+	for ( const file of phaseGateFiles ) {
 		const mutated = withMutation( documents, file, ( source ) => replaceOnce(
 			source,
 			'node scripts/verify-about-page-rendered.js --require-local --drafts',
@@ -70,7 +78,7 @@ test( 'rejects a weakened rendered-About command in every operator document', ()
 
 test( 'rejects local typography or resume commands without their explicit local guard', () => {
 	const documents = readDocuments();
-	for ( const file of documentFiles ) {
+	for ( const file of phaseGateFiles ) {
 		for ( const command of [ 'verify-typography', 'verify-resume-route' ] ) {
 			const mutated = withMutation( documents, file, ( source ) => replaceOnce(
 				source,
@@ -104,7 +112,7 @@ test( 'rejects a reworded claim that the About adapter rewrites resume actions',
 test( 'rejects snapshot promotion before publication', () => {
 	const documents = readDocuments();
 	const mutations = {
-		'CLAUDE.md': ( source ) => source.replace(
+		[ verifiersSkill ]: ( source ) => source.replace(
 			'Do not change accepted snapshots before the corresponding database bodies are explicitly approved, published, freshly re-read, and proven equal.',
 			'Refresh accepted snapshots before the database bodies are published.'
 		),
@@ -117,7 +125,7 @@ test( 'rejects snapshot promotion before publication', () => {
 			'Refresh accepted snapshots before publishing the database bodies.'
 		),
 	};
-	for ( const file of documentFiles ) {
+	for ( const file of phaseGateFiles ) {
 		const mutated = withMutation( documents, file, mutations[ file ] );
 		assert.notEqual( mutated[ file ], documents[ file ], `Mutation must change ${ file } snapshot guidance.` );
 		assert.throws(
@@ -129,9 +137,9 @@ test( 'rejects snapshot promotion before publication', () => {
 
 test( 'anchors operating-section headings to real lines outside prose and fences', () => {
 	const documents = readDocuments();
-	const claude = documents[ 'CLAUDE.md' ];
+	const skill = documents[ verifiersSkill ];
 	const decoy = 'The section named ### WCUS portfolio ownership and phase gate appears below.\n\n```text\n### WCUS portfolio ownership and phase gate\n```\n\n';
-	const mutated = { ...documents, 'CLAUDE.md': `${ decoy }${ claude }` };
+	const mutated = { ...documents, [ verifiersSkill ]: `${ decoy }${ skill }` };
 	assert.doesNotThrow( () => verifyPortfolioOwnershipDocuments( mutated ) );
 } );
 
@@ -183,17 +191,29 @@ test( 'rejects a theme deploy that claims production page or footer writes', () 
 	}
 } );
 
-test( 'rejects a prescribed CLAUDE unit command that omits either operator regression suite', () => {
+test( 'rejects a prescribed skill unit command that omits either operator regression suite', () => {
 	const documents = readDocuments();
 	for ( const testFile of [
 		'scripts/lib/content-ownership-docs.test.js',
 		'scripts/lib/event-copy-retirement-runbook.test.js',
 	] ) {
-		const mutated = withMutation( documents, 'CLAUDE.md', ( source ) => source.replace( ` ${ testFile }`, '' ) );
-		assert.notEqual( mutated[ 'CLAUDE.md' ], documents[ 'CLAUDE.md' ], `Mutation must remove ${ testFile }.` );
+		const mutated = withMutation( documents, verifiersSkill, ( source ) => source.replace( ` ${ testFile }`, '' ) );
+		assert.notEqual( mutated[ verifiersSkill ], documents[ verifiersSkill ], `Mutation must remove ${ testFile }.` );
 		assert.throws(
 			() => verifyPortfolioOwnershipDocuments( mutated ),
-			/CLAUDE\.md.*shared-library unit-test command/i
+			/SKILL\.md.*shared-library unit-test command/i
 		);
 	}
+} );
+
+test( 'requires CLAUDE.md to keep pointing at the extracted verifiers skill', () => {
+	const claude = fs.readFileSync( path.join( themeRoot, 'CLAUDE.md' ), 'utf8' );
+	assert.ok(
+		claude.includes( verifiersSkill ),
+		'CLAUDE.md must name the skill that now owns the verifier command reference.'
+	);
+	assert.ok(
+		fs.existsSync( path.join( themeRoot, verifiersSkill ) ),
+		'The verifiers skill must exist in the repository, not only on the author machine.'
+	);
 } );

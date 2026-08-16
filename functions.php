@@ -188,6 +188,25 @@ add_action( 'wp_enqueue_scripts', function () {
 			)
 		);
 	}
+
+	// Release-state filter for the Job Placement Digest's evidence register. The
+	// script mounts only where it finds that register and declines to mount at
+	// all unless it can classify every row, so the twelve records stay visible
+	// on every other route and whenever classification is uncertain.
+	$register_filter_rel  = '/assets/js/digest-register-filter.js';
+	$register_filter_file = get_stylesheet_directory() . $register_filter_rel;
+	if ( file_exists( $register_filter_file ) ) {
+		wp_enqueue_script(
+			'hperkins-digest-register-filter',
+			get_stylesheet_directory_uri() . $register_filter_rel,
+			array(),
+			filemtime( $register_filter_file ),
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
+		);
+	}
 }, 20 );
 
 add_action( 'after_setup_theme', function () {

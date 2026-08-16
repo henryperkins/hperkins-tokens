@@ -2,7 +2,51 @@
 
 **Date:** 2026-08-13
 
-**Status:** Approved by the user on 2026-08-13
+**Status:** Approved by the user on 2026-08-13. **Partially superseded on
+2026-08-16** — see the amendment below.
+
+## Amendment — 2026-08-16, approved by the user
+
+The Digest was re-derived from the Imladris Design System project's
+`templates/digest/Digest.dc.html`, which restores the long-form numbered
+dossier. Three constraints recorded below were lifted deliberately, and are
+recorded here rather than silently overridden:
+
+1. **The event-imagery ban is lifted.** "Add no WordCamp palette, logo,
+   imagery, Phoenix decoration…" no longer holds for imagery. The event plate
+   may carry a captioned documentary photograph of the venue, bled to the
+   plate's own edges, on `.hp-wcus-callout__figure` /
+   `.hp-wcus-callout__caption`. The remaining bans — WordCamp palette, logo,
+   gradients, a second visual identity — stand. *This is the one part of the
+   amendment not yet delivered: the photograph itself is not in the
+   repository.*
+2. **"Add no disclosure, truncation, or default-hidden state" is narrowed.**
+   The evidence register may carry a release-state filter, on the condition
+   that it never hides evidence the reader has not chosen to hide: the filter
+   is injected by script, defaults to "All evidence", declines to mount unless
+   it can classify every row, and leaves all twelve records visible with no
+   JavaScript. The rendered contract pins that condition
+   (`registerVisibleRows === 12` before any interaction).
+3. **The banner no longer leads the page.** The spec put the event first; the
+   design file puts the hero first. The hero now opens the outline with the
+   H1, and the event plate takes the second slot, so the event's own H2 can no
+   longer precede the document's first heading. The event action rail is
+   reduced from three actions to one — the conversation — because the résumé
+   and evidence routes are already offered by the closing invitation, after
+   the argument has been made.
+
+The recruiter-brief distillation of commit `10adf63` is superseded by the same
+decision. The 425-word budget, the four-block structure, and the eight-link
+inventory no longer apply; `scripts/verify-job-placement-digest-source.js` now
+pins the dossier instead.
+
+Unchanged by this amendment: every factual claim, evidence state, link, date,
+and contribution attribution; one H1 and a sequential outline; keyboard and
+assistive-technology order; visible focus; reduced-motion behaviour; the
+44px target floor; the 12px typography floor; and the rule that the live
+database body is canonical while the tracked snapshot is its accepted mirror.
+
+---
 
 **Surface:** `/job-placement-digest/`
 

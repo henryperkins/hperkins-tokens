@@ -8,6 +8,13 @@ const { SOURCE_UNIT_TEST_FILES } = require( './lib/source-unit-test-files' );
 
 const themeRoot = path.join( __dirname, '..' );
 
+// The verifier command reference, the shared-library unit-test command, and the
+// WCUS phase gate moved out of CLAUDE.md into this skill (0.3.58). CLAUDE.md now
+// carries only a pointer to it, so the contracts that used to be asserted
+// against CLAUDE.md are asserted here instead. The file is tracked precisely so
+// that pointer resolves in a fresh clone and in CI.
+const VERIFIERS_SKILL = '.claude/skills/verifiers/SKILL.md';
+
 function assert( condition, message ) {
 	if ( ! condition ) {
 		throw new Error( message );
@@ -59,7 +66,6 @@ const checks = [
 			'content/page-snapshots/placement-method-evidence.html',
 			'content/page-snapshots/work-flavor-agent-demo.html',
 			'theme-owned `wapuu-home-hero` pattern',
-			'verify-prominent-actions.js',
 			'hp-action-rail',
 			'[hperkins_council_header]',
 			'inc/council-header.php',
@@ -70,13 +76,15 @@ const checks = [
 			'content/page-drafts/about.html',
 			'thin adapter over the accepted snapshot',
 			'--page=about',
-			'verify-about-page-source.js',
-			'verify-about-page-rendered.js',
 			'.hp-about-template` selector anymore',
 			'PRODUCT.md',
 			'DESIGN.md',
 			'.impeccable/design.json',
 			'verify-impeccable-artifacts.js',
+			// The pointer that replaced the extracted Commands section. Without
+			// this, CLAUDE.md could silently lose its only route to the
+			// verifier reference.
+			VERIFIERS_SKILL,
 		],
 		exclude: [
 			/page-ai-enablement\.html is a \*\*shadow template\*\*/i,
@@ -86,6 +94,17 @@ const checks = [
 			// page layer lives in assets/imladris-pages.css now.
 			/design system \(ai-enablement essay, contact, work index, job-placement digest\)/,
 		],
+	},
+	{
+		// Verifier names that used to be asserted against CLAUDE.md's Commands
+		// section and now live in the skill.
+		file: VERIFIERS_SKILL,
+		include: [
+			'verify-prominent-actions.js',
+			'verify-about-page-source.js',
+			'verify-about-page-rendered.js',
+		],
+		exclude: [],
 	},
 	{
 		file: 'docs/design-system/INDEX.md',
@@ -147,7 +166,7 @@ const checks = [
 const staleAboutAdapterClaim = /about-resume[\s\S]{0,500}substitutes[\s\S]{0,160}portrait\s+and\s+r[\u00e9e]sum[\u00e9e]\s+asset URLs?/i;
 
 const portfolioDocumentSections = {
-	'CLAUDE.md': {
+	[ VERIFIERS_SKILL ]: {
 		heading: '### WCUS portfolio ownership and phase gate',
 		nextHeading: /^#{1,3}\s+/m,
 	},
@@ -160,6 +179,12 @@ const portfolioDocumentSections = {
 		nextHeading: /^#{1,3}\s+/m,
 	},
 };
+
+// Documents that no longer own the phase-gate section but still describe the
+// adapter, snapshot, and deployment model well enough to contradict it.
+// CLAUDE.md kept all of that in its Architecture notes when the Commands
+// section moved to the skill, so it must stay under contradiction scanning.
+const contradictionOnlyDocuments = [ 'CLAUDE.md' ];
 
 const portfolioOperatorCommands = [
 	'node scripts/verify-resume-route.js --source-only',
@@ -327,23 +352,32 @@ function assertNoPortfolioContradictions( contents, file ) {
 	}
 }
 
-function verifyClaudeSharedLibraryCommand( contents ) {
+function verifySharedLibraryCommand( contents, file ) {
 	const marker = '# Unit tests for the shared script libraries. Name every file explicitly';
 	const markerIndex = contents.indexOf( marker );
-	assert( markerIndex !== -1, 'CLAUDE.md is missing its shared-library unit-test command guidance.' );
+	assert( markerIndex !== -1, `${ file } is missing its shared-library unit-test command guidance.` );
 	const command = /^node --test .+$/m.exec( contents.slice( markerIndex ) );
-	assert( command, 'CLAUDE.md is missing its shared-library unit-test command.' );
+	assert( command, `${ file } is missing its shared-library unit-test command.` );
 
 	const files = command[0].split( /\s+/ ).slice( 2 );
 	assert(
 		JSON.stringify( files ) === JSON.stringify( SOURCE_UNIT_TEST_FILES ),
-		'CLAUDE.md shared-library unit-test command must exactly match the active CI test inventory.'
+		`${ file } shared-library unit-test command must exactly match the active CI test inventory.`
 	);
 }
 
 function verifyPortfolioOwnershipDocuments( documents ) {
-	assert( typeof documents[ 'CLAUDE.md' ] === 'string', 'CLAUDE.md was not supplied to the portfolio ownership verifier.' );
-	verifyClaudeSharedLibraryCommand( documents[ 'CLAUDE.md' ] );
+	assert(
+		typeof documents[ VERIFIERS_SKILL ] === 'string',
+		`${ VERIFIERS_SKILL } was not supplied to the portfolio ownership verifier.`
+	);
+	verifySharedLibraryCommand( documents[ VERIFIERS_SKILL ], VERIFIERS_SKILL );
+
+	for ( const file of contradictionOnlyDocuments ) {
+		const contents = documents[ file ];
+		assert( typeof contents === 'string', `${ file } was not supplied to the portfolio ownership verifier.` );
+		assertNoPortfolioContradictions( contents, file );
+	}
 
 	for ( const [ file, specification ] of Object.entries( portfolioDocumentSections ) ) {
 		const contents = documents[ file ];
@@ -477,7 +511,10 @@ function verifyRetirementRunbook( contents ) {
 }
 
 function main() {
-	const portfolioDocuments = Object.fromEntries( Object.keys( portfolioDocumentSections ).map( ( file ) => [
+	const portfolioDocuments = Object.fromEntries( [
+		...Object.keys( portfolioDocumentSections ),
+		...contradictionOnlyDocuments,
+	].map( ( file ) => [
 		file,
 		fs.readFileSync( path.join( themeRoot, file ), 'utf8' ),
 	] ) );

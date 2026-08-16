@@ -93,10 +93,15 @@ test( 'rendered recruiter probes keep snapshot and event-first draft phases dist
 	assert.match( recruiter, /document\.querySelector\('main \.hp-wcus-callout'\)/ );
 	assert.match( recruiter, /primaryRail\.closest\('\.hp-wcus-callout'\)/ );
 	assert.doesNotMatch( recruiter, /hero\?\.querySelector\('\.hp-wcus-callout'\)/ );
-	assert.match( recruiter, /supportBrief/ );
 	assert.match( recruiter, /documentHeight/ );
 	assert.match( recruiter, /DIGEST_HEIGHT_BUDGETS/ );
-	assert.match( recruiter, /'event\|hero\|brief'/ );
+	// The draft phase is the dossier: hero first so the H1 opens the outline,
+	// then the event plate, then the numbered argument. The accepted snapshot
+	// still carries its hero-contained WordCamp panel, which is why the two
+	// phases stay separately asserted.
+	assert.match( recruiter, /'hero\|event\|why'/ );
+	assert.doesNotMatch( recruiter, /'event\|hero\|brief'/ );
+	assert.match( recruiter, /result\.dossier\.registerVisibleRows === 12/ );
 	assert.match( recruiter, /zoom-200-from-1024/ );
 
 	const prominent = fs.readFileSync(
@@ -171,7 +176,7 @@ test( 'Digest text resize proof requires three visible actions with nonempty fou
 	assert.match( probe, /actionsVisible: actionMetrics\.every\(\( action \) => action\.visible\s*\)/ );
 	assert.match( probe, /actionsHaveTextRects: actionMetrics\.every\(\( action \) => action\.textRectCount > 0\s*\)/ );
 	assert.match( probe, /rect\.left >= box\.left - 1 &&\s*rect\.right <= box\.right \+ 1 &&\s*rect\.top >= box\.top - 1 &&\s*rect\.bottom <= box\.bottom \+ 1/ );
-	assert.match( assertMetrics, /result\.textResize200\.actionCount === 3/ );
+	assert.match( assertMetrics, /result\.textResize200\.actionCount === 1/ );
 	assert.match( assertMetrics, /result\.textResize200\.actionCount === DIGEST_EXPECTATIONS\.wcusActions\.length/ );
 	assert.match( assertMetrics, /result\.textResize200\.actionsVisible/ );
 	assert.match( assertMetrics, /result\.textResize200\.actionsHaveTextRects/ );

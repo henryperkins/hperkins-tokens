@@ -78,14 +78,22 @@ function deriveDigestExpectations( html, { requireEventFirst = false } = {} ) {
 
 	if ( requireEventFirst ) {
 		const event = topLevelBlocks[ eventIndex ];
-		assert( eventIndex === 0, 'Selected Digest body must begin with the WordCamp aside.' );
-		assert( heroIndex === 1, 'Selected Digest hero must immediately follow the WordCamp aside.' );
-		assert( supportBriefIndex === 2, 'The support brief must immediately follow the Digest hero.' );
-		assert( topLevelBlocks.length === 4, 'The selected recruiter brief must contain four top-level blocks.' );
+		// The dossier opens on its own H1 and hands the WordCamp invitation the
+		// second slot, so the event never introduces a heading ahead of the
+		// outline. The numbered argument starts immediately after it.
+		assert( heroIndex === 0, 'Selected Digest body must begin with the hero, so the H1 opens the outline.' );
+		assert( eventIndex === 1, 'Selected Digest WordCamp aside must immediately follow the hero.' );
+		assert( whyIndex === 2, 'The first numbered section must immediately follow the WordCamp aside.' );
+		assert( topLevelBlocks.length === 10, 'The selected dossier must contain ten top-level blocks.' );
+		assert( supportBriefIndex === -1, 'The selected dossier must not retain the retired recruiter brief.' );
 		assert( event.attrs.tagName === 'aside', 'Selected Digest WordCamp Group must serialize as an aside.' );
 		assert(
 			event.attrs.ariaLabel === 'I’ll be at WordCamp US.',
 			'Selected Digest WordCamp aside has the wrong accessible name.'
+		);
+		assert(
+			event.attrs.anchor === 'wordcamp-us-2026',
+			'Selected Digest WordCamp aside must own the wordcamp-us-2026 fragment.'
 		);
 		assert(
 			getClassCount( event.outer, 'hp-digest__primary-actions' ) === 1,
@@ -94,6 +102,10 @@ function deriveDigestExpectations( html, { requireEventFirst = false } = {} ) {
 		assert(
 			getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-digest__primary-actions' ) === 0,
 			'Selected Digest hero must not repeat event actions.'
+		);
+		assert(
+			getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-wcus-callout' ) === 0,
+			'Selected Digest hero must not contain the WordCamp aside.'
 		);
 	} else {
 		assert( heroIndex !== -1, 'Accepted Digest snapshot must contain its current hero.' );
@@ -106,8 +118,12 @@ function deriveDigestExpectations( html, { requireEventFirst = false } = {} ) {
 	}
 	assert( wcusActions, 'Selected Digest WordCamp aside has no .hp-wcus-callout__actions.' );
 	if ( requireEventFirst ) {
-		assert( briefProofs, 'Selected Digest recruiter brief has no proof list.' );
-		assert( ! rootCauseSection, 'Selected Digest recruiter brief must not repeat the long-form root-cause section.' );
+		assert( ! briefProofs, 'Selected Digest dossier must not retain the recruiter brief proof list.' );
+		assert( rootCauseSection, 'Selected Digest dossier has no #root-cause-investigation section.' );
+		assert(
+			[ ...html.matchAll( /<p class="hp-digest-kicker">/g ) ].length === 7,
+			'Selected Digest dossier must number all seven sections.'
+		);
 	} else {
 		assert( rootCauseSection, 'Accepted Digest body has no #root-cause-investigation section.' );
 	}
@@ -148,20 +164,27 @@ const DIGEST_VIEWPORTS = [
 	{ name: 'zoom-200-from-1024', width: 512, height: 500, mobile: false, zoomPercent: 200 },
 ];
 
-// These ceilings are approximately half the accepted snapshot's measured
-// document height at the three directly comparable widths, with interpolated
-// allowances for the breakpoint probes between them. The zoom-equivalent probe
-// has its own reflow contract and is intentionally excluded from length gating.
+// The previous ceilings were half the accepted snapshot's measured height,
+// because their job was to enforce a distillation. The dossier restores the
+// full argument, so these are no longer a target — they are a runaway guard.
+// Each is 2.2x the old half-budget, i.e. about 10% above the accepted
+// production page's own measured height at that width. That leaves room for
+// the kickers, the gap callout, the artifact row, and the filter row while
+// still failing if a section is duplicated or a table doubles.
+//
+// Derived, not measured: these have not been confirmed against a rendered
+// page, because the rendered pass needs Chrome and a live install. Re-measure
+// and tighten them on the first green rendered run.
 const DIGEST_HEIGHT_BUDGETS = {
-	'desktop-1440': 3350,
-	'desktop-1024': 3500,
-	'compact-upper-1023': 3700,
-	'event-wide-782': 4200,
-	'event-linear-781': 4400,
-	'tablet-768': 4500,
-	'phone-boundary-600': 5000,
-	'mobile-390': 6000,
-	'mobile-320': 6500,
+	'desktop-1440': 7370,
+	'desktop-1024': 7700,
+	'compact-upper-1023': 8140,
+	'event-wide-782': 9240,
+	'event-linear-781': 9680,
+	'tablet-768': 9900,
+	'phone-boundary-600': 11000,
+	'mobile-390': 13200,
+	'mobile-320': 14300,
 };
 
 const APPENDIX_VIEWPORTS = [
@@ -290,15 +313,18 @@ function verifySourceContracts() {
 		assertRuleDeclarations( pageCss, contract );
 	}
 	if ( DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
-		assert( DIGEST_EXPECTATIONS.wcusActions.length === 3, 'Selected Digest WCUS callout must expose exactly three ordered actions.' );
-		if ( DIGEST_EXPECTATIONS.eventFirst ) {
-			assert( DIGEST_EXPECTATIONS.briefProofs.length === 3, 'Selected recruiter brief must expose exactly three proof links.' );
-		} else {
-			assert(
-				DIGEST_EXPECTATIONS.proofLabels.join( '|' ) === 'Signal|Diagnosis|Constraint|Result',
-				`Selected Digest proof order is ${ DIGEST_EXPECTATIONS.proofLabels.join( ', ' ) }; expected Signal, Diagnosis, Constraint, Result.`
-			);
-		}
+		// The dossier's event plate carries one action — the conversation. The
+		// résumé and evidence routes belong to the closing invitation, where the
+		// reader has already been given the argument. The accepted snapshot still
+		// carries the older three-action rail.
+		assert(
+			DIGEST_EXPECTATIONS.wcusActions.length === ( DIGEST_EXPECTATIONS.eventFirst ? 1 : 3 ),
+			`Selected Digest WCUS callout exposes ${ DIGEST_EXPECTATIONS.wcusActions.length } actions; expected ${ DIGEST_EXPECTATIONS.eventFirst ? 'one' : 'three' }.`
+		);
+		assert(
+			DIGEST_EXPECTATIONS.proofLabels.join( '|' ) === 'Signal|Diagnosis|Constraint|Result',
+			`Selected Digest proof order is ${ DIGEST_EXPECTATIONS.proofLabels.join( ', ' ) }; expected Signal, Diagnosis, Constraint, Result.`
+		);
 	}
 
 	verifyStackedLedgerLabels( pageCss );
@@ -665,8 +691,8 @@ function assertPageMetrics( result, page, viewport ) {
 	if ( shouldInspectDigestTextResize( page, viewport ) ) {
 		assert( result.textResize200, context + ' did not collect the required 200% root-text metrics.' );
 		assert(
-			result.textResize200.actionCount === 3,
-			context + ` found ${ result.textResize200.actionCount } event actions at 200% root text; expected exactly 3.`
+			result.textResize200.actionCount === 1,
+			context + ` found ${ result.textResize200.actionCount } event actions at 200% root text; expected exactly 1.`
 		);
 		assert(
 			result.textResize200.actionCount === DIGEST_EXPECTATIONS.wcusActions.length,
@@ -704,22 +730,19 @@ function assertPageMetrics( result, page, viewport ) {
 				result.eventLandmark.title === result.eventLandmark.ariaLabel,
 				context + ' does not keep the visible event title and accessible name identical.'
 			);
-			assert( result.eventLandmark.beforeH1, context + ' does not put the WordCamp landmark before the H1.' );
 			assert(
-				result.mainOpening.join( '|' ) === 'event|hero|brief',
-				context + ' does not keep event, hero, and recruiter brief in one visual/source order.'
+				! result.eventLandmark.beforeH1,
+				context + ' puts the WordCamp landmark ahead of the H1, so its own H2 opens the outline.'
+			);
+			assert(
+				result.mainOpening.join( '|' ) === 'hero|event|why',
+				context + ' does not keep hero, event, and the first numbered section in one visual/source order.'
 			);
 			assert( result.primaryActions.inEvent, context + ' first-screen actions are outside the WordCamp landmark.' );
 			assert( result.primaryActions.top >= -1, context + ' first-screen actions begin above the viewport.' );
-			if ( viewport.width >= 768 ) {
-				assert(
-					result.primaryActions.bottom <= viewport.height + 1,
-					context + ' first-screen actions do not clear the fixed verification fold.'
-				);
-			}
 			assert(
-				result.primaryActions.focusIndexes.join( '|' ) === '0|1|2',
-				context + ' changes the first three keyboard stops from the approved event action order.'
+				result.primaryActions.focusIndexes.join( '|' ) === '0',
+				context + ' does not make the single event action the first keyboard stop in main.'
 			);
 		} else {
 			assert( result.primaryActions.inHero, `${ context } first-screen action rail is outside the recruiter hero.` );
@@ -772,14 +795,10 @@ function assertPageMetrics( result, page, viewport ) {
 			}
 
 			if ( viewport.width === 1024 && ! viewport.zoomPercent ) {
-				assert( result.opening.hero && result.opening.brief, context + ' is missing opening-section geometry.' );
+				assert( result.opening.hero && result.opening.why, context + ' is missing opening-section geometry.' );
 				assert(
 					result.opening.hero.bottom <= viewport.height + 1,
 					context + ' does not keep the complete role proposition in the first 1000px.'
-				);
-				assert(
-					result.opening.brief.top <= viewport.height + 64,
-					context + ' does not begin the recruiter brief near the 1024x1000 fold.'
 				);
 			}
 
@@ -794,29 +813,44 @@ function assertPageMetrics( result, page, viewport ) {
 				);
 			}
 
-			assert( result.supportBrief, context + ' is missing the compact support brief.' );
-			assert( result.supportBrief.fit && result.supportBrief.proof, context + ' is missing support-brief column geometry.' );
-			assert( result.supportBrief.fitItemCount === 3, context + ' does not render three working-style points.' );
-			assert( result.supportBrief.proofItemCount === 3, context + ' does not render three selected proofs.' );
-			assertLinks( result.supportBrief.proofLinks, DIGEST_EXPECTATIONS.briefProofs, `${ context } selected proofs`, result.url );
-			assert( result.longformCount === 0, context + ' still renders a removed long-form Digest section.' );
-			if ( viewport.width >= 782 ) {
+			assert( ! result.supportBrief, context + ' still renders the retired recruiter brief.' );
+			assert( result.dossier.kickers === 7, `${ context } renders ${ result.dossier.kickers } numbered kickers; the dossier has seven.` );
+			assert( result.dossier.fitRows === 5, `${ context } renders ${ result.dossier.fitRows } fit rows; the ledger holds the five with proof.` );
+			assert( result.dossier.gap, context + ' does not render the named gap outside the fit ledger.' );
+			assert( result.dossier.proofCards === 3, `${ context } renders ${ result.dossier.proofCards } proof cards; expected three.` );
+			assert( result.dossier.artifactCells === 6, `${ context } renders ${ result.dossier.artifactCells } incident artifacts; expected six.` );
+			assert( result.dossier.registerRows === 12, `${ context } renders ${ result.dossier.registerRows } register rows; the register publishes twelve.` );
+			assert(
+				result.longformCount >= 5,
+				context + ' does not render the dossier\'s long-form sections.'
+			);
+
+			// The filter is an enhancement over a complete register. Either it
+			// mounted — four states, a live status, and every row still shown
+			// because "All evidence" is the default — or it declined to mount and
+			// the register renders unfiltered. A mounted filter that starts by
+			// hiding evidence is the failure this pins.
+			assert(
+				result.dossier.registerFilterButtons === 0 || result.dossier.registerFilterButtons === 4,
+				`${ context } renders ${ result.dossier.registerFilterButtons } register filter controls; expected none or all four.`
+			);
+			assert(
+				result.dossier.registerVisibleRows === 12,
+				`${ context } hides ${ 12 - result.dossier.registerVisibleRows } register rows before the reader has filtered anything.`
+			);
+			if ( result.dossier.registerFilterButtons === 4 ) {
 				assert(
-					result.supportBrief.fit.right <= result.supportBrief.proof.left + 2,
-					context + ' does not keep working style and proof in two scan-friendly columns.'
-				);
-			} else {
-				assert(
-					result.supportBrief.proof.top >= result.supportBrief.fit.bottom - 1,
-					context + ' does not stack selected proof after working style.'
+					result.dossier.registerStatusLive === 'polite',
+					context + ' does not announce the filtered register count politely.'
 				);
 			}
+
 			if ( ! viewport.zoomPercent ) {
 				const heightBudget = DIGEST_HEIGHT_BUDGETS[ viewport.name ];
-				assert( heightBudget, context + ' has no recruiter-brief height budget.' );
+				assert( heightBudget, context + ' has no dossier height budget.' );
 				assert(
 					result.documentHeight <= heightBudget,
-					`${ context } is ${ result.documentHeight }px tall; recruiter-brief budget is ${ heightBudget }px.`
+					`${ context } is ${ result.documentHeight }px tall; dossier runaway budget is ${ heightBudget }px.`
 				);
 			}
 		} else {
@@ -1159,6 +1193,22 @@ async function inspectPage( cdp, page, viewport ) {
 						href: link.getAttribute('href'),
 					})),
 				} : null,
+				// The dossier's own inventory. Row and card counts are read from
+				// the rendered page so a section that fails to render — or a
+				// register the filter script has wrongly emptied — is caught here
+				// and not only in the source contract.
+				dossier: {
+					kickers: document.querySelectorAll('.hp-digest-kicker').length,
+					fitRows: document.querySelectorAll('.hp-fit-table tbody tr').length,
+					gap: rect(document.querySelector('.hp-digest-gap')),
+					proofCards: document.querySelectorAll('.hp-primary-proof .hp-proof-card').length,
+					artifactCells: document.querySelectorAll('#root-cause-investigation .hp-artifact').length,
+					registerRows: document.querySelectorAll('.hp-evidence-table tbody tr').length,
+					registerVisibleRows: Array.from(document.querySelectorAll('.hp-evidence-table tbody tr'))
+						.filter((row) => !row.hidden && isVisible(row)).length,
+					registerFilterButtons: document.querySelectorAll('.hp-evidence-filter__button').length,
+					registerStatusLive: document.querySelector('.hp-evidence-filter__status')?.getAttribute('aria-live') || null,
+				},
 				longformCount: document.querySelectorAll('.hp-fit-ledger, .hp-incident-card, .hp-theme-governance, .hp-evidence-ledger, .hp-method-link').length,
 				evidenceRecord: firstEvidenceRow ? {
 					title: rect(firstEvidenceRow.querySelector('th')),

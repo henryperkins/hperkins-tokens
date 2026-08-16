@@ -453,34 +453,31 @@ p.hp-contact-form__hint {
 
 .hp-support-now > p,
 .hp-theme-governance > p,
-.hp-method-link > p,
-.hp-digest-brief > p {
+.hp-method-link > p {
   max-inline-size: var(--wp--custom--measure--prose);
 }
 
-.hp-digest-brief__columns.wp-block-columns {
-  align-items: start;
-  gap: var(--wp--preset--spacing--6);
-  margin-block-start: var(--wp--preset--spacing--5);
+/* Numbered section kickers. The ordinal is gold and the label names the move
+   the section makes; both are real text, so the sequence survives with styles
+   off and reaches the accessible name. The 2xs preset is exactly 12px — the
+   site-wide typography floor — so this is the smallest a kicker may legally
+   be. The design handoff drew 11px here; the floor wins. */
+.hp-digest-kicker {
+  margin-block: 0 var(--wp--preset--spacing--3);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--wp--custom--text--faint);
 }
 
-.hp-digest-brief__columns > .wp-block-column {
-  min-inline-size: 0;
+.hp-digest-kicker strong {
+  font-weight: 400;
+  color: var(--wp--preset--color--gold-700);
 }
 
-.hp-digest-brief__columns h3 {
+.hp-digest-kicker + h2 {
   margin-block-start: 0;
-}
-
-.hp-digest-brief__columns ul {
-  margin-block-end: 0;
-  padding-inline-start: var(--wp--preset--spacing--5);
-}
-
-.hp-digest-brief__gap {
-  margin-block-start: var(--wp--preset--spacing--5);
-  padding-block-start: var(--wp--preset--spacing--4);
-  border-block-start: 1px solid var(--wp--custom--border--hair);
 }
 
 .hp-fit-ledger,
@@ -489,8 +486,7 @@ p.hp-contact-form__hint {
   margin-block-start: var(--wp--preset--spacing--6);
 }
 
-/* Two-column fit is short enough to wrap in place at every width. The final
-   row is visibly a gap, not a proxy claim presented as evidence. */
+/* Two-column fit is short enough to wrap in place at every width. */
 .hp-fit-table table {
   table-layout: fixed;
 }
@@ -499,12 +495,26 @@ p.hp-contact-form__hint {
   inline-size: 38%;
 }
 
-.hp-fit-table tbody tr:last-child {
-  background: var(--wp--custom--surface--pending);
+/* The gap is named outside the ledger rather than smuggled in as a sixth row,
+   so nothing in the table reads as proof that isn't. It is a review-status
+   entry: rule colour, surface tint, and the redundant word "gap" all say the
+   same thing, so the state never depends on colour alone. */
+.hp-digest-gap {
+  margin-block-start: var(--wp--preset--spacing--4);
+  padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+  border-inline-start: var(--hp-rule-evidence) solid var(--wp--custom--status--review);
+  border-start-end-radius: var(--hp-radius-register);
+  border-end-end-radius: var(--hp-radius-register);
+  background: var(--wp--custom--surface--review);
+  color: var(--wp--custom--on--review);
 }
 
-.hp-fit-table tbody tr:last-child th {
-  color: var(--wp--custom--on--pending);
+.hp-digest-gap strong {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .hp-proof-cards.wp-block-columns {
@@ -579,6 +589,166 @@ p.hp-contact-form__hint {
 
 .hp-evidence-table :is(th, td):nth-child(2) {
   inline-size: 31%;
+}
+
+/* Six labelled cells do not survive six columns at the reading measure, so the
+   incident's register wraps to three across and collapses to one below the
+   fold. Grid rather than flex because grid items ignore the flex-basis core
+   stamps !important on stacked columns. */
+.hp-incident-card .hp-artifacts.wp-block-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.hp-incident-card .hp-artifacts > .hp-artifact {
+  border-inline-start: 1px solid var(--wp--custom--border--hair);
+  border-block-start: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-incident-card .hp-artifacts > .hp-artifact:nth-child(3n + 1) {
+  border-inline-start: 0;
+}
+
+.hp-incident-card .hp-artifacts > .hp-artifact:nth-child(-n + 3) {
+  border-block-start: 0;
+}
+
+/* Release-state rule on each register row. The state word is already in the
+   State column, so the rule is a second, redundant signal — never the only
+   one. Rows carry data-state only once the filter script has classified every
+   row; unclassified registers keep a neutral hairline. */
+.hp-evidence-table tbody th[data-state] {
+  border-inline-start: var(--hp-rule-entry) solid var(--wp--custom--border--hair);
+}
+
+.hp-evidence-table tbody th[data-state="released"] {
+  border-inline-start-color: var(--wp--custom--status--done);
+}
+
+.hp-evidence-table tbody th[data-state="open"] {
+  border-inline-start-color: var(--wp--custom--status--review);
+}
+
+.hp-evidence-table tbody th[data-state="unreleased"] {
+  border-inline-start-color: var(--wp--custom--status--pending);
+}
+
+/* The three records that also appear as proof cards above say so, so a reader
+   scanning only the register knows which rows are already argued in full. */
+.hp-evidence-table tbody th strong {
+  display: block;
+  margin-block-start: var(--hp-gap-xs);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--wp--preset--color--gold-700);
+}
+
+/* The narrow layout below re-declares tbody rows as display:block, which would
+   beat the UA sheet's [hidden] rule at equal specificity, so a filtered-out row
+   would keep rendering on a phone. Carry the extra class to win outright at any
+   source order. */
+.wp-block-table.hp-evidence-table tbody tr[hidden] {
+  display: none;
+}
+
+/* Register filter. Injected by assets/js/digest-register-filter.js — with no
+   JavaScript the row never appears and all twelve records stay visible, which
+   is the honest default: the filter narrows a complete register, it never
+   hides evidence that was not already on screen. */
+.hp-evidence-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--wp--preset--spacing--2);
+  margin-block: var(--wp--preset--spacing--4) 0;
+}
+
+.hp-evidence-filter__button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--hp-gap-xs);
+  min-block-size: 44px;
+  padding: var(--wp--preset--spacing--2) var(--wp--preset--spacing--4);
+  border: 1px solid var(--wp--custom--border--hair);
+  border-radius: var(--hp-radius-pill);
+  background: var(--wp--custom--surface--card);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--wp--custom--text--muted);
+  cursor: pointer;
+}
+
+.hp-evidence-filter__button:hover {
+  border-color: var(--wp--custom--rule--gold);
+  color: var(--wp--custom--text--strong);
+}
+
+.hp-evidence-filter__button:focus-visible {
+  outline: 2px solid var(--wp--preset--color--gold-700);
+  outline-offset: 2px;
+}
+
+.hp-evidence-filter__button[aria-pressed="true"] {
+  border-color: var(--wp--preset--color--green-700);
+  background: var(--wp--preset--color--green-700);
+  color: var(--wp--preset--color--parchment-100);
+}
+
+.hp-evidence-filter__count {
+  font-variant-numeric: tabular-nums;
+}
+
+.hp-evidence-filter__status {
+  margin-block: var(--wp--preset--spacing--3) 0;
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--xs);
+  color: var(--wp--custom--text--muted);
+}
+
+/* Motion is opt-in, not opt-out: the transition is declared only where the
+   visitor has expressed no preference against it. */
+@media (prefers-reduced-motion: no-preference) {
+  .hp-evidence-filter__button {
+    transition:
+      background var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+      border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+      color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+  }
+}
+
+/* Documentary event photography. The figure bleeds to the plate's own edges so
+   the photo and the invitation stay one object rather than two stacked cards;
+   the caption dates and places it. */
+.hp-wcus-callout__figure {
+  grid-column: 1 / -1;
+  margin: calc(var(--wp--preset--spacing--6) * -1);
+  margin-block-end: var(--wp--preset--spacing--6);
+  background: var(--wp--custom--surface--card);
+  border-block-end: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-wcus-callout__figure img {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  object-position: center 40%;
+}
+
+.hp-wcus-callout__caption {
+  margin: 0;
+  padding: var(--wp--preset--spacing--3) var(--wp--preset--spacing--4);
+  border-block-start: 1px solid var(--wp--custom--border--hair);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--xs);
+  line-height: var(--wp--custom--leading--relaxed);
+  color: var(--wp--custom--text--muted);
+  text-wrap: pretty;
 }
 
 .hp-method-hero > p:not(.hp-page-hero__eyebrow, .hp-digest__dateline) {
@@ -726,6 +896,21 @@ p.hp-contact-form__hint {
   .hp-incident-card,
   .hp-evidence-ledger {
     margin-block-start: var(--wp--preset--spacing--5);
+  }
+
+  /* One cell per row below the fold; the inline rule between cells becomes a
+     block rule between them, and the first cell keeps a clean top edge. */
+  .hp-incident-card .hp-artifacts.wp-block-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hp-incident-card .hp-artifacts > .hp-artifact {
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--wp--custom--border--hair);
+  }
+
+  .hp-incident-card .hp-artifacts > .hp-artifact:first-child {
+    border-block-start: 0;
   }
 
   .hp-debug-proof__grid {

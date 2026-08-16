@@ -15,56 +15,69 @@ const themeRoot = path.join( __dirname, '..' );
 const mainPath = path.join( themeRoot, 'content', 'page-drafts', 'job-placement-digest.html' );
 const appendixPath = path.join( themeRoot, 'content', 'page-drafts', 'placement-method-evidence.html' );
 const retiredPatternPath = path.join( themeRoot, 'patterns', 'job-placement-digest.php' );
+const registerFilterPath = path.join( themeRoot, 'assets', 'js', 'digest-register-filter.js' );
 
-const WCUS_ACTIONS = [
-	[ 'Start a WordCamp conversation', '/contact/' ],
-	[ 'View one-page résumé', '/one-page-resume/' ],
-	[ 'Review selected work', '/work/' ],
-];
-
-const BRIEF_PROOF_LINKS = [
-	[ 'WordPress/ai PR #501', 'https://github.com/WordPress/ai/pull/501' ],
-	[ 'AI Provider for Codex v2.1', 'https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v2.1' ],
-	[ 'WordPress/ai issue #732', 'https://github.com/WordPress/ai/issues/732' ],
-];
+const WCUS_ACTIONS = [ [ 'Start a WordCamp conversation', '/contact/' ] ];
 
 const CLOSING_ACTIONS = [
 	[ 'Contact Henry', '/contact/' ],
 	[ 'View one-page résumé', '/one-page-resume/' ],
+	[ 'Review selected WordPress evidence', '#evidence-register' ],
 ];
+
+// The dossier's spine. Each section carries a gold ordinal and a label naming
+// the move it makes; the order is the argument, so it is pinned here rather
+// than left to whoever edits the page next.
+const SECTIONS = [
+	{ ordinal: '01', label: 'The work I want', anchor: 'why-support-engineer-now', heading: 'Why Support Engineer now' },
+	{ ordinal: '02', label: 'The ask, against proof', anchor: 'current-support-fit', heading: 'Current Support Engineer fit' },
+	{ ordinal: '03', label: 'Primary proof', anchor: 'primary-proof', heading: 'Three proofs, each open to inspection' },
+	{ ordinal: '04', label: 'How I debug', anchor: 'root-cause-investigation', heading: 'Debugging proof: a request log that silently under-reported' },
+	{ ordinal: '05', label: 'What prevention looks like', anchor: 'theme-governance', heading: 'The constraint is narrower than the slogan' },
+	{ ordinal: '06', label: 'Everything, dated', anchor: 'evidence-register', heading: 'Evidence register' },
+	{ ordinal: '07', label: 'The appendix', anchor: null, heading: 'The method stays inspectable without becoming the pitch' },
+];
+
+const DEBUG_PROOF_TERMS = [ 'Signal', 'Diagnosis', 'Constraint', 'Result' ];
+
+const INCIDENT_ARTIFACTS = [
+	[ 'Henry authored', 'Issue #732 report and reproduction' ],
+	[ 'Henry tested', 'PR #757 integration-test findings' ],
+	[ 'Henry proposed', 'PR #757 ownership split' ],
+	[ 'The precedent', 'Issue #529 report' ],
+	[ 'The fix', 'Maintainer-authored PR #593' ],
+	[ 'The release', 'WordPress AI 1.0.1' ],
+];
+
+// Canonical release-state vocabulary. assets/js/digest-register-filter.js holds
+// the same list; the two are asserted identical below, because a register row
+// the script cannot classify silently disables the filter on the live page and
+// nothing else would notice.
+const STATE_TOKENS = [
+	[ 'prerelease', 'unreleased' ],
+	[ 'unreleased', 'unreleased' ],
+	[ 'no release', 'unreleased' ],
+	[ 'open upstream', 'open' ],
+	[ 'non-formal', 'open' ],
+	[ 'merged upstream', 'released' ],
+	[ 'shipped in', 'released' ],
+	[ 'released owned work', 'released' ],
+];
+
+const REGISTER_ROWS = 12;
+const REGISTER_GROUP_COUNTS = { released: 4, open: 4, unreleased: 4 };
+const PRIMARY_PROOF_MARKER = 'Primary proof · card above';
 
 const REDUNDANT_DIGEST_MARKERS = [
 	'hp-digest-section__body',
 	'hp-digest-editorial-split',
-	'hp-fit-ledger',
-	'hp-fit-table',
-	'hp-primary-proof',
-	'hp-proof-card',
-	'hp-incident-card',
-	'hp-debug-proof__grid',
-	'hp-debug-proof__item',
-	'hp-theme-governance',
-	'hp-evidence-ledger',
-	'hp-evidence-table',
 	'hp-digest-closing-zone',
-	'hp-method-link',
-	'why-support-engineer-now',
-	'current-support-fit',
-	'primary-proof',
-	'root-cause-investigation',
-	'theme-governance',
-	'evidence-register',
+	'hp-digest-brief',
+	'support-brief',
 ];
 
 const FORBIDDEN_DIGEST_COPY = [
 	'WordPress since 2012 · Former WordPress.com Happiness Engineer',
-	'Why Support Engineer now',
-	'Current Support Engineer fit',
-	'Three proofs, each open to inspection',
-	'Debugging proof: a request log that silently under-reported',
-	'The constraint is narrower than the slogan',
-	'Evidence register',
-	'The method stays inspectable without becoming the pitch',
 	'/wp-content/themes/hperkins-tokens/assets/documents/henry-perkins-wordpress-support-engineer-resume.pdf',
 ];
 
@@ -83,10 +96,13 @@ function countMatches( value, expression ) {
 	return [ ...value.matchAll( expression ) ].length;
 }
 
+function escapeForRegExp( value ) {
+	return value.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
+}
+
 function countTableRows( markup, className ) {
-	const escapedClass = className.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
 	const tableExpression = new RegExp(
-		`<figure\\b[^>]*class=(['"])[^'"]*\\b${ escapedClass }\\b[^'"]*\\1[^>]*>([\\s\\S]*?)<\\/figure>`,
+		`<figure\\b[^>]*class=(['"])[^'"]*\\b${ escapeForRegExp( className ) }\\b[^'"]*\\1[^>]*>([\\s\\S]*?)<\\/figure>`,
 		'gi'
 	);
 	let rows = 0;
@@ -98,6 +114,18 @@ function countTableRows( markup, className ) {
 	}
 
 	return rows;
+}
+
+function getTableBody( markup, className ) {
+	const expression = new RegExp(
+		`<figure\\b[^>]*class=(['"])[^'"]*\\b${ escapeForRegExp( className ) }\\b[^'"]*\\1[^>]*>([\\s\\S]*?)<\\/figure>`,
+		'i'
+	);
+	const match = expression.exec( markup );
+	assert( match, `Expected one ${ className } table.` );
+	const body = /<tbody\b[^>]*>([\s\S]*?)<\/tbody>/i.exec( match[ 2 ] );
+	assert( body, `Expected a tbody inside ${ className }.` );
+	return body[ 1 ];
 }
 
 function stripMarkup( value ) {
@@ -120,9 +148,8 @@ function visibleWordCount( markup ) {
 }
 
 function getScopedElementMatch( markup, tagName, className ) {
-	const escapedClass = className.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' );
 	const expression = new RegExp(
-		`<${ tagName }\\b[^>]*class=(['"])[^'"]*\\b${ escapedClass }\\b[^'"]*\\1[^>]*>([\\s\\S]*?)<\\/${ tagName }>`,
+		`<${ tagName }\\b[^>]*class=(['"])[^'"]*\\b${ escapeForRegExp( className ) }\\b[^'"]*\\1[^>]*>([\\s\\S]*?)<\\/${ tagName }>`,
 		'i'
 	);
 	const match = expression.exec( markup );
@@ -140,6 +167,16 @@ function extractLinks( markup ) {
 		stripMarkup( match[ 3 ] ),
 		match[ 2 ],
 	] );
+}
+
+function classifyState( text ) {
+	const haystack = String( text || '' ).toLowerCase();
+	for ( const [ token, state ] of STATE_TOKENS ) {
+		if ( haystack.includes( token ) ) {
+			return state;
+		}
+	}
+	return null;
 }
 
 function verifyHeadingContract( label, markup ) {
@@ -170,33 +207,89 @@ function verifyNoMovingGitHubLinks( label, markup ) {
 	);
 }
 
+// The register's state vocabulary lives in two places by necessity — a Node
+// verifier and a browser script that cannot share a module. Keep them equal.
+function verifyRegisterFilterAgreement() {
+	const script = readRequiredFile( registerFilterPath );
+	const block = /var STATE_TOKENS = \[([\s\S]*?)\];/.exec( script );
+	assert( block, 'assets/js/digest-register-filter.js must declare STATE_TOKENS.' );
+
+	const scriptTokens = [ ...block[ 1 ].matchAll( /\[\s*'([^']+)'\s*,\s*'([^']+)'\s*\]/g ) ].map( ( match ) => [
+		match[ 1 ],
+		match[ 2 ],
+	] );
+
+	assert(
+		JSON.stringify( scriptTokens ) === JSON.stringify( STATE_TOKENS ),
+		'assets/js/digest-register-filter.js STATE_TOKENS must match this verifier\'s list, in order.'
+	);
+}
+
+function verifyEvidenceRegister( markup ) {
+	assert(
+		countTableRows( markup, 'hp-evidence-table' ) === REGISTER_ROWS,
+		`The evidence register must publish all ${ REGISTER_ROWS } dated records.`
+	);
+
+	const body = getTableBody( markup, 'hp-evidence-table' );
+	const rows = [ ...body.matchAll( /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi ) ].map( ( match ) => match[ 1 ] );
+	const counts = { released: 0, open: 0, unreleased: 0 };
+
+	rows.forEach( ( row, index ) => {
+		const cell = /<td\b[^>]*>([\s\S]*?)<\/td>/i.exec( row );
+		assert( cell, `Register row ${ index + 1 } must carry a State cell.` );
+		const state = classifyState( stripMarkup( cell[ 1 ] ) );
+		assert(
+			state,
+			`Register row ${ index + 1 } has a State the filter cannot classify: "${ stripMarkup( cell[ 1 ] ) }". ` +
+				'An unclassifiable row disables the filter for the whole register.'
+		);
+		counts[ state ] += 1;
+	} );
+
+	for ( const [ state, expected ] of Object.entries( REGISTER_GROUP_COUNTS ) ) {
+		assert(
+			counts[ state ] === expected,
+			`The register must hold ${ expected } ${ state } records; found ${ counts[ state ] }.`
+		);
+	}
+
+	assert(
+		countMatches( body, new RegExp( escapeForRegExp( PRIMARY_PROOF_MARKER ), 'g' ) ) === 3,
+		'Exactly the three records argued as proof cards above must be marked as primary proof.'
+	);
+
+	assert(
+		markup.includes( 'filter the register to hold one of those states at a time' ),
+		'The register preamble must tell the reader the states can be held one at a time.'
+	);
+}
+
 function verifyMain( markup, _themeVersion, _deployedCommit, { requireEvent = true } = {} ) {
 	verifyHeadingContract( 'Main digest draft', markup );
 	verifyNoPublicationPlaceholders( 'Main digest draft', markup );
 	verifyNoMovingGitHubLinks( 'Main digest draft', markup );
 
 	const wordCount = visibleWordCount( markup );
-	assert( wordCount <= 425, `Main digest draft contains ${ wordCount } visible words; the recruiter brief budget is 425.` );
-	assert( ! /<(?:table|figure)\b/i.test( markup ), 'Main digest draft must not repeat table or ledger content available elsewhere.' );
+	assert(
+		wordCount >= 850,
+		`Main digest draft contains only ${ wordCount } visible words; the dossier argues the full case.`
+	);
 	assert( ! /<!--\s+wp:html\s*-->/.test( markup ), 'Main digest draft must use editable native blocks.' );
 
 	for ( const required of [
-		'<h1 class="wp-block-heading">I debug WordPress systems, document root causes, and turn recurring failures into constraints.</h1>',
-		'I’m pursuing Support Engineer, WordPress VIP: complex WordPress troubleshooting, clear customer communication, and prevention of repeat incidents.',
+		'<h1 class="wp-block-heading">I report WordPress failures so others can fix them.</h1>',
+		'Former WordPress.com Happiness Engineer · WordPress AI contributor · Chicago',
+		'I’m pursuing Support Engineer, WordPress VIP because I want the work itself',
 		'Published 13 Jul 2026 · Last verified 11 Aug 2026',
-		'What I bring to support',
-		'How I work',
-		'Proof you can inspect',
-		'One honest gap:',
-		'I do not claim public enterprise-scale monitoring experience.',
 		'A next step, stated plainly.',
 		'Bring me the problem behind the ticket.',
 	] ) {
-		assert( markup.includes( required ), `Main digest draft is missing required brief copy: ${ required }` );
+		assert( markup.includes( required ), `Main digest draft is missing required dossier copy: ${ required }` );
 	}
 
 	for ( const marker of REDUNDANT_DIGEST_MARKERS ) {
-		assert( ! markup.includes( marker ), `Main digest draft still contains removed long-form structure: ${ marker }` );
+		assert( ! markup.includes( marker ), `Main digest draft still contains retired brief structure: ${ marker }` );
 	}
 	for ( const forbidden of FORBIDDEN_DIGEST_COPY ) {
 		assert( ! markup.includes( forbidden ), `Main digest draft still repeats copy available elsewhere: ${ forbidden }` );
@@ -205,61 +298,118 @@ function verifyMain( markup, _themeVersion, _deployedCommit, { requireEvent = tr
 	const topLevelBlocks = parseTopLevelBlocks( markup );
 	const hasBlockClass = ( block, className ) =>
 		( block.attrs.className || '' ).split( /\s+/ ).includes( className );
-	const eventIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-wcus-callout' ) );
 	const heroIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-digest__hero' ) );
-	const briefIndex = topLevelBlocks.findIndex( ( block ) => block.attrs.anchor === 'support-brief' );
+	const eventIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-wcus-callout' ) );
 	const closingIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-digest-cta' ) );
 
-	assert( heroIndex !== -1, 'Main digest draft must contain a top-level .hp-digest__hero block.' );
-	assert( briefIndex !== -1, 'Main digest draft must contain one #support-brief section.' );
-	assert( closingIndex !== -1, 'Main digest draft must contain one top-level .hp-digest-cta section.' );
-	assert( getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-wcus-callout' ) === 0, 'The Digest hero must not contain the WordCamp aside.' );
-	assert( getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-digest__primary-actions' ) === 0, 'The Digest hero must not repeat event actions.' );
+	assert( heroIndex === 0, 'The Digest hero must be the first top-level block, so the H1 opens the outline.' );
+	assert(
+		closingIndex === topLevelBlocks.length - 1,
+		'The closing invitation must be the last top-level block.'
+	);
+	assert(
+		topLevelBlocks.length === ( requireEvent ? 10 : 9 ),
+		`The dossier must contain ${ requireEvent ? 10 : 9 } top-level blocks; found ${ topLevelBlocks.length }.`
+	);
 
 	if ( requireEvent ) {
-		assert( topLevelBlocks.length === 4, `The recruiter brief must contain four top-level blocks; found ${ topLevelBlocks.length }.` );
-		assert( eventIndex === 0, 'The WordCamp aside must be the first top-level block.' );
-		assert( heroIndex === 1 && briefIndex === 2 && closingIndex === 3, 'The recruiter brief must order event, hero, support brief, then closing invitation.' );
+		assert( eventIndex === 1, 'The WordCamp aside must follow the hero, not precede the H1.' );
 		const eventBlock = topLevelBlocks[ eventIndex ];
 		assert( eventBlock.name === 'group' && eventBlock.attrs.tagName === 'aside', 'The WordCamp aside must remain a native Group with aside semantics.' );
 		assert( eventBlock.attrs.ariaLabel === 'I’ll be at WordCamp US.', 'The WordCamp aside must have the approved accessible name.' );
+		assert( eventBlock.attrs.anchor === 'wordcamp-us-2026', 'The WordCamp aside must own the wordcamp-us-2026 fragment.' );
 		assert( /<aside\b[^>]*aria-label="I’ll be at WordCamp US\."[^>]*>/.test( eventBlock.outer ), 'The WordCamp Group markup must serialize the accessible name.' );
-		assert( ! /<h[1-6]\b/i.test( eventBlock.outer ), 'The WordCamp aside must not introduce a heading before the H1.' );
-		assert( getClassCount( eventBlock.outer, 'hp-wcus-callout--event-first' ) === 1, 'The candidate WordCamp aside must carry its event-first modifier.' );
+		assert( getClassCount( eventBlock.outer, 'hp-wcus-callout--event-first' ) === 1, 'The WordCamp aside must carry its event-first modifier.' );
 		assert( getClassCount( eventBlock.outer, 'hp-wcus-callout__copy' ) === 1 && getClassCount( eventBlock.outer, 'hp-wcus-callout__actions' ) === 1, 'The WordCamp aside must contain one copy column and one action column.' );
-		assert( JSON.stringify( extractLinks( eventBlock.outer ) ) === JSON.stringify( WCUS_ACTIONS ), 'The WordCamp aside actions must match the approved ordered contract.' );
+		assert( JSON.stringify( extractLinks( eventBlock.outer ) ) === JSON.stringify( WCUS_ACTIONS ), 'The WordCamp aside carries one action; the résumé and evidence routes belong to the closing invitation.' );
 	} else {
-		assert( topLevelBlocks.length === 3, `Event-removal mode must leave three top-level blocks; found ${ topLevelBlocks.length }.` );
 		assert( eventIndex === -1, 'Event-removal mode requires the WordCamp block to be absent.' );
-		assert( heroIndex === 0 && briefIndex === 1 && closingIndex === 2, 'Event removal must leave hero, support brief, then closing invitation.' );
 	}
 
-	const briefBlock = topLevelBlocks[ briefIndex ];
-	assert( briefBlock.name === 'group' && briefBlock.attrs.tagName === 'section', 'The support brief must remain a native Group with section semantics.' );
-	assert( getClassCount( briefBlock.outer, 'hp-digest-brief' ) === 1, 'The support brief must own one hp-digest-brief class.' );
-	assert( getClassCount( briefBlock.outer, 'wp-block-column' ) === 2, 'The support brief must contain exactly two native columns.' );
-	const fitList = getScopedElement( briefBlock.outer, 'ul', 'hp-digest-brief__list' );
-	const proofList = getScopedElement( briefBlock.outer, 'ul', 'hp-digest-brief__proofs' );
-	assert( countMatches( fitList, /<li\b/gi ) === 3, 'The support brief must contain exactly three working-style points.' );
-	assert( extractLinks( fitList ).length === 0, 'The working-style list must remain scan-first prose, not a link directory.' );
-	assert( countMatches( proofList, /<li\b/gi ) === 3, 'The support brief must contain exactly three selected proofs.' );
-	assert( JSON.stringify( extractLinks( proofList ) ) === JSON.stringify( BRIEF_PROOF_LINKS ), 'The selected proofs must expose exactly three canonical links in order.' );
-	for ( const required of [
-		'documentation I authored, refined through review, and merged upstream.',
-		'a stable WordPress AI provider release',
-		'a request-log blind spot I reported and reproduced, then integration-tested against another contributor’s proposed fix.',
-	] ) {
-		assert( proofList.includes( required ), `Selected proof is missing attribution-safe context: ${ required }` );
-	}
+	// The seven kickers are the dossier's spine: ordinal, label, anchor, heading.
+	const kickers = [ ...markup.matchAll( /<p class="hp-digest-kicker"><strong>(\d\d)<\/strong> · ([^<]+)<\/p>/g ) ];
+	assert(
+		kickers.length === SECTIONS.length,
+		`The dossier must carry ${ SECTIONS.length } numbered section kickers; found ${ kickers.length }.`
+	);
+	SECTIONS.forEach( ( section, index ) => {
+		assert(
+			kickers[ index ][ 1 ] === section.ordinal && kickers[ index ][ 2 ] === section.label,
+			`Section ${ index + 1 } must read "${ section.ordinal } · ${ section.label }"; found "${ kickers[ index ][ 1 ] } · ${ kickers[ index ][ 2 ] }".`
+		);
+		assert(
+			markup.includes( `<h2 class="wp-block-heading">${ section.heading }</h2>` ),
+			`The dossier is missing the section heading: ${ section.heading }`
+		);
+		if ( section.anchor ) {
+			assert(
+				hasMeaningfulFragmentTarget( markup, section.anchor ),
+				`The ${ section.anchor } fragment must target its real section.`
+			);
+		}
+	} );
+
+	// 02 — the ledger holds five proven rows and the gap is stated outside it,
+	// so nothing in the table reads as evidence that isn't.
+	assert(
+		countTableRows( markup, 'hp-fit-table' ) === 5,
+		'The fit ledger must hold exactly the five rows that have proof.'
+	);
+	const fitBody = getTableBody( markup, 'hp-fit-table' );
+	assert( ! /gap/i.test( fitBody ), 'The named gap must sit outside the fit ledger, not inside it as a sixth row.' );
+	const gap = getScopedElement( markup, 'p', 'hp-digest-gap' );
+	assert( gap.includes( 'The gap, named' ), 'The gap callout must name itself in words, not by colour alone.' );
+	assert(
+		gap.includes( 'I do not yet have a public enterprise-scale monitoring or incident record' ),
+		'The gap callout must keep the enterprise-monitoring admission verbatim.'
+	);
+
+	// 03 — three proof cards, each with a claim and a support-relevance line.
+	assert( getClassCount( markup, 'hp-proof-card' ) === 3, 'Primary proof must hold exactly three cards.' );
+	assert( countMatches( markup, /<strong>Claim:<\/strong>/g ) === 3, 'Each proof card must state a claim.' );
+	assert( countMatches( markup, /<strong>Support relevance:<\/strong>/g ) === 3, 'Each proof card must state its support relevance.' );
+
+	// 04 — the four investigation moves, then the record they came from.
+	assert( getClassCount( markup, 'hp-debug-proof__item' ) === 4, 'The debugging proof must hold four moves.' );
+	DEBUG_PROOF_TERMS.forEach( ( term ) => {
+		assert( markup.includes( `<p>${ term }</p>` ), `The debugging proof is missing its ${ term } term.` );
+	} );
+	assert(
+		markup.includes( 'I own the report and the integration testing; another contributor owns the fix.' ),
+		'The debugging proof must keep the ownership split attribution-safe.'
+	);
+	assert(
+		getScopedElement( markup, 'p', 'hp-artifact-row__legend' ).includes( 'Open the record' ),
+		'The incident artifact row must be legended "Open the record".'
+	);
+	// The row nests columns inside groups, so slice it by its block delimiters
+	// rather than by a tag match that would stop at the first closing </div>.
+	assert( getClassCount( markup, 'hp-artifact-row' ) === 1, 'The dossier must carry exactly one artifact row.' );
+	const artifactStart = markup.indexOf( '<!-- wp:columns {"className":"hp-artifacts"} -->' );
+	const artifactEnd = markup.indexOf( '<!-- /wp:columns -->', artifactStart );
+	assert( artifactStart !== -1 && artifactEnd !== -1, 'The incident artifact row must serialize as a native Columns block.' );
+	const artifactRow = markup.slice( artifactStart, artifactEnd );
+	assert(
+		getClassCount( artifactRow, 'hp-artifact' ) === INCIDENT_ARTIFACTS.length,
+		`The incident artifact row must expose ${ INCIDENT_ARTIFACTS.length } labelled cells.`
+	);
+	const verifies = [ ...artifactRow.matchAll( /<p class="hp-artifact__verifies">([^<]+)<\/p>/g ) ].map( ( m ) => m[ 1 ] );
+	const artifactLabels = extractLinks( artifactRow ).map( ( link ) => link[ 0 ] );
+	assert(
+		JSON.stringify( verifies.map( ( label, index ) => [ label, artifactLabels[ index ] ] ) ) ===
+			JSON.stringify( INCIDENT_ARTIFACTS ),
+		'Each incident artifact must name what it verifies, in the approved order.'
+	);
+
+	// 06 — the complete register, and the filter that can narrow it.
+	verifyEvidenceRegister( markup );
+	verifyRegisterFilterAgreement();
 
 	const closingBlock = topLevelBlocks[ closingIndex ];
 	assert( closingBlock.attrs.tagName === 'section', 'The closing invitation must serialize as a section.' );
 	assert( hasBlockClass( closingBlock, 'hp-action-panel' ) && hasBlockClass( closingBlock, 'is-closing' ), 'The closing invitation must retain the shared closing-panel treatment.' );
-	assert( JSON.stringify( extractLinks( closingBlock.outer ) ) === JSON.stringify( CLOSING_ACTIONS ), 'The closing invitation must contain only contact and résumé actions.' );
+	assert( JSON.stringify( extractLinks( closingBlock.outer ) ) === JSON.stringify( CLOSING_ACTIONS ), 'The closing invitation must offer contact, résumé, and the evidence register.' );
 
-	const expectedLinks = [ ...( requireEvent ? WCUS_ACTIONS : [] ), ...BRIEF_PROOF_LINKS, ...CLOSING_ACTIONS ];
-	assert( JSON.stringify( extractLinks( markup ) ) === JSON.stringify( expectedLinks ), 'The recruiter brief must expose only the approved decision-ready links in order.' );
-	assert( extractLinks( markup ).length <= 8, 'The recruiter brief must expose at most eight links.' );
 	assert( ! extractLinks( markup ).some( ( link ) => {
 		try {
 			return new URL( link[ 1 ], 'https://digest-candidate.invalid/' ).pathname === '/root-cause-investigation/';
@@ -329,4 +479,4 @@ if ( require.main === module ) {
 	}
 }
 
-module.exports = { verifyMain, visibleWordCount };
+module.exports = { verifyMain, visibleWordCount, classifyState, STATE_TOKENS, SECTIONS };
