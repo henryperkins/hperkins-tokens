@@ -133,13 +133,20 @@ function verifySourceContracts() {
 	}
 	if ( USE_DRAFTS ) {
 		assertRuleDeclarations( pageCss, {
+			selector: '.hp-wcus-callout',
+			declarations: {
+				'--hp-plate-pad': 'var(--wp--preset--spacing--6)',
+				padding: 'var(--hp-plate-pad)',
+			},
+		} );
+		assertRuleDeclarations( pageCss, {
 			selector: '.hp-wcus-callout--event-first',
 			declarations: {
 				display: 'grid',
 				'grid-template-columns': 'minmax(0, 1fr)',
 				'column-gap': '0',
 				'row-gap': 'var(--wp--preset--spacing--5)',
-				padding: 'var(--wp--preset--spacing--6)',
+				padding: 'var(--hp-plate-pad)',
 				'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
 			},
 		} );
@@ -167,7 +174,8 @@ function verifySourceContracts() {
 		assertRuleDeclarations( pageCss, {
 			selector: '.hp-wcus-callout',
 			declarations: {
-				padding: 'var(--wp--preset--spacing--6)',
+				'--hp-plate-pad': 'var(--wp--preset--spacing--6)',
+				padding: 'var(--hp-plate-pad)',
 				'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
 			},
 		} );

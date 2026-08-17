@@ -117,6 +117,42 @@ test( 'keeps the labelled WordCamp aside after the H1 so it never precedes the o
 	);
 } );
 
+test( 'ships the captioned documentary WordCamp photograph inside the event plate', () => {
+	const event = parseTopLevelBlocks( DIGEST )[ 1 ];
+	const asset = path.join(
+		THEME_ROOT,
+		'assets',
+		'img',
+		'imagery',
+		'wcus-2026-phoenix.png'
+	);
+
+	assert( fs.existsSync( asset ), 'The supplied WordCamp documentary photograph must be tracked by the theme.' );
+	const image = fs.readFileSync( asset );
+	assert.equal( image.readUInt32BE( 16 ), 1448, 'The WordCamp photograph must keep its supplied intrinsic width.' );
+	assert.equal( image.readUInt32BE( 20 ), 1086, 'The WordCamp photograph must keep its supplied intrinsic height.' );
+	assert.match( event.outer, /<!-- wp:image \{[^\n]*"className":"hp-wcus-callout__figure"[^\n]*\} -->/ );
+	assert.match(
+		event.outer,
+		/<img src="\/wp-content\/themes\/hperkins-tokens\/assets\/img\/imagery\/wcus-2026-phoenix\.png" alt="The West entrance of the Phoenix Convention Center at night, its glass doors dressed in WordCamp US 26 desert artwork under the illuminated building sign\."\/>/
+	);
+	assert.match(
+		event.outer,
+		/<figcaption class="wp-element-caption">Phoenix Convention Center, West entrance — WordCamp US 2026, 16–19 August\. I’m staffing the Core AI booth\.<\/figcaption>/
+	);
+	assert(
+		event.outer.indexOf( 'hp-wcus-callout__figure' ) < event.outer.indexOf( 'hp-wcus-callout__copy' ),
+		'The photograph must remain the first object inside the event plate.'
+	);
+
+	const imageBlock = /<!-- wp:image \{[^\n]*"className":"hp-wcus-callout__figure"[^\n]*\} -->[\s\S]*?<!-- \/wp:image -->\n\n/.exec( DIGEST );
+	assert( imageBlock, 'The mutation fixture must find the WordCamp image block.' );
+	assert.throws(
+		() => verifyMain( DIGEST.replace( imageBlock[ 0 ], '' ) ),
+		/captioned documentary WordCamp photograph/
+	);
+} );
+
 test( 'stays valid when the event block is retired after WordCamp', () => {
 	const evergreen = removeEventBlock( DIGEST );
 	const blocks = parseTopLevelBlocks( evergreen );

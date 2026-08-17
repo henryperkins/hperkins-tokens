@@ -17,9 +17,9 @@ recorded here rather than silently overridden:
    may carry a captioned documentary photograph of the venue, bled to the
    plate's own edges, on `.hp-wcus-callout__figure` /
    `.hp-wcus-callout__caption`. The remaining bans — WordCamp palette, logo,
-   gradients, a second visual identity — stand. *This is the one part of the
-   amendment not yet delivered: the photograph itself is not in the
-   repository.*
+   gradients, a second visual identity — stand. **Delivered 2026-08-17:** the
+   canonical project export supplied `wcus-2026-phoenix.png`, now implemented
+   as a captioned native Image block in the reviewed Digest candidate.
 2. **"Add no disclosure, truncation, or default-hidden state" is narrowed.**
    The evidence register may carry a release-state filter, on the condition
    that it never hides evidence the reader has not chosen to hide: the filter

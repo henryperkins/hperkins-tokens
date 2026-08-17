@@ -16,8 +16,12 @@ const mainPath = path.join( themeRoot, 'content', 'page-drafts', 'job-placement-
 const appendixPath = path.join( themeRoot, 'content', 'page-drafts', 'placement-method-evidence.html' );
 const retiredPatternPath = path.join( themeRoot, 'patterns', 'job-placement-digest.php' );
 const registerFilterPath = path.join( themeRoot, 'assets', 'js', 'digest-register-filter.js' );
+const wcusImagePath = path.join( themeRoot, 'assets', 'img', 'imagery', 'wcus-2026-phoenix.png' );
 
 const WCUS_ACTIONS = [ [ 'Start a WordCamp conversation', '/contact/' ] ];
+const WCUS_IMAGE_SOURCE = '/wp-content/themes/hperkins-tokens/assets/img/imagery/wcus-2026-phoenix.png';
+const WCUS_IMAGE_ALT = 'The West entrance of the Phoenix Convention Center at night, its glass doors dressed in WordCamp US 26 desert artwork under the illuminated building sign.';
+const WCUS_IMAGE_CAPTION = 'Phoenix Convention Center, West entrance — WordCamp US 2026, 16–19 August. I’m staffing the Core AI booth.';
 
 const CLOSING_ACTIONS = [
 	[ 'Contact Henry', '/contact/' ],
@@ -406,7 +410,24 @@ function verifyMain( markup, _themeVersion, _deployedCommit, { requireEvent = tr
 		assert( eventBlock.attrs.anchor === 'wordcamp-us-2026', 'The WordCamp aside must own the wordcamp-us-2026 fragment.' );
 		assert( /<aside\b[^>]*aria-label="I’ll be at WordCamp US\."[^>]*>/.test( eventBlock.outer ), 'The WordCamp Group markup must serialize the accessible name.' );
 		assert( getClassCount( eventBlock.outer, 'hp-wcus-callout--event-first' ) === 1, 'The WordCamp aside must carry its event-first modifier.' );
+		assert(
+			countMatches( eventBlock.outer, /<!-- wp:image\b/g ) === 1 &&
+				getClassCount( eventBlock.outer, 'hp-wcus-callout__figure' ) === 1,
+			'The WordCamp aside must contain one captioned documentary WordCamp photograph.'
+		);
+		assert(
+			eventBlock.outer.includes( `<img src="${ WCUS_IMAGE_SOURCE }" alt="${ WCUS_IMAGE_ALT }"/>` ),
+			'The captioned documentary WordCamp photograph must retain its approved source and alternative text.'
+		);
+		assert(
+			eventBlock.outer.includes( `<figcaption class="wp-element-caption">${ WCUS_IMAGE_CAPTION }</figcaption>` ),
+			'The captioned documentary WordCamp photograph must retain its approved visible caption.'
+		);
 		assert( getClassCount( eventBlock.outer, 'hp-wcus-callout__copy' ) === 1 && getClassCount( eventBlock.outer, 'hp-wcus-callout__actions' ) === 1, 'The WordCamp aside must contain one copy column and one action column.' );
+		assert(
+			eventBlock.outer.indexOf( 'hp-wcus-callout__figure' ) < eventBlock.outer.indexOf( 'hp-wcus-callout__copy' ),
+			'The captioned documentary WordCamp photograph must be the first object in the WordCamp aside.'
+		);
 		assert( JSON.stringify( extractLinks( eventBlock.outer ) ) === JSON.stringify( WCUS_ACTIONS ), 'The WordCamp aside carries one action; the résumé and evidence routes belong to the closing invitation.' );
 	} else {
 		assert( eventIndex === -1, 'Event-removal mode requires the WordCamp block to be absent.' );
@@ -596,6 +617,12 @@ function verifyForbiddenCopy( combinedMarkup ) {
 function main() {
 	const main = readRequiredFile( mainPath );
 	const appendix = readRequiredFile( appendixPath );
+	assert( fs.existsSync( wcusImagePath ), 'The captioned documentary WordCamp photograph asset is missing.' );
+	const wcusImage = fs.readFileSync( wcusImagePath );
+	assert(
+		wcusImage.length >= 24 && wcusImage.readUInt32BE( 16 ) === 1448 && wcusImage.readUInt32BE( 20 ) === 1086,
+		'The captioned documentary WordCamp photograph must keep its supplied 1448×1086 dimensions.'
+	);
 
 	verifyMain( main );
 	verifyAppendix( appendix );

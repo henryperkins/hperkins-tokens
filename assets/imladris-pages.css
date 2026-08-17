@@ -362,8 +362,9 @@ p.hp-contact-form__hint {
 }
 
 .hp-wcus-callout {
+  --hp-plate-pad: var(--wp--preset--spacing--6);
   margin-block-start: var(--wp--preset--spacing--6);
-  padding: var(--wp--preset--spacing--6);
+  padding: var(--hp-plate-pad);
   border-inline-start: 0.25rem solid var(--wp--preset--color--gold-600);
   background: color-mix(in srgb, var(--wp--preset--color--parchment-100) 88%, var(--wp--preset--color--gold-100));
 }
@@ -377,7 +378,7 @@ p.hp-contact-form__hint {
   align-items: stretch;
   max-inline-size: var(--wp--style--global--wide-size, 72rem);
   margin-block-start: 0;
-  padding: var(--wp--preset--spacing--6);
+  padding: var(--hp-plate-pad);
   border-inline-start: 0.25rem solid var(--wp--preset--color--gold-600);
   background: var(--wp--custom--surface--raised);
 }
@@ -416,7 +417,13 @@ p.hp-contact-form__hint {
   grid-template-columns: minmax(0, 1fr);
   gap: var(--wp--preset--spacing--4);
   width: 100%;
-  align-self: stretch;
+  align-self: end;
+  align-content: end;
+  grid-auto-rows: max-content;
+}
+
+.hp-wcus-callout--event-first .hp-wcus-callout__actions > * {
+  align-self: end;
 }
 
 .hp-digest__primary-actions .wp-block-button,
@@ -726,8 +733,7 @@ p.hp-contact-form__hint {
    the caption dates and places it. */
 .hp-wcus-callout__figure {
   grid-column: 1 / -1;
-  margin: calc(var(--wp--preset--spacing--6) * -1);
-  margin-block-end: var(--wp--preset--spacing--6);
+  margin: calc(var(--hp-plate-pad) * -1) calc(var(--hp-plate-pad) * -1) var(--hp-plate-pad);
   background: var(--wp--custom--surface--card);
   border-block-end: 1px solid var(--wp--custom--border--hair);
 }
@@ -740,7 +746,8 @@ p.hp-contact-form__hint {
   object-position: center 40%;
 }
 
-.hp-wcus-callout__caption {
+.hp-wcus-callout__caption,
+.hp-wcus-callout__figure > .wp-element-caption {
   margin: 0;
   padding: var(--wp--preset--spacing--3) var(--wp--preset--spacing--4);
   border-block-start: 1px solid var(--wp--custom--border--hair);
@@ -1009,7 +1016,7 @@ p.hp-contact-form__hint {
   }
 
   .hp-wcus-callout--event-first {
-    padding: var(--wp--preset--spacing--5);
+    --hp-plate-pad: var(--wp--preset--spacing--5);
   }
 }
 
@@ -1036,6 +1043,15 @@ p.hp-contact-form__hint {
 @media (max-width: 781px) {
   .hp-wcus-callout__actions {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hp-wcus-callout--event-first .hp-wcus-callout__actions {
+    align-self: start;
+    align-content: start;
+  }
+
+  .hp-wcus-callout--event-first .hp-wcus-callout__actions > * {
+    align-self: start;
   }
 
   .hp-wcus-callout--event-first {
@@ -1261,8 +1277,8 @@ p.hp-contact-form__hint {
   }
 
   .hp-wcus-callout--event-first {
+    --hp-plate-pad: var(--wp--preset--spacing--4);
     row-gap: var(--wp--preset--spacing--4);
-    padding: var(--wp--preset--spacing--4);
   }
 
   .hp-wcus-callout--event-first .hp-wcus-callout__title {
