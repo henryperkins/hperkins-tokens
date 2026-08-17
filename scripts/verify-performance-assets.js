@@ -30,6 +30,10 @@ const modernArtworkBudgets = {
 	'assets/img/imagery/rivendell-third-age.webp': 180000,
 	'assets/img/imagery/rivendell-fourth-age.webp': 180000,
 	'assets/img/imagery/valley-twilight.webp': 180000,
+	// The Job Placement Digest's event photograph. It arrived as a 3.4 MB PNG
+	// and shipped that way until this budget existed; the recruiter route is
+	// the one most likely to be opened on a phone on conference wifi.
+	'assets/img/imagery/wcus-2026-phoenix.webp': 180000,
 	'assets/img/wapuu-color.webp': 60000,
 	'assets/img/wapuu-emblem-green.webp': 12000,
 };
@@ -293,11 +297,20 @@ assert(
 // which fetch the 640w file today. The ring grid is three ~365px columns above
 // 920px and one ~92vw column below, so 768w serves desktop at 2x and mobile up
 // to roughly 2x. A 600w candidate would have won none of those cases.
+// The Digest event photograph spans the alignwide plate — its figure margins
+// cancel the plate padding — so it is calc(100vw - 4rem) up to a 1216px
+// viewport and 72rem above it. A phone lays it out near 326px and takes 768w at
+// 2x, landing on the same candidate width as the ring cards. Unlike the hero
+// and the ring cards, its srcset is not authored in markup: the photograph sits
+// in a wp:image block that core/image cannot serialize an srcset into, so
+// inc/content-images.php adds one on wp_content_img_tag instead. That file is
+// asserted below.
 const responsiveVariants = {
 	'assets/img/wapuu-color-448.webp': 30000,
 	'assets/img/imagery/rivendell-second-age-768.webp': 90000,
 	'assets/img/imagery/rivendell-third-age-768.webp': 90000,
 	'assets/img/imagery/rivendell-fourth-age-768.webp': 90000,
+	'assets/img/imagery/wcus-2026-phoenix-768.webp': 90000,
 };
 for ( const [ relativePath, maxBytes ] of Object.entries( responsiveVariants ) ) {
 	assertFileSmallerThan( relativePath, maxBytes );
@@ -319,6 +332,42 @@ assert(
 assert(
 	( ringPattern.match( /sizes="\(max-width: 920px\) 92vw, 23rem"/g ) || [] ).length >= 3,
 	'Ring-card sizes must match .hp-ring-grid (one column under 920px, ~23rem per column above).'
+);
+
+// The Digest event photograph gets its candidates at render time. Nothing in
+// the page body shows that, so the contract is pinned against the filter file.
+const contentImages = readFileSync( join( themeRoot, 'inc/content-images.php' ), 'utf8' );
+assert(
+	functionsPhp.includes( '/inc/content-images.php' ),
+	'functions.php must require inc/content-images.php.'
+);
+assert(
+	contentImages.includes( "add_filter( 'wp_content_img_tag'" ),
+	'inc/content-images.php must register its candidates on wp_content_img_tag.'
+);
+for ( const file of [
+	'assets/img/imagery/wcus-2026-phoenix.webp',
+	'assets/img/imagery/wcus-2026-phoenix-768.webp',
+] ) {
+	assert(
+		contentImages.includes( file ),
+		`inc/content-images.php must name ${ file } as a responsive candidate.`
+	);
+}
+assert(
+	contentImages.includes( "'small_width' => 768" ) && contentImages.includes( "'width'       => 1448" ),
+	'The Digest photograph needs a 768w candidate against the 1448w full frame.'
+);
+assert(
+	contentImages.includes( "'sizes'       => '(max-width: 1216px) calc(100vw - 4rem), 72rem'" ),
+	'Digest photograph sizes must match the alignwide plate (calc(100vw - 4rem) below 1216px, 72rem above).'
+);
+// Core decides loading and fetchpriority for this one. It is the first content
+// image on the route, which wp_get_loading_optimization_attributes() already
+// keeps eager; hardcoding either here would override that on a likely LCP image.
+assert(
+	! /\bloading=|\bfetchpriority=/.test( contentImages ),
+	'inc/content-images.php must leave loading and fetchpriority to core.'
 );
 
 // Release-sync contract: style.css Version, readme.txt Stable tag, and the

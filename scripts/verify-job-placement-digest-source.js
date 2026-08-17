@@ -16,10 +16,16 @@ const mainPath = path.join( themeRoot, 'content', 'page-drafts', 'job-placement-
 const appendixPath = path.join( themeRoot, 'content', 'page-drafts', 'placement-method-evidence.html' );
 const retiredPatternPath = path.join( themeRoot, 'patterns', 'job-placement-digest.php' );
 const registerFilterPath = path.join( themeRoot, 'assets', 'js', 'digest-register-filter.js' );
+// The PNG is the archival master; the WebP is what the page actually serves.
+// Every other photograph under assets/img/imagery/ keeps the same pair, and the
+// byte budget for the delivered file lives with the rest of them in
+// scripts/verify-performance-assets.js.
 const wcusImagePath = path.join( themeRoot, 'assets', 'img', 'imagery', 'wcus-2026-phoenix.png' );
+const wcusWebpPath = path.join( themeRoot, 'assets', 'img', 'imagery', 'wcus-2026-phoenix.webp' );
+const wcusWebp768Path = path.join( themeRoot, 'assets', 'img', 'imagery', 'wcus-2026-phoenix-768.webp' );
 
 const WCUS_ACTIONS = [ [ 'Start a WordCamp conversation', '/contact/' ] ];
-const WCUS_IMAGE_SOURCE = '/wp-content/themes/hperkins-tokens/assets/img/imagery/wcus-2026-phoenix.png';
+const WCUS_IMAGE_SOURCE = '/wp-content/themes/hperkins-tokens/assets/img/imagery/wcus-2026-phoenix.webp';
 const WCUS_IMAGE_ALT = 'The West entrance of the Phoenix Convention Center at night, its glass doors dressed in WordCamp US 26 desert artwork under the illuminated building sign.';
 const WCUS_IMAGE_CAPTION = 'Phoenix Convention Center, West entrance — WordCamp US 2026, 16–19 August. I’m staffing the Core AI booth.';
 
@@ -138,6 +144,25 @@ function readRequiredFile( filePath ) {
 
 function countMatches( value, expression ) {
 	return [ ...value.matchAll( expression ) ].length;
+}
+
+// Intrinsic size of a simple lossy WebP: RIFF container, "WEBP" form type, a
+// "VP8 " chunk, then the frame header's two 14-bit little-endian dimensions.
+// Only this one shape is accepted on purpose — a VP8L or VP8X file here would
+// mean the asset was re-encoded by some other tool, which is worth failing on.
+function readWebpDimensions( buffer ) {
+	assert(
+		buffer.length >= 30 &&
+			buffer.toString( 'ascii', 0, 4 ) === 'RIFF' &&
+			buffer.toString( 'ascii', 8, 12 ) === 'WEBP' &&
+			buffer.toString( 'ascii', 12, 16 ) === 'VP8 ',
+		'The delivered WordCamp photograph must be a simple lossy WebP.'
+	);
+
+	return {
+		width: buffer.readUInt16LE( 26 ) & 0x3fff,
+		height: buffer.readUInt16LE( 28 ) & 0x3fff,
+	};
 }
 
 function escapeForRegExp( value ) {
@@ -410,6 +435,11 @@ function verifyMain( markup, _themeVersion, _deployedCommit, { requireEvent = tr
 		assert( eventBlock.attrs.anchor === 'wordcamp-us-2026', 'The WordCamp aside must own the wordcamp-us-2026 fragment.' );
 		assert( /<aside\b[^>]*aria-label="I’ll be at WordCamp US\."[^>]*>/.test( eventBlock.outer ), 'The WordCamp Group markup must serialize the accessible name.' );
 		assert( getClassCount( eventBlock.outer, 'hp-wcus-callout--event-first' ) === 1, 'The WordCamp aside must carry its event-first modifier.' );
+		// The block stays a plain wp:image an editor can still edit: core/image
+		// has no srcset or sizes attribute, so responsive candidates cannot be
+		// written here without failing block validation. inc/content-images.php
+		// adds them at render time instead, and verify-performance-assets.js
+		// owns that contract alongside the hero and ring-card srcsets.
 		assert(
 			countMatches( eventBlock.outer, /<!-- wp:image\b/g ) === 1 &&
 				getClassCount( eventBlock.outer, 'hp-wcus-callout__figure' ) === 1,
@@ -622,6 +652,37 @@ function main() {
 	assert(
 		wcusImage.length >= 24 && wcusImage.readUInt32BE( 16 ) === 1448 && wcusImage.readUInt32BE( 20 ) === 1086,
 		'The captioned documentary WordCamp photograph must keep its supplied 1448×1086 dimensions.'
+	);
+
+	// The page serves the WebP, so it has to be the full frame at the master's
+	// dimensions — not a thumbnail — and it has to be the reason the route got
+	// cheap. Shipping the 3.4 MB master again would pass every other check here.
+	assert( fs.existsSync( wcusWebpPath ), 'The delivered WebP of the WordCamp photograph is missing.' );
+	const wcusWebp = fs.readFileSync( wcusWebpPath );
+	const webpSize = readWebpDimensions( wcusWebp );
+	assert(
+		webpSize.width === 1448 && webpSize.height === 1086,
+		`The delivered WordCamp photograph must keep the master's 1448×1086 frame; found ${ webpSize.width }×${ webpSize.height }.`
+	);
+	assert(
+		wcusWebp.length * 10 <= wcusImage.length,
+		`The delivered WordCamp photograph must stay at least ten times smaller than the archival PNG; found ${ wcusWebp.length } vs ${ wcusImage.length } bytes.`
+	);
+
+	// The 768w candidate is what a phone actually downloads, so it has to exist,
+	// keep the master's 4:3 frame (the 16/9 crop is CSS, not a re-encode), and be
+	// meaningfully cheaper than the full file — otherwise the srcset costs a
+	// second asset and buys nothing.
+	assert( fs.existsSync( wcusWebp768Path ), 'The 768w candidate of the WordCamp photograph is missing.' );
+	const wcusWebp768 = fs.readFileSync( wcusWebp768Path );
+	const webp768Size = readWebpDimensions( wcusWebp768 );
+	assert(
+		webp768Size.width === 768 && webp768Size.height === 576,
+		`The 768w WordCamp candidate must keep the master's 4:3 frame at 768×576; found ${ webp768Size.width }×${ webp768Size.height }.`
+	);
+	assert(
+		wcusWebp768.length * 2 <= wcusWebp.length,
+		`The 768w WordCamp candidate must be at least half the full file to be worth serving; found ${ wcusWebp768.length } vs ${ wcusWebp.length } bytes.`
 	);
 
 	verifyMain( main );

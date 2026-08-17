@@ -119,22 +119,47 @@ test( 'keeps the labelled WordCamp aside after the H1 so it never precedes the o
 
 test( 'ships the captioned documentary WordCamp photograph inside the event plate', () => {
 	const event = parseTopLevelBlocks( DIGEST )[ 1 ];
-	const asset = path.join(
-		THEME_ROOT,
-		'assets',
-		'img',
-		'imagery',
-		'wcus-2026-phoenix.png'
-	);
+	const imagery = path.join( THEME_ROOT, 'assets', 'img', 'imagery' );
+	const asset = path.join( imagery, 'wcus-2026-phoenix.png' );
+	const delivered = path.join( imagery, 'wcus-2026-phoenix.webp' );
+	const candidate = path.join( imagery, 'wcus-2026-phoenix-768.webp' );
 
 	assert( fs.existsSync( asset ), 'The supplied WordCamp documentary photograph must be tracked by the theme.' );
 	const image = fs.readFileSync( asset );
 	assert.equal( image.readUInt32BE( 16 ), 1448, 'The WordCamp photograph must keep its supplied intrinsic width.' );
 	assert.equal( image.readUInt32BE( 20 ), 1086, 'The WordCamp photograph must keep its supplied intrinsic height.' );
+
+	// The block references the WebP, so that is the file a reader downloads.
+	assert( fs.existsSync( delivered ), 'The delivered WebP of the WordCamp photograph must be tracked by the theme.' );
+	const webp = fs.readFileSync( delivered );
+	assert.equal( webp.toString( 'ascii', 8, 12 ), 'WEBP', 'The delivered WordCamp photograph must be a WebP.' );
+	assert.equal( webp.readUInt16LE( 26 ) & 0x3fff, 1448, 'The delivered WordCamp photograph must keep the full frame width.' );
+	assert.equal( webp.readUInt16LE( 28 ) & 0x3fff, 1086, 'The delivered WordCamp photograph must keep the full frame height.' );
+	assert.ok(
+		webp.length * 10 <= image.length,
+		'The delivered WordCamp photograph must stay at least ten times smaller than the archival PNG.'
+	);
+
+	// The srcset's small candidate is what a phone downloads. It keeps the 4:3
+	// frame because the 16/9 crop is CSS (object-fit), not a re-encode.
+	assert.ok( fs.existsSync( candidate ), 'The 768w WordCamp candidate must be tracked by the theme.' );
+	const small = fs.readFileSync( candidate );
+	assert.equal( small.toString( 'ascii', 8, 12 ), 'WEBP', 'The 768w WordCamp candidate must be a WebP.' );
+	assert.equal( small.readUInt16LE( 26 ) & 0x3fff, 768, 'The 768w WordCamp candidate must be 768 wide.' );
+	assert.equal( small.readUInt16LE( 28 ) & 0x3fff, 576, 'The 768w WordCamp candidate must keep the 4:3 frame.' );
+	assert.ok(
+		small.length * 2 <= webp.length,
+		'The 768w WordCamp candidate must be at least half the full file to be worth serving.'
+	);
+
+	// The block stays a plain, editable wp:image. Its responsive candidates are
+	// added at render time by inc/content-images.php, because core/image has no
+	// srcset or sizes attribute to serialize them into.
 	assert.match( event.outer, /<!-- wp:image \{[^\n]*"className":"hp-wcus-callout__figure"[^\n]*\} -->/ );
+	assert.doesNotMatch( event.outer, /<!-- wp:html\b/ );
 	assert.match(
 		event.outer,
-		/<img src="\/wp-content\/themes\/hperkins-tokens\/assets\/img\/imagery\/wcus-2026-phoenix\.png" alt="The West entrance of the Phoenix Convention Center at night, its glass doors dressed in WordCamp US 26 desert artwork under the illuminated building sign\."\/>/
+		/<img src="\/wp-content\/themes\/hperkins-tokens\/assets\/img\/imagery\/wcus-2026-phoenix\.webp" alt="The West entrance of the Phoenix Convention Center at night, its glass doors dressed in WordCamp US 26 desert artwork under the illuminated building sign\."\/>/
 	);
 	assert.match(
 		event.outer,
