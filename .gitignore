@@ -48,6 +48,11 @@ coverage/
 /docs/howhperkinswasbuilt.html
 /docs/imladris.html
 
+# Superpowers runtime state and operational backups (local dev only). Holds a
+# brainstorm session token, server PIDs, and full site content/config dumps that
+# belong to the production-operations checkout, not the theme repo.
+/.superpowers/
+
 # Playwright MCP / browser automation session artifacts (local dev only)
 .playwright-mcp/
 docs/blogdocs/**
