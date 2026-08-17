@@ -1,0 +1,35 @@
+# Line endings.
+#
+# Every text file in this repo is stored LF in the index and checked out LF in
+# the working tree, on every platform. `eol=lf` is what makes the working-tree
+# half of that true: without it, a Windows clone with `core.autocrlf=true`
+# rewrites all 205 text files to CRLF on checkout, and `git status` then reports
+# them as modified forever even though `git diff` is empty.
+#
+# LF is already what the index holds, so this file is a no-op on content —
+# `git add --renormalize .` stages nothing. It pins the current state rather
+# than changing it.
+#
+# The theme ships no build step, and its consumers are PHP, CSS, JS, and
+# WordPress block markup, none of which care about EOL. The two .ps1 scripts run
+# under PowerShell 5.1+, which reads LF scripts fine.
+* text=auto eol=lf
+
+# Binary assets — never normalize EOL, never diff as text.
+# Git already auto-detects all of these; declaring them keeps that from
+# depending on content sniffing.
+*.png   binary
+*.jpeg  binary
+*.jpg   binary
+*.webp  binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.eot   binary
+*.pdf   binary
+*.xlsx  binary
+*.docx  binary
+*.zip   binary
