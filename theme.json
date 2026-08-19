@@ -560,9 +560,11 @@
       },
       "measure": {
         "prose": "68ch",
-        "narrow": "46ch"
+        "narrow": "46ch",
+        "contactLead": "54ch"
       },
       "container": {
+        "contact": "600px",
         "text": "44rem",
         "wide": "72rem",
         "full": "84rem"

@@ -87,7 +87,7 @@ component CSS to refresh either — the theme's `style.css` is a superset.
 |---|---|---|
 | `templates/front-page` | `content/page-snapshots/front-page.html`, `templates/front-page.html`, `patterns/wapuu-home-hero.php` | Published **Home** page (slug `home`, ID 36) in hybrid mode: theme-owned Wapuu hero + Three Rings shell, DB-owned middle body |
 | `templates/about` | `content/page-drafts/about.html` (the only human-authored About candidate), `content/page-snapshots/about.html` (accepted snapshot, export-only mirror), `patterns/about-resume.php` (portrait-only thin accepted-snapshot adapter — no page markup of its own), `templates/page-about.html`, About page layer in `assets/imladris-pages.css` | Published **About + Resume** page (slug `about`, ID 6) in DB-owned page-body mode. The proof-first candidate in `content/page-drafts/about.html` is applied locally only via the explicit `--page=about` draft command and is not the deployed body until it passes review and controlled promotion |
-| `templates/contact` | `patterns/contact.php`, `templates/page-contact.html` | Published **Contact** page (slug `contact`, ID 233) |
+| `templates/contact` | `patterns/contact.php`, `templates/page-contact.html`, the Contact section of `assets/imladris-pages.css`, `.hp-form-confirm*` in `style.css` | Published **Contact** page (slug `contact`, ID 233) in repository-owned mode — the body comes from the pattern, not the database, so this route is outside the page-snapshot contract. Aligned to the design template on 2026-08-18 (section below) |
 | `templates/ai-enablement` | `content/page-snapshots/ai-enablement.html`, `templates/page-ai-enablement.html` | Published **AI Enablement** page (slug `ai-enablement`, ID 175) in DB-owned page-body mode; `patterns/ai-enablement.php` remains a reusable seed/reference copy |
 | `templates/work-index` | `content/page-snapshots/work.html`, `templates/page-work.html` | Published **Work** page (slug `work`, ID 13) in DB-owned page-body mode; `patterns/work-index.php` remains a reusable seed/reference copy |
 | `templates/digest` | `content/page-snapshots/job-placement-digest.html`, `templates/page-job-placement-digest.html` | Published **Job Placement Digest** (slug `job-placement-digest`, ID 433) in DB-owned page-body mode; the former full-page pattern is retired |
@@ -618,3 +618,123 @@ same recorded-not-pushed contract as the entries above. The design project's
   text may synthesize: `<strong>` in EB Garamond now renders the real 600.
   `scripts/verify-typography.js` (new) asserts the fluid presets, text floors,
   measure, family allow-list, and no-synthetic-Marcellus invariants.
+
+## 2026-08-18 — Contact fidelity pass (`templates/contact` → `/contact/`, 0.3.60)
+
+Targeted alignments against the design template, not a redesign; everything
+else on the route is unchanged, and nothing from the prototype ships.
+
+- **Composition** — the hero and the message panel share one 600px column
+  centred in the page spine, where both previously filled the 44rem content
+  measure. The shared width is the whole mechanism: core forces
+  `margin-left/right: auto` on every direct child of this main, so two blocks
+  align only by matching widths — a hero on its own measure steps the page
+  inward and leaves its closing hairline short of the form's right edge. The
+  lead still reads at 54ch rather than the 46ch `measure.narrow` the other page
+  heroes use; `ch` resolves against the lead's own 22px type, so that measure
+  has to sit on the lead and not on the hero box. Its rule is scoped to
+  `.hp-contact-template` because `.hp-page-hero` is shared with `/about/`,
+  `/work/`, `/ai-enablement/` and the digest. The subscribe plate keeps the full
+  spine on purpose: it is a plate, not a text block.
+- **Tokens** — `theme.json` is the normative owner of both values:
+  `settings.custom.container.contact` (600px) and
+  `settings.custom.measure.contactLead` (54ch), consumed as
+  `--wp--custom--container--contact` and `--wp--custom--measure--contact-lead`.
+  The contact container and the 600px component-stack breakpoint that stacks
+  the Name/Email row are different things whose values happen to match; neither
+  derives from the other and they are not one token.
+- **Specificity, not order** — both column rules carry the
+  `.hp-contact-template` scope so each is (0,2,0) and outranks core's
+  constrained-layout rule, which is one class wide. An unscoped
+  `.hp-contact-panel` would only *tie* core and win on print order, and this
+  theme has already paid for that tie: production's Page Optimize concatenates
+  the file-based sheets above WordPress's inline styles, which is what killed
+  the button focus ring in 0.3.52 (README.md). Under that order the panel would
+  have fallen back to the 44rem spine while the scoped hero held 600px — the
+  stagger these rules exist to remove, reversed.
+- **Confirmation card** — `.hp-form-confirm` takes the design's anatomy: a 1px
+  `rule.gold` ring on all four sides in place of the 3px left rule,
+  `spacing.8` padding, `surface.card`, a 44px check medallion with a 22px
+  glyph, and the display h3 step (`2xl`) with `tracking.tight` on the title.
+  Two of those are intent rather than pixels: `rule.gold` and `gold-500` are
+  the same hex, so the ring's colour is unchanged and only its width and
+  coverage are new; `surface.card` and `surface.raised` are likewise the same
+  value. "Compose another" becomes the secondary Button primitive —
+  transparent ground, a 1px inset `border.brand` ring, `radius.md`, and the
+  44px touch height. It stays outside `.hp-action-rail`, which is reserved for
+  prominent page actions.
+- **Focus** — the panel takes focus when it replaces the form, and the
+  site-wide ring lists interactive elements only, so a `[tabindex="-1"]`
+  container fell through to Chrome's black `outline: auto` at zero offset,
+  drawn directly over the gold ring that is the point of the card. It now
+  carries the theme's 3px `gold-700` ring at 2px offset. This was not new in
+  0.3.60 — it measured identically before the card was restyled — but the
+  restyle is what made it consequential. `.hp-subscribe__status`, the theme's
+  other programmatic focus target, had the same gap and gets the same ring in
+  `assets/c/interactive.css` (the class is bundle-owned, so the declaration
+  cannot live in `style.css`).
+- **Retired, not scoped away** — there was a `.hp-form-confirm--inverse`
+  modifier for a dark plate, and `confirmPanel()` took an `inverse` argument.
+  Nothing ever rendered either: the helper has one call site and the subscribe
+  form is a real POST whose status the pattern renders server-side. Both are
+  gone, and the card's declarations sit on the base selectors rather than
+  behind a `:not()` guard with nothing to guard.
+- **Icon family** — the direct channels move to pill radius and outline glyphs,
+  reusing the Lucide `github` and `linkedin` paths already in
+  `parts/footer.html` verbatim rather than redrawing them.
+- **Contact address** — `patterns/contact.php` carried three literal copies of
+  the address and `form-enhance.js` a fourth, so the filterable
+  `hperkins_tokens_contact_email()` governed the subscribe notification but not
+  the contact route itself. The pattern now renders the accessor, and the
+  script reads the address back off the form's `action` — keeping only the
+  address, and falling back if what it finds is not a plausible one.
+- **Deliberate divergences from the design (recorded, not drift):** the design's
+  contact address is ignored — `htperkins@gmail.com` is canonical, and it is
+  now reached through `hperkins_tokens_contact_email()` on every surface. The
+  design's confirmation copy ("nothing left the browser") is prototype wording;
+  the shipped copy states the site's actual claim instead — the fields never
+  reach the site — and makes **no reply-time commitment**, which would be a
+  claim with nothing behind it, in a register whose rule is inspectable proof
+  beside every material claim. The subscribe plate's copy is untouched:
+  `hperkins-tokens/imladris-subscribe` also renders on `/essays/` and every
+  single post, so a wording change there is site-wide, and the route to a
+  contact-only variant is pattern arguments rather than a second pattern file.
+  The secondary button's 0.08em tracking has no token — it sits between
+  `tracking.wide` (0.04em) and `tracking.caps` (0.18em), and is the Button
+  primitive's own literal, carried by `.wp-block-button__link`,
+  `.hp-subscribe__form button` and the content-search submit, along with the
+  same `0.72em 1.5em` padding. (The primary contact submit is 0.06em and is
+  *not* its source.) It is set at `sm` rather than the primitive's `base`
+  because it is a secondary control inside a card, not a page action. No
+  `shadow.card` token exists, so the card surface stays flat rather than
+  inventing one.
+- **Verification** — `scripts/verify-contact-form-styling.js` pins all of it
+  from the rendered page: the column and lead resolving to their `theme.json`
+  tokens *and* the source declaring them as tokens rather than literals, the
+  centring inside `main.hp-contact-template`, the hero and the panel hanging on
+  one left edge, the lead's 54ch against a measured `ch` unit, the confirmation
+  card reached through a real valid submit (headless Chrome has no `mailto:`
+  handler, and the panel is built synchronously after that assignment), its
+  focus ring, the 22px medallion glyph, the secondary button's inset ring and
+  touch height, and the outline icon family — compared shape by shape against
+  `parts/footer.html`, because "one family" is a claim about provenance that
+  stroke widths cannot prove. Two checks deliberately refuse to trust the local
+  environment: the column is re-measured with core's own constrained-layout
+  declaration replayed **last**, so a local run answers the production
+  stylesheet-order question rather than assuming its own (`verify-header.js`
+  replays Assembler's focus-ring declaration for the same reason), and the
+  filled-shape scan walks the whole SVG subtree rather than direct children,
+  which would wave through a filled shape nested in a `<g>`. No assertion
+  repeats a word of the panel's copy — title, body and button label are all
+  read out of `assets/js/form-enhance.js`. The wide measurement rides the
+  existing page load, so the run costs no extra navigation.
+
+**Outstanding.** `.impeccable/design.json` is not regenerated here: the
+generated sidecar mirrors colors, typography, radius, shadows, motion and
+breakpoints, and neither `container` nor `measure` is in that set, so
+`verify-impeccable-artifacts.js` is unaffected. Regenerate with
+`$impeccable document` if the design narrative is refreshed for another reason.
+The follow-up spec `docs/superpowers/specs/2026-08-18-contact-route-recovery-and-finale-design.md`
+owns the remaining Contact work — message preservation on handoff, the
+`Send message` label, named profile links, and the contact-to-subscribe bridge
+— and its token contract is the one implemented above.

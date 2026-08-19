@@ -5,6 +5,22 @@
  * Launches Chrome through the DevTools Protocol and fails if the themed
  * hp-input wrapper loses to the parent theme's raw input rules, or if the
  * contact focus ring falls back to the weak translucent treatment.
+ *
+ * It also pins the page composition the Imladris Contact template asks for:
+ * the contact container centred in the page spine and shared by the hero so
+ * the route hangs on one left edge, the contact-only lead measure, the
+ * gold-ringed confirmation card, the secondary "Compose another" button, and
+ * the outline icon family shared with the footer.
+ *
+ * Two of those checks are deliberately not content with "it renders right
+ * here". The column check replays core's own constrained-layout declaration
+ * LAST and re-measures, because production's Page Optimize concatenates the
+ * file-based sheets above WordPress's inline styles and inverts any
+ * order-decided tie (README.md; verify-header.js does the same for
+ * Assembler's focus-ring declaration). And the icon check compares the glyph
+ * geometry in patterns/contact.php against parts/footer.html, since "one icon
+ * family with the footer" is a claim about provenance that stroke widths alone
+ * cannot prove.
  */
 const { spawn } = require( 'node:child_process' );
 const fs = require( 'node:fs/promises' );
@@ -39,7 +55,203 @@ const subscribePatternSource = readFileSync(
 );
 const SUBSCRIBE_RECEIVED = extractSubscribeMessage( subscribePatternSource, 'success' );
 const SUBSCRIBE_EMAIL_ERROR = extractSubscribeMessage( subscribePatternSource, 'invalid-email' );
+
+// Same idea for the contact confirmation: read the copy out of the script that
+// renders it instead of keeping a second, silently divergent copy here — no
+// assertion below repeats a word of the panel's wording. The call is authored
+// as single-quoted literals joined with the address the handler read off the
+// form, so rebuild that shape by hand rather than eval'ing theme source.
+function splitTopLevelArguments( source ) {
+	const args = [];
+	let current = '';
+	let inString = false;
+	for ( let index = 0; index < source.length; index++ ) {
+		const character = source[ index ];
+		if ( inString ) {
+			if ( character === '\\' ) {
+				current += character + source[ ++index ];
+				continue;
+			}
+			if ( character === "'" ) {
+				inString = false;
+			}
+			current += character;
+			continue;
+		}
+		if ( character === "'" ) {
+			inString = true;
+			current += character;
+			continue;
+		}
+		if ( character === ',' ) {
+			args.push( current );
+			current = '';
+			continue;
+		}
+		current += character;
+	}
+	args.push( current );
+	return args;
+}
+
+const JS_ESCAPES = { n: '\n', t: '\t', r: '\r', '0': '\0' };
+
+function resolveCopyExpression( expression, constants ) {
+	let resolved = '';
+	let index = 0;
+	while ( index < expression.length ) {
+		if ( expression[ index ] === "'" ) {
+			let cursor = index + 1;
+			while ( cursor < expression.length && expression[ cursor ] !== "'" ) {
+				if ( expression[ cursor ] === '\\' ) {
+					// Decode the escape rather than dropping the backslash: an
+					// unhandled \n would otherwise resolve to a literal "n" and
+					// the comparison against the rendered text would fail with a
+					// message that made no sense.
+					resolved += JS_ESCAPES[ expression[ cursor + 1 ] ] ?? expression[ cursor + 1 ];
+					cursor += 2;
+					continue;
+				}
+				resolved += expression[ cursor++ ];
+			}
+			index = cursor + 1;
+			continue;
+		}
+		const identifier = expression.slice( index ).match( /^[A-Za-z_$][\w$]*/ );
+		if ( identifier ) {
+			if ( ! ( identifier[0] in constants ) ) {
+				throw new Error(
+					`verify-contact-form-styling.js cannot resolve "${ identifier[0] }" in the contact confirmation copy; teach the extractor about it alongside the change to assets/js/form-enhance.js.`
+				);
+			}
+			resolved += constants[ identifier[0] ];
+			index += identifier[0].length;
+			continue;
+		}
+		// Whitespace, the + joins, and line continuations carry no text.
+		index++;
+	}
+	return resolved;
+}
+
+function extractContactConfirmation( source ) {
+	const call = source.match( /var panel = confirmPanel\(([\s\S]*?)\n\t*\);/ );
+	if ( ! call ) {
+		throw new Error(
+			'assets/js/form-enhance.js no longer builds the contact confirmation with a `var panel = confirmPanel( … );` call; update the extractor in verify-contact-form-styling.js alongside it.'
+		);
+	}
+	const args = splitTopLevelArguments( call[1] );
+	if ( args.length !== 2 ) {
+		throw new Error(
+			`assets/js/form-enhance.js now passes ${ args.length } arguments to confirmPanel(); the extractor expects title and body. The retired third argument was an \`inverse\` flag for a dark variant nothing rendered.`
+		);
+	}
+	// The handler reads the address off the form's action, which the pattern
+	// writes from hperkins_tokens_contact_email(). Unfiltered, that is the
+	// address the form-action assertion below already pins.
+	const constants = { mailtoAddress: CONTACT_EMAIL };
+	const label = source.match( /again\.textContent = '((?:[^'\\]|\\.)*)';/ );
+	if ( ! label ) {
+		throw new Error(
+			'assets/js/form-enhance.js no longer assigns the reset button label with `again.textContent = \'…\';`; update the extractor in verify-contact-form-styling.js alongside it.'
+		);
+	}
+	return {
+		title: resolveCopyExpression( args[0], constants ),
+		body: resolveCopyExpression( args[1], constants ),
+		againLabel: label[1].replace( /\\(['\\])/g, '$1' ),
+	};
+}
+
+const CONTACT_CONFIRMATION = extractContactConfirmation(
+	readFileSync( path.join( __dirname, '..', 'assets/js/form-enhance.js' ), 'utf8' )
+);
+
+// theme.json owns the two accepted Contact dimensions. Reading them here — and
+// asserting the rendered page resolves to them — is what makes the CSS
+// declarations token references rather than literals that happen to agree.
+const THEME_JSON = JSON.parse(
+	readFileSync( path.join( __dirname, '..', 'theme.json' ), 'utf8' )
+);
+const CONTACT_CONTAINER = THEME_JSON.settings.custom.container.contact;
+const CONTACT_LEAD_MEASURE = THEME_JSON.settings.custom.measure.contactLead;
+
+const PAGES_CSS = readFileSync(
+	path.join( __dirname, '..', 'assets/imladris-pages.css' ),
+	'utf8'
+);
+
+/**
+ * The declarations the Contact composition is allowed to be written as.
+ *
+ * Each entry is a rule that must exist verbatim. A literal creeping back in
+ * (`max-inline-size: 600px`) would still render correctly and still pass every
+ * measurement below, so the source is pinned separately from the geometry.
+ *
+ * The .hp-contact-template scope on the column rule is load-bearing, not
+ * tidiness: unscoped, `.hp-contact-panel` only TIES core's constrained-layout
+ * rule and wins on print order, which production inverts. The replay check in
+ * inspectContactPage() proves the same thing from the rendered page.
+ */
+const REQUIRED_PAGE_RULES = [
+	{
+		label: 'the shared contact column, scoped so it outranks core on specificity',
+		snippet: '.hp-contact-template .hp-page-hero,\n.hp-contact-template .hp-contact-panel {\n  max-inline-size: var(--wp--custom--container--contact);',
+	},
+	{
+		label: 'the contact-only lead measure',
+		snippet: '.hp-contact-template .hp-page-hero__lead {\n  max-width: var(--wp--custom--measure--contact-lead);',
+	},
+];
+
+const FORBIDDEN_PAGE_LITERALS = [
+	{ pattern: /max-inline-size:\s*600px/, name: 'max-inline-size: 600px' },
+	{ pattern: /max-width:\s*54ch/, name: 'max-width: 54ch' },
+];
+
+// "One icon family with the footer" is a provenance claim: the GitHub and
+// LinkedIn marks are meant to be the footer's own Lucide paths, not lookalikes.
+// Stroke width and fill cannot tell those apart, so compare the geometry.
+const FOOTER_PART = readFileSync(
+	path.join( __dirname, '..', 'parts/footer.html' ),
+	'utf8'
+);
+const CONTACT_PATTERN = readFileSync(
+	path.join( __dirname, '..', 'patterns/contact.php' ),
+	'utf8'
+);
+
+function extractGlyph( source, hrefFragment, file ) {
+	const anchor = source.split( '<a ' ).find( ( chunk ) => chunk.includes( hrefFragment ) );
+	if ( ! anchor ) {
+		throw new Error( `${ file } no longer links ${ hrefFragment }; update verify-contact-form-styling.js alongside it.` );
+	}
+	const svg = anchor.match( /<svg[\s\S]*?<\/svg>/ );
+	if ( ! svg ) {
+		throw new Error( `the ${ hrefFragment } link in ${ file } carries no <svg>.` );
+	}
+	// Only the drawn geometry, in order — attribute order and sizing are the
+	// stylesheet's business, not the family's.
+	return ( svg[0].match( /<(?:path|rect|circle|polyline|line)\b[^>]*>/g ) || [] )
+		.map( ( shape ) => shape.replace( /\s+/g, ' ' ) )
+		.join( '' );
+}
+
+const SHARED_GLYPHS = [
+	{ label: 'GitHub', hrefFragment: 'github.com' },
+	{ label: 'LinkedIn', hrefFragment: 'linkedin.com' },
+].map( ( glyph ) => ( {
+	...glyph,
+	footer: extractGlyph( FOOTER_PART, glyph.hrefFragment, 'parts/footer.html' ),
+	contact: extractGlyph( CONTACT_PATTERN, glyph.hrefFragment, 'patterns/contact.php' ),
+} ) );
+
 const VIEWPORT = { width: 390, height: 1400, deviceScaleFactor: 1, mobile: false };
+// The form column and the hero measures are narrower than the page spine, so
+// they only bind on a viewport wider than they are: at 390px the panel would
+// satisfy "600px wide, centred" by simply running out of room.
+const DESKTOP_VIEWPORT = { width: 1280, height: 1400, deviceScaleFactor: 1, mobile: false };
 
 function wait( ms ) {
 	return new Promise( ( resolve ) => setTimeout( resolve, ms ) );
@@ -155,13 +367,116 @@ async function inspectContactPage( cdp ) {
 
 	await cdp.send( 'Page.enable', {}, sessionId );
 	await cdp.send( 'Runtime.enable', {}, sessionId );
-	await cdp.send( 'Emulation.setDeviceMetricsOverride', VIEWPORT, sessionId );
+	// Load wide, measure the page composition, then shrink to the mobile
+	// viewport the input/focus contract has always been checked at. One page
+	// load carries both: a second navigation is the slowest thing this script
+	// can do, and the computed styles below depend on the viewport in force
+	// when they are read, not the one the document happened to load at.
+	await cdp.send( 'Emulation.setDeviceMetricsOverride', DESKTOP_VIEWPORT, sessionId );
 
 	const loaded = cdp.once( 'Page.loadEventFired', sessionId );
 	await cdp.send( 'Page.navigate', { url: new URL( '/contact/', ORIGIN ).href }, sessionId );
 	await loaded;
 	await cdp.send( 'Runtime.evaluate', { expression: 'document.fonts && document.fonts.ready', awaitPromise: true }, sessionId );
 	await wait( 250 );
+
+	const layoutExpression = `(() => {
+		// ch is a font metric, so the expectation has to be measured in the same
+		// font the rule applies to rather than hardcoded as pixels: the probe
+		// inherits the element's own type, and an absolute box keeps flow
+		// margins out of the measurement.
+		const chUnit = (el) => {
+			const probe = document.createElement('div');
+			probe.style.position = 'absolute';
+			probe.style.visibility = 'hidden';
+			probe.style.inlineSize = '100ch';
+			el.appendChild(probe);
+			const unit = probe.getBoundingClientRect().width / 100;
+			probe.remove();
+			return unit;
+		};
+		const main = document.querySelector('main.hp-contact-template');
+		const panel = document.querySelector('.hp-contact-panel');
+		const hero = document.querySelector('.hp-page-hero');
+		const lead = document.querySelector('.hp-page-hero__lead');
+		if (!main || !panel || !hero || !lead) {
+			throw new Error('contact layout probe could not find main.hp-contact-template, .hp-contact-panel, .hp-page-hero and .hp-page-hero__lead');
+		}
+		const mainStyle = getComputedStyle(main);
+		const mainRect = main.getBoundingClientRect();
+		const contentLeft = mainRect.left + parseFloat(mainStyle.paddingLeft);
+		const contentRight = mainRect.right - parseFloat(mainStyle.paddingRight);
+		const panelRect = panel.getBoundingClientRect();
+		const heroRect = hero.getBoundingClientRect();
+		const rootStyle = getComputedStyle(document.documentElement);
+		const measured = {
+			contentWidth: contentRight - contentLeft,
+			containerToken: rootStyle.getPropertyValue('--wp--custom--container--contact').trim(),
+			leadMeasureToken: rootStyle.getPropertyValue('--wp--custom--measure--contact-lead').trim(),
+			panelMaxInlineSize: parseFloat(getComputedStyle(panel).maxInlineSize),
+			panelWidth: panelRect.width,
+			panelLeft: panelRect.left,
+			panelLeftGap: panelRect.left - contentLeft,
+			panelRightGap: contentRight - panelRect.right,
+			heroMaxInlineSize: parseFloat(getComputedStyle(hero).maxInlineSize),
+			heroWidth: heroRect.width,
+			heroLeft: heroRect.left,
+			leadMaxInlineSize: parseFloat(getComputedStyle(lead).maxInlineSize),
+			leadCh: chUnit(lead),
+		};
+
+		// Production order, replayed. Page Optimize concatenates the file-based
+		// sheets and hoists them above WordPress's inline styles, so anything the
+		// theme wins only by printing later loses there. Re-emit core's own
+		// constrained-layout declaration for this main, last, and re-measure: a
+		// rule that beats core on specificity is unmoved, one that merely tied it
+		// snaps back to the 44rem spine. verify-header.js replays Assembler's
+		// focus-ring declaration for exactly the same reason.
+		const container = Array.from(main.classList)
+			.find((name) => name.startsWith('wp-container-core-group-is-layout-'));
+		if (!container) {
+			throw new Error('main.hp-contact-template carries no wp-container-core-group-is-layout-* class; the constrained-layout replay cannot be built.');
+		}
+		// Re-emit core's OWN rule text rather than a reconstruction of it: the
+		// block sets contentSize on itself, so the width in that declaration is
+		// not necessarily the global one, and a hand-built copy could replay a
+		// rule production never serves.
+		const coreRules = [];
+		for (const sheet of Array.from(document.styleSheets)) {
+			let rules;
+			try { rules = Array.from(sheet.cssRules || []); } catch (e) { continue; }
+			for (const rule of rules) {
+				if (rule.selectorText && rule.selectorText.indexOf('.' + container + ' >') === 0) {
+					coreRules.push(rule.cssText);
+				}
+			}
+		}
+		if (!coreRules.length) {
+			throw new Error('could not find the constrained-layout rule core emits for .' + container + '; the production-order replay would silently pass.');
+		}
+		const replay = document.createElement('style');
+		replay.textContent = coreRules.join('\\n');
+		document.head.appendChild(replay);
+		measured.replayed = {
+			panelWidth: panel.getBoundingClientRect().width,
+			heroWidth: hero.getBoundingClientRect().width,
+		};
+		replay.remove();
+
+		return measured;
+	})()`;
+
+	const layoutEvaluated = await cdp.send( 'Runtime.evaluate', {
+		expression: layoutExpression,
+		awaitPromise: true,
+		returnByValue: true,
+	}, sessionId );
+	if ( layoutEvaluated.exceptionDetails ) {
+		throw new Error( `contact layout evaluation failed: ${ layoutEvaluated.exceptionDetails.exception?.description || layoutEvaluated.exceptionDetails.text }` );
+	}
+
+	await cdp.send( 'Emulation.setDeviceMetricsOverride', VIEWPORT, sessionId );
+	await wait( 150 );
 
 	const expression = `(() => {
 		const rootStyle = getComputedStyle(document.documentElement);
@@ -174,6 +489,17 @@ async function inspectContactPage( cdp ) {
 			return normalized;
 		};
 		const colorToken = (name) => color(rootStyle.getPropertyValue(name).trim());
+		const rawToken = (name) => rootStyle.getPropertyValue(name).trim();
+		// font-size tokens are hand-authored clamp()s, so the only honest
+		// expectation is what the browser resolves them to at this viewport.
+		const sizeToken = (value) => {
+			const probe = document.createElement('span');
+			probe.style.fontSize = value;
+			document.body.appendChild(probe);
+			const resolved = getComputedStyle(probe).fontSize;
+			probe.remove();
+			return resolved;
+		};
 		const styles = (el) => {
 			const s = getComputedStyle(el);
 			return {
@@ -205,6 +531,11 @@ async function inspectContactPage( cdp ) {
 					faint: colorToken('--wp--custom--text--faint'),
 					focus: colorToken('--wp--preset--color--gold-700'),
 					danger: colorToken('--wp--custom--feedback--danger'),
+					ruleGold: colorToken('--wp--custom--rule--gold'),
+					borderBrand: colorToken('--wp--custom--border--brand'),
+					link: colorToken('--wp--custom--text--link'),
+					pill: rawToken('--hp-radius-pill'),
+					h3: sizeToken('var(--wp--preset--font-size--2-xl)'),
 				},
 				fallbacks: {
 					contactAction: form.getAttribute('action') || '',
@@ -238,6 +569,8 @@ async function inspectContactPage( cdp ) {
 			result.channels = Array.from(document.querySelectorAll('.hp-channels a')).map((link) => {
 				const s = getComputedStyle(link);
 				const r = link.getBoundingClientRect();
+				const svg = link.querySelector('svg');
+				const svgStyle = svg ? getComputedStyle(svg) : null;
 				return {
 					href: link.href,
 					label: link.getAttribute('aria-label') || '',
@@ -248,11 +581,74 @@ async function inspectContactPage( cdp ) {
 					display: s.display,
 					alignItems: s.alignItems,
 					justifyContent: s.justifyContent,
+					borderRadius: s.borderRadius,
+					svgFill: svgStyle ? svgStyle.fill : '',
+					svgStroke: svgStyle ? svgStyle.stroke : '',
+					svgStrokeWidth: svgStyle ? parseFloat(svgStyle.strokeWidth) : null,
+					// A filled silhouette hides inside an outline rule unless the
+					// shapes are checked too: only the geometry decides. Walk the
+					// whole subtree, not svg.children — the footer's own star mark
+					// nests a filled circle inside a <g>, and a direct-child scan
+					// would wave that shape straight through.
+					filledShapes: svg
+						? Array.from(svg.querySelectorAll('*')).filter((node) => {
+							const fill = getComputedStyle(node).fill;
+							return fill !== 'none' && fill !== 'rgba(0, 0, 0, 0)';
+						}).length
+						: 0,
 				};
 			});
 			result.contactAside = {
 				hasWhatToInclude: !! document.querySelector('.hp-contact-aside .hp-callout'),
 				hasOfficeHours: !! document.querySelector('.hp-contact-aside .hp-officehours'),
+			};
+			// Last, because it replaces the form: a real valid submit is the only
+			// way to measure the confirmation the shipped code actually builds
+			// (a hand-injected stand-in would drift from confirmPanel()). It is
+			// safe headless — handleContactSubmit assigns window.location.href a
+			// mailto: URL, which Chrome has no protocol handler for and drops,
+			// and the panel is built synchronously right after that assignment,
+			// so these reads run in the same task regardless.
+			emailInput.value = 'someone@example.com';
+			form.querySelector('button[type="submit"]').click();
+			const confirmPanel = document.querySelector('.hp-form-confirm');
+			if (!confirmPanel) { throw new Error('a valid contact submit did not swap the form for .hp-form-confirm'); }
+			const confirmStyle = getComputedStyle(confirmPanel);
+			const mark = confirmPanel.querySelector('.hp-form-confirm__mark');
+			const markSvg = mark && mark.querySelector('svg');
+			const title = confirmPanel.querySelector('.hp-form-confirm__title');
+			const body = confirmPanel.querySelector('.hp-form-confirm__body');
+			const again = confirmPanel.querySelector('.hp-form-confirm__again');
+			const againStyle = again && getComputedStyle(again);
+			result.confirm = {
+				// The retired --inverse modifier would show up here, as would any
+				// other stray state class.
+				classes: Array.from(confirmPanel.classList).sort().join(' '),
+				// form-enhance.js focuses the panel, so this is the state a
+				// keyboard visitor actually sees.
+				hasFocus: document.activeElement === confirmPanel,
+				focusVisible: confirmPanel.matches(':focus-visible'),
+				outlineStyle: confirmStyle.outlineStyle,
+				outlineWidth: confirmStyle.outlineWidth,
+				outlineColor: confirmStyle.outlineColor,
+				outlineOffset: confirmStyle.outlineOffset,
+				borderTopColor: confirmStyle.borderTopColor,
+				borderRightColor: confirmStyle.borderRightColor,
+				borderBottomColor: confirmStyle.borderBottomColor,
+				borderLeftColor: confirmStyle.borderLeftColor,
+				borderTopWidth: confirmStyle.borderTopWidth,
+				borderLeftWidth: confirmStyle.borderLeftWidth,
+				title: title ? title.textContent.trim() : '',
+				titleFontSize: title ? getComputedStyle(title).fontSize : '',
+				body: body ? body.textContent.trim() : '',
+				markWidth: mark ? Math.round(mark.getBoundingClientRect().width) : 0,
+				markHeight: mark ? Math.round(mark.getBoundingClientRect().height) : 0,
+				markSvgWidth: markSvg ? Math.round(markSvg.getBoundingClientRect().width) : 0,
+				againLabel: again ? again.textContent.trim() : '',
+				againHeight: again ? Math.round(again.getBoundingClientRect().height) : 0,
+				againBoxShadow: againStyle ? againStyle.boxShadow : '',
+				againColor: againStyle ? againStyle.color : '',
+				againBorderTopWidth: againStyle ? againStyle.borderTopWidth : '',
 			};
 			return result;
 			})()`;
@@ -267,7 +663,7 @@ async function inspectContactPage( cdp ) {
 	}
 
 	await cdp.send( 'Target.closeTarget', { targetId: target.targetId } );
-	return evaluated.result.value;
+	return { ...evaluated.result.value, layout: layoutEvaluated.result.value };
 }
 
 async function inspectSubscribeStatusPage( cdp, status ) {
@@ -493,6 +889,197 @@ function validate( result ) {
 		failures,
 		'contact aside still renders the redundant "Office hours" block.'
 	);
+	const wrongRadius = result.channels.filter( ( item ) => item.borderRadius !== result.tokens.pill );
+	failUnless(
+		wrongRadius.length === 0,
+		failures,
+		`direct channels ${ wrongRadius.map( ( item ) => `"${ item.label }" (${ item.borderRadius })` ).join( ', ' ) } do not use the pill radius ${ result.tokens.pill }; the system reads profile affordances as pills, like .hp-footer__social.`
+	);
+	const notOutlined = result.channels.filter(
+		( item ) =>
+			item.svgFill !== 'none' ||
+			item.svgStroke === 'none' ||
+			item.svgStrokeWidth !== 2 ||
+			item.filledShapes > 0
+	);
+	failUnless(
+		notOutlined.length === 0,
+		failures,
+		`direct channel glyphs ${ notOutlined.map( ( item ) => `"${ item.label }" (fill ${ item.svgFill }, stroke ${ item.svgStroke } at ${ item.svgStrokeWidth }, ${ item.filledShapes } filled shapes)` ).join( ', ' ) } are not outline marks; they must match the .hp-footer__social icon family.`
+	);
+	// Stroke geometry proves the marks are drawn as outlines; only this proves
+	// they are the FOOTER'S outlines, which is what "one icon family" claims.
+	const divergedGlyphs = SHARED_GLYPHS.filter( ( glyph ) => glyph.contact !== glyph.footer );
+	failUnless(
+		divergedGlyphs.length === 0,
+		failures,
+		divergedGlyphs
+			.map(
+				( glyph ) =>
+					`the ${ glyph.label } mark in patterns/contact.php has drifted from parts/footer.html.\n    footer:  ${ glyph.footer }\n    contact: ${ glyph.contact }`
+			)
+			.join( '\n  ' )
+	);
+
+	const confirm = result.confirm;
+	failUnless(
+		confirm.classes === 'hp-form-confirm',
+		failures,
+		`the contact confirmation rendered as "${ confirm.classes }"; it takes the base class alone. The --inverse modifier was retired in 0.3.60 because nothing rendered it, so a state class reappearing here means a variant came back without its CSS.`
+	);
+	const confirmBorders = [
+		confirm.borderTopColor,
+		confirm.borderRightColor,
+		confirm.borderBottomColor,
+		confirm.borderLeftColor,
+	];
+	failUnless(
+		confirmBorders.every( ( value ) => value === result.tokens.ruleGold ),
+		failures,
+		`confirmation card borders are ${ confirmBorders.join( ' / ' ) }, expected the rule--gold token ${ result.tokens.ruleGold } on all four sides.`
+	);
+	failUnless(
+		confirm.borderTopWidth === '1px' && confirm.borderLeftWidth === '1px',
+		failures,
+		`confirmation card draws a ${ confirm.borderLeftWidth } left rule against a ${ confirm.borderTopWidth } top border; the template card is an even 1px ring, not a left-ruled plate.`
+	);
+	// form-enhance.js focuses the panel, so the ring is not hypothetical: without
+	// a themed rule for [tabindex="-1"] containers, Chrome draws its own black
+	// `outline: auto` at zero offset, directly over the gold ring above.
+	failUnless(
+		confirm.hasFocus && confirm.focusVisible,
+		failures,
+		`the confirmation panel did not take visible focus (focused: ${ confirm.hasFocus }, :focus-visible: ${ confirm.focusVisible }); the focus-ring assertion below would pass on a panel nobody can see.`
+	);
+	failUnless(
+		confirm.outlineStyle === 'solid' &&
+			confirm.outlineWidth === '3px' &&
+			confirm.outlineColor === result.tokens.focus &&
+			confirm.outlineOffset === '2px',
+		failures,
+		`the focused confirmation panel draws outline ${ confirm.outlineStyle } ${ confirm.outlineWidth } ${ confirm.outlineColor } at ${ confirm.outlineOffset }; expected the site's 3px solid ${ result.tokens.focus } ring at 2px offset. A UA "auto" outline here means the panel is not covered by a themed focus rule.`
+	);
+	failUnless(
+		confirm.markWidth === 44 && confirm.markHeight === 44,
+		failures,
+		`confirmation mark is ${ confirm.markWidth }x${ confirm.markHeight }, expected the 44x44 medallion.`
+	);
+	failUnless(
+		confirm.markSvgWidth === 22,
+		failures,
+		`the check glyph inside the confirmation medallion renders ${ confirm.markSvgWidth }px wide, expected 22px in the 44px mark.`
+	);
+	// Every copy expectation below comes from form-enhance.js. Nothing here
+	// repeats the wording, so a deliberate copy edit needs one edit, not two —
+	// and a panel that silently stops rendering what the code builds still fails.
+	failUnless(
+		confirm.title === CONTACT_CONFIRMATION.title,
+		failures,
+		`confirmation title renders "${ confirm.title }" but form-enhance.js builds "${ CONTACT_CONFIRMATION.title }".`
+	);
+	failUnless(
+		confirm.titleFontSize === result.tokens.h3,
+		failures,
+		`confirmation title is set at ${ confirm.titleFontSize }, expected the display h3 step ${ result.tokens.h3 } that .hp-subscribe__title also uses.`
+	);
+	failUnless(
+		confirm.body === CONTACT_CONFIRMATION.body,
+		failures,
+		`confirmation body renders "${ confirm.body }" but form-enhance.js builds "${ CONTACT_CONFIRMATION.body }".`
+	);
+	failUnless(
+		confirm.body.includes( CONTACT_EMAIL ),
+		failures,
+		`confirmation body does not name ${ CONTACT_EMAIL }; the visitor has just lost the form that carried the address.`
+	);
+	// Not a wording check: the label has to be the one the code sets, and the
+	// control has to be reachable at the touch floor.
+	failUnless(
+		confirm.againLabel === CONTACT_CONFIRMATION.againLabel && confirm.againHeight >= 44,
+		failures,
+		`the reset control renders "${ confirm.againLabel }" at ${ confirm.againHeight }px tall; form-enhance.js builds "${ CONTACT_CONFIRMATION.againLabel }" and the secondary button owes the 44px touch height.`
+	);
+	failUnless(
+		confirm.againBoxShadow === `${ result.tokens.borderBrand } 0px 0px 0px 1px inset` &&
+			confirm.againBorderTopWidth === '0px' &&
+			confirm.againColor === result.tokens.link,
+		failures,
+		`"${ confirm.againLabel }" is box-shadow "${ confirm.againBoxShadow }" / border ${ confirm.againBorderTopWidth } / color ${ confirm.againColor }; expected the secondary button's 1px inset ${ result.tokens.borderBrand } ring, no border, and the ${ result.tokens.link } link colour.`
+	);
+
+	// ---- Page composition --------------------------------------------------
+	const layout = result.layout;
+	// theme.json is the normative owner of both dimensions; the source contract
+	// keeps the declarations pointing at it, and the geometry below proves the
+	// page resolves to the same numbers.
+	failUnless(
+		CONTACT_CONTAINER === '600px' && CONTACT_LEAD_MEASURE === '54ch',
+		failures,
+		`theme.json declares container.contact = ${ CONTACT_CONTAINER } and measure.contactLead = ${ CONTACT_LEAD_MEASURE }; the accepted Contact composition is a 600px column and a 54ch lead.`
+	);
+	failUnless(
+		layout.containerToken === CONTACT_CONTAINER && layout.leadMeasureToken === CONTACT_LEAD_MEASURE,
+		failures,
+		`/contact/ serves --wp--custom--container--contact: "${ layout.containerToken }" and --wp--custom--measure--contact-lead: "${ layout.leadMeasureToken }", but theme.json declares "${ CONTACT_CONTAINER }" and "${ CONTACT_LEAD_MEASURE }". Flush the site's theme.json cache, or the page is running on stale tokens.`
+	);
+	for ( const rule of REQUIRED_PAGE_RULES ) {
+		failUnless(
+			PAGES_CSS.includes( rule.snippet ),
+			failures,
+			`assets/imladris-pages.css no longer declares ${ rule.label } as written; expected to find:\n    ${ rule.snippet.replace( /\n/g, '\n    ' ) }`
+		);
+	}
+	for ( const literal of FORBIDDEN_PAGE_LITERALS ) {
+		failUnless(
+			! literal.pattern.test( PAGES_CSS ),
+			failures,
+			`assets/imladris-pages.css contains a literal "${ literal.name }". Both Contact dimensions are theme.json tokens; a literal renders identically and would pass every measurement in this file.`
+		);
+	}
+
+	const containerWidth = Number.parseFloat( CONTACT_CONTAINER );
+	failUnless(
+		layout.contentWidth > containerWidth,
+		failures,
+		`the layout pass ran at a ${ Math.round( layout.contentWidth ) }px content measure; it must be wider than the ${ containerWidth }px form column or "centred" means nothing.`
+	);
+	failUnless(
+		Math.abs( layout.panelMaxInlineSize - containerWidth ) < 0.5,
+		failures,
+		`.hp-contact-panel resolves to a ${ layout.panelMaxInlineSize }px measure, expected the ${ containerWidth }px contact container.`
+	);
+	failUnless(
+		Math.abs( layout.panelWidth - containerWidth ) < 0.5 && Math.abs( layout.panelLeftGap - layout.panelRightGap ) <= 1,
+		failures,
+		`.hp-contact-panel renders ${ Math.round( layout.panelWidth ) }px wide with ${ Math.round( layout.panelLeftGap ) }px / ${ Math.round( layout.panelRightGap ) }px side gaps, expected a ${ containerWidth }px column centred in main.hp-contact-template.`
+	);
+	failUnless(
+		Math.abs( layout.heroMaxInlineSize - containerWidth ) < 0.5 && Math.abs( layout.heroWidth - containerWidth ) < 0.5,
+		failures,
+		`.hp-page-hero resolves to a ${ layout.heroMaxInlineSize }px measure and renders ${ Math.round( layout.heroWidth ) }px wide, expected the same ${ containerWidth }px column as the message panel.`
+	);
+	// The one contract behind the shared column: core forces margin auto on
+	// every direct child of this main, so two blocks align only by matching
+	// width. A hero measure that drifts off the container steps the page inward.
+	failUnless(
+		Math.abs( layout.heroLeft - layout.panelLeft ) <= 0.5,
+		failures,
+		`.hp-page-hero starts at ${ Math.round( layout.heroLeft * 10 ) / 10 }px and .hp-contact-panel at ${ Math.round( layout.panelLeft * 10 ) / 10 }px; the hero and the message column must hang on one left edge.`
+	);
+	// The check a local run would otherwise never make. See the replay note in
+	// inspectContactPage(): production hoists the file-based sheets above the
+	// inline block-supports styles, so a rule that only ties core loses there.
+	failUnless(
+		Math.abs( layout.replayed.panelWidth - containerWidth ) < 0.5 &&
+			Math.abs( layout.replayed.heroWidth - containerWidth ) < 0.5,
+		failures,
+		`with core's constrained-layout rule replayed last, .hp-contact-panel renders ${ Math.round( layout.replayed.panelWidth ) }px and .hp-page-hero ${ Math.round( layout.replayed.heroWidth ) }px, expected both to hold the ${ containerWidth }px container. A selector that only ties core wins locally on print order and loses under production's Page Optimize concatenation — scope it to .hp-contact-template so specificity decides.`
+	);
+	failUnless(
+		Math.abs( layout.leadMaxInlineSize - Number.parseFloat( CONTACT_LEAD_MEASURE ) * layout.leadCh ) < 1,
+		failures,
+		`.hp-contact-template .hp-page-hero__lead resolves to ${ layout.leadMaxInlineSize }px against a ${ layout.leadCh }px ch, expected ${ CONTACT_LEAD_MEASURE } (${ Number.parseFloat( CONTACT_LEAD_MEASURE ) * layout.leadCh }px) rather than the shared 46ch narrow measure. \`ch\` resolves against the lead's own type, so this measure has to stay on the lead, not the hero box.`
+	);
 	failUnless(
 		result.subscribeStatus.before.statusText === SUBSCRIBE_RECEIVED &&
 			! result.subscribeStatus.before.statusText.toLowerCase().includes( 'already' ),
@@ -569,7 +1156,7 @@ async function main() {
 		if ( failures.length ) {
 			throw new Error( failures.join( '\n' ) );
 		}
-		console.log( 'checked contact form input, focus, and invalid states' );
+		console.log( 'checked contact form input, focus, invalid, confirmation, channel, and page-measure states (incl. production stylesheet order)' );
 	} finally {
 		if ( ! chrome.killed ) {
 			chrome.kill( 'SIGTERM' );

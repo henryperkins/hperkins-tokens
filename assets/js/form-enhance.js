@@ -18,7 +18,11 @@
 	'use strict';
 
 	var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	var MAILTO   = 'htperkins@gmail.com';
+	// Last resort only. The live address is read off the form's own action
+	// attribute, which patterns/contact.php writes from the filterable
+	// hperkins_tokens_contact_email(); a literal here would go stale the moment
+	// a site filtered the address, leaving the markup right and the handoff wrong.
+	var MAILTO_FALLBACK = 'htperkins@gmail.com';
 	var CONTACT_EMAIL_ERROR = 'Enter a valid email so I can reply.';
 	var SUBSCRIBE_EMAIL_ERROR = 'Enter a valid email to join the dispatch.';
 
@@ -85,9 +89,13 @@
 		input.removeAttribute( 'aria-invalid' );
 	}
 
-	function confirmPanel( title, body, inverse ) {
+	// One caller, one appearance. There used to be an `inverse` flag for a dark
+	// subscribe plate, but the subscribe form is a real POST whose status the
+	// pattern renders server-side, so nothing ever passed it — and style.css
+	// carried a modifier no DOM node could wear. Both are retired.
+	function confirmPanel( title, body ) {
 		var panel = document.createElement( 'div' );
-		panel.className = 'hp-form-confirm' + ( inverse ? ' hp-form-confirm--inverse' : '' );
+		panel.className = 'hp-form-confirm';
 		panel.setAttribute( 'role', 'status' );
 		panel.setAttribute( 'aria-live', 'polite' );
 
@@ -167,12 +175,28 @@
 		if ( get( 'name' ) ) {
 			body += '\n\n— ' + get( 'name' );
 		}
-		go( 'mailto:' + MAILTO + '?subject=' + encodeURIComponent( subject ) + '&body=' + encodeURIComponent( body ) );
+		// PHP decides the address; this reads it back rather than repeating it.
+		// Take only the address: a `mailto:` action may legitimately carry its
+		// own query (`?subject=…`) or fragment, and appending our own
+		// `?subject=` after one would build a malformed URL and print a bogus
+		// address in the copy below. Anything that does not survive as a
+		// plausible address falls back rather than shipping a broken handoff.
+		var mailtoAddress = ( contact.getAttribute( 'action' ) || '' )
+			.replace( /^mailto:/i, '' )
+			.split( /[?#]/ )[0]
+			.trim();
+		if ( ! EMAIL_RE.test( mailtoAddress ) ) {
+			mailtoAddress = MAILTO_FALLBACK;
+		}
+		go( 'mailto:' + mailtoAddress + '?subject=' + encodeURIComponent( subject ) + '&body=' + encodeURIComponent( body ) );
 
+		// Says what this page did and did not do, and nothing more: the fields
+		// never reach the site, so the confirmation is about the mail client.
+		// No reply-time commitment — that would be a claim with nothing behind it.
 		var panel = confirmPanel(
-			'Your message is ready in your mail app.',
-			'If nothing opened, email ' + MAILTO + ' directly — whichever you prefer.',
-			false
+			'Message ready to send',
+			'This composes a mail to ' + mailtoAddress + ' in your mail app; nothing was sent ' +
+				'from this page. If nothing opened, email that address directly.'
 		);
 		var again = document.createElement( 'button' );
 		again.type = 'button';

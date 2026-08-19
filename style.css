@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.59
+Version: 0.3.60
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -2160,68 +2160,101 @@ samp {
 
 
 
-/* Contact + Subscribe confirmation state (form-enhance.js progressive enhancement). */
+/* Contact confirmation state (form-enhance.js progressive enhancement).
+	 The Imladris confirmation card: ringed in gold on all four sides rather than
+	 left-ruled, with a 44px mark and the display h3 step on the title.
+
+	 Two of those reads are intent, not pixels: `rule.gold` and `gold-500` are the
+	 same hex (#C29A44), so the ring's COLOUR is unchanged from the 3px left rule
+	 it replaced — only its width and coverage are new; and `surface.card` and
+	 `surface.raised` are both #FAF6EC, so naming the card surface here renames
+	 nothing on screen.
+
+	 There was a `--inverse` modifier for a dark subscribe plate. Nothing ever
+	 rendered it: confirmPanel() has one call site and the subscribe form is a
+	 real POST whose status the pattern renders server-side. It is retired rather
+	 than kept as an unreachable variant that documentation described as live —
+	 which is also why these declarations sit on the base selectors instead of
+	 behind a `:not(.hp-form-confirm--inverse)` guard with nothing to guard. */
 .hp-form-confirm {
 	display: grid;
 	gap: var(--wp--preset--spacing--2);
-	padding: var(--wp--preset--spacing--6);
-	border: 1px solid var(--wp--custom--border--hair);
-	border-left: 3px solid var(--wp--preset--color--gold-500);
+	padding: var(--wp--preset--spacing--8);
+	border: 1px solid var(--wp--custom--rule--gold);
 	border-radius: var(--wp--custom--radius--lg, 12px);
-	background: var(--wp--custom--surface--raised);
+	background: var(--wp--custom--surface--card);
+}
+/* The panel takes focus when it replaces the form, so it needs the site's own
+	 ring. The rule beside the button primitive lists interactive elements only,
+	 so a programmatically focused [tabindex="-1"] container fell through to
+	 Chrome's `outline: rgb(16,16,16) auto 1px` — a black ring laid at zero offset
+	 directly over the gold one that is the point of this card. */
+.hp-form-confirm:focus-visible {
+	outline: 3px solid var(--wp--preset--color--gold-700);
+	outline-offset: 2px;
 }
 .hp-form-confirm__mark {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 2rem;
-	height: 2rem;
+	width: 44px;
+	height: 44px;
 	border-radius: 50%;
-	background: color-mix(in srgb, var(--wp--preset--color--green-600) 16%, transparent);
+	background: color-mix(in srgb, var(--wp--preset--color--green-600) 14%, transparent);
 	color: var(--wp--preset--color--green-700);
 }
 .hp-form-confirm__mark svg {
-	width: 1.1rem;
-	height: 1.1rem;
+	width: 22px;
+	height: 22px;
 	fill: none;
 	stroke: currentColor;
-	stroke-width: 2.5;
+	stroke-width: 2.2;
 	stroke-linecap: round;
 	stroke-linejoin: round;
 }
 .hp-form-confirm__title {
 	margin: 0;
 	font-family: var(--hp-font-display);
-	font-size: var(--wp--preset--font-size--lg);
+	font-size: var(--wp--preset--font-size--2-xl);
+	letter-spacing: var(--wp--custom--tracking--tight);
 	color: var(--wp--custom--text--strong, var(--hp-neutral-900));
 }
 .hp-form-confirm__body {
 	margin: 0;
 	font-size: var(--wp--preset--font-size--sm);
+	line-height: var(--wp--custom--leading--relaxed);
 	color: var(--wp--custom--text--muted, var(--hp-neutral-600));
 }
+/* Compose another is the secondary Button primitive: transparent ground, a 1px
+	 inset brand ring, label family at the touch-target height. Deliberately NOT
+	 .hp-action-rail — that composition is reserved for prominent page actions,
+	 and this is a control inside a form's confirmation card. The 0.08em tracking
+	 and the 0.72em/1.5em padding are the primitive's own literals
+	 (.wp-block-button__link above; .hp-subscribe__form button and the search
+	 submit in assets/c/interactive.css carry the same pair) — there is no
+	 tracking token between wide (0.04em) and caps (0.18em). Note the primary
+	 contact submit is 0.06em and is NOT the source of this value. The size is
+	 `sm` rather than the primitive's `base` on purpose: a secondary control
+	 inside a card, not a page action. */
 .hp-form-confirm__again {
 	justify-self: start;
 	margin-top: var(--wp--preset--spacing--2);
-	padding: 0;
+	min-block-size: var(--hp-touch-min);
+	padding: 0.72em 1.5em;
 	border: 0;
-	background: none;
+	border-radius: var(--wp--custom--radius--md);
+	background: transparent;
+	box-shadow: inset 0 0 0 1px var(--wp--custom--border--brand);
 	font-family: var(--hp-font-label);
-	font-size: var(--wp--preset--font-size--xs);
-	letter-spacing: var(--wp--custom--tracking--wide, 0.04em);
+	font-size: var(--wp--preset--font-size--sm);
+	letter-spacing: 0.08em;
+	line-height: 1.2;
 	text-transform: uppercase;
-	color: var(--wp--custom--text--accent, var(--wp--preset--color--gold-700));
+	color: var(--wp--custom--text--link);
 	cursor: pointer;
 }
-.hp-form-confirm--inverse {
-	border-color: var(--wp--preset--color--gold-500);
-	background: var(--wp--custom--surface--inverse);
-}
-.hp-form-confirm--inverse .hp-form-confirm__title {
-	color: var(--wp--preset--color--parchment-50);
-}
-.hp-form-confirm--inverse .hp-form-confirm__body {
-	color: var(--wp--preset--color--green-200);
+.hp-form-confirm__again:hover {
+	background: var(--wp--custom--brand--subtle);
 }
 
 /* =====================================================================

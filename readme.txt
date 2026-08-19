@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.59
+Stable tag: 0.3.60
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -380,6 +380,74 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.60 =
+* Aligned /contact/ with the Imladris Contact template. The hero and the
+  message form move off the 44rem content spine onto a shared 600px column,
+  centred, so the route reads at a tighter measure while still hanging on a
+  single left edge — the hero's closing hairline lands on the form's right
+  edge. The lead reads at 54ch rather than the 46ch narrow measure the other
+  page heroes share. The subscribe plate keeps the full spine.
+* theme.json owns both new dimensions: settings.custom.container.contact
+  (600px) and settings.custom.measure.contactLead (54ch), consumed as
+  --wp--custom--container--contact and --wp--custom--measure--contact-lead.
+  The contact container is not the 600px component-stack breakpoint that
+  stacks the Name/Email row; the values match today and neither derives from
+  the other.
+* Scoped both column rules under .hp-contact-template. This is load-bearing,
+  not tidiness: core's constrained-layout rule for that main is one class
+  wide, so an unscoped .hp-contact-panel only ties it and wins on print order
+  — and production's Page Optimize concatenates the file-based sheets above
+  WordPress's inline styles, inverting exactly that kind of tie (it is what
+  cost the button focus ring in 0.3.52). Under that order the form would have
+  snapped back to 44rem while the hero held 600px. Specificity decides it now.
+* Rebuilt the mailto confirmation as the template's card: a 1px gold ring on
+  all four sides in place of the 3px left rule, spacing-8 padding, a 44px
+  check medallion with a 22px glyph, and the display h3 step on the title.
+  "Compose another" becomes the secondary Button primitive — transparent
+  ground, a 1px inset brand ring, and the 44px touch height. The ring's colour
+  is unchanged: rule.gold and gold-500 are the same hex, so only its width and
+  coverage are new, and surface.card and surface.raised are likewise the same
+  value.
+* Gave the confirmation panel the site's own focus ring. form-enhance.js moves
+  focus to it when it replaces the form, but the site-wide rule lists
+  interactive elements only, so a [tabindex="-1"] container fell through to
+  Chrome's black outline: auto at zero offset — laid directly over the gold
+  ring. .hp-subscribe__status had the same gap and gets the same ring.
+* Retired the .hp-form-confirm--inverse modifier and confirmPanel()'s
+  `inverse` argument. Nothing ever rendered them: the helper has one call
+  site, and the subscribe form is a real POST whose status the pattern renders
+  server-side. The card's declarations now sit on the base selectors instead
+  of behind a :not() guard with nothing to guard.
+* Rewrote the confirmation copy to say what the page did and did not do: the
+  mail is composed in the visitor's own mail app and nothing was sent from the
+  site. It names the address the visitor has just lost with the form, and makes
+  no reply-time commitment.
+* Routed the contact address through hperkins_tokens_contact_email().
+  patterns/contact.php had three literal copies and form-enhance.js a fourth,
+  so filtering the address would have left /contact/ — the one route whose job
+  is reaching the author — on the old one. The pattern now renders the
+  accessor and the script reads the address back off the form's action,
+  keeping only the address and falling back if it is not a plausible one.
+* Moved the direct channels onto one icon family with the footer — pill radius,
+  and the Lucide GitHub and LinkedIn outlines already in parts/footer.html in
+  place of the filled silhouettes. The WordPress.org W-in-circle mark stays,
+  redrawn as strokes.
+* Extended scripts/verify-contact-form-styling.js to pin the new anatomy from
+  the rendered page: the column and lead resolving to their theme.json tokens
+  and the source declaring them as tokens rather than literals, the centring,
+  the confirmation card reached through a real valid submit, its focus ring,
+  the 22px medallion glyph, the secondary button's inset ring and touch
+  height, and the outline icon family — compared shape by shape against
+  parts/footer.html, since "one family" is a provenance claim stroke widths
+  cannot prove. The check also replays core's own constrained-layout
+  declaration last and re-measures, so a local run answers the production
+  stylesheet-order question instead of assuming its own; verify-header.js
+  replays Assembler's focus-ring declaration the same way. No assertion
+  repeats a word of the panel's copy — title, body and button label are all
+  read out of assets/js/form-enhance.js. The page composition is measured on a
+  wide viewport within the existing page load, so the check costs no extra
+  navigation.
 
 = 0.3.59 =
 * Snapped the /how-this-was-built/ build report onto the governed token

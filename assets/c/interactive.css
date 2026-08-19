@@ -509,6 +509,18 @@
 	color: var(--wp--preset--color--amber);
 }
 
+/* form-enhance.js focuses the endpoint's status paragraph so the answer to the
+	 visitor's own submission is announced and reachable. Like .hp-form-confirm in
+	 style.css it is a [tabindex="-1"] container, and the site-wide focus rule
+	 lists interactive elements only — without this it falls through to Chrome's
+	 black `outline: auto`. Same ring; declared here because .hp-subscribe is
+	 owned by this bundle. gold-700 is the deeper gold chosen to clear 3:1 on the
+	 twilight plate as well as on parchment. */
+.hp-subscribe__status:focus-visible {
+	outline: 3px solid var(--wp--preset--color--gold-700);
+	outline-offset: 2px;
+}
+
 .hp-subscribe__form.has-error input {
 	border-color: var(--wp--preset--color--amber);
 }

@@ -169,12 +169,51 @@
 /* ===========================================================================
    Contact
    ========================================================================= */
-/* Single readable column on the hero's content measure: the message form,
-   then a hairline-ruled "Direct channels" row beneath it. (Was a 2-up grid
-   whose aside held only the icon row, leaving a tall empty rail on desktop.) */
+/* One column for the whole route. The hero and the message panel share a box,
+   so the page hangs on a single left edge instead of stepping inward twice —
+   the hero's closing hairline lands on the form's right edge for the same
+   reason. Both are still centred in the 44rem spine; it is the shared width
+   that removes the stagger, since core forces `margin-left/right: auto` on
+   every direct child of this main and no non-matching width can align.
+   The subscribe plate below keeps the full spine on purpose: it is a plate,
+   not a text block.
+   (Was a 2-up grid whose aside held only the icon row, leaving a tall empty
+   rail on desktop, then a full-measure column.)
+
+   BOTH selectors carry the .hp-contact-template scope so each is (0,2,0) and
+   outranks core's constrained-layout rule for this main, which is only one
+   class wide (its `:where()` half contributes nothing). An unscoped
+   `.hp-contact-panel` would merely TIE core and win on print order — and this
+   theme has already been burned by exactly that tie. Locally the file-based
+   sheets print after WordPress's inline styles; in production Page Optimize
+   concatenates them and hoists the bundle ABOVE the inline blocks, inverting
+   it (README.md, and the focus-ring note beside the button primitive in
+   style.css). Under that order the panel alone would fall back to the 44rem
+   spine while the scoped hero held the column — the stagger these rules exist
+   to remove, reversed. Specificity, never order.
+
+   The width is --wp--custom--container--contact. It is NOT the 600px
+   component-stack breakpoint below: that is the responsive boundary for the
+   two-column Name/Email row. The values match today; neither derives from the
+   other, and they are not one token. */
+.hp-contact-template .hp-page-hero,
+.hp-contact-template .hp-contact-panel {
+  max-inline-size: var(--wp--custom--container--contact);
+  margin-inline: auto;
+}
 .hp-contact-panel {
   display: flex;
   flex-direction: column;
+}
+
+/* The column sets the edge; this sets the line length. The lead reads at the
+   contact-lead measure (54ch) rather than the 46ch narrow measure the other
+   page heroes share — `ch` here resolves against the lead's own 22px body
+   type, which is why the measure cannot live on the hero box now that the box
+   is the shared column. .hp-page-hero is shared with /about/, /work/,
+   /ai-enablement/ and the digest, so this stays scoped to the template. */
+.hp-contact-template .hp-page-hero__lead {
+  max-width: var(--wp--custom--measure--contact-lead);
 }
 
 .hp-contact-form { display: flex; flex-direction: column; gap: var(--wp--preset--spacing--5); }
@@ -253,7 +292,9 @@ p.hp-contact-form__hint {
   width: 44px;
   height: 44px;
   border: 1px solid var(--wp--custom--border--hair);
-  border-radius: var(--wp--custom--radius--md);
+  /* Pill radius, matching .hp-footer__social: the system reads social and
+     profile affordances as pills, not as square component cells. */
+  border-radius: var(--hp-radius-pill);
   background: var(--wp--custom--surface--card);
   color: var(--wp--custom--artifact-link);
   text-decoration: none;
@@ -266,15 +307,16 @@ p.hp-contact-form__hint {
   border-color: var(--wp--custom--border--brand);
   color: var(--wp--custom--text--link);
 }
+/* One icon family with the footer: outline glyphs, never filled silhouettes.
+   The marks in patterns/contact.php are drawn as strokes to match. */
 .hp-channels svg {
   width: 19px;
   height: 19px;
-  fill: currentColor;
-}
-.hp-channels svg circle {
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.8;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* ===========================================================================
