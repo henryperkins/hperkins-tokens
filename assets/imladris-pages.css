@@ -683,7 +683,13 @@ p.hp-contact-form__hint {
 }
 
 /* The three records that also appear as proof cards above say so, so a reader
-   scanning only the register knows which rows are already argued in full. */
+   scanning only the register knows which rows are already argued in full.
+
+   gold-800, not the gold-700 the design handoff specifies: at this size the
+   label is body text and owes 4.5:1, and gold-700 measures 3.92:1 on
+   surface-card. gold-800 measures 6.67:1 and keeps the accent in the same
+   family, so the marker still reads as gold rather than falling back to the
+   muted ink its sibling .hp-keyword-table marker uses. */
 .hp-evidence-table tbody th strong {
   display: block;
   margin-block-start: var(--hp-gap-xs);
@@ -692,7 +698,7 @@ p.hp-contact-form__hint {
   font-weight: 400;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--wp--preset--color--gold-700);
+  color: var(--wp--preset--color--gold-800);
 }
 
 /* The narrow layout below re-declares tbody rows as display:block, which would
