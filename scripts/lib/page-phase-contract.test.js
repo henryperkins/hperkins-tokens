@@ -4,6 +4,7 @@ const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 const { spawnSync } = require( 'node:child_process' );
 
+const { DIGEST_OPENING_CONTRACTS } = require( './job-placement-page-style-contracts' );
 const { selectAboutSource, selectDigestSource } = require( './page-phase-contract' );
 
 const themeRoot = path.join( __dirname, '..', '..' );
@@ -83,22 +84,23 @@ test( 'prominent-action source mode reads the selected absolute draft paths acro
 	assert.match( result.stdout, /prominent action source contracts verified/ );
 } );
 
-test( 'rendered recruiter probes keep snapshot and event-first draft phases distinct', () => {
+test( 'rendered recruiter probes pin the dossier as the only Digest shape', () => {
 	const recruiter = fs.readFileSync(
 		path.join( themeRoot, 'scripts', 'verify-job-placement-pages.js' ),
 		'utf8'
 	);
-	assert.match( recruiter, /requireEventFirst: USE_DRAFTS/ );
-	assert.match( recruiter, /if \( requireEventFirst \)/ );
+	// The Digest redesign was promoted on 2026-08-19, so candidate and accepted
+	// snapshot now hold the same dossier and the shape is asserted for whichever
+	// one --drafts selects. Nothing may reintroduce a second expected shape.
+	assert.match( recruiter, /deriveDigestExpectations\( read\( DIGEST_SOURCE \) \)/ );
+	assert.doesNotMatch( recruiter, /requireEventFirst|eventFirst/ );
 	assert.match( recruiter, /document\.querySelector\('main \.hp-wcus-callout'\)/ );
 	assert.match( recruiter, /primaryRail\.closest\('\.hp-wcus-callout'\)/ );
 	assert.doesNotMatch( recruiter, /hero\?\.querySelector\('\.hp-wcus-callout'\)/ );
 	assert.match( recruiter, /documentHeight/ );
 	assert.match( recruiter, /DIGEST_HEIGHT_BUDGETS/ );
-	// The draft phase is the dossier: hero first so the H1 opens the outline,
-	// then the event plate, then the numbered argument. The accepted snapshot
-	// still carries its hero-contained WordCamp panel, which is why the two
-	// phases stay separately asserted.
+	// The dossier puts the hero first so the H1 opens the outline, then the
+	// event plate, then the numbered argument.
 	assert.match( recruiter, /'hero\|event\|why'/ );
 	assert.doesNotMatch( recruiter, /'event\|hero\|brief'/ );
 	assert.match( recruiter, /result\.dossier\.registerVisibleRows === 12/ );
@@ -132,7 +134,7 @@ test( 'Digest text resize qualification is exact and requires a collected result
 
 	assert.match(
 		qualifier,
-		/return page\.name === 'digest' &&\s*DIGEST_EXPECTATIONS\.eventFirst &&\s*viewport\.width === 1024 &&\s*! viewport\.zoomPercent;/
+		/return page\.name === 'digest' &&\s*viewport\.width === 1024 &&\s*! viewport\.zoomPercent;/
 	);
 	assert.match(
 		inspectPage,
@@ -183,53 +185,31 @@ test( 'Digest text resize proof requires three visible actions with nonempty fou
 	assert.match( assertMetrics, /result\.textResize200\.actionsContained/ );
 } );
 
-test( 'default recruiter source acceptance pins the complete shared WCUS presentation', () => {
-	const sourceContracts = sourceBetween(
-		readRecruiterVerifier(),
-		'function verifySourceContracts',
-		'function verifyStackedLedgerLabels'
+test( 'the shared WCUS plate presentation stays pinned after the phase retirement', () => {
+	// Retiring the hero-contained panel removed the branch that used to pin the
+	// base .hp-wcus-callout rule inline. The contract moved into the shared
+	// module so the declarations the --event-first modifier builds on — and
+	// overrides — cannot silently disappear with it.
+	const generic = DIGEST_OPENING_CONTRACTS.filter(
+		( contract ) => contract.selector === '.hp-wcus-callout' && ! contract.atContext
 	);
-	const defaultBranch = sourceBetween(
-		sourceContracts,
-		'} else {',
-		'\n\t}\n\tfor ( const contract of ['
-	);
-	const defaultContract = /assertRuleDeclarations\( pageCss, \{\s*selector: '\.hp-wcus-callout',\s*declarations: \{([\s\S]*?)\r?\n\s*\},\r?\n\s*\} \);/.exec( defaultBranch );
 
-	assert( defaultContract, 'Default recruiter source acceptance has no generic WCUS callout contract.' );
-	assert.match(
-		defaultContract[ 1 ],
-		/'margin-block-start': 'var\(--wp--preset--spacing--6\)'/
-	);
-	assert.match(
-		defaultContract[ 1 ],
-		/background: 'color-mix\(in srgb, var\(--wp--preset--color--parchment-100\) 88%, var\(--wp--preset--color--gold-100\)\)'/
-	);
-} );
+	assert.equal( generic.length, 1, 'The opening contracts must own exactly one generic WCUS callout rule.' );
+	assert.deepEqual( generic[ 0 ].declarations, {
+		'--hp-plate-pad': 'var(--wp--preset--spacing--6)',
+		'margin-block-start': 'var(--wp--preset--spacing--6)',
+		padding: 'var(--hp-plate-pad)',
+		'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
+		background: 'color-mix(in srgb, var(--wp--preset--color--parchment-100) 88%, var(--wp--preset--color--gold-100))',
+	} );
 
-test( 'both default Digest source branches apply the shared accepted-action topology', () => {
-	for ( const verifier of [
-		'verify-job-placement-pages.js',
-		'verify-prominent-actions.js',
-	] ) {
+	// Neither recruiter verifier may keep a second, retired Digest topology.
+	for ( const verifier of [ 'verify-job-placement-pages.js', 'verify-prominent-actions.js' ] ) {
 		const source = fs.readFileSync( path.join( themeRoot, 'scripts', verifier ), 'utf8' );
-		const sourceContracts = sourceBetween(
+		assert.doesNotMatch(
 			source,
-			'function verifySourceContracts',
-			verifier === 'verify-job-placement-pages.js'
-				? 'function verifyStackedLedgerLabels'
-				: 'function wait'
-		);
-
-		assert.match(
-			source,
-			/const \{[\s\S]*DIGEST_ACCEPTED_ACTION_CONTRACTS[\s\S]*\} = require\( '\.\/lib\/job-placement-page-style-contracts' \);/,
-			`${ verifier } must import the shared accepted-action topology.`
-		);
-		assert.match(
-			sourceContracts,
-			/\} else \{\s*for \( const contract of DIGEST_ACCEPTED_ACTION_CONTRACTS \) \{\s*assertRuleDeclarations\( pageCss, contract \);\s*\}/,
-			`${ verifier } default branch must apply every shared accepted-action contract.`
+			/DIGEST_ACCEPTED_ACTION_CONTRACTS/,
+			`${ verifier } still applies the retired accepted-action topology.`
 		);
 	}
 } );

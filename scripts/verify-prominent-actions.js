@@ -7,7 +7,6 @@ const os = require( 'node:os' );
 const path = require( 'node:path' );
 
 const { findHeadings } = require( './lib/about-page-contract' );
-const { DIGEST_ACCEPTED_ACTION_CONTRACTS } = require( './lib/job-placement-page-style-contracts' );
 const { assertKnownOptions, selectAboutSource, selectDigestSource } = require( './lib/page-phase-contract' );
 const { getOrigin } = require( './lib/site-url' );
 const { assertRuleDeclarations } = require( './lib/style-coverage' );
@@ -131,55 +130,41 @@ function verifySourceContracts() {
 	] ) {
 		assert( css.includes( expected ), `style.css is missing expected contract: ${ expected }` );
 	}
-	if ( USE_DRAFTS ) {
-		assertRuleDeclarations( pageCss, {
-			selector: '.hp-wcus-callout',
-			declarations: {
-				'--hp-plate-pad': 'var(--wp--preset--spacing--6)',
-				padding: 'var(--hp-plate-pad)',
-			},
-		} );
-		assertRuleDeclarations( pageCss, {
-			selector: '.hp-wcus-callout--event-first',
-			declarations: {
-				display: 'grid',
-				'grid-template-columns': 'minmax(0, 1fr)',
-				'column-gap': '0',
-				'row-gap': 'var(--wp--preset--spacing--5)',
-				padding: 'var(--hp-plate-pad)',
-				'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
-			},
-		} );
-		assertRuleDeclarations( pageCss, {
-			selector: '.hp-wcus-callout--event-first .hp-wcus-callout__actions',
-			declarations: {
-				display: 'grid',
-				'grid-template-columns': 'minmax(0, 1fr)',
-				gap: 'var(--wp--preset--spacing--4)',
-			},
-		} );
-		assertRuleDeclarations( pageCss, {
-			selector: '.hp-wcus-callout--event-first',
-			atContext: '@media (min-width: 782px)',
-			declarations: {
-				'grid-template-columns': 'minmax(0, 1.35fr) minmax(16rem, 0.65fr)',
-				'column-gap': 'var(--wp--preset--spacing--6)',
-				'row-gap': '0',
-			},
-		} );
-	} else {
-		for ( const contract of DIGEST_ACCEPTED_ACTION_CONTRACTS ) {
-			assertRuleDeclarations( pageCss, contract );
-		}
-		assertRuleDeclarations( pageCss, {
-			selector: '.hp-wcus-callout',
-			declarations: {
-				'--hp-plate-pad': 'var(--wp--preset--spacing--6)',
-				padding: 'var(--hp-plate-pad)',
-				'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
-			},
-		} );
-	}
+	assertRuleDeclarations( pageCss, {
+		selector: '.hp-wcus-callout',
+		declarations: {
+			'--hp-plate-pad': 'var(--wp--preset--spacing--6)',
+			padding: 'var(--hp-plate-pad)',
+		},
+	} );
+	assertRuleDeclarations( pageCss, {
+		selector: '.hp-wcus-callout--event-first',
+		declarations: {
+			display: 'grid',
+			'grid-template-columns': 'minmax(0, 1fr)',
+			'column-gap': '0',
+			'row-gap': 'var(--wp--preset--spacing--5)',
+			padding: 'var(--hp-plate-pad)',
+			'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
+		},
+	} );
+	assertRuleDeclarations( pageCss, {
+		selector: '.hp-wcus-callout--event-first .hp-wcus-callout__actions',
+		declarations: {
+			display: 'grid',
+			'grid-template-columns': 'minmax(0, 1fr)',
+			gap: 'var(--wp--preset--spacing--4)',
+		},
+	} );
+	assertRuleDeclarations( pageCss, {
+		selector: '.hp-wcus-callout--event-first',
+		atContext: '@media (min-width: 782px)',
+		declarations: {
+			'grid-template-columns': 'minmax(0, 1.35fr) minmax(16rem, 0.65fr)',
+			'column-gap': 'var(--wp--preset--spacing--6)',
+			'row-gap': '0',
+		},
+	} );
 	if ( read( ABOUT_SOURCE ).includes( 'hp-about-wcus' ) ) {
 		assertRuleDeclarations( pageCss, {
 			selector: '.hp-about-wcus',

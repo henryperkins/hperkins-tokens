@@ -16,7 +16,6 @@ const path = require( 'node:path' );
 const { findHeadings, findLinks, extractExactText, parseTopLevelBlocks } = require( './lib/about-page-contract' );
 const {
 	APPENDIX_LEDGER_CONTRACTS,
-	DIGEST_ACCEPTED_ACTION_CONTRACTS,
 	DIGEST_COMPACT_CONTRACTS,
 	DIGEST_LOWER_CONTRACTS,
 	DIGEST_OPENING_CONTRACTS,
@@ -35,7 +34,6 @@ const ARGV = process.argv.slice( 2 );
 assertKnownOptions( ARGV, [ '--source-only', '--drafts' ] );
 const ORIGIN = getOrigin();
 const SOURCE_ONLY = ARGV.includes( '--source-only' );
-const USE_DRAFTS = ARGV.includes( '--drafts' );
 const DIGEST_SOURCE = selectDigestSource( ARGV );
 const APPENDIX_SOURCE = selectPlacementMethodSource( ARGV );
 
@@ -59,7 +57,7 @@ function findWpBlocksByClass( html, blockName, className ) {
 	return blocks;
 }
 
-function deriveDigestExpectations( html, { requireEventFirst = false } = {} ) {
+function deriveDigestExpectations( html ) {
 	const headings = findHeadings( html, 'selected Digest body' );
 	const h1 = headings.find( ( heading ) => heading.level === 1 );
 	const actionRails = findWpBlocksByClass( html, 'buttons', 'hp-action-rail' );
@@ -82,57 +80,43 @@ function deriveDigestExpectations( html, { requireEventFirst = false } = {} ) {
 	assert( actionRails.length >= 2, 'Selected Digest body has no closing action rail.' );
 	assert( eyebrows.length > 0, 'Selected Digest body has no closing eyebrow.' );
 
-	if ( requireEventFirst ) {
-		const event = topLevelBlocks[ eventIndex ];
-		// The dossier opens on its own H1 and hands the WordCamp invitation the
-		// second slot, so the event never introduces a heading ahead of the
-		// outline. The numbered argument starts immediately after it.
-		assert( heroIndex === 0, 'Selected Digest body must begin with the hero, so the H1 opens the outline.' );
-		assert( eventIndex === 1, 'Selected Digest WordCamp aside must immediately follow the hero.' );
-		assert( whyIndex === 2, 'The first numbered section must immediately follow the WordCamp aside.' );
-		assert( topLevelBlocks.length === 10, 'The selected dossier must contain ten top-level blocks.' );
-		assert( supportBriefIndex === -1, 'The selected dossier must not retain the retired recruiter brief.' );
-		assert( event.attrs.tagName === 'aside', 'Selected Digest WordCamp Group must serialize as an aside.' );
-		assert(
-			event.attrs.ariaLabel === 'I’ll be at WordCamp US.',
-			'Selected Digest WordCamp aside has the wrong accessible name.'
-		);
-		assert(
-			event.attrs.anchor === 'wordcamp-us-2026',
-			'Selected Digest WordCamp aside must own the wordcamp-us-2026 fragment.'
-		);
-		assert(
-			getClassCount( event.outer, 'hp-digest__primary-actions' ) === 1,
-			'Selected Digest WordCamp aside must own the first-screen action rail.'
-		);
-		assert(
-			getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-digest__primary-actions' ) === 0,
-			'Selected Digest hero must not repeat event actions.'
-		);
-		assert(
-			getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-wcus-callout' ) === 0,
-			'Selected Digest hero must not contain the WordCamp aside.'
-		);
-	} else {
-		assert( heroIndex !== -1, 'Accepted Digest snapshot must contain its current hero.' );
-		assert(
-			getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-wcus-callout' ) === 1 &&
-				getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-digest__primary-actions' ) === 1,
-			'Accepted Digest snapshot must retain its current hero-contained WordCamp panel.'
-		);
-		assert( whyIndex === heroIndex + 1, 'Accepted Digest snapshot has the wrong section order.' );
-	}
+	const event = topLevelBlocks[ eventIndex ];
+	// The dossier opens on its own H1 and hands the WordCamp invitation the
+	// second slot, so the event never introduces a heading ahead of the
+	// outline. The numbered argument starts immediately after it.
+	assert( heroIndex === 0, 'Selected Digest body must begin with the hero, so the H1 opens the outline.' );
+	assert( eventIndex === 1, 'Selected Digest WordCamp aside must immediately follow the hero.' );
+	assert( whyIndex === 2, 'The first numbered section must immediately follow the WordCamp aside.' );
+	assert( topLevelBlocks.length === 10, 'The selected dossier must contain ten top-level blocks.' );
+	assert( supportBriefIndex === -1, 'The selected dossier must not retain the retired recruiter brief.' );
+	assert( event.attrs.tagName === 'aside', 'Selected Digest WordCamp Group must serialize as an aside.' );
+	assert(
+		event.attrs.ariaLabel === 'I’ll be at WordCamp US.',
+		'Selected Digest WordCamp aside has the wrong accessible name.'
+	);
+	assert(
+		event.attrs.anchor === 'wordcamp-us-2026',
+		'Selected Digest WordCamp aside must own the wordcamp-us-2026 fragment.'
+	);
+	assert(
+		getClassCount( event.outer, 'hp-digest__primary-actions' ) === 1,
+		'Selected Digest WordCamp aside must own the first-screen action rail.'
+	);
+	assert(
+		getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-digest__primary-actions' ) === 0,
+		'Selected Digest hero must not repeat event actions.'
+	);
+	assert(
+		getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-wcus-callout' ) === 0,
+		'Selected Digest hero must not contain the WordCamp aside.'
+	);
 	assert( wcusActions, 'Selected Digest WordCamp aside has no .hp-wcus-callout__actions.' );
-	if ( requireEventFirst ) {
-		assert( ! briefProofs, 'Selected Digest dossier must not retain the recruiter brief proof list.' );
-		assert( rootCauseSection, 'Selected Digest dossier has no #root-cause-investigation section.' );
-		assert(
-			[ ...html.matchAll( /<p class="hp-digest-kicker">/g ) ].length === 7,
-			'Selected Digest dossier must number all seven sections.'
-		);
-	} else {
-		assert( rootCauseSection, 'Accepted Digest body has no #root-cause-investigation section.' );
-	}
+	assert( ! briefProofs, 'Selected Digest dossier must not retain the recruiter brief proof list.' );
+	assert( rootCauseSection, 'Selected Digest dossier has no #root-cause-investigation section.' );
+	assert(
+		[ ...html.matchAll( /<p class="hp-digest-kicker">/g ) ].length === 7,
+		'Selected Digest dossier must number all seven sections.'
+	);
 
 	const proofLabels = rootCauseSection
 		? [ ...rootCauseSection[ 1 ].matchAll( /<div\b[^>]*\bhp-debug-proof__item\b[^>]*>[\s\S]*?<dt\b[^>]*>[\s\S]*?<p\b[^>]*>([^<]+)<\/p>[\s\S]*?<\/dt>/gi ) ]
@@ -140,7 +124,6 @@ function deriveDigestExpectations( html, { requireEventFirst = false } = {} ) {
 		: [];
 
 	return {
-		eventFirst: requireEventFirst,
 		h1: h1.text,
 		primaryActions: findLinks( primaryRail, 'selected Digest primary actions' ),
 		closingActions: findLinks( actionRails.at( -1 ), 'selected Digest closing actions' ),
@@ -152,10 +135,7 @@ function deriveDigestExpectations( html, { requireEventFirst = false } = {} ) {
 	};
 }
 
-const DIGEST_EXPECTATIONS = deriveDigestExpectations(
-	read( DIGEST_SOURCE ),
-	{ requireEventFirst: USE_DRAFTS }
-);
+const DIGEST_EXPECTATIONS = deriveDigestExpectations( read( DIGEST_SOURCE ) );
 
 const DIGEST_VIEWPORTS = [
 	{ name: 'desktop-1440', width: 1440, height: 1000, mobile: false },
@@ -178,19 +158,23 @@ const DIGEST_VIEWPORTS = [
 // the kickers, the gap callout, the artifact row, and the filter row while
 // still failing if a section is duplicated or a table doubles.
 //
-// Derived, not measured: these have not been confirmed against a rendered
-// page, because the rendered pass needs Chrome and a live install. Re-measure
-// and tighten them on the first green rendered run.
+// Measured, not derived: taken from https://hperkins.blog/job-placement-digest/
+// on 2026-08-19, the first rendered run after the dossier was promoted, and
+// carried at +5% rounded up to the nearest 50px. The earlier derived numbers
+// predated the event photograph and were wrong in both directions — three
+// viewports over, six well under. The headroom absorbs font-metric and
+// image-decode jitter while staying far below the cost of a duplicated section
+// or a doubled table, which is what this budget exists to catch.
 const DIGEST_HEIGHT_BUDGETS = {
-	'desktop-1440': 7370,
-	'desktop-1024': 7700,
-	'compact-upper-1023': 8140,
-	'event-wide-782': 9240,
-	'event-linear-781': 9680,
-	'tablet-768': 9900,
-	'phone-boundary-600': 11000,
+	'desktop-1440': 8350,
+	'desktop-1024': 8450,
+	'compact-upper-1023': 8300,
+	'event-wide-782': 8950,
+	'event-linear-781': 9450,
+	'tablet-768': 9450,
+	'phone-boundary-600': 10100,
 	'mobile-390': 13200,
-	'mobile-320': 14300,
+	'mobile-320': 15800,
 };
 
 const APPENDIX_VIEWPORTS = [
@@ -260,28 +244,12 @@ function verifySourceContracts() {
 	] ) {
 		assert( pageCss.includes( expected ), `assets/imladris-pages.css is missing recruiter-page contract: ${ expected }` );
 	}
-	if ( DIGEST_EXPECTATIONS.eventFirst ) {
-		for ( const contract of [
-			...DIGEST_OPENING_CONTRACTS,
-			...DIGEST_COMPACT_CONTRACTS,
-			...DIGEST_LOWER_CONTRACTS,
-		] ) {
-			assertRuleDeclarations( pageCss, contract );
-		}
-	} else {
-		for ( const contract of DIGEST_ACCEPTED_ACTION_CONTRACTS ) {
-			assertRuleDeclarations( pageCss, contract );
-		}
-		assertRuleDeclarations( pageCss, {
-			selector: '.hp-wcus-callout',
-			declarations: {
-				'margin-block-start': 'var(--wp--preset--spacing--6)',
-				'--hp-plate-pad': 'var(--wp--preset--spacing--6)',
-				padding: 'var(--hp-plate-pad)',
-				'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
-				background: 'color-mix(in srgb, var(--wp--preset--color--parchment-100) 88%, var(--wp--preset--color--gold-100))',
-			},
-		} );
+	for ( const contract of [
+		...DIGEST_OPENING_CONTRACTS,
+		...DIGEST_COMPACT_CONTRACTS,
+		...DIGEST_LOWER_CONTRACTS,
+	] ) {
+		assertRuleDeclarations( pageCss, contract );
 	}
 	for ( const contract of [
 		{
@@ -322,11 +290,10 @@ function verifySourceContracts() {
 	if ( DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
 		// The dossier's event plate carries one action — the conversation. The
 		// résumé and evidence routes belong to the closing invitation, where the
-		// reader has already been given the argument. The accepted snapshot still
-		// carries the older three-action rail.
+		// reader has already been given the argument.
 		assert(
-			DIGEST_EXPECTATIONS.wcusActions.length === ( DIGEST_EXPECTATIONS.eventFirst ? 1 : 3 ),
-			`Selected Digest WCUS callout exposes ${ DIGEST_EXPECTATIONS.wcusActions.length } actions; expected ${ DIGEST_EXPECTATIONS.eventFirst ? 'one' : 'three' }.`
+			DIGEST_EXPECTATIONS.wcusActions.length === 1,
+			`Selected Digest WCUS callout exposes ${ DIGEST_EXPECTATIONS.wcusActions.length } actions; expected one.`
 		);
 		assert(
 			DIGEST_EXPECTATIONS.proofLabels.join( '|' ) === 'Signal|Diagnosis|Constraint|Result',
@@ -600,7 +567,6 @@ async function pressKey( cdp, sessionId, key ) {
 
 function shouldInspectDigestTextResize( page, viewport ) {
 	return page.name === 'digest' &&
-		DIGEST_EXPECTATIONS.eventFirst &&
 		viewport.width === 1024 &&
 		! viewport.zoomPercent;
 }
@@ -727,45 +693,30 @@ function assertPageMetrics( result, page, viewport ) {
 	if ( page.name === 'digest' ) {
 		assert( result.primaryActions, `${ context } is missing the first-screen action rail.` );
 		assertActions( result.primaryActions.actions, DIGEST_EXPECTATIONS.primaryActions, `${ context } first-screen rail`, result.url );
-		if ( DIGEST_EXPECTATIONS.eventFirst ) {
-			assert( result.eventLandmark, context + ' is missing the WordCamp complementary landmark.' );
-			assert( result.eventLandmark.tagName === 'ASIDE', context + ' does not render WordCamp as an aside.' );
-			assert(
-				result.eventLandmark.ariaLabel === 'I’ll be at WordCamp US.',
-				context + ' renders the wrong WordCamp accessible name.'
-			);
-			assert(
-				result.eventLandmark.title === result.eventLandmark.ariaLabel,
-				context + ' does not keep the visible event title and accessible name identical.'
-			);
-			assert(
-				! result.eventLandmark.beforeH1,
-				context + ' puts the WordCamp landmark ahead of the H1, so its own H2 opens the outline.'
-			);
-			assert(
-				result.mainOpening.join( '|' ) === 'hero|event|why',
-				context + ' does not keep hero, event, and the first numbered section in one visual/source order.'
-			);
-			assert( result.primaryActions.inEvent, context + ' first-screen actions are outside the WordCamp landmark.' );
-			assert( result.primaryActions.top >= -1, context + ' first-screen actions begin above the viewport.' );
-			assert(
-				result.primaryActions.focusIndexes.join( '|' ) === '0',
-				context + ' does not make the single event action the first keyboard stop in main.'
-			);
-		} else {
-			assert( result.primaryActions.inHero, `${ context } first-screen action rail is outside the recruiter hero.` );
-			assert( result.primaryActions.top >= -1, `${ context } first-screen rail begins above the viewport.` );
-			// Phone height is intentionally not part of the requested matrix (the
-			// selected primary actions stack, so a 320px-wide device can be 568px or 1000px
-			// tall). At tablet/desktop widths, the fixed verification height is a
-			// useful literal fold and every selected action must clear it.
-			if ( viewport.width >= 768 ) {
-				assert(
-					result.primaryActions.bottom <= viewport.height + 1,
-					`${ context } first-screen rail ends at ${ result.primaryActions.bottom}px, below the ${ viewport.height}px viewport.`
-				);
-			}
-		}
+		assert( result.eventLandmark, context + ' is missing the WordCamp complementary landmark.' );
+		assert( result.eventLandmark.tagName === 'ASIDE', context + ' does not render WordCamp as an aside.' );
+		assert(
+			result.eventLandmark.ariaLabel === 'I’ll be at WordCamp US.',
+			context + ' renders the wrong WordCamp accessible name.'
+		);
+		assert(
+			result.eventLandmark.title === result.eventLandmark.ariaLabel,
+			context + ' does not keep the visible event title and accessible name identical.'
+		);
+		assert(
+			! result.eventLandmark.beforeH1,
+			context + ' puts the WordCamp landmark ahead of the H1, so its own H2 opens the outline.'
+		);
+		assert(
+			result.mainOpening.join( '|' ) === 'hero|event|why',
+			context + ' does not keep hero, event, and the first numbered section in one visual/source order.'
+		);
+		assert( result.primaryActions.inEvent, context + ' first-screen actions are outside the WordCamp landmark.' );
+		assert( result.primaryActions.top >= -1, context + ' first-screen actions begin above the viewport.' );
+		assert(
+			result.primaryActions.focusIndexes.join( '|' ) === '0',
+			context + ' does not make the single event action the first keyboard stop in main.'
+		);
 		assert( result.closing, `${ context } is missing the composed closing panel.` );
 		assert( result.closing.eyebrow === DIGEST_EXPECTATIONS.closingEyebrow, `${ context } has the wrong closing eyebrow.` );
 		assert( result.closing.heading === DIGEST_EXPECTATIONS.closingHeading, `${ context } has the wrong closing heading.` );
@@ -775,157 +726,142 @@ function assertPageMetrics( result, page, viewport ) {
 		assert( result.wcus.actions.every( ( action ) => action.textContained ), `${ context } clips a WCUS action label.` );
 		assert( result.wcus.rail, `${ context } is missing WCUS action-rail geometry.` );
 
-		if ( DIGEST_EXPECTATIONS.eventFirst ) {
-			assert( result.wcus.copy, context + ' is missing event-copy geometry.' );
-			for ( let index = 1; index < result.wcus.actions.length; index++ ) {
-				assert(
-					result.wcus.actions[ index ].top >= result.wcus.actions[ index - 1 ].bottom - 1,
-					context + ' does not keep the event action rail vertical.'
-				);
-			}
-
-			if ( viewport.width >= 782 ) {
-				assert(
-					result.wcus.copy.right <= result.wcus.rail.left + 2,
-					context + ' does not render event copy left of the action rail.'
-				);
-			} else {
-				assert(
-					result.wcus.rail.top >= result.wcus.copy.bottom - 1,
-					context + ' does not stack event actions after event copy.'
-				);
-				for ( const action of result.wcus.actions ) {
-					assert(
-						action.width >= result.wcus.rail.width - 12,
-						context + ' contains an event action that does not fill its row.'
-					);
-				}
-			}
-
-			if ( viewport.width === 1024 && ! viewport.zoomPercent ) {
-				assert( result.opening.hero && result.opening.why, context + ' is missing opening-section geometry.' );
-				assert(
-					result.opening.hero.bottom <= viewport.height + 1,
-					context + ' does not keep the complete role proposition in the first 1000px.'
-				);
-			}
-
-			if ( viewport.zoomPercent === 200 ) {
-				assert(
-					result.wcus.rail.top >= result.wcus.copy.bottom - 1,
-					context + ' keeps compressed columns in the 200% zoom-equivalent reflow.'
-				);
-				assert(
-					result.scrollWidth <= result.clientWidth + 1,
-					context + ' overflows in the 200% zoom-equivalent reflow.'
-				);
-			}
-
-			assert( ! result.supportBrief, context + ' still renders the retired recruiter brief.' );
-			assert( result.dossier.kickers === 7, `${ context } renders ${ result.dossier.kickers } numbered kickers; the dossier has seven.` );
-			assert( result.dossier.fitRows === 5, `${ context } renders ${ result.dossier.fitRows } fit rows; the ledger holds the five with proof.` );
-			assert( result.dossier.gap, context + ' does not render the named gap outside the fit ledger.' );
-			assert( result.dossier.proofCards === 3, `${ context } renders ${ result.dossier.proofCards } proof cards; expected three.` );
-			assert( result.dossier.artifactCells === 6, `${ context } renders ${ result.dossier.artifactCells } incident artifacts; expected six.` );
-			assert( result.dossier.registerRows === 12, `${ context } renders ${ result.dossier.registerRows } register rows; the register publishes twelve.` );
+		assert( result.wcus.copy, context + ' is missing event-copy geometry.' );
+		for ( let index = 1; index < result.wcus.actions.length; index++ ) {
 			assert(
-				result.longformCount >= 5,
-				context + ' does not render the dossier\'s long-form sections.'
+				result.wcus.actions[ index ].top >= result.wcus.actions[ index - 1 ].bottom - 1,
+				context + ' does not keep the event action rail vertical.'
 			);
-
-			// The filter is an enhancement over a complete register. Either it
-			// mounted — four states, a live status, and every row still shown
-			// because "All evidence" is the default — or it declined to mount and
-			// the register renders unfiltered. A mounted filter that starts by
-			// hiding evidence is the failure this pins.
-			assert(
-				result.dossier.registerFilterButtons === 0 || result.dossier.registerFilterButtons === 4,
-				`${ context } renders ${ result.dossier.registerFilterButtons } register filter controls; expected none or all four.`
-			);
-			assert(
-				result.dossier.registerVisibleRows === 12,
-				`${ context } hides ${ 12 - result.dossier.registerVisibleRows } register rows before the reader has filtered anything.`
-			);
-			if ( result.dossier.registerFilterButtons === 4 ) {
-				assert(
-					result.dossier.registerStatusLive === 'polite',
-					context + ' does not announce the filtered register count politely.'
-				);
-			}
-
-			if ( ! viewport.zoomPercent ) {
-				const heightBudget = DIGEST_HEIGHT_BUDGETS[ viewport.name ];
-				assert( heightBudget, context + ' has no dossier height budget.' );
-				assert(
-					result.documentHeight <= heightBudget,
-					`${ context } is ${ result.documentHeight }px tall; dossier runaway budget is ${ heightBudget }px.`
-				);
-			}
-		} else {
-			if ( viewport.width >= 782 ) {
-				assert(
-					result.wcus.actions.every( ( action ) => Math.abs( action.top - result.wcus.actions[ 0 ].top ) <= 2 ) &&
-						result.wcus.actions.every( ( action, index ) => index === 0 || action.left > result.wcus.actions[ index - 1 ].left ),
-					`${ context } does not keep the three WCUS actions in ordered columns.`
-				);
-			} else {
-				for ( let index = 0; index < result.wcus.actions.length; index++ ) {
-					const action = result.wcus.actions[ index ];
-					assert( action.width >= result.wcus.rail.width - 12, `${ context } WCUS action ${ index + 1 } does not fill its stacked row.` );
-					if ( index > 0 ) {
-						assert( action.top >= result.wcus.actions[ index - 1 ].bottom - 1, `${ context } WCUS action ${ index + 1 } does not stack below action ${ index }.` );
-					}
-				}
-			}
-
-			if ( viewport.width === 390 ) {
-				assert( result.evidenceRecord?.title && result.evidenceRecord.state && result.evidenceRecord.directEvidence, context + ' is missing compact evidence geometry.' );
-				assert(
-					Math.abs( result.evidenceRecord.title.top - result.evidenceRecord.state.top ) <= 24,
-					context + ' does not keep title and state in one compact evidence metadata row.'
-				);
-				assert(
-					result.evidenceRecord.directEvidence.top >=
-						Math.max( result.evidenceRecord.title.bottom, result.evidenceRecord.state.bottom ) - 1,
-					context + ' does not place direct evidence after title and state.'
-				);
-			}
-
-			if ( viewport.width === 320 ) {
-				assert( result.evidenceRecord?.title && result.evidenceRecord.state && result.evidenceRecord.directEvidence, context + ' is missing stacked evidence geometry.' );
-				assert(
-					result.evidenceRecord.state.top >= result.evidenceRecord.title.bottom - 1 &&
-						result.evidenceRecord.directEvidence.top >= result.evidenceRecord.state.bottom - 1,
-					context + ' does not stack title, state, and direct evidence at 320px.'
-				);
-			}
-
-			assert( result.proofItems.length === 4, `${ context } renders ${ result.proofItems.length } root-cause proof items; expected 4.` );
-			assert(
-				result.proofItems.map( ( item ) => item.label ).join( '|' ) === DIGEST_EXPECTATIONS.proofLabels.join( '|' ),
-				`${ context } changes the Signal → Diagnosis → Constraint → Result proof order.`
-			);
-			if ( viewport.width < 782 ) {
-				for ( let index = 1; index < result.proofItems.length; index++ ) {
-					assert(
-						result.proofItems[ index ].top >= result.proofItems[ index - 1 ].bottom - 1,
-						`${ context } does not stack proof item ${ index + 1 } below item ${ index }.`
-					);
-				}
-			}
-			assert( result.rootCauseFragment, `${ context } did not exercise #root-cause-investigation.` );
-			assert( result.rootCauseFragment.hash === '#root-cause-investigation', `${ context } did not retain the root-cause fragment hash.` );
-			assert( result.rootCauseFragment.focused, `${ context } did not focus the root-cause proof section.` );
-			assert( result.rootCauseFragment.tabindex === '-1', `${ context } did not keep fragment focus programmatic-only.` );
-			assert( result.rootCauseFragment.headerPresent, `${ context } is missing the masthead used by the fragment-clearance contract.` );
-			assert( result.rootCauseFragment.headerPosition === 'sticky', `${ context } masthead is ${ result.rootCauseFragment.headerPosition || 'missing' }, not sticky.` );
-			assert(
-				result.rootCauseFragment.targetTop >= result.rootCauseFragment.headerBottom - 1 &&
-					result.rootCauseFragment.targetTop < viewport.height,
-				`${ context } did not scroll the root-cause proof section clear of the sticky header.`
-			);
-			assert( result.rootCauseFragment.headingOutlineUnchanged, `${ context } changed the heading outline during fragment focus.` );
 		}
+
+		if ( viewport.width >= 782 ) {
+			assert(
+				result.wcus.copy.right <= result.wcus.rail.left + 2,
+				context + ' does not render event copy left of the action rail.'
+			);
+		} else {
+			assert(
+				result.wcus.rail.top >= result.wcus.copy.bottom - 1,
+				context + ' does not stack event actions after event copy.'
+			);
+			for ( const action of result.wcus.actions ) {
+				assert(
+					action.width >= result.wcus.rail.width - 12,
+					context + ' contains an event action that does not fill its row.'
+				);
+			}
+		}
+
+		if ( viewport.width === 1024 && ! viewport.zoomPercent ) {
+			assert( result.opening.hero && result.opening.why, context + ' is missing opening-section geometry.' );
+			assert(
+				result.opening.hero.bottom <= viewport.height + 1,
+				context + ' does not keep the complete role proposition in the first 1000px.'
+			);
+		}
+
+		if ( viewport.zoomPercent === 200 ) {
+			assert(
+				result.wcus.rail.top >= result.wcus.copy.bottom - 1,
+				context + ' keeps compressed columns in the 200% zoom-equivalent reflow.'
+			);
+			assert(
+				result.scrollWidth <= result.clientWidth + 1,
+				context + ' overflows in the 200% zoom-equivalent reflow.'
+			);
+		}
+
+		assert( ! result.supportBrief, context + ' still renders the retired recruiter brief.' );
+		assert( result.dossier.kickers === 7, `${ context } renders ${ result.dossier.kickers } numbered kickers; the dossier has seven.` );
+		assert( result.dossier.fitRows === 5, `${ context } renders ${ result.dossier.fitRows } fit rows; the ledger holds the five with proof.` );
+		assert( result.dossier.gap, context + ' does not render the named gap outside the fit ledger.' );
+		assert( result.dossier.proofCards === 3, `${ context } renders ${ result.dossier.proofCards } proof cards; expected three.` );
+		assert( result.dossier.artifactCells === 6, `${ context } renders ${ result.dossier.artifactCells } incident artifacts; expected six.` );
+		assert( result.dossier.registerRows === 12, `${ context } renders ${ result.dossier.registerRows } register rows; the register publishes twelve.` );
+		assert(
+			result.longformCount >= 5,
+			context + ' does not render the dossier\'s long-form sections.'
+		);
+
+		// The filter is an enhancement over a complete register. Either it
+		// mounted — four states, a live status, and every row still shown
+		// because "All evidence" is the default — or it declined to mount and
+		// the register renders unfiltered. A mounted filter that starts by
+		// hiding evidence is the failure this pins.
+		assert(
+			result.dossier.registerFilterButtons === 0 || result.dossier.registerFilterButtons === 4,
+			`${ context } renders ${ result.dossier.registerFilterButtons } register filter controls; expected none or all four.`
+		);
+		assert(
+			result.dossier.registerVisibleRows === 12,
+			`${ context } hides ${ 12 - result.dossier.registerVisibleRows } register rows before the reader has filtered anything.`
+		);
+		if ( result.dossier.registerFilterButtons === 4 ) {
+			assert(
+				result.dossier.registerStatusLive === 'polite',
+				context + ' does not announce the filtered register count politely.'
+			);
+		}
+
+		if ( ! viewport.zoomPercent ) {
+			const heightBudget = DIGEST_HEIGHT_BUDGETS[ viewport.name ];
+			assert( heightBudget, context + ' has no dossier height budget.' );
+			assert(
+				result.documentHeight <= heightBudget,
+				`${ context } is ${ result.documentHeight }px tall; dossier runaway budget is ${ heightBudget }px.`
+			);
+		}
+
+		// The register, the four-part debugging proof, and the
+		// #root-cause-investigation fragment survive every Digest shape, so their
+		// geometry and focus contracts are asserted for whatever body is selected.
+		if ( viewport.width === 390 ) {
+			assert( result.evidenceRecord?.title && result.evidenceRecord.state && result.evidenceRecord.directEvidence, context + ' is missing compact evidence geometry.' );
+			assert(
+				Math.abs( result.evidenceRecord.title.top - result.evidenceRecord.state.top ) <= 24,
+				context + ' does not keep title and state in one compact evidence metadata row.'
+			);
+			assert(
+				result.evidenceRecord.directEvidence.top >=
+					Math.max( result.evidenceRecord.title.bottom, result.evidenceRecord.state.bottom ) - 1,
+				context + ' does not place direct evidence after title and state.'
+			);
+		}
+
+		if ( viewport.width === 320 ) {
+			assert( result.evidenceRecord?.title && result.evidenceRecord.state && result.evidenceRecord.directEvidence, context + ' is missing stacked evidence geometry.' );
+			assert(
+				result.evidenceRecord.state.top >= result.evidenceRecord.title.bottom - 1 &&
+					result.evidenceRecord.directEvidence.top >= result.evidenceRecord.state.bottom - 1,
+				context + ' does not stack title, state, and direct evidence at 320px.'
+			);
+		}
+
+		assert( result.proofItems.length === 4, `${ context } renders ${ result.proofItems.length } root-cause proof items; expected 4.` );
+		assert(
+			result.proofItems.map( ( item ) => item.label ).join( '|' ) === DIGEST_EXPECTATIONS.proofLabels.join( '|' ),
+			`${ context } changes the Signal → Diagnosis → Constraint → Result proof order.`
+		);
+		if ( viewport.width < 782 ) {
+			for ( let index = 1; index < result.proofItems.length; index++ ) {
+				assert(
+					result.proofItems[ index ].top >= result.proofItems[ index - 1 ].bottom - 1,
+					`${ context } does not stack proof item ${ index + 1 } below item ${ index }.`
+				);
+			}
+		}
+		assert( result.rootCauseFragment, `${ context } did not exercise #root-cause-investigation.` );
+		assert( result.rootCauseFragment.hash === '#root-cause-investigation', `${ context } did not retain the root-cause fragment hash.` );
+		assert( result.rootCauseFragment.focused, `${ context } did not focus the root-cause proof section.` );
+		assert( result.rootCauseFragment.tabindex === '-1', `${ context } did not keep fragment focus programmatic-only.` );
+		assert( result.rootCauseFragment.headerPresent, `${ context } is missing the masthead used by the fragment-clearance contract.` );
+		assert( result.rootCauseFragment.headerPosition === 'sticky', `${ context } masthead is ${ result.rootCauseFragment.headerPosition || 'missing' }, not sticky.` );
+		assert(
+			result.rootCauseFragment.targetTop >= result.rootCauseFragment.headerBottom - 1 &&
+				result.rootCauseFragment.targetTop < viewport.height,
+			`${ context } did not scroll the root-cause proof section clear of the sticky header.`
+		);
+		assert( result.rootCauseFragment.headingOutlineUnchanged, `${ context } changed the heading outline during fragment focus.` );
 	} else {
 		assert( result.fragment, `${ context } is missing #resume-keyword-bank.` );
 		assert( result.fragment.tagName === 'SECTION', `${ context } assigns #resume-keyword-bank to ${ result.fragment.tagName}, not SECTION.` );
@@ -1329,11 +1265,7 @@ async function inspectPage( cdp, page, viewport ) {
 				);
 			}
 		}
-		if (
-			page.name === 'digest' &&
-			DIGEST_EXPECTATIONS.wcusActions.length > 0 &&
-			! DIGEST_EXPECTATIONS.eventFirst
-		) {
+		if ( page.name === 'digest' && DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
 			const initialOutline = await evaluate( cdp, sessionId, `Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')` );
 			await evaluate( cdp, sessionId, `location.hash = 'root-cause-investigation'` );
 			await wait( 100 );
@@ -1443,7 +1375,7 @@ async function verifyRenderedContracts() {
 				const result = await inspectPage( cdp, page, viewport );
 				assertPageMetrics( result, page, viewport );
 				const heightSummary =
-					page.name === 'digest' && DIGEST_EXPECTATIONS.eventFirst && ! viewport.zoomPercent
+					page.name === 'digest' && ! viewport.zoomPercent
 						? `, document height ${ result.documentHeight }px/${ DIGEST_HEIGHT_BUDGETS[ viewport.name ] }px budget`
 						: '';
 				console.log(

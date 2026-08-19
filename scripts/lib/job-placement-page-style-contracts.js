@@ -26,10 +26,17 @@ const DIGEST_OPENING_CONTRACTS = [
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--6)' },
 	},
 	{
+		// The shared plate presentation every WordCamp callout builds on. The
+		// dossier's --event-first modifier overrides margin-block-start and
+		// background; the base rule stays pinned here so retiring the older
+		// hero-contained panel cannot quietly drop it.
 		selector: '.hp-wcus-callout',
 		declarations: {
 			'--hp-plate-pad': 'var(--wp--preset--spacing--6)',
+			'margin-block-start': 'var(--wp--preset--spacing--6)',
 			padding: 'var(--hp-plate-pad)',
+			'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
+			background: 'color-mix(in srgb, var(--wp--preset--color--parchment-100) 88%, var(--wp--preset--color--gold-100))',
 		},
 	},
 	{
