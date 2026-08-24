@@ -1,4 +1,5 @@
 {
+	"buildPath": "comp",
   "hook": {
     "enabled": true,
     "limits": {

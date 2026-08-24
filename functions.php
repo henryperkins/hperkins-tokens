@@ -1053,3 +1053,26 @@ function hperkins_tokens_cleanup_legacy_global_styles() {
 	update_option( $option_key, gmdate( 'c' ) );
 }
 add_action( 'after_switch_theme', 'hperkins_tokens_cleanup_legacy_global_styles' );
+
+/**
+ * Load the progressive About resume controller on every route.
+ *
+ * It self-declines unless the current document contains .hp-about-resume, which
+ * also lets it recover after Interactivity Router document swaps.
+ */
+add_action(
+	'wp_enqueue_scripts',
+	static function () {
+		$script_path = get_stylesheet_directory() . '/assets/js/about-resume.js';
+
+		wp_enqueue_script(
+			'hperkins-about-resume',
+			get_stylesheet_directory_uri() . '/assets/js/about-resume.js',
+			array(),
+			filemtime( $script_path ),
+			true
+		);
+		wp_script_add_data( 'hperkins-about-resume', 'strategy', 'defer' );
+	},
+	30
+);

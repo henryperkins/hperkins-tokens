@@ -1251,3 +1251,168 @@ module.exports = {
 	verifyCssOwnership,
 	verifyPatternAdapter,
 };
+
+const ABOUT_V2_EVIDENCE = {
+	'Authored the Content Resizing and Title Generation experiment docs': [ 'Documentation', 'Developer enablement' ],
+	'Reported a defect a maintainer then fixed and shipped': [ 'Escalation triage' ],
+	'Built and released the Codex provider other developers install': [ 'Plugin development', 'Provider integrations', 'Sidecar debugging', 'Request logging', 'Release packaging', 'PHPStan', 'Plugin Check', 'PHP', 'AI Client' ],
+	'Root-caused a production-only focus-ring regression': [ 'CSS cascade', 'Browser debugging', 'Release packaging', 'Git' ],
+	'Proposed the AI-skills policy and wrote its reference implementation': [ 'AI Client', 'Abilities API', 'MCP', 'Documentation', 'Developer enablement' ],
+	'Finite-vector validation and model-aware sampling, with regression tests': [ 'PHP', 'Provider integrations', 'AI Client' ],
+	'Reported the request-logging gap, then integration-tested the fix': [ 'Request logging', 'Sidecar debugging', 'Provider integrations', 'Escalation triage' ],
+	'Independent Technology Consultant': [ 'Plugin development', 'Gutenberg', 'REST API', 'WP-CLI', 'JavaScript', 'TypeScript', 'React', 'CSS cascade', 'WooCommerce', 'Cloudflare Workers', 'Prompt design', 'Provider integrations', 'Documentation', 'Release packaging', 'Git', 'GitHub Actions', 'Composer' ],
+	'Shift Supervisor': [ 'Escalation triage' ],
+	'Happiness Engineer': [ 'HTTP', 'DNS', 'Documentation', 'Escalation triage', 'Browser debugging' ],
+	'Developer Community Manager': [ 'Developer enablement', 'Documentation' ]
+};
+
+const ABOUT_V2_TERM_LABELS = {
+	'plugin-development': 'Plugin development',
+	gutenberg: 'Gutenberg',
+	'ai-client': 'AI Client',
+	'abilities-api': 'Abilities API',
+	'rest-api': 'REST API',
+	'wp-cli': 'WP-CLI',
+	php: 'PHP',
+	javascript: 'JavaScript',
+	typescript: 'TypeScript',
+	react: 'React',
+	'css-cascade': 'CSS cascade',
+	'cloudflare-workers': 'Cloudflare Workers',
+	woocommerce: 'WooCommerce',
+	http: 'HTTP',
+	dns: 'DNS',
+	'browser-debugging': 'Browser debugging',
+	'provider-integrations': 'Provider integrations',
+	mcp: 'MCP',
+	'prompt-design': 'Prompt design',
+	'request-logging': 'Request logging',
+	'sidecar-debugging': 'Sidecar debugging',
+	git: 'Git',
+	'github-actions': 'GitHub Actions',
+	'release-packaging': 'Release packaging',
+	'plugin-check': 'Plugin Check',
+	phpstan: 'PHPStan',
+	composer: 'Composer',
+	documentation: 'Documentation',
+	'developer-enablement': 'Developer enablement',
+	'escalation-triage': 'Escalation triage'
+};
+
+function aboutV2Assert(condition, message) {
+	if (!condition) {
+		throw new Error(message);
+	}
+}
+
+function aboutV2Text(fragment) {
+	return String(fragment || '')
+		.replace(/<!--[\s\S]*?-->/g, '')
+		.replace(/<[^>]+>/g, ' ')
+		.replace(/&amp;/g, '&')
+		.replace(/&mdash;|&#8212;/g, '—')
+		.replace(/&ndash;|&#8211;/g, '–')
+		.replace(/&#(\d+);/g, function (_match, code) {
+			return String.fromCharCode(Number(code));
+		})
+		.replace(/\s+/g, ' ')
+		.trim();
+}
+
+function aboutV2Classes(openingTag) {
+	const match = String(openingTag || '').match(/\bclass="([^"]*)"/);
+	return match ? match[1].split(/\s+/).filter(Boolean) : [];
+}
+
+function aboutV2Terms(openingTag) {
+	return aboutV2Classes(openingTag)
+		.filter(function (className) {
+			return className.indexOf('hp-term--') === 0;
+		})
+		.map(function (className) {
+			const slug = className.slice('hp-term--'.length);
+			return ABOUT_V2_TERM_LABELS[slug] || slug;
+		});
+}
+
+function aboutV2RowRecords(body) {
+	const records = [];
+	const pattern = /(<div\b[^>]*\bhp-about-index-row\b[^>]*>)([\s\S]*?)<\/div>/g;
+	let match;
+
+	while ((match = pattern.exec(body)) !== null) {
+		const heading = match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/);
+		records.push({
+			title: aboutV2Text(heading ? heading[1] : ''),
+			terms: aboutV2Terms(match[1])
+		});
+	}
+
+	return records;
+}
+
+function verifyAboutV2Body(body, options = {}) {
+	const label = options.label || 'About v2 body';
+	const source = String(body || '');
+	const sectionIds = [ 'contributions', 'experience', 'skills', 'showcase', 'contact' ];
+	const sectionOrder = sectionIds.map(function (id) {
+		return source.indexOf('id="' + id + '"');
+	});
+	const contributionCount = (source.match(/class="[^"]*\bhp-about-contribution\b/g) || []).length;
+	const currentRoleCount = (source.match(/class="[^"]*\bhp-about-role\b[^"]*\bis-current\b/g) || []).length;
+	const earlierRoleCount = (source.match(/class="[^"]*\bhp-about-role\b[^"]*\bis-earlier\b/g) || []).length;
+	const skillTermCount = (source.match(/class="[^"]*\bhp-about-skill-term\b[^"]*"/g) || []).length;
+	const h1Matches = source.match(/<h1\b[\s\S]*?<\/h1>/g) || [];
+	const rows = aboutV2RowRecords(source);
+	const counts = {};
+
+	aboutV2Assert(source.includes('hp-about-resume'), label + ': missing hp-about-resume root.');
+	aboutV2Assert(!source.includes('WordCamp US 2026'), label + ': expired WordCamp US availability copy must not return.');
+	aboutV2Assert(!/<!--\s+wp:html\b/.test(source), label + ': raw HTML blocks are not allowed.');
+	aboutV2Assert(!/<script\b/i.test(source), label + ': inline scripts are not allowed.');
+	aboutV2Assert(h1Matches.length === 1 && aboutV2Text(h1Matches[0]) === 'Henry Perkins', label + ': expected one Henry Perkins H1.');
+	aboutV2Assert(sectionOrder.every(function (offset) { return offset >= 0; }), label + ': one or more required sections are missing.');
+	aboutV2Assert(sectionOrder.every(function (offset, index) { return index === 0 || offset > sectionOrder[index - 1]; }), label + ': sections are not in the required order.');
+	aboutV2Assert(contributionCount === 7, label + ': expected 7 contribution rows, found ' + contributionCount + '.');
+	aboutV2Assert(currentRoleCount === 4, label + ': expected 4 primary experience rows, found ' + currentRoleCount + '.');
+	aboutV2Assert(earlierRoleCount === 3, label + ': expected 3 earlier roles, found ' + earlierRoleCount + '.');
+	aboutV2Assert(skillTermCount === 30, label + ': expected 30 skill terms, found ' + skillTermCount + '.');
+	aboutV2Assert(rows.length === 11, label + ': expected 11 evidence-index rows, found ' + rows.length + '.');
+
+	rows.forEach(function (row) {
+		const expected = ABOUT_V2_EVIDENCE[row.title];
+		aboutV2Assert(expected, label + ': unexpected evidence row "' + row.title + '".');
+		aboutV2Assert(
+			JSON.stringify(row.terms.slice().sort()) === JSON.stringify(expected.slice().sort()),
+			label + ': evidence terms drifted for "' + row.title + '".'
+		);
+		row.terms.forEach(function (term) {
+			counts[term] = (counts[term] || 0) + 1;
+		});
+	});
+
+	aboutV2Assert(Object.keys(ABOUT_V2_EVIDENCE).every(function (title) {
+		return rows.some(function (row) { return row.title === title; });
+	}), label + ': one or more required evidence rows are missing.');
+
+	Object.keys(ABOUT_V2_TERM_LABELS).forEach(function (slug) {
+		const labelText = ABOUT_V2_TERM_LABELS[slug];
+		const termPattern = new RegExp('class="[^"]*\\bhp-about-skill-term\\b[^"]*\\bhp-term--' + slug + '\\b[^"]*"');
+		aboutV2Assert(termPattern.test(source), label + ': missing skill term "' + labelText + '".');
+	});
+
+	aboutV2Assert(source.includes('6/6 backed above'), label + ': WordPress coverage label is missing.');
+	aboutV2Assert(source.includes('9/9 backed above'), label + ': Workflow coverage label is missing.');
+
+	return {
+		label,
+		contributionCount,
+		currentRoleCount,
+		earlierRoleCount,
+		skillTermCount,
+		counts,
+		sectionOrder: sectionIds
+	};
+}
+
+module.exports.verifyAboutV2Body = verifyAboutV2Body;

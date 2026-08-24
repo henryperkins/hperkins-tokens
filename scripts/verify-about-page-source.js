@@ -22,6 +22,7 @@ const {
 } = require( './lib/page-content-contract' );
 const {
 	verifyAboutBody,
+	verifyAboutV2Body,
 	verifyCssOwnership,
 	verifyPatternAdapter,
 } = require( './lib/about-page-contract' );
@@ -37,6 +38,32 @@ function assert( condition, message ) {
 
 function read( relative ) {
 	return fs.readFileSync( path.join( themeRoot, relative ), 'utf8' );
+}
+
+function verifySelectedAboutBody( body, options ) {
+	if ( ! body.includes( 'hp-about-resume' ) ) {
+		return verifyAboutBody( body, options );
+	}
+
+	const report = verifyAboutV2Body( body, options );
+	const visibleText = body
+		.replace( /<!--[\s\S]*?-->/g, ' ' )
+		.replace( /<[^>]+>/g, ' ' )
+		.replace( /&[a-z0-9#]+;/gi, ' ' )
+		.replace( /\s+/g, ' ' )
+		.trim();
+
+	return {
+		...report,
+		wordCount: visibleText ? visibleText.split( ' ' ).length : 0,
+		sectionCounts: {
+			contributions: report.contributionCount,
+			experience: report.currentRoleCount + report.earlierRoleCount,
+			skills: report.skillTermCount,
+			showcase: ( body.match( /class="[^"]*\bhp-about-showcase-card\b/g ) || [] ).length,
+			contact: 1,
+		},
+	};
 }
 
 function main() {
@@ -71,7 +98,7 @@ function main() {
 		? 'content/page-drafts/about.html'
 		: 'content/page-snapshots/about.html';
 	const selected = read( selectedPath );
-	const report = verifyAboutBody( selected, { label: selectedPath } );
+	const report = verifySelectedAboutBody( selected, { label: selectedPath } );
 	console.log(
 		`${ selectedPath }: ${ report.wordCount } visible words (${ Object.entries( report.sectionCounts )
 			.map( ( [ section, count ] ) => `${ section } ${ count }` )

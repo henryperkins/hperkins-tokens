@@ -3463,3 +3463,1167 @@ p.hp-contact-form__hint {
     gap: var(--wp--preset--spacing--7);
   }
 }
+
+/* About v2: resume-first evidence index. Kept alongside the accepted About CSS until publication. */
+.hp-about-template .hp-about-resume {
+	--hp-about-gutter: clamp(var(--wp--preset--spacing--4), 4vw, var(--wp--preset--spacing--6));
+	--hp-about-rule: color-mix(in srgb, var(--wp--preset--color--green-700) 22%, transparent);
+	--hp-about-muted: color-mix(in srgb, var(--wp--preset--color--ink-700) 68%, transparent);
+	--hp-about-surface: color-mix(in srgb, var(--wp--preset--color--parchment-100) 88%, var(--wp--preset--color--gold-500));
+	box-sizing: border-box;
+	width: min(72rem, 100%);
+	max-width: 72rem;
+	margin-inline: auto;
+	padding: 0 var(--hp-about-gutter) var(--wp--preset--spacing--9);
+	color: var(--wp--preset--color--ink-700);
+}
+
+.hp-about-resume :where(.wp-block-group, .wp-block-image, .wp-block-list, p, h1, h2, h3, h4) {
+	margin-block-start: 0;
+}
+
+.hp-about-resume a,
+.hp-about-resume button {
+	-webkit-tap-highlight-color: transparent;
+}
+
+.hp-about-resume :where(a, button):focus-visible {
+	outline: 3px solid var(--wp--preset--color--gold-500);
+	outline-offset: 2px;
+}
+
+.hp-about-v2-hero {
+	display: block;
+	padding-block-start: var(--wp--preset--spacing--7);
+	background: transparent;
+}
+
+.hp-about-v2-hero__identity {
+	display: grid;
+	grid-template-columns: 5rem minmax(0, 1fr);
+	gap: var(--wp--preset--spacing--5);
+	align-items: center;
+}
+
+.hp-about-v2-hero__portrait {
+	position: relative;
+	width: 5rem;
+	height: 5rem;
+	margin: 0;
+	border: 1px solid var(--hp-about-rule);
+	border-radius: 50%;
+	overflow: hidden;
+	background: var(--wp--preset--color--gold-500);
+}
+
+.hp-about-v2-hero__portrait::before {
+	content: "HP";
+	position: absolute;
+	inset: 0;
+	display: grid;
+	place-items: center;
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--lg);
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-v2-hero__portrait img {
+	position: relative;
+	z-index: 1;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.hp-about-kicker,
+.hp-about-section__eyebrow,
+.hp-about-rail__label,
+.hp-about-showcase-card__type {
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	line-height: 1.35;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-v2-hero h1 {
+	margin-bottom: 0.2rem;
+	font-family: var(--wp--preset--font-family--display);
+	font-size: clamp(2.5rem, 6vw, 4rem);
+	font-weight: 600;
+	line-height: 0.92;
+	letter-spacing: -0.035em;
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-v2-hero__location,
+.hp-about-role__dates,
+.hp-about-role__org,
+.hp-about-contribution__meta {
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.55;
+	color: var(--hp-about-muted);
+}
+
+.hp-about-v2-hero__positioning {
+	max-width: 36rem;
+	margin-top: var(--wp--preset--spacing--3);
+	font-family: var(--wp--preset--font-family--body);
+	font-size: var(--wp--preset--font-size--lg);
+	line-height: 1.55;
+	text-wrap: balance;
+}
+
+.hp-about-v2-hero__availability {
+	max-width: 28rem;
+	margin-top: var(--wp--preset--spacing--5);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+	line-height: 1.65;
+	color: var(--hp-about-muted);
+}
+
+.hp-about-v2-hero__actions,
+.hp-about-contact__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--2);
+	align-items: center;
+}
+
+.hp-about-v2-hero__actions {
+	margin-top: var(--wp--preset--spacing--5);
+	gap: var(--wp--preset--spacing--5);
+}
+
+.hp-about-action,
+.hp-about-copy {
+	display: inline-flex;
+	min-height: 2.75rem;
+	align-items: center;
+	justify-content: center;
+	padding: 0.65rem 0.9rem;
+	border: 1px solid var(--wp--preset--color--green-700);
+	border-radius: 2px;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	font-weight: 700;
+	line-height: 1.2;
+	text-decoration: none;
+	color: var(--wp--preset--color--green-700);
+	background: transparent;
+	cursor: pointer;
+}
+
+.hp-about-v2-hero__actions .hp-about-action {
+	min-height: 2.75rem;
+	padding-inline: 0;
+	border: 0;
+	font-size: var(--wp--preset--font-size--xs);
+	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.22em;
+	color: var(--wp--preset--color--river-500);
+	background: transparent;
+}
+
+.hp-about-v2-hero__actions .hp-about-action:hover {
+	color: var(--wp--preset--color--river-700);
+	background: transparent;
+}
+
+.hp-about-v2-hero__actions .hp-about-copy {
+	margin-inline-start: calc(-1 * var(--wp--preset--spacing--4));
+	padding-inline: 0.45rem;
+}
+
+.hp-about-v2-hero .hp-about-kicker {
+	color: var(--wp--preset--color--gold-700);
+}
+
+.hp-about-action:hover,
+.hp-about-copy:hover {
+	color: var(--wp--preset--color--parchment-100);
+	background: var(--wp--preset--color--green-700);
+}
+
+.hp-about-action--primary {
+	color: var(--wp--preset--color--parchment-100);
+	background: var(--wp--preset--color--green-700);
+}
+
+.hp-about-copy {
+	margin-inline-start: calc(-1 * var(--wp--preset--spacing--1));
+	border-color: var(--hp-about-rule);
+}
+
+.hp-about-impact-strip {
+	display: grid;
+	gap: 1px;
+	margin-top: var(--wp--preset--spacing--10);
+	border: 1px solid var(--hp-about-rule);
+	background: var(--hp-about-rule);
+}
+
+.hp-about-v2-impact {
+	padding: var(--wp--preset--spacing--4);
+	background: var(--wp--preset--color--parchment-100);
+}
+
+.hp-about-v2-impact__value {
+	font-family: var(--wp--preset--font-family--display);
+	font-size: clamp(2.25rem, 8vw, 4rem);
+	font-weight: 600;
+	line-height: 0.9;
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-v2-impact__label {
+	margin-top: var(--wp--preset--spacing--1);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.4;
+	color: var(--hp-about-muted);
+}
+
+.hp-about-v2-layout {
+	display: grid;
+	gap: clamp(var(--wp--preset--spacing--5), 7vw, var(--wp--preset--spacing--7));
+	align-items: start;
+	margin-top: var(--wp--preset--spacing--5);
+}
+
+.hp-about-rail {
+	position: sticky;
+	top: var(--hp-about-header-height, 0);
+	z-index: 8;
+	margin-inline: calc(-1 * var(--hp-about-gutter));
+	padding: var(--wp--preset--spacing--2) var(--hp-about-gutter);
+	border-block: 1px solid var(--hp-about-rule);
+	overflow-x: auto;
+	background: color-mix(in srgb, var(--wp--preset--color--parchment-100) 94%, transparent);
+	backdrop-filter: blur(0.7rem);
+}
+
+.hp-about-rail__label {
+	display: none;
+}
+
+.hp-about-rail__links {
+	display: flex;
+	width: max-content;
+	gap: var(--wp--preset--spacing--1);
+	padding: 0;
+	list-style: none;
+}
+
+.hp-about-rail__links li {
+	margin: 0;
+}
+
+.hp-about-rail__links a,
+.hp-about-print button {
+	display: inline-flex;
+	min-height: 2.75rem;
+	align-items: center;
+	padding: 0.55rem 0.7rem;
+	border: 0;
+	border-bottom: 2px solid transparent;
+	border-radius: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	font-weight: 700;
+	line-height: 1;
+	text-decoration: none;
+	white-space: nowrap;
+	color: var(--hp-about-muted);
+	background: transparent;
+	cursor: pointer;
+}
+
+.hp-about-rail__links a:hover,
+.hp-about-rail__links a.is-active,
+.hp-about-rail__links a[aria-current="location"],
+.hp-about-print button:hover {
+	border-bottom-color: var(--wp--preset--color--gold-500);
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-print {
+	display: flex;
+	width: max-content;
+	gap: var(--wp--preset--spacing--1);
+}
+
+.hp-about-print__submit,
+.hp-about-print__exit,
+.hp-about-print.is-ready .hp-about-print__prepare {
+	display: none;
+}
+
+.hp-about-print.is-ready :where(.hp-about-print__submit, .hp-about-print__exit) {
+	display: inline-flex;
+}
+
+.hp-about-v2-main {
+	min-width: 0;
+}
+
+.hp-about-section {
+	scroll-margin-top: calc(var(--hp-about-header-height, 0px) + 4.5rem);
+	padding-block: clamp(var(--wp--preset--spacing--6), 10vw, var(--wp--preset--spacing--8));
+	border-top: 1px solid var(--hp-about-rule);
+}
+
+.hp-about-section:first-child {
+	border-top-width: 3px;
+}
+
+.hp-about-section h2 {
+	max-width: 44rem;
+	margin-block: var(--wp--preset--spacing--2) var(--wp--preset--spacing--4);
+	font-family: var(--wp--preset--font-family--display);
+	font-size: clamp(2.3rem, 6vw, 4.4rem);
+	font-weight: 600;
+	line-height: 0.98;
+	letter-spacing: -0.03em;
+	text-wrap: balance;
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-section__intro {
+	max-width: 46rem;
+	margin-bottom: var(--wp--preset--spacing--5);
+	font-family: var(--wp--preset--font-family--body);
+	font-size: clamp(1.1rem, 2vw, 1.35rem);
+	line-height: 1.55;
+}
+
+.hp-about-contribution {
+	display: grid;
+	gap: var(--wp--preset--spacing--2);
+	padding-block: var(--wp--preset--spacing--5);
+	border-top: 1px solid var(--hp-about-rule);
+	border-left: 3px solid var(--wp--preset--color--green-700);
+	padding-inline-start: var(--wp--preset--spacing--4);
+}
+
+.hp-about-contribution:last-child {
+	border-bottom: 1px solid var(--hp-about-rule);
+}
+
+.hp-about-contribution.is-review {
+	border-left-color: var(--wp--preset--color--gold-500);
+}
+
+.hp-about-contribution__register {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--2);
+	align-items: center;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.4;
+}
+
+.hp-about-contribution__status {
+	padding: 0.25rem 0.45rem;
+	border-radius: 2px;
+	font-weight: 700;
+	color: var(--wp--preset--color--parchment-100);
+	background: var(--wp--preset--color--green-700);
+}
+
+.hp-about-contribution.is-review .hp-about-contribution__status {
+	color: var(--wp--preset--color--green-700);
+	background: var(--wp--preset--color--gold-500);
+}
+
+.hp-about-contribution__repo {
+	color: var(--hp-about-muted);
+}
+
+.hp-about-contribution h3,
+.hp-about-role h3,
+.hp-about-showcase-card h3 {
+	font-family: var(--wp--preset--font-family--label);
+	font-size: clamp(1.2rem, 3vw, 1.55rem);
+	font-weight: 400;
+	line-height: 1.28;
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-contribution__links,
+.hp-about-showcase-card__link {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--3);
+}
+
+.hp-about-contribution__links a,
+.hp-about-showcase-card__link a {
+	display: inline-flex;
+	min-height: 2.75rem;
+	align-items: center;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	font-weight: 700;
+	color: var(--wp--preset--color--green-700);
+	text-underline-offset: 0.22em;
+}
+
+.hp-about-role {
+	display: grid;
+	gap: var(--wp--preset--spacing--2);
+	margin-top: var(--wp--preset--spacing--4);
+	padding: var(--wp--preset--spacing--4) 0 var(--wp--preset--spacing--4) var(--wp--preset--spacing--4);
+	border-left: 3px solid var(--wp--preset--color--green-700);
+	border-bottom: 1px solid var(--hp-about-rule);
+}
+
+.hp-about-role .wp-block-list {
+	margin-block: var(--wp--preset--spacing--2) 0;
+	padding-inline-start: 1.25rem;
+	line-height: 1.6;
+}
+
+.hp-about-role .wp-block-list li + li {
+	margin-top: var(--wp--preset--spacing--2);
+}
+
+.hp-about-role__dates {
+	grid-row: 2;
+}
+
+.hp-about-role__org {
+	grid-row: 3;
+}
+
+.hp-about-earlier__heading {
+	margin-top: var(--wp--preset--spacing--6);
+	font-family: var(--wp--preset--font-family--label);
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-earlier__toggle,
+.hp-about-skills__clear {
+	display: inline-flex;
+	min-height: 2.75rem;
+	align-items: center;
+	margin-top: var(--wp--preset--spacing--4);
+	padding: 0.55rem 0.8rem;
+	border: 1px solid var(--wp--preset--color--green-700);
+	border-radius: 2px;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	font-weight: 700;
+	color: var(--wp--preset--color--green-700);
+	background: transparent;
+	cursor: pointer;
+}
+
+.hp-about-skills__controls {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--3);
+	align-items: center;
+	margin-bottom: var(--wp--preset--spacing--4);
+	padding-block: var(--wp--preset--spacing--3);
+	border-block: 1px solid var(--hp-about-rule);
+}
+
+.hp-about-skills__readout {
+	flex: 1 1 28rem;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.5;
+	color: var(--hp-about-muted);
+}
+
+.hp-about-skills__clear {
+	margin-top: 0;
+}
+
+.hp-about-skill-groups {
+	display: grid;
+	gap: var(--wp--preset--spacing--5);
+}
+
+.hp-about-skill-group {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: var(--wp--preset--spacing--1) var(--wp--preset--spacing--3);
+	align-items: baseline;
+	padding-top: var(--wp--preset--spacing--3);
+	border-top: 3px solid var(--wp--preset--color--green-700);
+}
+
+.hp-about-skill-group h3 {
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--lg);
+	font-weight: 400;
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-skill-group__coverage {
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	color: var(--hp-about-muted);
+}
+
+.hp-about-skill-term {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 2.5rem;
+	gap: var(--wp--preset--spacing--2);
+	align-items: stretch;
+	border-bottom: 1px solid var(--hp-about-rule);
+}
+
+.hp-about-skill-term__label,
+.hp-about-skill-term__count {
+	min-height: 2.75rem;
+}
+
+.hp-about-skill-term__label {
+	display: flex;
+	align-items: stretch;
+}
+
+.hp-about-skill-term__button {
+	width: 100%;
+	min-height: 2.75rem;
+	padding: 0.55rem 0.3rem;
+	border: 0;
+	border-radius: 2px;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: var(--wp--preset--font-size--md);
+	line-height: 1.3;
+	text-align: left;
+	color: var(--wp--preset--color--ink-700);
+	background: transparent;
+	cursor: pointer;
+}
+
+.hp-about-skill-term__button:hover,
+.hp-about-skill-term__button[aria-pressed="true"] {
+	padding-inline: 0.65rem;
+	color: var(--wp--preset--color--parchment-100);
+	background: var(--wp--preset--color--green-700);
+}
+
+.hp-about-skill-term__button:disabled {
+	cursor: not-allowed;
+	opacity: 0.45;
+}
+
+.hp-about-skill-term__count {
+	display: grid;
+	place-items: center;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	color: var(--hp-about-muted);
+}
+
+.hp-about-index-row {
+	transition: opacity 140ms ease;
+}
+
+.hp-about-index-row.is-dimmed {
+	opacity: 0.34;
+}
+
+.hp-about-education {
+	display: grid;
+	gap: var(--wp--preset--spacing--4);
+	margin-top: var(--wp--preset--spacing--7);
+	padding-top: var(--wp--preset--spacing--5);
+	border-top: 1px solid var(--hp-about-rule);
+}
+
+.hp-about-education > h3 {
+	font-family: var(--wp--preset--font-family--display);
+	font-size: clamp(1.8rem, 4vw, 2.7rem);
+	font-weight: 600;
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-education__item {
+	padding-left: var(--wp--preset--spacing--4);
+	border-left: 3px solid var(--wp--preset--color--gold-500);
+}
+
+.hp-about-education__item h4 {
+	font-family: var(--wp--preset--font-family--label);
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-showcase__grid {
+	display: grid;
+	gap: 1px;
+	margin-top: var(--wp--preset--spacing--5);
+	border: 1px solid var(--hp-about-rule);
+	background: var(--hp-about-rule);
+}
+
+.hp-about-showcase-card {
+	display: flex;
+	min-height: 17rem;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--3);
+	padding: clamp(var(--wp--preset--spacing--4), 5vw, var(--wp--preset--spacing--6));
+	background:
+		linear-gradient(145deg, transparent 62%, color-mix(in srgb, var(--wp--preset--color--gold-500) 12%, transparent)),
+		var(--wp--preset--color--parchment-100);
+}
+
+.hp-about-showcase-card > p:not(.hp-about-showcase-card__type, .hp-about-showcase-card__link) {
+	line-height: 1.55;
+}
+
+.hp-about-showcase-card__link {
+	margin-top: auto;
+}
+
+.hp-about-contact {
+	margin-bottom: var(--wp--preset--spacing--7);
+	padding: clamp(var(--wp--preset--spacing--5), 8vw, var(--wp--preset--spacing--7));
+	border: 3px solid var(--wp--preset--color--green-700);
+	background:
+		linear-gradient(120deg, color-mix(in srgb, var(--wp--preset--color--gold-500) 16%, transparent), transparent 54%),
+		var(--hp-about-surface);
+}
+
+.hp-about-contact__lede {
+	max-width: 42rem;
+	margin-bottom: var(--wp--preset--spacing--5);
+	font-family: var(--wp--preset--font-family--body);
+	font-size: clamp(1.2rem, 2.5vw, 1.55rem);
+	line-height: 1.5;
+}
+
+.hp-about-resume.is-print-mode .hp-about-rail,
+.hp-about-resume.is-print-mode .hp-about-showcase,
+.hp-about-resume.is-print-mode .hp-about-contact,
+.hp-about-resume.is-print-mode .hp-about-skills__controls,
+.hp-about-resume.is-print-mode .hp-about-earlier__toggle {
+	display: none;
+}
+
+.hp-about-resume.is-print-mode .hp-about-v2-layout {
+	display: block;
+}
+
+.hp-about-resume.is-print-mode .hp-about-earlier[hidden] {
+	display: block;
+}
+
+@media (min-width: 40rem) {
+	.hp-about-impact-strip {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+
+	.hp-about-contribution {
+		grid-template-columns: minmax(9rem, 0.42fr) minmax(0, 1fr);
+		column-gap: var(--wp--preset--spacing--5);
+	}
+
+	.hp-about-contribution__register,
+	.hp-about-contribution__meta {
+		grid-column: 1;
+	}
+
+	.hp-about-contribution h3,
+	.hp-about-contribution__links {
+		grid-column: 2;
+	}
+
+	.hp-about-contribution h3 {
+		grid-row: 1 / span 2;
+	}
+
+	.hp-about-role {
+		grid-template-columns: minmax(0, 1fr) 9rem;
+	}
+
+	.hp-about-role h3,
+	.hp-about-role__org,
+	.hp-about-role .wp-block-list,
+	.hp-about-role > p:not(.hp-about-role__dates, .hp-about-role__org) {
+		grid-column: 1;
+	}
+
+	.hp-about-role__dates {
+		grid-column: 2;
+		grid-row: 1;
+		text-align: right;
+	}
+
+	.hp-about-showcase__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.hp-about-showcase-card--wide {
+		grid-column: 1 / -1;
+		min-height: 14rem;
+	}
+
+	.hp-about-education {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.hp-about-education > h3 {
+		grid-column: 1 / -1;
+	}
+}
+
+@media (min-width: 64rem) {
+	.hp-about-v2-layout {
+		grid-template-columns: 13rem minmax(0, 1fr);
+	}
+
+	.hp-about-rail {
+		top: calc(var(--hp-about-header-height, 0px) + var(--wp--preset--spacing--4));
+		margin-inline: 0;
+		padding: var(--wp--preset--spacing--3) 0 0;
+		border-block: 0;
+		border-top: 3px solid var(--wp--preset--color--green-700);
+		overflow: visible;
+		background: transparent;
+		backdrop-filter: none;
+	}
+
+	.hp-about-rail__label {
+		display: block;
+		margin-bottom: var(--wp--preset--spacing--2);
+	}
+
+	.hp-about-rail__links,
+	.hp-about-print {
+		display: grid;
+		width: 100%;
+		gap: 0;
+	}
+
+	.hp-about-rail__links a,
+	.hp-about-print button {
+		width: 100%;
+		justify-content: flex-start;
+		padding-inline: 0;
+	}
+
+	.hp-about-skill-group {
+		grid-template-columns: 11rem minmax(0, 1fr) auto;
+	}
+
+	.hp-about-skill-group h3 {
+		grid-row: 1 / span 5;
+	}
+
+	.hp-about-skill-group__coverage {
+		grid-column: 3;
+		grid-row: 1;
+	}
+
+	.hp-about-skill-term {
+		grid-column: 2 / -1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hp-about-index-row {
+		transition: none;
+	}
+
+	.hp-about-resume {
+		scroll-behavior: auto;
+	}
+}
+
+@media print {
+	.hp-about-template .hp-about-resume {
+		width: 100%;
+		padding: 0;
+		font-size: 10pt;
+	}
+
+	.hp-about-resume :where(.hp-about-rail, .hp-about-showcase, .hp-about-contact, .hp-about-skills__controls, .hp-about-earlier__toggle, .hp-about-copy) {
+		display: none !important;
+	}
+
+	.hp-about-resume .hp-about-v2-layout {
+		display: block;
+	}
+
+	.hp-about-resume .hp-about-earlier[hidden] {
+		display: block !important;
+	}
+
+	.hp-about-resume .hp-about-index-row {
+		break-inside: avoid;
+		opacity: 1 !important;
+	}
+
+	.hp-about-resume .hp-about-v2-hero,
+	.hp-about-resume .hp-about-section {
+		padding-block: 1rem;
+	}
+
+	.hp-about-resume a {
+		color: currentColor;
+		text-decoration: none;
+	}
+}
+
+/* About v2 reviewed handoff fidelity ------------------------------------- */
+.hp-about-resume .hp-about-rail {
+	display: flex;
+	align-items: center;
+	gap: 0.45rem;
+	min-width: 0;
+	padding-block: 0.35rem;
+	border-block: 0 1px solid color-mix(in srgb, var(--wp--preset--color--gold-500) 34%, transparent);
+	background: color-mix(in srgb, var(--wp--preset--color--parchment-100) 96%, white);
+	overflow-x: auto;
+	scrollbar-width: none;
+}
+
+.hp-about-resume .hp-about-rail::-webkit-scrollbar {
+	display: none;
+}
+
+.hp-about-resume .hp-about-rail__label {
+	display: none;
+}
+
+.hp-about-resume .hp-about-rail__links,
+.hp-about-resume .hp-about-print {
+	display: flex;
+	flex: 0 0 auto;
+	align-items: center;
+	gap: 0.45rem;
+	margin: 0;
+	padding: 0;
+}
+
+.hp-about-resume .hp-about-rail__links {
+	list-style: none;
+}
+
+.hp-about-resume .hp-about-rail__links li {
+	margin: 0;
+	padding: 0;
+}
+
+.hp-about-resume .hp-about-rail__links a,
+.hp-about-resume .hp-about-print button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 2.75rem;
+	padding: 0.45rem 0.95rem;
+	border: 1px solid color-mix(in srgb, var(--wp--preset--color--gold-500) 34%, transparent);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--wp--preset--color--ink-700);
+	font-family: var(--wp--preset--font-family--label);
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	line-height: 1;
+	text-decoration: none;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+
+.hp-about-resume .hp-about-rail__links a[aria-current="location"],
+.hp-about-resume .hp-about-rail__links a.is-active,
+.hp-about-resume .hp-about-rail__links a:hover,
+.hp-about-resume .hp-about-rail__links a:focus-visible,
+.hp-about-resume .hp-about-print button:hover,
+.hp-about-resume .hp-about-print button:focus-visible {
+	border-color: var(--wp--preset--color--gold-500);
+	background: color-mix(in srgb, var(--wp--preset--color--gold-500) 9%, transparent);
+}
+
+.hp-about-resume .hp-about-print__submit,
+.hp-about-resume .hp-about-print__exit {
+	display: none;
+}
+
+.hp-about-resume.is-print-mode .hp-about-print__prepare {
+	display: none;
+}
+
+.hp-about-resume.is-print-mode .hp-about-print__submit,
+.hp-about-resume.is-print-mode .hp-about-print__exit {
+	display: inline-flex;
+}
+
+.hp-about-resume .hp-about-contributions > .hp-about-section__intro,
+.hp-about-resume .hp-about-skills > .hp-about-section__intro {
+	max-width: 42rem;
+}
+
+.hp-about-resume .hp-about-contribution {
+	display: block;
+	grid-template-columns: none;
+	gap: 0;
+	margin: -1px 0 0;
+	padding: 1.1rem 1.5rem 1.25rem;
+	border: 1px solid color-mix(in srgb, var(--wp--preset--color--gold-500) 34%, transparent);
+	border-left: 2px solid var(--wp--preset--color--green-700);
+	border-radius: 0;
+	background: color-mix(in srgb, var(--wp--preset--color--parchment-100) 76%, white);
+}
+
+.hp-about-resume .hp-about-contributions > .hp-about-section__intro + .hp-about-contribution {
+	margin-top: var(--wp--preset--spacing--5);
+	border-radius: 0.4rem 0.4rem 0 0;
+}
+
+.hp-about-resume .hp-about-contribution:last-of-type {
+	border-radius: 0 0 0.4rem 0.4rem;
+}
+
+.hp-about-resume .hp-about-contribution__register {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--wp--preset--spacing--4);
+	margin: 0;
+}
+
+.hp-about-resume .hp-about-contribution__status,
+.hp-about-resume .hp-about-contribution__repo,
+.hp-about-resume .hp-about-contribution__meta {
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: 0.75rem;
+	letter-spacing: 0.06em;
+}
+
+.hp-about-resume .hp-about-contribution__status {
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--wp--preset--color--green-700);
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.hp-about-resume .hp-about-contribution__status::before {
+	content: "• ";
+}
+
+.hp-about-resume .hp-about-contribution__repo {
+	color: color-mix(in srgb, var(--wp--preset--color--ink-700) 72%, transparent);
+}
+
+.hp-about-resume .hp-about-contribution h3 {
+	margin: 0.7rem 0 0.35rem;
+	color: var(--wp--preset--color--ink-700);
+	font-family: var(--wp--preset--font-family--display);
+	font-size: clamp(1.25rem, 2vw, 1.45rem);
+	font-weight: 500;
+	line-height: 1.25;
+}
+
+.hp-about-resume .hp-about-contribution__summary {
+	margin: 0;
+	color: color-mix(in srgb, var(--wp--preset--color--ink-700) 72%, transparent);
+	font-family: var(--wp--preset--font-family--body);
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.55;
+}
+
+.hp-about-resume .hp-about-contribution__meta {
+	margin: 0.55rem 0 0;
+	color: color-mix(in srgb, var(--wp--preset--color--ink-700) 72%, transparent);
+}
+
+.hp-about-resume .hp-about-contribution__links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--5);
+	margin: 0.75rem 0 0;
+}
+
+.hp-about-resume .hp-about-contribution.is-dimmed {
+	background: color-mix(in srgb, var(--wp--preset--color--gold-500) 12%, var(--wp--preset--color--parchment-100));
+	opacity: 0.32;
+}
+
+.hp-about-resume .hp-about-skills__controls {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: center;
+	gap: var(--wp--preset--spacing--5);
+	margin-top: var(--wp--preset--spacing--5);
+	padding: 0.75rem 1rem;
+	border: 1px solid color-mix(in srgb, var(--wp--preset--color--gold-500) 34%, transparent);
+	border-left: 2px solid var(--wp--preset--color--gold-500);
+	border-radius: 0.45rem;
+	background: color-mix(in srgb, var(--wp--preset--color--gold-500) 8%, var(--wp--preset--color--parchment-100));
+}
+
+.hp-about-resume .hp-about-skills__readout {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: 0.75rem;
+	letter-spacing: 0.035em;
+	line-height: 1.5;
+}
+
+.hp-about-resume .hp-about-skills__clear {
+	min-height: 2.75rem;
+	padding: 0.45rem 1.15rem;
+	border: 1px solid color-mix(in srgb, var(--wp--preset--color--gold-500) 34%, transparent);
+	border-radius: 0.45rem;
+	background: color-mix(in srgb, var(--wp--preset--color--parchment-100) 82%, white);
+	color: var(--wp--preset--color--ink-700);
+	font-family: var(--wp--preset--font-family--label);
+	font-size: 0.75rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.hp-about-resume .hp-about-skills:not(:has(.hp-about-skill-term__button[aria-pressed="true"])) .hp-about-skills__clear {
+	display: none;
+}
+
+.hp-about-resume .hp-about-skill-groups {
+	margin-top: var(--wp--preset--spacing--5);
+	border-top: 1px solid color-mix(in srgb, var(--wp--preset--color--gold-500) 34%, transparent);
+}
+
+.hp-about-resume .hp-about-skill-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem 0.2rem;
+	padding: 1rem 0 0.8rem;
+	border-bottom: 1px solid color-mix(in srgb, var(--wp--preset--color--gold-500) 34%, transparent);
+}
+
+.hp-about-resume .hp-about-skill-group > h3,
+.hp-about-resume .hp-about-skill-group__coverage {
+	flex: 0 0 100%;
+	margin: 0;
+}
+
+.hp-about-resume .hp-about-skill-group > h3 {
+	color: var(--wp--preset--color--ink-700);
+	font-family: var(--wp--preset--font-family--label);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	line-height: 1.2;
+	text-transform: uppercase;
+}
+
+.hp-about-resume .hp-about-skill-group__coverage {
+	color: color-mix(in srgb, var(--wp--preset--color--ink-700) 70%, transparent);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: 0.75rem;
+	letter-spacing: 0.04em;
+}
+
+.hp-about-resume .hp-about-skill-term {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	width: auto;
+	margin: 0.2rem 0.35rem 0.2rem 0;
+	padding: 0;
+	border: 0;
+}
+
+.hp-about-resume .hp-about-skill-term__label,
+.hp-about-resume .hp-about-skill-term__count {
+	margin: 0;
+}
+
+.hp-about-resume .hp-about-skill-term__button {
+	min-height: 2.75rem;
+	padding: 0.45rem 0.75rem;
+	border: 1px solid color-mix(in srgb, var(--wp--preset--color--green-700) 18%, transparent);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--wp--preset--color--ink-700);
+	font-family: var(--wp--preset--font-family--body);
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.15;
+}
+
+.hp-about-resume .hp-about-skill-term__button:hover,
+.hp-about-resume .hp-about-skill-term__button:focus-visible {
+	border-color: var(--wp--preset--color--gold-500);
+}
+
+.hp-about-resume .hp-about-skill-term__button[aria-pressed="true"] {
+	border-color: var(--wp--preset--color--green-700);
+	background: var(--wp--preset--color--green-700);
+	color: var(--wp--preset--color--parchment-100);
+}
+
+.hp-about-resume .hp-about-skill-term__count {
+	color: color-mix(in srgb, var(--wp--preset--color--ink-700) 72%, transparent);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: 0.75rem;
+}
+
+@media (max-width: 44rem) {
+	.hp-about-resume .hp-about-rail {
+		padding-inline: var(--hp-about-gutter);
+	}
+
+	.hp-about-resume .hp-about-contribution {
+		padding-inline: 1rem;
+	}
+
+	.hp-about-resume .hp-about-skills__controls {
+		grid-template-columns: 1fr;
+	}
+
+	.hp-about-resume .hp-about-skills__clear {
+		width: 100%;
+	}
+}
+
+/* Keep main-column sections inside the desktop rail grid. */
+.hp-about-resume > .hp-about-section {
+	width: auto;
+	max-width: 100%;
+	min-width: 0;
+}
+
+.hp-about-resume .hp-about-v2-main > .hp-about-section {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	margin-inline: 0;
+}
+
+.hp-about-resume .hp-about-print .hp-about-print__submit,
+.hp-about-resume .hp-about-print .hp-about-print__exit,
+.hp-about-resume .hp-about-print.is-ready .hp-about-print__prepare {
+	display: none;
+}
+
+.hp-about-resume .hp-about-print.is-ready :where(.hp-about-print__submit, .hp-about-print__exit) {
+	display: inline-flex;
+}
+
+@media screen {
+	.hp-about-resume.is-print-mode .hp-about-rail {
+		display: flex;
+	}
+}
+
+.hp-about-resume .hp-about-section {
+	scroll-margin-top: calc(var(--hp-about-header-height, 0px) + 4.5rem);
+}
