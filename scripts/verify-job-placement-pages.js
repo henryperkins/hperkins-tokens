@@ -61,7 +61,6 @@ function deriveDigestExpectations( html ) {
 	const headings = findHeadings( html, 'selected Digest body' );
 	const h1 = headings.find( ( heading ) => heading.level === 1 );
 	const actionRails = findWpBlocksByClass( html, 'buttons', 'hp-action-rail' );
-	const primaryRail = findWpBlocksByClass( html, 'buttons', 'hp-digest__primary-actions' )[ 0 ];
 	const eyebrow = /<p\b[^>]*class="[^"]*\bhp-page-hero__eyebrow\b[^"]*"[^>]*>([\s\S]*?)<\/p>/g;
 	const eyebrows = [ ...html.matchAll( eyebrow ) ];
 	const wcusActions = findWpBlocksByClass( html, 'buttons', 'hp-wcus-callout__actions' )[ 0 ] || null;
@@ -74,6 +73,15 @@ function deriveDigestExpectations( html ) {
 	const whyIndex = topLevelBlocks.findIndex( ( block ) => block.attrs.anchor === 'why-support-engineer-now' );
 	const supportBriefIndex = topLevelBlocks.findIndex( ( block ) => block.attrs.anchor === 'support-brief' );
 	const briefProofs = findWpBlocksByClass( html, 'list', 'hp-digest-brief__proofs' )[ 0 ] || null;
+	// The accepted mirror still carries the event plate while the reviewed
+	// candidate has retired it, so the shape is derived from the selected body
+	// rather than flagged. The first-screen rail survives the retirement — it
+	// moves from the plate into the hero — so it is resolved from whichever
+	// container owns it here instead of from the plate's own class.
+	const hasEvent = eventIndex !== -1;
+	const primaryRail = hasEvent
+		? findWpBlocksByClass( html, 'buttons', 'hp-digest__primary-actions' )[ 0 ]
+		: findWpBlocksByClass( topLevelBlocks[ heroIndex ]?.outer || '', 'buttons', 'hp-action-rail' )[ 0 ];
 
 	assert( h1, 'Selected Digest body has no H1.' );
 	assert( primaryRail, 'Selected Digest body has no primary action rail.' );
@@ -85,32 +93,41 @@ function deriveDigestExpectations( html ) {
 	// second slot, so the event never introduces a heading ahead of the
 	// outline. The numbered argument starts immediately after it.
 	assert( heroIndex === 0, 'Selected Digest body must begin with the hero, so the H1 opens the outline.' );
-	assert( eventIndex === 1, 'Selected Digest WordCamp aside must immediately follow the hero.' );
-	assert( whyIndex === 2, 'The first numbered section must immediately follow the WordCamp aside.' );
-	assert( topLevelBlocks.length === 10, 'The selected dossier must contain ten top-level blocks.' );
+	assert( whyIndex === ( hasEvent ? 2 : 1 ), 'The first numbered section must immediately follow the opening.' );
+	assert( topLevelBlocks.length === ( hasEvent ? 10 : 9 ), `The selected dossier must contain ${ hasEvent ? 'ten' : 'nine' } top-level blocks.` );
 	assert( supportBriefIndex === -1, 'The selected dossier must not retain the retired recruiter brief.' );
-	assert( event.attrs.tagName === 'aside', 'Selected Digest WordCamp Group must serialize as an aside.' );
-	assert(
-		event.attrs.ariaLabel === 'I’ll be at WordCamp US.',
-		'Selected Digest WordCamp aside has the wrong accessible name.'
-	);
-	assert(
-		event.attrs.anchor === 'wordcamp-us-2026',
-		'Selected Digest WordCamp aside must own the wordcamp-us-2026 fragment.'
-	);
-	assert(
-		getClassCount( event.outer, 'hp-digest__primary-actions' ) === 1,
-		'Selected Digest WordCamp aside must own the first-screen action rail.'
-	);
-	assert(
-		getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-digest__primary-actions' ) === 0,
-		'Selected Digest hero must not repeat event actions.'
-	);
 	assert(
 		getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-wcus-callout' ) === 0,
 		'Selected Digest hero must not contain the WordCamp aside.'
 	);
-	assert( wcusActions, 'Selected Digest WordCamp aside has no .hp-wcus-callout__actions.' );
+	if ( hasEvent ) {
+		assert( eventIndex === 1, 'Selected Digest WordCamp aside must immediately follow the hero.' );
+		assert( event.attrs.tagName === 'aside', 'Selected Digest WordCamp Group must serialize as an aside.' );
+		assert(
+			event.attrs.ariaLabel === 'I’ll be at WordCamp US.',
+			'Selected Digest WordCamp aside has the wrong accessible name.'
+		);
+		assert(
+			event.attrs.anchor === 'wordcamp-us-2026',
+			'Selected Digest WordCamp aside must own the wordcamp-us-2026 fragment.'
+		);
+		assert(
+			getClassCount( event.outer, 'hp-digest__primary-actions' ) === 1,
+			'Selected Digest WordCamp aside must own the first-screen action rail.'
+		);
+		assert(
+			getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-digest__primary-actions' ) === 0,
+			'Selected Digest hero must not repeat event actions.'
+		);
+		assert( wcusActions, 'Selected Digest WordCamp aside has no .hp-wcus-callout__actions.' );
+	} else {
+		// Retiring the plate must not cost the dossier its only above-the-fold
+		// action; the rail moves into the hero and keeps its 44px target there.
+		assert(
+			getClassCount( topLevelBlocks[ heroIndex ].outer, 'hp-action-rail' ) === 1,
+			'With the WordCamp aside retired, the Digest hero must own the first-screen action rail.'
+		);
+	}
 	assert( ! briefProofs, 'Selected Digest dossier must not retain the recruiter brief proof list.' );
 	assert( rootCauseSection, 'Selected Digest dossier has no #root-cause-investigation section.' );
 	assert(
@@ -125,11 +142,12 @@ function deriveDigestExpectations( html ) {
 
 	return {
 		h1: h1.text,
+		hasEvent,
 		primaryActions: findLinks( primaryRail, 'selected Digest primary actions' ),
 		closingActions: findLinks( actionRails.at( -1 ), 'selected Digest closing actions' ),
 		closingEyebrow: extractExactText( eyebrows.at( -1 )[ 1 ], { label: 'selected Digest closing eyebrow' } ),
 		closingHeading: headings.filter( ( heading ) => heading.level === 2 ).at( -1 ).text,
-		wcusActions: findLinks( wcusActions, 'selected Digest WCUS actions' ),
+		wcusActions: wcusActions ? findLinks( wcusActions, 'selected Digest WCUS actions' ) : [],
 		briefProofs: briefProofs ? findLinks( briefProofs, 'selected Digest proof list' ) : [],
 		proofLabels,
 	};
@@ -287,7 +305,7 @@ function verifySourceContracts() {
 	] ) {
 		assertRuleDeclarations( pageCss, contract );
 	}
-	if ( DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
+	if ( DIGEST_EXPECTATIONS.hasEvent ) {
 		// The dossier's event plate carries one action — the conversation. The
 		// résumé and evidence routes belong to the closing invitation, where the
 		// reader has already been given the argument.
@@ -295,11 +313,20 @@ function verifySourceContracts() {
 			DIGEST_EXPECTATIONS.wcusActions.length === 1,
 			`Selected Digest WCUS callout exposes ${ DIGEST_EXPECTATIONS.wcusActions.length } actions; expected one.`
 		);
-		assert(
-			DIGEST_EXPECTATIONS.proofLabels.join( '|' ) === 'Signal|Diagnosis|Constraint|Result',
-			`Selected Digest proof order is ${ DIGEST_EXPECTATIONS.proofLabels.join( ', ' ) }; expected Signal, Diagnosis, Constraint, Result.`
-		);
 	}
+	// The debugging grid's proof order describes the root-cause section, not the
+	// event plate. It used to sit inside the plate's guard, so retiring the
+	// event would have silently stopped asserting it.
+	assert(
+		DIGEST_EXPECTATIONS.proofLabels.join( '|' ) === 'Signal|Diagnosis|Constraint|Result',
+		`Selected Digest proof order is ${ DIGEST_EXPECTATIONS.proofLabels.join( ', ' ) }; expected Signal, Diagnosis, Constraint, Result.`
+	);
+	// The first-screen rail exists in both shapes, so its single action is
+	// pinned outside the event branch.
+	assert(
+		DIGEST_EXPECTATIONS.primaryActions.length === 1,
+		`Selected Digest first-screen rail exposes ${ DIGEST_EXPECTATIONS.primaryActions.length } actions; expected one.`
+	);
 
 	// The appendix ledgers are filtered by the same script as the register, so
 	// the declarations that make filtering safe are pinned the same way.
@@ -582,7 +609,9 @@ async function inspectDigestTextResize( cdp, sessionId ) {
 		await wait( 50 );
 		return await evaluate( cdp, sessionId, `(() => {
 			const root = document.documentElement;
-			const actions = Array.from(document.querySelectorAll('.hp-wcus-callout__actions .wp-block-button__link'));
+			const rail = document.querySelector('.hp-wcus-callout__actions') ||
+				document.querySelector('.hp-digest__hero .wp-block-buttons.hp-action-rail');
+			const actions = Array.from(rail?.querySelectorAll('.wp-block-button__link') || []);
 			const actionMetrics = actions.map((link) => {
 				const box = link.getBoundingClientRect();
 				const range = document.createRange();
@@ -669,8 +698,8 @@ function assertPageMetrics( result, page, viewport ) {
 			context + ` found ${ result.textResize200.actionCount } event actions at 200% root text; expected exactly 1.`
 		);
 		assert(
-			result.textResize200.actionCount === DIGEST_EXPECTATIONS.wcusActions.length,
-			context + ' changed the expected event action count at 200% root text.'
+			result.textResize200.actionCount === DIGEST_EXPECTATIONS.primaryActions.length,
+			context + ' changed the expected first-screen action count at 200% root text.'
 		);
 		assert(
 			result.textResize200.actionsVisible,
@@ -693,6 +722,31 @@ function assertPageMetrics( result, page, viewport ) {
 	if ( page.name === 'digest' ) {
 		assert( result.primaryActions, `${ context } is missing the first-screen action rail.` );
 		assertActions( result.primaryActions.actions, DIGEST_EXPECTATIONS.primaryActions, `${ context } first-screen rail`, result.url );
+		assert( result.primaryActions.top >= -1, context + ' first-screen actions begin above the viewport.' );
+		assert(
+			result.primaryActions.focusIndexes.join( '|' ) === '0',
+			context + ' does not make the single first-screen action the first keyboard stop in main.'
+		);
+		// The probe samples three opening children; the retired shape has one
+		// fewer opening block, so the comparison takes the matching slice.
+		const expectedOpening = DIGEST_EXPECTATIONS.hasEvent ? 'hero|event|why' : 'hero|why';
+		assert(
+			result.mainOpening.slice( 0, expectedOpening.split( '|' ).length ).join( '|' ) === expectedOpening,
+			`${ context } opens on ${ result.mainOpening.join( '|' ) }; expected ${ expectedOpening }.`
+		);
+		assert( result.closing, `${ context } is missing the composed closing panel.` );
+		assert( result.closing.eyebrow === DIGEST_EXPECTATIONS.closingEyebrow, `${ context } has the wrong closing eyebrow.` );
+		assert( result.closing.heading === DIGEST_EXPECTATIONS.closingHeading, `${ context } has the wrong closing heading.` );
+		assertActions( result.closing.actions, DIGEST_EXPECTATIONS.closingActions, `${ context } closing panel`, result.url );
+	}
+
+	if ( page.name === 'digest' && ! DIGEST_EXPECTATIONS.hasEvent ) {
+		assert( result.primaryActions.inHero, context + ' first-screen actions are outside the hero.' );
+		assert( ! result.eventLandmark, context + ' still renders the retired WordCamp landmark.' );
+		assert( ! result.wcus, context + ' still renders the retired WordCamp action region.' );
+	}
+
+	if ( page.name === 'digest' && DIGEST_EXPECTATIONS.hasEvent ) {
 		assert( result.eventLandmark, context + ' is missing the WordCamp complementary landmark.' );
 		assert( result.eventLandmark.tagName === 'ASIDE', context + ' does not render WordCamp as an aside.' );
 		assert(
@@ -707,20 +761,7 @@ function assertPageMetrics( result, page, viewport ) {
 			! result.eventLandmark.beforeH1,
 			context + ' puts the WordCamp landmark ahead of the H1, so its own H2 opens the outline.'
 		);
-		assert(
-			result.mainOpening.join( '|' ) === 'hero|event|why',
-			context + ' does not keep hero, event, and the first numbered section in one visual/source order.'
-		);
 		assert( result.primaryActions.inEvent, context + ' first-screen actions are outside the WordCamp landmark.' );
-		assert( result.primaryActions.top >= -1, context + ' first-screen actions begin above the viewport.' );
-		assert(
-			result.primaryActions.focusIndexes.join( '|' ) === '0',
-			context + ' does not make the single event action the first keyboard stop in main.'
-		);
-		assert( result.closing, `${ context } is missing the composed closing panel.` );
-		assert( result.closing.eyebrow === DIGEST_EXPECTATIONS.closingEyebrow, `${ context } has the wrong closing eyebrow.` );
-		assert( result.closing.heading === DIGEST_EXPECTATIONS.closingHeading, `${ context } has the wrong closing heading.` );
-		assertActions( result.closing.actions, DIGEST_EXPECTATIONS.closingActions, `${ context } closing panel`, result.url );
 		assert( result.wcus, `${ context } is missing the .hp-wcus-callout action region.` );
 		assertActions( result.wcus.actions, DIGEST_EXPECTATIONS.wcusActions, `${ context } WCUS callout`, result.url );
 		assert( result.wcus.actions.every( ( action ) => action.textContained ), `${ context } clips a WCUS action label.` );
@@ -752,6 +793,17 @@ function assertPageMetrics( result, page, viewport ) {
 			}
 		}
 
+		if ( viewport.zoomPercent === 200 ) {
+			assert(
+				result.wcus.rail.top >= result.wcus.copy.bottom - 1,
+				context + ' keeps compressed columns in the 200% zoom-equivalent reflow.'
+			);
+		}
+	}
+
+	// Everything below describes the dossier itself, so it holds whether or not
+	// the event plate is still published.
+	if ( page.name === 'digest' ) {
 		if ( viewport.width === 1024 && ! viewport.zoomPercent ) {
 			assert( result.opening.hero && result.opening.why, context + ' is missing opening-section geometry.' );
 			assert(
@@ -761,10 +813,6 @@ function assertPageMetrics( result, page, viewport ) {
 		}
 
 		if ( viewport.zoomPercent === 200 ) {
-			assert(
-				result.wcus.rail.top >= result.wcus.copy.bottom - 1,
-				context + ' keeps compressed columns in the 200% zoom-equivalent reflow.'
-			);
 			assert(
 				result.scrollWidth <= result.clientWidth + 1,
 				context + ' overflows in the 200% zoom-equivalent reflow.'
@@ -1127,7 +1175,8 @@ async function inspectPage( cdp, page, viewport ) {
 					textContained: Array.from(range.getClientRects()).every((rect) => rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1 && rect.top >= bounds.top - 1 && rect.bottom <= bounds.bottom + 1),
 				};
 			}) : [];
-			const primaryRail = document.querySelector('.hp-digest__primary-actions');
+			const primaryRail = document.querySelector('.hp-digest__primary-actions') ||
+				document.querySelector('.hp-digest__hero .wp-block-buttons.hp-action-rail');
 			const primaryRect = primaryRail?.getBoundingClientRect();
 			const closing = document.querySelector('.hp-digest-cta');
 			const anchor = document.getElementById('resume-keyword-bank');
@@ -1141,7 +1190,7 @@ async function inspectPage( cdp, page, viewport ) {
 			const briefProof = supportBrief?.querySelector('.hp-digest-brief__proof');
 			const debugProofItems = Array.from(document.querySelectorAll('#root-cause-investigation .hp-debug-proof__item'));
 			const firstEvidenceRow = document.querySelector('.hp-evidence-table tbody tr');
-			const eventLinks = Array.from(wcusActionsRoot?.querySelectorAll('a') || []);
+			const eventLinks = Array.from(primaryRail?.querySelectorAll('a') || []);
 			const focusables = Array.from(document.querySelectorAll('main a[href], main button:not([disabled]), main summary'))
 				.filter(isVisible);
 			const contentRoot = document.querySelector('main .wp-block-post-content') || document.querySelector('main');
@@ -1265,7 +1314,7 @@ async function inspectPage( cdp, page, viewport ) {
 				);
 			}
 		}
-		if ( page.name === 'digest' && DIGEST_EXPECTATIONS.wcusActions.length > 0 ) {
+		if ( page.name === 'digest' ) {
 			const initialOutline = await evaluate( cdp, sessionId, `Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')` );
 			await evaluate( cdp, sessionId, `location.hash = 'root-cause-investigation'` );
 			await wait( 100 );

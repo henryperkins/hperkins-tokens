@@ -30,8 +30,14 @@ never publish a stale local body.
 
 Make only these event-copy removals:
 
-- Digest: remove the complete `.hp-wcus-callout` block; preserve the evidence
-  refresh and compact debugging proof.
+- Digest: remove the complete `.hp-wcus-callout` block **and move its action
+  rail into the hero** as a plain `hp-action-rail` reading "Start a
+  conversation". The plate was the only carrier of
+  `hp-digest__primary-actions`, so deleting it on its own leaves the dossier
+  with no action above the closing invitation, eight thousand pixels down.
+  `verify-job-placement-digest-source.js` and `verify-job-placement-pages.js`
+  now reject that shape instead of tolerating it. Preserve the evidence refresh
+  and compact debugging proof.
 - About: remove the complete `.hp-about-wcus` block; preserve the Tableau and
   contribution-attribution corrections.
 - Résumé: remove the exact line `WORDCAMP US 2026 — Phoenix, Aug 16–19 · Selected to staff the Core AI booth`; regenerate the DOCX and PDF together,
@@ -46,6 +52,14 @@ Make only these event-copy removals:
 Do not remove the evidence refresh, compact debugging proof, Tableau fix,
 contribution attribution, stable route, or unrelated résumé evidence while
 retiring the event-specific copy.
+
+The Digest verifiers derive the expected shape from the body they are given
+rather than from a flag: a body carrying `hp-wcus-callout` is held to the full
+event contract, and a body without one is held to the retired contract,
+including the relocated rail. That is what lets the reviewed candidate and the
+accepted mirror both verify during the window between the source change and the
+approved production write. Do not reintroduce a mode flag; the derivation is
+pinned by `scripts/lib/page-phase-contract.test.js`.
 
 ## Candidate verification
 

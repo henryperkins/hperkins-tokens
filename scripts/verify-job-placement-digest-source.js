@@ -25,6 +25,11 @@ const wcusWebpPath = path.join( themeRoot, 'assets', 'img', 'imagery', 'wcus-202
 const wcusWebp768Path = path.join( themeRoot, 'assets', 'img', 'imagery', 'wcus-2026-phoenix-768.webp' );
 
 const WCUS_ACTIONS = [ [ 'Start a WordCamp conversation', '/contact/' ] ];
+// Once the event plate retires, the first-screen action does not retire with
+// it: the rail moves into the hero and loses only its event framing. Pinning
+// both shapes here is what stops the retirement from quietly costing the
+// dossier its only above-the-fold call to action.
+const HERO_ACTIONS = [ [ 'Start a conversation', '/contact/' ] ];
 const WCUS_IMAGE_SOURCE = '/wp-content/themes/hperkins-tokens/assets/img/imagery/wcus-2026-phoenix.webp';
 const WCUS_IMAGE_ALT = 'The West entrance of the Phoenix Convention Center at night, its glass doors dressed in WordCamp US 26 desert artwork under the illuminated building sign.';
 const WCUS_IMAGE_CAPTION = 'Phoenix Convention Center, West entrance — WordCamp US 2026, 16–19 August. I’m staffing the Core AI booth.';
@@ -380,7 +385,13 @@ function verifyEvidenceRegister( markup ) {
 	);
 }
 
-function verifyMain( markup, _themeVersion, _deployedCommit, { requireEvent = true } = {} ) {
+// requireEvent is derived from the body, not defaulted: the accepted snapshot
+// still carries the event plate while the reviewed candidate has retired it, so
+// the same contract has to hold for whichever body it is handed. Passing the
+// option explicitly still overrides, which is how the unit tests assert both
+// directions against a single fixture.
+function verifyMain( markup, _themeVersion, _deployedCommit, options = {} ) {
+	const requireEvent = options.requireEvent ?? /hp-wcus-callout/.test( markup );
 	verifyHeadingContract( 'Main digest draft', markup );
 	verifyNoPublicationPlaceholders( 'Main digest draft', markup );
 	verifyNoMovingGitHubLinks( 'Main digest draft', markup );
@@ -461,6 +472,15 @@ function verifyMain( markup, _themeVersion, _deployedCommit, { requireEvent = tr
 		assert( JSON.stringify( extractLinks( eventBlock.outer ) ) === JSON.stringify( WCUS_ACTIONS ), 'The WordCamp aside carries one action; the résumé and evidence routes belong to the closing invitation.' );
 	} else {
 		assert( eventIndex === -1, 'Event-removal mode requires the WordCamp block to be absent.' );
+		const heroBlock = topLevelBlocks[ heroIndex ];
+		assert(
+			getClassCount( heroBlock.outer, 'hp-action-rail' ) === 1,
+			'With the WordCamp aside retired, the hero must carry the first-screen action rail it used to own.'
+		);
+		assert(
+			JSON.stringify( extractLinks( heroBlock.outer ) ) === JSON.stringify( HERO_ACTIONS ),
+			'The retired-event hero carries one action; the résumé and evidence routes belong to the closing invitation.'
+		);
 	}
 
 	// The seven kickers are the dossier's spine: ordinal, label, anchor, heading.

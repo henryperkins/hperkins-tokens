@@ -21,6 +21,15 @@ const DIGEST = fs.readFileSync(
 	path.join( THEME_ROOT, 'content', 'page-drafts', 'job-placement-digest.html' ),
 	'utf8'
 ).replace( /\r\n/g, '\n' );
+// The reviewed candidate has retired the WordCamp plate; the accepted mirror of
+// the live body still carries it. Both shapes are contracts right now, so both
+// get a fixture. When the retirement is published and the mirror re-exported,
+// the event tests below fail loudly — which is the moment they should be
+// retired, in that same reviewed change.
+const ACCEPTED_DIGEST = fs.readFileSync(
+	path.join( THEME_ROOT, 'content', 'page-snapshots', 'job-placement-digest.html' ),
+	'utf8'
+).replace( /\r\n/g, '\n' );
 const APPENDIX = fs.readFileSync(
 	path.join( THEME_ROOT, 'content', 'page-drafts', 'placement-method-evidence.html' ),
 	'utf8'
@@ -62,20 +71,26 @@ test( 'publishes the full dossier rather than a distilled brief', () => {
 	assert.doesNotThrow( () => verifyMain( DIGEST ) );
 } );
 
-test( 'opens on the H1 and orders hero, WordCamp aside, seven sections, closing invitation', () => {
+test( 'opens on the H1 and orders hero, seven sections, closing invitation', () => {
 	const blocks = parseTopLevelBlocks( DIGEST );
 
-	assert.equal( blocks.length, 10 );
+	assert.equal( blocks.length, 9 );
 	assert( hasBlockClass( blocks[ 0 ], 'hp-digest__hero' ) );
-	assert( hasBlockClass( blocks[ 1 ], 'hp-wcus-callout' ) );
-	assert( hasBlockClass( blocks[ 9 ], 'hp-digest-cta' ) );
-	assert( hasBlockClass( blocks[ 9 ], 'hp-action-panel' ) );
-	assert( hasBlockClass( blocks[ 9 ], 'is-closing' ) );
+	assert( hasBlockClass( blocks[ 8 ], 'hp-digest-cta' ) );
+	assert( hasBlockClass( blocks[ 8 ], 'hp-action-panel' ) );
+	assert( hasBlockClass( blocks[ 8 ], 'is-closing' ) );
+
+	// The event plate used to hold the second slot and the only first-screen
+	// action. Retiring it moved the rail into the hero rather than deleting it,
+	// so the numbered argument now starts immediately after the hero.
+	assert( hasBlockClass( blocks[ 1 ], 'hp-digest-section' ) );
+	assert.equal( blocks[ 1 ].attrs.anchor, 'why-support-engineer-now' );
+	assert.equal( [ ...blocks[ 0 ].outer.matchAll( /<div class="wp-block-buttons hp-action-rail">/g ) ].length, 1 );
+	assert.match( blocks[ 0 ].outer, /href="\/contact\/">Start a conversation</ );
 
 	// Every anchored section keeps its fragment, in the argued order.
 	const anchors = blocks.map( ( block ) => block.attrs.anchor ).filter( Boolean );
 	assert.deepEqual( anchors, [
-		'wordcamp-us-2026',
 		'why-support-engineer-now',
 		'current-support-fit',
 		'primary-proof',
@@ -99,7 +114,7 @@ test( 'numbers all seven sections and keeps the ordinals in step with their labe
 } );
 
 test( 'keeps the labelled WordCamp aside after the H1 so it never precedes the outline', () => {
-	const event = parseTopLevelBlocks( DIGEST )[ 1 ];
+	const event = parseTopLevelBlocks( ACCEPTED_DIGEST )[ 1 ];
 
 	assert.equal( event.name, 'group' );
 	assert.equal( event.attrs.tagName, 'aside' );
@@ -112,13 +127,13 @@ test( 'keeps the labelled WordCamp aside after the H1 so it never precedes the o
 	// The aside carries the event's own H2. Ahead of the hero it would open the
 	// document on a second-level heading, which is why the order is pinned.
 	assert.throws(
-		() => verifyMain( moveEventBeforeHero( DIGEST ) ),
+		() => verifyMain( moveEventBeforeHero( ACCEPTED_DIGEST ) ),
 		/must begin its heading outline with H1/
 	);
 } );
 
 test( 'ships the captioned documentary WordCamp photograph inside the event plate', () => {
-	const event = parseTopLevelBlocks( DIGEST )[ 1 ];
+	const event = parseTopLevelBlocks( ACCEPTED_DIGEST )[ 1 ];
 	const imagery = path.join( THEME_ROOT, 'assets', 'img', 'imagery' );
 	const asset = path.join( imagery, 'wcus-2026-phoenix.png' );
 	const delivered = path.join( imagery, 'wcus-2026-phoenix.webp' );
@@ -170,22 +185,59 @@ test( 'ships the captioned documentary WordCamp photograph inside the event plat
 		'The photograph must remain the first object inside the event plate.'
 	);
 
-	const imageBlock = /<!-- wp:image \{[^\n]*"className":"hp-wcus-callout__figure"[^\n]*\} -->[\s\S]*?<!-- \/wp:image -->\n\n/.exec( DIGEST );
+	const imageBlock = /<!-- wp:image \{[^\n]*"className":"hp-wcus-callout__figure"[^\n]*\} -->[\s\S]*?<!-- \/wp:image -->\n\n/.exec( ACCEPTED_DIGEST );
 	assert( imageBlock, 'The mutation fixture must find the WordCamp image block.' );
 	assert.throws(
-		() => verifyMain( DIGEST.replace( imageBlock[ 0 ], '' ) ),
+		() => verifyMain( ACCEPTED_DIGEST.replace( imageBlock[ 0 ], '' ) ),
 		/captioned documentary WordCamp photograph/
 	);
 } );
 
-test( 'stays valid when the event block is retired after WordCamp', () => {
-	const evergreen = removeEventBlock( DIGEST );
-	const blocks = parseTopLevelBlocks( evergreen );
+test( 'the retired candidate carries no event copy and keeps its first-screen action', () => {
+	assert.doesNotMatch( DIGEST, /hp-wcus-callout/ );
+	assert.doesNotMatch( DIGEST, /WordCamp|WCUS|wordcamp-us-2026/ );
+	assert.doesNotThrow( () => verifyMain( DIGEST, undefined, undefined, { requireEvent: false } ) );
 
-	assert.equal( blocks.length, 9 );
-	assert( hasBlockClass( blocks[ 0 ], 'hp-digest__hero' ) );
-	assert.doesNotMatch( evergreen, /hp-wcus-callout/ );
-	assert.doesNotThrow( () => verifyMain( evergreen, undefined, undefined, { requireEvent: false } ) );
+	// Removal mode is derived from the body, so the same call with no options
+	// must reach the same verdict. If that derivation ever regressed to a
+	// hardcoded default, this is the assertion that catches it.
+	assert.doesNotThrow( () => verifyMain( DIGEST ) );
+
+	// Removing the aside must not be a way to drop the call to action: the hero
+	// has to have picked it up.
+	const hero = parseTopLevelBlocks( DIGEST )[ 0 ];
+	assert.match( hero.outer, /wp-block-buttons hp-action-rail/ );
+	assert.equal( [ ...hero.outer.matchAll( /<!-- wp:button -->/g ) ].length, 1 );
+	assert.throws(
+		() => verifyMain(
+			replaceOnce( DIGEST, '<div class="wp-block-buttons hp-action-rail">', '<div class="wp-block-buttons">' ),
+			undefined,
+			undefined,
+			{ requireEvent: false }
+		),
+		/first-screen action rail/
+	);
+} );
+
+test( 'still rejects an event-bearing body in removal mode', () => {
+	// The accepted mirror keeps the plate until the retirement is published.
+	// verifyMain derives its mode from the body, so the explicit option is the
+	// only way to prove the two branches cannot be confused.
+	assert.match( ACCEPTED_DIGEST, /hp-wcus-callout/ );
+	// The top-level block count is asserted before the mode branch, so an
+	// event-bearing body fails on the count first. Either message proves the
+	// two branches cannot be confused.
+	assert.throws(
+		() => verifyMain( ACCEPTED_DIGEST, undefined, undefined, { requireEvent: false } ),
+		/must contain 9 top-level blocks|Event-removal mode requires the WordCamp block to be absent/
+	);
+	// Deleting the plate from the accepted body without relocating its rail is
+	// exactly the mistake the runbook's one-line "remove the complete block"
+	// instruction invites, so it has to be rejected rather than tolerated.
+	assert.throws(
+		() => verifyMain( removeEventBlock( ACCEPTED_DIGEST ), undefined, undefined, { requireEvent: false } ),
+		/hero must carry the first-screen action rail/
+	);
 } );
 
 test( 'holds five proven fit rows and states the gap outside the ledger', () => {

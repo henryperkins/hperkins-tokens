@@ -121,6 +121,12 @@ test( 'rendered recruiter probes pin the dossier as the only Digest shape', () =
 	// event plate, then the numbered argument.
 	assert.match( recruiter, /'hero\|event\|why'/ );
 	assert.doesNotMatch( recruiter, /'event\|hero\|brief'/ );
+	// Two legal shapes now, not one: the accepted mirror still publishes the
+	// event plate and the reviewed candidate has retired it. Both are derived
+	// from the selected body, never from a flag.
+	assert.match( recruiter, /'hero\|why'/ );
+	assert.match( recruiter, /const hasEvent = eventIndex !== -1;/ );
+	assert.doesNotMatch( recruiter, /requireEvent|--retired|--no-event/ );
 	assert.match( recruiter, /result\.dossier\.registerVisibleRows === 12/ );
 	assert.match( recruiter, /zoom-200-from-1024/ );
 
@@ -197,7 +203,13 @@ test( 'Digest text resize proof requires three visible actions with nonempty fou
 	assert.match( probe, /actionsHaveTextRects: actionMetrics\.every\(\( action \) => action\.textRectCount > 0\s*\)/ );
 	assert.match( probe, /rect\.left >= box\.left - 1 &&\s*rect\.right <= box\.right \+ 1 &&\s*rect\.top >= box\.top - 1 &&\s*rect\.bottom <= box\.bottom \+ 1/ );
 	assert.match( assertMetrics, /result\.textResize200\.actionCount === 1/ );
-	assert.match( assertMetrics, /result\.textResize200\.actionCount === DIGEST_EXPECTATIONS\.wcusActions\.length/ );
+	// The 200% reflow proof measures the first-screen rail, which survives the
+	// event retirement by moving into the hero. Pinning it to the derived
+	// primary-action count — and pinning the probe's fallback target — is what
+	// stops the accessibility proof from silently losing its subject when the
+	// event plate is retired.
+	assert.match( assertMetrics, /result\.textResize200\.actionCount === DIGEST_EXPECTATIONS\.primaryActions\.length/ );
+	assert.match( probe, /document\.querySelector\('\.hp-digest__hero \.wp-block-buttons\.hp-action-rail'\)/ );
 	assert.match( assertMetrics, /result\.textResize200\.actionsVisible/ );
 	assert.match( assertMetrics, /result\.textResize200\.actionsHaveTextRects/ );
 	assert.match( assertMetrics, /result\.textResize200\.actionsContained/ );
