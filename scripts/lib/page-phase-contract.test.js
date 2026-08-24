@@ -138,6 +138,41 @@ test( 'rendered recruiter probes pin the dossier as the only Digest shape', () =
 	assert.match( prominent, /\.hp-action-rail:not\(\.wp-block-buttons\)/ );
 } );
 
+test( 'progressive probes cover every ledger and both router history directions', () => {
+	const recruiter = readRecruiterVerifier();
+	const scenarios = sourceBetween(
+		recruiter,
+		'async function inspectProgressiveEnhancementFallbacks',
+		'function assertProgressiveEnhancementFallbacks'
+	);
+	const assertions = sourceBetween(
+		recruiter,
+		'function assertProgressiveEnhancementFallbacks',
+		'async function withChrome'
+	);
+
+	for ( const scenario of [
+		'digestNoJs',
+		'appendixNoJs',
+		'digestFailClosed',
+		'keywordFailClosed',
+		'marketFailClosed',
+		'routerRemount',
+		'historyRemount',
+	] ) {
+		assert.match( scenarios, new RegExp( `const ${ scenario } =` ) );
+		assert.match( assertions, new RegExp( `result\\.${ scenario }` ) );
+	}
+
+	const pushRemount = sourceBetween( scenarios, "{ name: 'the router-remount check' }", 'const historyRemount' );
+	assert(
+		pushRemount.indexOf( "history.pushState({}, '', location.pathname + '?hp-remount=1')" ) <
+			pushRemount.indexOf( 'root.replaceWith(replacement)' ),
+		'The push remount must replace roots only after the immediate pushState mount has run.'
+	);
+	assert.match( scenarios, /history\.back\(\)/ );
+} );
+
 test( 'Digest text resize qualification is exact and requires a collected result', () => {
 	const recruiter = readRecruiterVerifier();
 	const qualifier = sourceBetween(
@@ -185,7 +220,7 @@ test( 'Digest text resize probe restores the prior inline root size before retur
 	);
 } );
 
-test( 'Digest text resize proof requires three visible actions with nonempty four-edge-contained text', () => {
+test( 'Digest text resize proof requires the candidate actions to stay visible with nonempty four-edge-contained text', () => {
 	const recruiter = readRecruiterVerifier();
 	const probe = sourceBetween(
 		recruiter,
@@ -244,20 +279,56 @@ test( 'the shared WCUS plate presentation stays pinned after the phase retiremen
 	}
 } );
 
-test( '390px evidence must clear the taller metadata cell', () => {
+test( 'Digest evidence uses the shared stacked ledger anatomy below 782px', () => {
 	const assertion = sourceBetween(
-		sourceBetween(
-			readRecruiterVerifier(),
-			'function assertPageMetrics',
-			'async function inspectLedgers'
-		),
-		'if ( viewport.width === 390 )',
-		'if ( viewport.width === 320 )'
+		readRecruiterVerifier(),
+		'// The evidence register becomes the same labelled record anatomy',
+		'assert( result.proofItems.length'
 	);
 
+	assert.match( assertion, /if \( viewport\.width < 782 \)/ );
+	assert.match( assertion, /const evidenceLedger = result\.ledgerLayouts\.find/ );
 	assert.match(
 		assertion,
-		/Math\.max\( result\.evidenceRecord\.title\.bottom, result\.evidenceRecord\.state\.bottom \) - 1/
+		/evidenceLedger\.headers\.join\( '\|' \) === 'Artifact\|State\|Direct evidence'/
 	);
-	assert.doesNotMatch( assertion, /Math\.min\(/ );
+	assert.match( assertion, /evidenceLedger\.pseudoLabels\.join\( '\|' \) === evidenceLedger\.headers\.join\( '\|' \)/ );
+	assert.doesNotMatch( assertion, /evidenceRecord/ );
+	assert.doesNotMatch( assertion, /viewport\.width === 390/ );
+} );
+
+test( 'rendered ledger checks require painted mobile labels and visible standing text', () => {
+	const source = readRecruiterVerifier();
+
+	assert.match( source, /pseudoLabelsRendered: cells\.map\(pseudoLabelRendered\)/ );
+	assert.match( source, /ledger\.pseudoLabelsRendered\.every\( Boolean \)/ );
+	assert.match( source, /const isReadable = \(element\) =>/ );
+	assert.match( source, /isReadable\(cell\)/ );
+	assert.match( source, /ledger\.visibleStandings === ledger\.visibleRows/ );
+} );
+
+test( 'the verifier skill names the current candidate matrices and opening states', () => {
+	const recruiter = readRecruiterVerifier();
+	const skill = fs.readFileSync(
+		path.join( themeRoot, '.claude', 'skills', 'verifiers', 'SKILL.md' ),
+		'utf8'
+	);
+	const widths = ( startMarker, endMarker ) => [ ...sourceBetween( recruiter, startMarker, endMarker )
+		.matchAll( /\bwidth: (\d+)/g ) ]
+		.map( ( match ) => Number( match[ 1 ] ) );
+	const digestWidths = widths( 'const DIGEST_VIEWPORTS = [', 'const DIGEST_HEIGHT_BUDGETS' );
+	const appendixWidths = widths( 'const APPENDIX_VIEWPORTS = [', 'const PAGES = [' );
+	const ledgers = sourceBetween( recruiter, 'const APPENDIX_LEDGERS = [', 'async function inspectLedgers' );
+
+	assert( digestWidths.includes( 940 ), 'The Digest rendered matrix must exercise the exact masthead breakpoint.' );
+	assert(
+		skill.includes( `Digest ${ digestWidths.join( '/' ) }; appendix ${ appendixWidths.join( '/' ) }` ),
+		'The verifier skill viewport matrices have drifted from the executable verifier.'
+	);
+	assert.match( ledgers, /name: 'keyword ledger'[\s\S]*?defaultState: 'demonstrated'/ );
+	assert.match( ledgers, /name: 'market screen'[\s\S]*?defaultState: 'all'/ );
+	assert.match(
+		skill,
+		/Digest register complete by default; appendix keyword ledger Demonstrated-first and market screen complete before filtering/
+	);
 } );

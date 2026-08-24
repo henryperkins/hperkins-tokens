@@ -27,10 +27,11 @@
  * This site runs Gutenberg's full-page Interactivity Router: internal
  * navigations swap the <body> in place, discarding anything injected here.
  * Like router-scroll.js, pushState is wrapped (guarded against
- * double-wrapping, composing with the other wrappers) and the mount is
- * re-attempted across the commit window, because the router's render and
- * pushState order varies. mount() is idempotent, so the extra attempts are
- * free and whichever one lands after the swap wins.
+ * double-wrapping, composing with the other wrappers). Back/Forward traversal
+ * takes the separate popstate path. Both call the same settle routine, which
+ * re-attempts the mount across the commit window because the router's render
+ * order varies. mount() is idempotent, so the extra attempts are free and
+ * whichever one lands after the swap wins.
  */
 ( function () {
 	'use strict';
@@ -88,11 +89,12 @@
 			noun: 'terms',
 			allSuffix: '',
 			label: 'Filter the keyword ledger by standing',
+			defaultState: 'demonstrated',
 			filters: [
-				{ key: 'all', label: 'All terms' },
 				{ key: 'demonstrated', label: 'Demonstrated' },
 				{ key: 'partial', label: 'Partial' },
-				{ key: 'gap', label: 'Gap' }
+				{ key: 'gap', label: 'Gap' },
+				{ key: 'all', label: 'All terms' }
 			]
 		},
 		{
@@ -226,10 +228,22 @@
 			group.appendChild( button );
 		} );
 
-		root.insertBefore( group, figure );
-		root.insertBefore( status, figure );
+		// The shared numbered spine nests each ledger figure inside its content
+		// column. Insert beside the figure, never against the outer section root.
+		// Keep the market scroll hint adjacent to its table by placing controls
+		// before that hint when it is present.
+		var container = figure.parentNode;
+		if ( ! container ) {
+			return;
+		}
+		var insertionPoint = figure.previousElementSibling &&
+			figure.previousElementSibling.classList.contains( 'hp-market-scroll-hint' )
+			? figure.previousElementSibling
+			: figure;
+		container.insertBefore( group, insertionPoint );
+		container.insertBefore( status, insertionPoint );
 
-		apply( 'all' );
+		apply( ledger.defaultState || 'all' );
 	}
 
 	function mount() {
@@ -263,6 +277,7 @@
 	}
 
 	wrapHistory( 'pushState' );
+	window.addEventListener( 'popstate', settle );
 
 	if ( document.readyState === 'loading' ) {
 		document.addEventListener( 'DOMContentLoaded', mount );

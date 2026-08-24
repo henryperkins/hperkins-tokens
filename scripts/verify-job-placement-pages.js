@@ -19,6 +19,8 @@ const {
 	DIGEST_COMPACT_CONTRACTS,
 	DIGEST_LOWER_CONTRACTS,
 	DIGEST_OPENING_CONTRACTS,
+	PLACEMENT_CHASSIS_CONTRACTS,
+	PLACEMENT_LEDGER_LABEL_CONTRACTS,
 } = require( './lib/job-placement-page-style-contracts' );
 const { getClassCount } = require( './lib/page-markup-contract' );
 const {
@@ -36,6 +38,10 @@ const ORIGIN = getOrigin();
 const SOURCE_ONLY = ARGV.includes( '--source-only' );
 const DIGEST_SOURCE = selectDigestSource( ARGV );
 const APPENDIX_SOURCE = selectPlacementMethodSource( ARGV );
+// Studio's single-process preview can take longer than the generic CDP request
+// ceiling while WordPress warms. DOM/style readiness still has its own bounded
+// polling below; this only prevents Page.navigate from expiring first.
+const NAVIGATION_RESPONSE_TIMEOUT_MS = 30000;
 
 function read( sourcePath ) {
 	const resolved = path.isAbsolute( sourcePath ) ? sourcePath : path.join( ROOT, sourcePath );
@@ -159,6 +165,7 @@ const DIGEST_VIEWPORTS = [
 	{ name: 'desktop-1440', width: 1440, height: 1000, mobile: false },
 	{ name: 'desktop-1024', width: 1024, height: 1000, mobile: false },
 	{ name: 'compact-upper-1023', width: 1023, height: 1000, mobile: false },
+	{ name: 'masthead-break-940', width: 940, height: 1000, mobile: false },
 	{ name: 'event-wide-782', width: 782, height: 1000, mobile: false },
 	{ name: 'event-linear-781', width: 781, height: 1000, mobile: true },
 	{ name: 'tablet-768', width: 768, height: 1000, mobile: true },
@@ -176,31 +183,36 @@ const DIGEST_VIEWPORTS = [
 // the kickers, the gap callout, the artifact row, and the filter row while
 // still failing if a section is duplicated or a table doubles.
 //
-// Measured, not derived: taken from https://hperkins.blog/job-placement-digest/
-// on 2026-08-19, the first rendered run after the dossier was promoted, and
-// carried at +5% rounded up to the nearest 50px. The earlier derived numbers
-// predated the event photograph and were wrong in both directions — three
-// viewports over, six well under. The headroom absorbs font-metric and
+// Measured, not derived: taken from the isolated WordPress candidate renderer
+// on 2026-08-24 after the placement-system round trip, then carried at +5%
+// rounded up to the nearest 50px. The headroom absorbs font-metric and
 // image-decode jitter while staying far below the cost of a duplicated section
 // or a doubled table, which is what this budget exists to catch.
 const DIGEST_HEIGHT_BUDGETS = {
-	'desktop-1440': 8350,
-	'desktop-1024': 8450,
-	'compact-upper-1023': 8300,
-	'event-wide-782': 8950,
-	'event-linear-781': 9450,
-	'tablet-768': 9450,
-	'phone-boundary-600': 10100,
-	'mobile-390': 13200,
-	'mobile-320': 15800,
+	'desktop-1440': 9100,
+	'desktop-1024': 9300,
+	'compact-upper-1023': 9300,
+	'masthead-break-940': 9450,
+	'event-wide-782': 10200,
+	'event-linear-781': 12100,
+	'tablet-768': 12050,
+	'phone-boundary-600': 12900,
+	'mobile-390': 15250,
+	'mobile-320': 17950,
 };
 
 const APPENDIX_VIEWPORTS = [
 	{ name: 'desktop-1440', width: 1440, height: 1000, mobile: false },
 	{ name: 'desktop-1024', width: 1024, height: 1000, mobile: false },
+	{ name: 'masthead-break-940', width: 940, height: 1000, mobile: false },
+	{ name: 'ledger-table-782', width: 782, height: 1000, mobile: false },
+	{ name: 'ledger-stacked-781', width: 781, height: 1000, mobile: true },
 	{ name: 'tablet-768', width: 768, height: 1000, mobile: true },
+	{ name: 'filter-wrap-600', width: 600, height: 1000, mobile: true },
+	{ name: 'filter-snap-599', width: 599, height: 1000, mobile: true },
 	{ name: 'mobile-390', width: 390, height: 1000, mobile: true },
 	{ name: 'mobile-320', width: 320, height: 1000, mobile: true },
+	{ name: 'zoom-200-from-1024', width: 512, height: 500, mobile: false, zoomPercent: 200 },
 ];
 
 const PAGES = [
@@ -333,6 +345,9 @@ function verifySourceContracts() {
 	for ( const contract of APPENDIX_LEDGER_CONTRACTS ) {
 		assertRuleDeclarations( pageCss, contract );
 	}
+	for ( const contract of PLACEMENT_CHASSIS_CONTRACTS ) {
+		assertRuleDeclarations( pageCss, contract );
+	}
 
 	verifyStackedLedgerLabels( pageCss );
 
@@ -358,63 +373,44 @@ function ledgerHeaders( html, className ) {
 }
 
 /**
- * Below 782px the appendix ledgers stack and repeat selected column labels
- * inside their cells as `::before` labels, addressed by the cell's position.
- * Neither file can show that coupling on its own: rename or reorder a column in
- * the page body and the stylesheet keeps announcing the old name over the new
- * value, on the one layout where the header row is not on screen to contradict
- * it. So the appendix labels are checked against the headers they claim to
- * repeat. The Digest evidence register keeps its visually hidden header and
- * uses a title/state metadata row without pseudo-labels.
- *
- * Only labelled columns are listed. The market screen deliberately leaves
- * company, posting link and reasoning unlabelled — those values name
- * themselves — and a column added to this table must either be labelled here
- * or be as self-evident.
+ * Below 782px all three placement ledgers become labelled records. Core/table
+ * cannot serialize arbitrary cell data attributes, so the real header remains
+ * in the accessibility tree and a mutation-pinned CSS contract reproduces its
+ * fixed columns visually. Every authored cell stays schema-safe.
  */
-function verifyStackedLedgerLabels( pageCss ) {
+function verifyStackedLedgerLabels() {
+	const digest = read( DIGEST_SOURCE );
 	const appendix = read( APPENDIX_SOURCE );
-
-	const keyword = ledgerHeaders( appendix, 'hp-keyword-table' );
-	const market = ledgerHeaders( appendix, 'hp-market-table' );
-
-	// `instances` are the header rows a single label speaks for; more than one
-	// means every table sharing that unscoped rule must still agree on the name.
-	const contract = [
-		{ table: 'hp-keyword-table', cell: 1, column: 1, scope: '', instances: keyword },
-		// One ledger now, so one boundary label. The standing that used to be
-		// carried by which of three disclosures a row sat in rides in the row
-		// header instead, where the stacked layout shows it without a label.
-		{ table: 'hp-keyword-table', cell: 2, column: 2, scope: '', instances: keyword },
-		{ table: 'hp-market-table', cell: 3, column: 3, scope: '', instances: market },
-		{ table: 'hp-market-table', cell: 4, column: 4, scope: '', instances: market },
+	const ledgers = [
+		{ source: digest, table: 'hp-evidence-table', expectedRows: 12 },
+		{ source: appendix, table: 'hp-keyword-table', expectedRows: 34 },
+		{ source: appendix, table: 'hp-market-table', expectedRows: 20 },
 	];
 
-	for ( const { table, cell, column, scope, instances } of contract ) {
+	for ( const { source, table, expectedRows } of ledgers ) {
+		const headers = ledgerHeaders( source, table );
+		assert( headers.length === 1 && headers[ 0 ].length > 0, `${ table } must expose one real header row.` );
+		const figure = new RegExp( `<figure[^>]*\\b${ table }\\b[^>]*>([\\s\\S]*?)</figure>`, 'i' ).exec( source );
+		const body = figure && /<tbody>([\s\S]*?)<\/tbody>/i.exec( figure[ 1 ] );
+		assert( body, `${ table } must expose one tbody.` );
+		const rows = [ ...body[ 1 ].matchAll( /<tr\b[^>]*>([\s\S]*?)<\/tr>/gi ) ];
+		assert( rows.length === expectedRows, `${ table } carries ${ rows.length } labelled rows; expected ${ expectedRows}.` );
+		for ( const [ rowIndex, row ] of rows.entries() ) {
+			const cells = [ ...row[ 1 ].matchAll( /<(th|td)\b([^>]*)>/gi ) ];
+			assert(
+				cells.length === headers[ 0 ].length && cells[ 0 ][ 1 ].toLowerCase() === 'th' && cells.slice( 1 ).every( ( cell ) => cell[ 1 ].toLowerCase() === 'td' ),
+				`${ table } row ${ rowIndex + 1 } must keep one row header and ${ headers[ 0 ].length - 1 } data cells.`
+			);
+			assert( cells.every( ( cell ) => ! /\bdata-label\s*=/.test( cell[ 2 ] ) ), `${ table } row ${ rowIndex + 1 } contains a non-serializable data-label attribute.` );
+		}
+		const cssLabels = PLACEMENT_LEDGER_LABEL_CONTRACTS
+			.filter( ( contract ) => contract.selector.includes( table ) )
+			.map( ( contract ) => contract.declarations.content.slice( 1, -1 ) );
 		assert(
-			instances.length > 0 && instances.every( ( headers ) => headers && headers[ column ] ),
-			`${ table } has no column ${ column } in the tracked page snapshot; its stacked label addresses a column that is gone.`
-		);
-		const names = new Set( instances.map( ( headers ) => headers[ column ] ) );
-		assert(
-			names.size === 1,
-			`one stacked label speaks for every ${ table }, but their column ${ column } headers disagree: ${ JSON.stringify( [ ...names ] ) }.`
-		);
-		const [ expected ] = [ ...names ];
-		const selector = `${ scope }.wp-block-table.${ table } tbody td:nth-of-type(${ cell })::before`;
-		const rule = new RegExp(
-			`${ selector.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ) }\\s*\\{\\s*content:\\s*"([^"]*)"`
-		).exec( pageCss );
-		assert( rule, `assets/imladris-pages.css declares no stacked label for ${ selector }` );
-		assert(
-			rule[1] === expected,
-			`the stacked label for ${ table } column ${ column } says "${ rule[1] }" but the page snapshot's header says "${ expected }".`
+			JSON.stringify( cssLabels ) === JSON.stringify( headers[ 0 ] ),
+			`${ table } phone labels ${ JSON.stringify( cssLabels ) }; expected source headers ${ JSON.stringify( headers[ 0 ] ) }.`
 		);
 	}
-	assert(
-		!/\.wp-block-table\.hp-evidence-table tbody td(?:\[[^\]]+\]|:[^{,\s]+)*::before/.test( pageCss ),
-		'The narrow Digest evidence register must not repeat State or Direct evidence labels in every row.'
-	);
 }
 
 function wait( milliseconds ) {
@@ -567,6 +563,63 @@ async function evaluate( cdp, sessionId, expression ) {
 	return result.result.value;
 }
 
+async function waitForDocumentMain( cdp, sessionId, expectedUrl, timeout = 45000 ) {
+	const expectedPath = new URL( expectedUrl ).pathname;
+	const deadline = Date.now() + timeout;
+	let lastDocumentUrl = '';
+
+	while ( Date.now() < deadline ) {
+		try {
+			const { root } = await cdp.send( 'DOM.getDocument', { depth: 1, pierce: true }, sessionId );
+			lastDocumentUrl = root?.documentURL || '';
+			if ( lastDocumentUrl && new URL( lastDocumentUrl ).pathname === expectedPath ) {
+				const { nodeId } = await cdp.send( 'DOM.querySelector', {
+					nodeId: root.nodeId,
+					selector: 'main .hp-placement-masthead',
+				}, sessionId );
+				const { nodeId: scriptNodeId } = await cdp.send( 'DOM.querySelector', {
+					nodeId: root.nodeId,
+					selector: 'script[src*="digest-register-filter.js"]',
+				}, sessionId );
+				if ( nodeId && scriptNodeId ) {
+					return;
+				}
+			}
+		} catch ( error ) {
+			// Navigation can replace the document between DOM calls. Retry against
+			// the new document until the requested route owns a real main landmark.
+		}
+		await wait( 100 );
+	}
+
+	throw new Error( `Timed out waiting for ${ expectedPath } DOM (last URL: ${ lastDocumentUrl || 'none' }).` );
+}
+
+async function waitForPlacementStyles( cdp, sessionId, timeout = 45000 ) {
+	const deadline = Date.now() + timeout;
+	let lastState = null;
+
+	while ( Date.now() < deadline ) {
+		try {
+			lastState = await evaluate( cdp, sessionId, `(() => {
+				const masthead = document.querySelector('.hp-placement-masthead');
+				return {
+					pageSheet: Array.from(document.styleSheets).some((sheet) => (sheet.href || '').includes('/assets/imladris-pages.css')),
+					mastheadDisplay: masthead ? getComputedStyle(masthead).display : null,
+				};
+			})()` );
+			if ( lastState?.pageSheet && lastState.mastheadDisplay === 'grid' ) {
+				return;
+			}
+		} catch ( error ) {
+			// The execution context can turn over during a redirect. Retry it.
+		}
+		await wait( 100 );
+	}
+
+	throw new Error( `Timed out waiting for placement styles: ${ JSON.stringify( lastState ) }.` );
+}
+
 async function pressKey( cdp, sessionId, key ) {
 	const keys = {
 		Enter: {
@@ -674,6 +727,119 @@ function assertLinks( actual, expected, context, documentUrl ) {
 	}
 }
 
+function approximatelyEqual( actual, expected, tolerance = 1 ) {
+	return Math.abs( actual - expected ) <= tolerance;
+}
+
+function assertPlacementGeometry( result, viewport, context ) {
+	const expectedGutter = viewport.width >= 600 ? 32 : 16;
+	const expectedScrollOffset = viewport.width >= 782 ? 84 : 72;
+	assert( result.placementGeometry, `${ context } did not collect placement chassis geometry.` );
+	const masthead = result.placementGeometry.masthead;
+
+	assert( masthead?.root && masthead.main && masthead.side, `${ context } is missing placement masthead geometry.` );
+	assert(
+		approximatelyEqual( masthead.paddingLeft, expectedGutter ) &&
+			approximatelyEqual( masthead.paddingRight, expectedGutter ),
+		`${ context } masthead gutters are ${ masthead.paddingLeft }px/${ masthead.paddingRight }px; expected ${ expectedGutter }px.`
+	);
+	if ( viewport.width >= 940 ) {
+		assert(
+			masthead.main.right <= masthead.side.left + 1 && approximatelyEqual( masthead.main.top, masthead.side.top, 2 ),
+			`${ context } does not render the masthead's main and reference panels as columns at the 940px breakpoint.`
+		);
+	} else {
+		assert(
+			masthead.side.top >= masthead.main.bottom - 1 &&
+				approximatelyEqual( masthead.side.left, masthead.main.left, 2 ) &&
+				approximatelyEqual( masthead.side.width, masthead.main.width, 2 ),
+			`${ context } does not stack the masthead's reference panel below the main copy.`
+		);
+	}
+
+	assert( result.placementGeometry.textSections.length > 0, `${ context } has no text-width placement sections.` );
+	for ( const section of result.placementGeometry.textSections ) {
+		assert(
+			section.width <= result.placementGeometry.rootFontSize * 44 + 1,
+			`${ context } text section ${ section.id || '(unlabelled)' } is ${ section.width }px wide; expected at most 44rem.`
+		);
+	}
+	assert( result.placementGeometry.wideSections.length > 0, `${ context } has no wide placement sections.` );
+	for ( const section of result.placementGeometry.wideSections ) {
+		assert(
+			section.width <= result.placementGeometry.rootFontSize * 72 + 1,
+			`${ context } wide section ${ section.id || '(unlabelled)' } is ${ section.width }px wide; expected at most 72rem.`
+		);
+	}
+
+	assert( result.placementGeometry.bands.length > 0, `${ context } has no full-width placement bands.` );
+	for ( const band of result.placementGeometry.bands ) {
+		assert(
+			approximatelyEqual( band.left, 0, 2 ) && approximatelyEqual( band.right, result.clientWidth, 2 ),
+			`${ context } ${ band.name } band spans ${ band.left }px–${ band.right }px inside a ${ result.clientWidth }px viewport.`
+		);
+		assert( band.inner, `${ context } ${ band.name } band has no constrained inner wrapper.` );
+		const maximumRem = band.market ? 84 : 72;
+		assert(
+			band.inner.width <= result.placementGeometry.rootFontSize * maximumRem + 1,
+			`${ context } ${ band.name } band inner is ${ band.inner.width }px wide; expected at most ${ maximumRem }rem.`
+		);
+	}
+
+	assert( result.placementGeometry.sections.length > 0, `${ context } has no placement sections to measure.` );
+	for ( const section of result.placementGeometry.sections ) {
+		assert(
+			approximatelyEqual( section.paddingLeft, expectedGutter ) &&
+				approximatelyEqual( section.paddingRight, expectedGutter ),
+			`${ context } section ${ section.id || '(unlabelled)' } gutters are ${ section.paddingLeft }px/${ section.paddingRight }px; expected ${ expectedGutter }px.`
+		);
+		assert(
+			approximatelyEqual( section.scrollMarginBlockStart, expectedScrollOffset ),
+			`${ context } section ${ section.id || '(unlabelled)' } scroll offset is ${ section.scrollMarginBlockStart }px; expected ${ expectedScrollOffset }px.`
+		);
+	}
+	for ( const nested of result.placementGeometry.nestedTargets ) {
+		assert(
+			approximatelyEqual( nested.scrollMarginBlockStart, expectedScrollOffset ),
+			`${ context } nested target ${ nested.id } scroll offset is ${ nested.scrollMarginBlockStart }px; expected ${ expectedScrollOffset }px.`
+		);
+	}
+	assert(
+		approximatelyEqual( result.placementGeometry.nestedProbeScrollMargin, expectedScrollOffset ),
+		`${ context } nested placement-target probe has a ${ result.placementGeometry.nestedProbeScrollMargin }px scroll offset; expected ${ expectedScrollOffset }px.`
+	);
+
+	for ( const ledger of result.ledgerLayouts ) {
+		assert(
+			ledger.headers.length === ledger.cells.length,
+			`${ context } ${ ledger.name } renders ${ ledger.cells.length } first-row cells for ${ ledger.headers.length } headers.`
+		);
+		if ( viewport.width < 782 ) {
+			assert( ledger.headerVisuallyHidden, `${ context } ${ ledger.name } leaves its repeated header row visible in stacked mode.` );
+			assert(
+				ledger.pseudoLabels.join( '|' ) === ledger.headers.join( '|' ),
+				`${ context } ${ ledger.name } mobile labels are ${ JSON.stringify( ledger.pseudoLabels ) }; expected ${ JSON.stringify( ledger.headers ) }.`
+			);
+			assert(
+				ledger.pseudoLabelsRendered.every( Boolean ),
+				`${ context } ${ ledger.name } defines mobile labels that are not visibly painted: ${ JSON.stringify( ledger.pseudoLabelsRendered ) }.`
+			);
+			for ( let index = 1; index < ledger.cells.length; index++ ) {
+				assert(
+					ledger.cells[ index ].top >= ledger.cells[ index - 1 ].bottom - 1,
+					`${ context } ${ ledger.name } does not stack cell ${ index + 1 } after cell ${ index }.`
+				);
+			}
+		} else {
+			assert( ledger.headerVisible && ! ledger.headerVisuallyHidden, `${ context } ${ ledger.name } hides its column headers in table mode.` );
+			assert(
+				ledger.pseudoLabels.every( ( label ) => label === '' ),
+				`${ context } ${ ledger.name } renders mobile pseudo-labels in table mode: ${ JSON.stringify( ledger.pseudoLabels ) }.`
+			);
+		}
+	}
+}
+
 function assertPageMetrics( result, page, viewport ) {
 	const context = `${ result.url } at ${ viewport.width }px`;
 	assert( result.pathname === page.route, `${ context } resolved to unexpected path ${ result.pathname}.` );
@@ -691,6 +857,7 @@ function assertPageMetrics( result, page, viewport ) {
 		result.reducedMotion.offenders.length === 0,
 		`${ context } retains visible motion under reduced motion: ${ JSON.stringify( result.reducedMotion.offenders.slice( 0, 8 ) ) }.`
 	);
+	assertPlacementGeometry( result, viewport, context );
 	if ( shouldInspectDigestTextResize( page, viewport ) ) {
 		assert( result.textResize200, context + ' did not collect the required 200% root-text metrics.' );
 		assert(
@@ -723,10 +890,6 @@ function assertPageMetrics( result, page, viewport ) {
 		assert( result.primaryActions, `${ context } is missing the first-screen action rail.` );
 		assertActions( result.primaryActions.actions, DIGEST_EXPECTATIONS.primaryActions, `${ context } first-screen rail`, result.url );
 		assert( result.primaryActions.top >= -1, context + ' first-screen actions begin above the viewport.' );
-		assert(
-			result.primaryActions.focusIndexes.join( '|' ) === '0',
-			context + ' does not make the single first-screen action the first keyboard stop in main.'
-		);
 		// The probe samples three opening children; the retired shape has one
 		// fewer opening block, so the comparison takes the matching slice.
 		const expectedOpening = DIGEST_EXPECTATIONS.hasEvent ? 'hero|event|why' : 'hero|why';
@@ -742,6 +905,10 @@ function assertPageMetrics( result, page, viewport ) {
 
 	if ( page.name === 'digest' && ! DIGEST_EXPECTATIONS.hasEvent ) {
 		assert( result.primaryActions.inHero, context + ' first-screen actions are outside the hero.' );
+		assert(
+			result.primaryActions.focusIndexes.join( '|' ) === '0',
+			context + ' does not make the single first-screen action the first keyboard stop in main.'
+		);
 		assert( ! result.eventLandmark, context + ' still renders the retired WordCamp landmark.' );
 		assert( ! result.wcus, context + ' still renders the retired WordCamp action region.' );
 	}
@@ -762,6 +929,11 @@ function assertPageMetrics( result, page, viewport ) {
 			context + ' puts the WordCamp landmark ahead of the H1, so its own H2 opens the outline.'
 		);
 		assert( result.primaryActions.inEvent, context + ' first-screen actions are outside the WordCamp landmark.' );
+		assert(
+			result.primaryActions.focusIndexes.join( '|' ) === String( result.primaryActions.mastheadFocusCount ) &&
+				result.primaryActions.mastheadFocusCount === 7,
+			context + ' does not place the event action immediately after the masthead’s seven contents links in keyboard order.'
+		);
 		assert( result.wcus, `${ context } is missing the .hp-wcus-callout action region.` );
 		assertActions( result.wcus.actions, DIGEST_EXPECTATIONS.wcusActions, `${ context } WCUS callout`, result.url );
 		assert( result.wcus.actions.every( ( action ) => action.textContained ), `${ context } clips a WCUS action label.` );
@@ -860,28 +1032,16 @@ function assertPageMetrics( result, page, viewport ) {
 			);
 		}
 
-		// The register, the four-part debugging proof, and the
-		// #root-cause-investigation fragment survive every Digest shape, so their
-		// geometry and focus contracts are asserted for whatever body is selected.
-		if ( viewport.width === 390 ) {
-			assert( result.evidenceRecord?.title && result.evidenceRecord.state && result.evidenceRecord.directEvidence, context + ' is missing compact evidence geometry.' );
+		// The evidence register becomes the same labelled record anatomy as the
+		// appendix ledgers below 782px. This used to permit a special 390px
+		// title/state metadata row, which no longer matches the shared chassis.
+		if ( viewport.width < 782 ) {
+			const evidenceLedger = result.ledgerLayouts.find( ( ledger ) => ledger.name === 'evidence register' );
+			assert( evidenceLedger, context + ' is missing stacked evidence-ledger geometry.' );
 			assert(
-				Math.abs( result.evidenceRecord.title.top - result.evidenceRecord.state.top ) <= 24,
-				context + ' does not keep title and state in one compact evidence metadata row.'
-			);
-			assert(
-				result.evidenceRecord.directEvidence.top >=
-					Math.max( result.evidenceRecord.title.bottom, result.evidenceRecord.state.bottom ) - 1,
-				context + ' does not place direct evidence after title and state.'
-			);
-		}
-
-		if ( viewport.width === 320 ) {
-			assert( result.evidenceRecord?.title && result.evidenceRecord.state && result.evidenceRecord.directEvidence, context + ' is missing stacked evidence geometry.' );
-			assert(
-				result.evidenceRecord.state.top >= result.evidenceRecord.title.bottom - 1 &&
-					result.evidenceRecord.directEvidence.top >= result.evidenceRecord.state.bottom - 1,
-				context + ' does not stack title, state, and direct evidence at 320px.'
+				evidenceLedger.headers.join( '|' ) === 'Artifact|State|Direct evidence' &&
+					evidenceLedger.pseudoLabels.join( '|' ) === evidenceLedger.headers.join( '|' ),
+				context + ' does not render the Digest evidence row as an Artifact / State / Direct evidence record.'
 			);
 		}
 
@@ -916,25 +1076,58 @@ function assertPageMetrics( result, page, viewport ) {
 		assert( result.fragment.visible, `${ context } assigns #resume-keyword-bank to an empty or hidden element.` );
 		assert( result.fragment.heading === 'The 34-term keyword ledger', `${ context } fragment target does not own the keyword-ledger H2.` );
 		assert( result.fragment.isTarget, `${ context } #resume-keyword-bank does not become the meaningful :target.` );
+		assert( result.marketScrollHint.exists, `${ context } is missing the market-table scroll hint.` );
+		const expectsScrollHint = viewport.width >= 782 && viewport.width <= 1180;
+		assert(
+			result.marketScrollHint.visible === expectsScrollHint,
+			`${ context } market scroll hint is ${ result.marketScrollHint.visible ? 'visible' : 'hidden' }; expected ${ expectsScrollHint ? 'visible' : 'hidden' }.`
+		);
 
-		// Both ledgers publish complete before the filter narrows them, so the
-		// row totals are asserted against the enhancement's own idea of "all"
-		// rather than against whatever happens to be on screen.
+		// Both ledgers remain complete in the source. Once enhancement mounts,
+		// the keyword ledger intentionally opens on Demonstrated while the market
+		// screen opens on All; their all-state counts still have to equal source.
 		assert( result.ledgers.length === 2, `${ context } renders ${ result.ledgers.length } filterable ledgers; expected 2.` );
 		for ( const ledger of result.ledgers ) {
 			assert(
-				ledger.rows === ledger.visibleRows,
-				`${ context } ${ ledger.name } opens with ${ ledger.visibleRows } of ${ ledger.rows } rows shown; the ledger must publish complete and filter down from there.`
+				ledger.visibleRows === ledger.expectedInitialRows,
+				`${ context } ${ ledger.name } opens with ${ ledger.visibleRows } rows shown; expected ${ ledger.expectedInitialRows } for ${ ledger.defaultState }.`
 			);
 			assert( ledger.rows === ledger.expectedRows, `${ context } ${ ledger.name } holds ${ ledger.rows } rows; expected ${ ledger.expectedRows }.` );
 			assert(
 				ledger.standings === ledger.rows,
 				`${ context } ${ ledger.name } states a standing on ${ ledger.standings } of ${ ledger.rows } rows; state may never rest on colour alone.`
 			);
-			assert( ledger.chips.length >= 4, `${ context } ${ ledger.name } offers ${ ledger.chips.length } filters; expected at least 4.` );
+			assert(
+				ledger.visibleStandings === ledger.visibleRows,
+				`${ context } ${ ledger.name } visibly exposes standing text on ${ ledger.visibleStandings } of ${ ledger.visibleRows } shown rows.`
+			);
+			assert( ledger.chips.length === ledger.expectedOrder.length, `${ context } ${ ledger.name } offers ${ ledger.chips.length } filters; expected ${ ledger.expectedOrder.length }.` );
+			assert(
+				ledger.chips.map( ( chip ) => chip.state ).join( ',' ) === ledger.expectedOrder.join( ',' ),
+				`${ context } ${ ledger.name } filter order is ${ ledger.chips.map( ( chip ) => chip.state ).join( ' → ' ) }; expected ${ ledger.expectedOrder.join( ' → ' ) }.`
+			);
 			assert( ledger.group === 'group' && ledger.groupLabel, `${ context } ${ ledger.name } filter row is not a labelled group.` );
 			assert( ledger.statusLive === 'polite', `${ context } ${ ledger.name } filter has no polite status region.` );
+			assert(
+				ledger.openingStatus === ledger.expectedOpeningStatus,
+				`${ context } ${ ledger.name } opening status is "${ ledger.openingStatus }"; expected "${ ledger.expectedOpeningStatus }".`
+			);
+			if ( viewport.width < 600 ) {
+				assert(
+					ledger.filterLayout.flexWrap === 'nowrap' && ledger.filterLayout.overflowX === 'auto' &&
+						ledger.filterLayout.scrollSnapType.startsWith( 'x' ),
+					`${ context } ${ ledger.name } filter does not become a no-wrap horizontal snap rail below 600px.`
+				);
+			} else {
+				assert(
+					ledger.filterLayout.flexWrap === 'wrap' && ledger.filterLayout.overflowX === 'visible' &&
+						ledger.filterLayout.scrollSnapType === 'none',
+					`${ context } ${ ledger.name } filter does not restore wrapping, non-scrolling controls at 600px and above.`
+				);
+			}
 			assert( ledger.chipsSum === ledger.rows, `${ context } ${ ledger.name } chip counts total ${ ledger.chipsSum }, not the ${ ledger.rows } rows published.` );
+			assert( ledger.allCount === ledger.rows, `${ context } ${ ledger.name } All count is ${ ledger.allCount }, not ${ ledger.rows }.` );
+			assert( ledger.openingPressedState === ledger.defaultState, `${ context } ${ ledger.name } opens on ${ ledger.openingPressedState || 'no state' }, not ${ ledger.defaultState }.` );
 			for ( const chip of ledger.chips ) {
 				assert( chip.height >= 44, `${ context } ${ ledger.name } filter "${ chip.label }" is ${ chip.height }px high; expected at least 44px.` );
 				assert( chip.cursor === 'pointer', `${ context } ${ ledger.name } filter "${ chip.label }" cursor is ${ chip.cursor }, not pointer.` );
@@ -945,11 +1138,14 @@ function assertPageMetrics( result, page, viewport ) {
 				ledger.outlineStyle !== 'none' && ledger.outlineWidth >= 2,
 				`${ context } ${ ledger.name } filter has no visible keyboard outline.`
 			);
-			assert( ledger.narrowed > 0 && ledger.narrowed < ledger.rows, `${ context } ${ ledger.name } filter did not narrow the ledger.` );
+			assert(
+				ledger.narrowed === ledger.expectedNarrowRows,
+				`${ context } ${ ledger.name } ${ ledger.narrowState || 'held' } filter shows ${ ledger.narrowed } rows; expected ${ ledger.expectedNarrowRows }.`
+			);
 			assert( ledger.narrowedPressed, `${ context } ${ ledger.name } filter did not mark the held state pressed.` );
 			assert(
-				ledger.narrowedStatus.includes( String( ledger.narrowed ) ),
-				`${ context } ${ ledger.name } status says "${ ledger.narrowedStatus }" while ${ ledger.narrowed } rows are shown.`
+				ledger.narrowedStatus === ledger.expectedNarrowStatus,
+				`${ context } ${ ledger.name } narrowed status is "${ ledger.narrowedStatus }"; expected "${ ledger.expectedNarrowStatus }" while ${ ledger.narrowed } rows are shown.`
 			);
 			assert( ledger.restored === ledger.rows, `${ context } ${ ledger.name } did not restore every row when the filter was released.` );
 		}
@@ -957,15 +1153,52 @@ function assertPageMetrics( result, page, viewport ) {
 }
 
 /**
- * Both appendix ledgers publish complete and are narrowed by an injected filter
- * row (assets/js/digest-register-filter.js). Nothing here may be read from the
- * script's own bookkeeping: the row totals, the standing words, and the counts
- * on the chips are read back off the rendered table, so a filter that hides a
- * row it never counted fails rather than agreeing with itself.
+ * Both appendix ledgers publish complete in markup and are narrowed by an
+ * injected filter row (assets/js/digest-register-filter.js). The keyword
+ * ledger opens Demonstrated-first after a successful mount; the market screen
+ * opens on All. Nothing here is read from the script's own bookkeeping: row
+ * totals, standing words, and chip counts come back off the rendered page.
  */
+const DIGEST_LEDGER = {
+	name: 'evidence register',
+	root: '.hp-evidence-ledger',
+	table: '.hp-evidence-table table',
+	rows: 12,
+	initialRows: 12,
+	defaultState: 'all',
+	openingStatus: 'Showing all 12 records · states verified 10 Aug 2026',
+	standing: 'td:first-of-type',
+};
+
 const APPENDIX_LEDGERS = [
-	{ name: 'keyword ledger', root: '.hp-resume-keyword-bank', table: '.hp-keyword-table table', rows: 34, standing: 'th strong' },
-	{ name: 'market screen', root: '.hp-live-states', table: '.hp-market-table table', rows: 20, standing: 'td:nth-of-type(4)' },
+	{
+		name: 'keyword ledger',
+		root: '.hp-resume-keyword-bank',
+		table: '.hp-keyword-table table',
+		rows: 34,
+		initialRows: 10,
+		defaultState: 'demonstrated',
+		openingStatus: 'Showing 10 of 34 terms · demonstrated',
+		narrowState: 'partial',
+		narrowRows: 11,
+		narrowStatus: 'Showing 11 of 34 terms · partial',
+		order: [ 'demonstrated', 'partial', 'gap', 'all' ],
+		standing: 'th strong',
+	},
+	{
+		name: 'market screen',
+		root: '.hp-live-states',
+		table: '.hp-market-table table',
+		rows: 20,
+		initialRows: 20,
+		defaultState: 'all',
+		openingStatus: 'Showing all 20 rows',
+		narrowState: 'live',
+		narrowRows: 9,
+		narrowStatus: 'Showing 9 of 20 rows · live passes',
+		order: [ 'all', 'live', 'historical', 'recheck', 'failed' ],
+		standing: 'td:nth-of-type(4)',
+	},
 ];
 
 async function inspectLedgers( cdp, sessionId ) {
@@ -974,7 +1207,23 @@ async function inspectLedgers( cdp, sessionId ) {
 	for ( const ledger of APPENDIX_LEDGERS ) {
 		const present = await evaluate( cdp, sessionId, `!!document.querySelector('${ ledger.root } .hp-evidence-filter')` );
 		if ( ! present ) {
-			ledgers.push( { name: ledger.name, rows: 0, visibleRows: 0, expectedRows: ledger.rows, standings: 0, chips: [], chipsSum: 0 } );
+			ledgers.push( {
+				name: ledger.name,
+				rows: 0,
+				visibleRows: 0,
+				expectedRows: ledger.rows,
+				expectedInitialRows: ledger.initialRows,
+				defaultState: ledger.defaultState,
+				expectedOpeningStatus: ledger.openingStatus,
+				expectedNarrowStatus: ledger.narrowStatus,
+				expectedNarrowRows: ledger.narrowRows,
+				narrowState: ledger.narrowState,
+				expectedOrder: ledger.order,
+				standings: 0,
+				visibleStandings: 0,
+				chips: [],
+				chipsSum: 0,
+			} );
 			continue;
 		}
 
@@ -990,9 +1239,22 @@ async function inspectLedgers( cdp, sessionId ) {
 				return !el.hidden && style.display !== 'none' && style.visibility !== 'hidden' &&
 					el.getClientRects().length > 0;
 			};
+			const isReadable = (element) => {
+				if (!element || !element.textContent.trim() || !isShown(element)) return false;
+				const bounds = element.getBoundingClientRect();
+				if (bounds.width <= 1 || bounds.height <= 1) return false;
+				for (let current = element; current; current = current.parentElement) {
+					const style = getComputedStyle(current);
+					if (current.getAttribute('aria-hidden') === 'true' || style.display === 'none' ||
+						style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+				}
+				return true;
+			};
 			const chips = Array.from(group.querySelectorAll('.hp-evidence-filter__button'));
-			chips[1].focus();
-			const style = getComputedStyle(chips[1]);
+			const focusChip = group.querySelector('[data-state="${ ledger.narrowState }"]');
+			focusChip.focus();
+			const style = getComputedStyle(focusChip);
+			const groupStyle = getComputedStyle(group);
 			return {
 				rows: rows.length,
 				visibleRows: rows.filter(isShown).length,
@@ -1000,23 +1262,37 @@ async function inspectLedgers( cdp, sessionId ) {
 					const cell = row.querySelector('${ ledger.standing }');
 					return !!cell && cell.textContent.trim().length > 0;
 				}).length,
+				visibleStandings: rows.filter((row) => {
+					const cell = row.querySelector('${ ledger.standing }');
+					return isReadable(cell);
+				}).length,
 				group: group.getAttribute('role'),
 				groupLabel: group.getAttribute('aria-label'),
 				statusLive: status ? status.getAttribute('aria-live') : null,
+				openingStatus: status ? status.textContent.trim() : null,
+				filterLayout: {
+					flexWrap: groupStyle.flexWrap,
+					overflowX: groupStyle.overflowX,
+					scrollSnapType: groupStyle.scrollSnapType,
+					clientWidth: group.clientWidth,
+					scrollWidth: group.scrollWidth,
+				},
 				chips: chips.map((chip) => ({
 					label: chip.textContent.trim(),
+					state: chip.dataset.state,
 					count: Number(chip.querySelector('.hp-evidence-filter__count').textContent),
 					height: chip.getBoundingClientRect().height,
 					cursor: getComputedStyle(chip).cursor,
 					pressed: chip.getAttribute('aria-pressed'),
 				})),
-				focusVisible: chips[1].matches(':focus-visible'),
+				openingPressedState: (chips.find((chip) => chip.getAttribute('aria-pressed') === 'true') || {}).dataset?.state || null,
+				focusVisible: focusChip.matches(':focus-visible'),
 				outlineStyle: style.outlineStyle,
 				outlineWidth: parseFloat(style.outlineWidth) || 0,
 			};
 		})()` );
 
-		// The focused chip is the first real state; hold it, then release it.
+		// Hold a non-default state, then restore the explicit All state.
 		await pressKey( cdp, sessionId, 'Enter' );
 		const narrowed = await evaluate( cdp, sessionId, `(() => {
 			const root = document.querySelector('${ ledger.root }');
@@ -1029,14 +1305,14 @@ async function inspectLedgers( cdp, sessionId ) {
 			};
 			return {
 				shown: rows.filter(isShown).length,
-				pressed: chips[1].getAttribute('aria-pressed') === 'true',
+				pressed: root.querySelector('[data-state="${ ledger.narrowState }"]').getAttribute('aria-pressed') === 'true',
 				status: root.querySelector('.hp-evidence-filter__status').textContent,
 			};
 		})()` );
 
 		const restored = await evaluate( cdp, sessionId, `(() => {
 			const root = document.querySelector('${ ledger.root }');
-			root.querySelectorAll('.hp-evidence-filter__button')[0].click();
+			root.querySelector('.hp-evidence-filter__button[data-state="all"]').click();
 			const rows = Array.from(root.querySelectorAll('${ ledger.table } tbody tr'));
 			const isShown = (el) => {
 				const style = getComputedStyle(el);
@@ -1049,11 +1325,19 @@ async function inspectLedgers( cdp, sessionId ) {
 		ledgers.push( {
 			name: ledger.name,
 			expectedRows: ledger.rows,
+			expectedInitialRows: ledger.initialRows,
+			defaultState: ledger.defaultState,
+			expectedOpeningStatus: ledger.openingStatus,
+			expectedNarrowStatus: ledger.narrowStatus,
+			expectedNarrowRows: ledger.narrowRows,
+			narrowState: ledger.narrowState,
+			expectedOrder: ledger.order,
 			...opening,
 			// "All" repeats the total, so the states themselves have to add up
 			// to it — a chip counting rows no other chip claims would pass a
 			// simple sum.
-			chipsSum: opening.chips.slice( 1 ).reduce( ( total, chip ) => total + chip.count, 0 ),
+			chipsSum: opening.chips.filter( ( chip ) => chip.state !== 'all' ).reduce( ( total, chip ) => total + chip.count, 0 ),
+			allCount: ( opening.chips.find( ( chip ) => chip.state === 'all' ) || { count: 0 } ).count,
 			narrowed: narrowed.shown,
 			narrowedPressed: narrowed.pressed,
 			narrowedStatus: narrowed.status,
@@ -1075,6 +1359,7 @@ async function inspectPage( cdp, page, viewport ) {
 	try {
 		await cdp.send( 'Page.enable', {}, sessionId );
 		await cdp.send( 'Runtime.enable', {}, sessionId );
+		await cdp.send( 'DOM.enable', {}, sessionId );
 		await cdp.send( 'Emulation.setDeviceMetricsOverride', {
 			width: viewport.width,
 			height: viewport.height,
@@ -1082,18 +1367,22 @@ async function inspectPage( cdp, page, viewport ) {
 			mobile: viewport.mobile,
 		}, sessionId );
 
-		const loaded = cdp.once( 'Page.loadEventFired', sessionId );
 		const url = new URL( page.route, ORIGIN ).href;
-		const navigation = await cdp.send( 'Page.navigate', { url }, sessionId );
+		const navigation = await cdp.send( 'Page.navigate', { url }, sessionId, NAVIGATION_RESPONSE_TIMEOUT_MS );
 		assert( ! navigation.errorText, `${ url } failed to navigate: ${ navigation.errorText }` );
-		await loaded;
-		await evaluate( cdp, sessionId, 'document.fonts ? document.fonts.ready : Promise.resolve()' );
+		await waitForDocumentMain( cdp, sessionId, url );
+		await waitForPlacementStyles( cdp, sessionId );
+		await evaluate( cdp, sessionId, `document.fonts ? Promise.race([
+			document.fonts.ready,
+			new Promise((resolve) => setTimeout(resolve, 8000)),
+		]) : Promise.resolve()` );
 		await wait( 250 );
 
 		let ledgers = [];
 		if ( page.name === 'appendix' ) {
 			ledgers = await inspectLedgers( cdp, sessionId );
 		}
+		await evaluate( cdp, sessionId, 'scrollTo(0, 0)' );
 
 		const metrics = await evaluate( cdp, sessionId, `(() => {
 			const round = (value) => Math.round(value * 100) / 100;
@@ -1114,6 +1403,21 @@ async function inspectPage( cdp, page, viewport ) {
 			const isVisible = (element) => {
 				const style = getComputedStyle(element);
 				return style.display !== 'none' && style.visibility !== 'hidden' && element.getClientRects().length > 0;
+			};
+			const pseudoLabel = (element) => {
+				const content = getComputedStyle(element, '::before').content;
+				if (!content || content === 'none' || content === 'normal') {
+					return '';
+				}
+				return content.replace(/^["']|["']$/g, '');
+			};
+			const pseudoLabelRendered = (element) => {
+				const style = getComputedStyle(element, '::before');
+				return pseudoLabel(element).length > 0 && style.display !== 'none' &&
+					style.visibility !== 'hidden' && style.contentVisibility !== 'hidden' &&
+					Number(style.opacity) > 0 && parseFloat(style.fontSize) > 0 &&
+					style.clipPath === 'none' && style.color !== 'transparent' &&
+					!style.color.endsWith(', 0)') && !style.color.includes('/ 0)');
 			};
 			const linkSelector = [
 				'.hp-evidence-table a',
@@ -1202,6 +1506,67 @@ async function inspectPage( cdp, page, viewport ) {
 					bottom: round(bounds.bottom),
 				};
 			});
+			const masthead = document.querySelector('.hp-placement-masthead');
+			const mastheadMain = masthead?.querySelector(':scope > .hp-placement-masthead__main');
+			const mastheadSide = masthead?.querySelector(':scope > .hp-placement-contents, :scope > .hp-placement-audit');
+			const mastheadStyle = masthead ? getComputedStyle(masthead) : null;
+			const sectionMetric = (section) => {
+				const style = getComputedStyle(section);
+				return {
+					id: section.id || null,
+					...rect(section),
+					paddingLeft: round(parseFloat(style.paddingLeft) || 0),
+					paddingRight: round(parseFloat(style.paddingRight) || 0),
+					scrollMarginBlockStart: round(parseFloat(style.scrollMarginBlockStart) || 0),
+				};
+			};
+			const placementSections = Array.from(document.querySelectorAll('.hp-placement-section'));
+			const nestedTargets = Array.from(document.querySelectorAll('.hp-placement-section [id]')).map((target) => ({
+				id: target.id,
+				scrollMarginBlockStart: round(parseFloat(getComputedStyle(target).scrollMarginBlockStart) || 0),
+			}));
+			let nestedProbeScrollMargin = null;
+			if (placementSections[0]) {
+				const probe = document.createElement('span');
+				probe.id = 'hp-placement-scroll-offset-probe';
+				probe.hidden = true;
+				placementSections[0].appendChild(probe);
+				nestedProbeScrollMargin = round(parseFloat(getComputedStyle(probe).scrollMarginBlockStart) || 0);
+				probe.remove();
+			}
+			const bands = Array.from(document.querySelectorAll('.hp-placement-band')).map((band) => {
+				const inner = band.querySelector(':scope > .hp-placement-part, :scope > .hp-placement-band__inner');
+				return {
+					name: Array.from(band.classList).find((name) => name.startsWith('hp-placement-band--')) || 'placement',
+					market: band.classList.contains('hp-placement-band--market'),
+					...rect(band),
+					inner: rect(inner),
+				};
+			});
+			const ledgerLayouts = Array.from(document.querySelectorAll('.hp-placement-ledger')).map((figure) => {
+				const table = figure.querySelector('table');
+				const head = table?.querySelector('thead');
+				const headRect = rect(head);
+				const headStyle = head ? getComputedStyle(head) : null;
+				const firstRow = table?.querySelector('tbody tr:not([hidden])') || table?.querySelector('tbody tr');
+				const cells = firstRow ? Array.from(firstRow.children).filter((cell) => cell.matches('th, td')) : [];
+				let name = 'placement ledger';
+				if (figure.classList.contains('hp-evidence-table')) name = 'evidence register';
+				if (figure.classList.contains('hp-keyword-table')) name = 'keyword ledger';
+				if (figure.classList.contains('hp-market-table')) name = 'market screen';
+				const headerVisuallyHidden = !!headStyle && !!headRect && headStyle.position === 'absolute' &&
+					headRect.width <= 1.5 && headRect.height <= 1.5 && headStyle.overflow === 'hidden';
+				return {
+					name,
+					headers: Array.from(table?.querySelectorAll('thead th') || []).map((cell) => cell.textContent.trim().replace(/\\s+/g, ' ')),
+					cells: cells.map(rect),
+					pseudoLabels: cells.map(pseudoLabel),
+					pseudoLabelsRendered: cells.map(pseudoLabelRendered),
+					headerVisible: !!head && isVisible(head) && !headerVisuallyHidden,
+					headerVisuallyHidden,
+				};
+			});
+			const marketScrollHint = document.querySelector('.hp-market-scroll-hint');
 
 			return {
 				url: location.href,
@@ -1213,6 +1578,29 @@ async function inspectPage( cdp, page, viewport ) {
 				firstHeadingLevel: headings[0]?.level || null,
 				headingSkips,
 				linkFailures,
+				placementGeometry: {
+					rootFontSize: round(parseFloat(getComputedStyle(document.documentElement).fontSize) || 16),
+					masthead: masthead ? {
+						root: rect(masthead),
+						main: rect(mastheadMain),
+						side: rect(mastheadSide),
+						gridTemplateColumns: mastheadStyle.gridTemplateColumns,
+						paddingLeft: round(parseFloat(mastheadStyle.paddingLeft) || 0),
+						paddingRight: round(parseFloat(mastheadStyle.paddingRight) || 0),
+					} : null,
+					textSections: Array.from(document.querySelectorAll('.hp-placement-section--text')).map(sectionMetric),
+					wideSections: Array.from(document.querySelectorAll('.hp-placement-section--wide')).map(sectionMetric),
+					sections: placementSections.map(sectionMetric),
+					nestedTargets,
+					nestedProbeScrollMargin,
+					bands,
+				},
+				ledgerLayouts,
+				marketScrollHint: {
+					exists: !!marketScrollHint,
+					visible: !!marketScrollHint && isVisible(marketScrollHint),
+					display: marketScrollHint ? getComputedStyle(marketScrollHint).display : null,
+				},
 				eventLandmark: wcus ? {
 					tagName: wcus.tagName,
 					ariaLabel: wcus.getAttribute('aria-label'),
@@ -1236,6 +1624,7 @@ async function inspectPage( cdp, page, viewport ) {
 					bottom: round(primaryRect.bottom),
 					actions: actions(primaryRail),
 					focusIndexes: eventLinks.map((link) => focusables.indexOf(link)),
+					mastheadFocusCount: masthead ? Array.from(masthead.querySelectorAll('a[href], button:not([disabled]), summary')).filter(isVisible).length : 0,
 				} : null,
 				closing: closing ? {
 					eyebrow: closing.querySelector('.hp-page-hero__eyebrow')?.textContent.trim() || null,
@@ -1281,11 +1670,6 @@ async function inspectPage( cdp, page, viewport ) {
 					registerStatusLive: document.querySelector('.hp-evidence-filter__status')?.getAttribute('aria-live') || null,
 				},
 				longformCount: document.querySelectorAll('.hp-fit-ledger, .hp-incident-card, .hp-theme-governance, .hp-evidence-ledger, .hp-method-link').length,
-				evidenceRecord: firstEvidenceRow ? {
-					title: rect(firstEvidenceRow.querySelector('th')),
-					state: rect(firstEvidenceRow.querySelector('td:nth-of-type(1)')),
-					directEvidence: rect(firstEvidenceRow.querySelector('td:nth-of-type(2)')),
-				} : null,
 				proofItems,
 				fragment: anchor ? {
 					tagName: anchor.tagName,
@@ -1317,7 +1701,12 @@ async function inspectPage( cdp, page, viewport ) {
 		if ( page.name === 'digest' ) {
 			const initialOutline = await evaluate( cdp, sessionId, `Array.from(document.querySelectorAll('main h1, main h2, main h3, main h4, main h5, main h6')).map((heading) => heading.tagName + '|' + heading.textContent.trim().replace(/\\s+/g, ' ')).join('\\n')` );
 			await evaluate( cdp, sessionId, `location.hash = 'root-cause-investigation'` );
-			await wait( 100 );
+			for ( let attempt = 0; attempt < 20; attempt++ ) {
+				if ( await evaluate( cdp, sessionId, `document.activeElement === document.getElementById('root-cause-investigation')` ) ) {
+					break;
+				}
+				await wait( 50 );
+			}
 			metrics.rootCauseFragment = await evaluate( cdp, sessionId, `(() => {
 				const target = document.getElementById('root-cause-investigation');
 				const header = document.querySelector('header.wp-block-template-part');
@@ -1343,7 +1732,7 @@ async function inspectPage( cdp, page, viewport ) {
 			media: 'screen',
 			features: [ { name: 'prefers-reduced-motion', value: 'reduce' } ],
 		}, sessionId );
-		await wait( 30 );
+		await wait( 250 );
 		const reducedMotion = await evaluate( cdp, sessionId, `(() => {
 			const maximumSeconds = (value) => Math.max(...value.split(',').map((part) => {
 				const number = parseFloat(part) || 0;
@@ -1383,6 +1772,392 @@ async function inspectPage( cdp, page, viewport ) {
 	}
 }
 
+function ledgerSnapshotExpression( ledgers ) {
+	const contracts = ledgers.map( ( ledger ) => ( {
+		name: ledger.name,
+		root: ledger.root,
+		table: ledger.table,
+		standing: ledger.standing,
+	} ) );
+	return `(() => {
+		const contracts = ${ JSON.stringify( contracts ) };
+		const isShown = (element) => {
+			const style = getComputedStyle(element);
+			return !element.hidden && style.display !== 'none' && style.visibility !== 'hidden' &&
+				element.getClientRects().length > 0;
+		};
+		const isReadable = (element) => {
+			if (!element || !element.textContent.trim() || !isShown(element)) return false;
+			const bounds = element.getBoundingClientRect();
+			if (bounds.width <= 1 || bounds.height <= 1) return false;
+			for (let current = element; current; current = current.parentElement) {
+				const style = getComputedStyle(current);
+				if (current.getAttribute('aria-hidden') === 'true' || style.display === 'none' ||
+					style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+			}
+			return true;
+		};
+		return {
+			url: location.href,
+			pathname: location.pathname,
+			ledgers: contracts.map((contract) => {
+				const root = document.querySelector(contract.root);
+				const rows = root ? Array.from(root.querySelectorAll(contract.table + ' tbody tr')) : [];
+				const pressed = root?.querySelector('.hp-evidence-filter__button[aria-pressed="true"]');
+				return {
+					name: contract.name,
+					rootPresent: !!root,
+					rows: rows.length,
+					visibleRows: rows.filter(isShown).length,
+					standings: rows.filter((row) => isReadable(row.querySelector(contract.standing))).length,
+					filterGroups: root?.querySelectorAll('.hp-evidence-filter').length || 0,
+					statuses: root?.querySelectorAll('.hp-evidence-filter__status').length || 0,
+					dataStates: rows.filter((row) => row.querySelector('th')?.hasAttribute('data-state')).length,
+					pressedState: pressed?.dataset.state || null,
+					statusText: root?.querySelector('.hp-evidence-filter__status')?.textContent.trim() || null,
+				};
+			}),
+		};
+	})()`;
+}
+
+function appendixLedgerSnapshotExpression() {
+	return ledgerSnapshotExpression( APPENDIX_LEDGERS );
+}
+
+function digestLedgerSnapshotExpression() {
+	return ledgerSnapshotExpression( [ DIGEST_LEDGER ] );
+}
+
+async function withPlacementScenarioTarget( cdp, options, callback ) {
+	const target = await cdp.send( 'Target.createTarget', { url: 'about:blank' } );
+	const attached = await cdp.send( 'Target.attachToTarget', {
+		targetId: target.targetId,
+		flatten: true,
+	} );
+	const sessionId = attached.sessionId;
+
+	try {
+		await cdp.send( 'Page.enable', {}, sessionId );
+		await cdp.send( 'Runtime.enable', {}, sessionId );
+		await cdp.send( 'DOM.enable', {}, sessionId );
+		await cdp.send( 'Emulation.setDeviceMetricsOverride', {
+			width: 1024,
+			height: 1000,
+			deviceScaleFactor: 1,
+			mobile: false,
+		}, sessionId );
+		if ( options.preloadScript ) {
+			await cdp.send( 'Page.addScriptToEvaluateOnNewDocument', {
+				source: options.preloadScript,
+			}, sessionId );
+		}
+		if ( options.disableScripts ) {
+			await cdp.send( 'Emulation.setScriptExecutionDisabled', { value: true }, sessionId );
+		}
+
+		const url = new URL( options.route || '/placement-method-and-evidence/', ORIGIN ).href;
+		const navigation = await cdp.send( 'Page.navigate', { url }, sessionId, NAVIGATION_RESPONSE_TIMEOUT_MS );
+		assert( ! navigation.errorText, `${ url } failed to navigate during ${ options.name }: ${ navigation.errorText }` );
+		await waitForDocumentMain( cdp, sessionId, url );
+		if ( options.disableScripts ) {
+			// Re-enable CDP evaluation only after load. Scripts skipped while the
+			// document parsed are not replayed, preserving the deliberate no-JS case.
+			await cdp.send( 'Emulation.setScriptExecutionDisabled', { value: false }, sessionId );
+			await waitForPlacementStyles( cdp, sessionId );
+		} else {
+			await waitForPlacementStyles( cdp, sessionId );
+			await evaluate( cdp, sessionId, `document.fonts ? Promise.race([
+				document.fonts.ready,
+				new Promise((resolve) => setTimeout(resolve, 8000)),
+			]) : Promise.resolve()` );
+			await wait( 250 );
+		}
+		return await callback( sessionId );
+	} finally {
+		await cdp.send( 'Target.closeTarget', { targetId: target.targetId } );
+	}
+}
+
+async function inspectProgressiveEnhancementFallbacks( cdp ) {
+	const digestNoJs = await withPlacementScenarioTarget(
+		cdp,
+		{ name: 'the Digest no-JavaScript check', route: '/job-placement-digest/', disableScripts: true },
+		( sessionId ) => evaluate( cdp, sessionId, digestLedgerSnapshotExpression() )
+	);
+
+	const appendixNoJs = await withPlacementScenarioTarget(
+		cdp,
+		{ name: 'the appendix no-JavaScript check', disableScripts: true },
+		( sessionId ) => evaluate( cdp, sessionId, appendixLedgerSnapshotExpression() )
+	);
+
+	const digestFailClosed = await withPlacementScenarioTarget(
+		cdp,
+		{
+			name: 'the Digest fail-closed check',
+			route: '/job-placement-digest/',
+			preloadScript: `new MutationObserver(function (records, observer) {
+				var state = document.querySelector('.hp-evidence-ledger .hp-evidence-table tbody td');
+				if (state) {
+					state.textContent = 'Unclassifiable';
+					window.__hpVerifierPoisonedDigestState = true;
+					observer.disconnect();
+				}
+			}).observe(document, { childList: true, subtree: true });`,
+		},
+		async ( sessionId ) => {
+			const snapshot = await evaluate( cdp, sessionId, digestLedgerSnapshotExpression() );
+			snapshot.poisonedState = await evaluate(
+				cdp,
+				sessionId,
+				`window.__hpVerifierPoisonedDigestState === true && document.querySelector('.hp-evidence-table tbody td')?.textContent === 'Unclassifiable'`
+			);
+			return snapshot;
+		}
+	);
+
+	const keywordFailClosed = await withPlacementScenarioTarget(
+		cdp,
+		{
+			name: 'the keyword fail-closed check',
+			preloadScript: `new MutationObserver(function (records, observer) {
+				var standing = document.querySelector('.hp-resume-keyword-bank .hp-keyword-table tbody th strong');
+				if (standing) {
+					standing.textContent = 'Unclassifiable';
+					window.__hpVerifierPoisonedStanding = true;
+					observer.disconnect();
+				}
+			}).observe(document, { childList: true, subtree: true });`,
+		},
+		async ( sessionId ) => {
+			const snapshot = await evaluate( cdp, sessionId, appendixLedgerSnapshotExpression() );
+			snapshot.poisonedStanding = await evaluate(
+				cdp,
+				sessionId,
+				`window.__hpVerifierPoisonedStanding === true && document.querySelector('.hp-keyword-table tbody th strong')?.textContent === 'Unclassifiable'`
+			);
+			return snapshot;
+		}
+	);
+
+	const marketFailClosed = await withPlacementScenarioTarget(
+		cdp,
+		{
+			name: 'the market fail-closed check',
+			preloadScript: `new MutationObserver(function (records, observer) {
+				var state = document.querySelector('.hp-live-states .hp-market-table tbody td:nth-of-type(4)');
+				if (state) {
+					state.textContent = 'Unclassifiable';
+					window.__hpVerifierPoisonedMarketState = true;
+					observer.disconnect();
+				}
+			}).observe(document, { childList: true, subtree: true });`,
+		},
+		async ( sessionId ) => {
+			const snapshot = await evaluate( cdp, sessionId, appendixLedgerSnapshotExpression() );
+			snapshot.poisonedState = await evaluate(
+				cdp,
+				sessionId,
+				`window.__hpVerifierPoisonedMarketState === true && document.querySelector('.hp-market-table tbody td:nth-of-type(4)')?.textContent === 'Unclassifiable'`
+			);
+			return snapshot;
+		}
+	);
+
+	const routerRemount = await withPlacementScenarioTarget(
+		cdp,
+		{ name: 'the router-remount check' },
+		async ( sessionId ) => {
+			const replacedRoots = await evaluate( cdp, sessionId, `(() => {
+				history.pushState({}, '', location.pathname + '?hp-remount=1');
+				const selectors = ['.hp-resume-keyword-bank', '.hp-live-states'];
+				let replaced = 0;
+				for (const selector of selectors) {
+					const root = document.querySelector(selector);
+					if (!root) continue;
+					const replacement = root.cloneNode(true);
+					replacement.querySelectorAll('.hp-evidence-filter, .hp-evidence-filter__status').forEach((node) => node.remove());
+					replacement.querySelectorAll('tbody tr').forEach((row) => row.hidden = false);
+					replacement.querySelectorAll('tbody th[data-state]').forEach((header) => header.removeAttribute('data-state'));
+					root.replaceWith(replacement);
+					replaced++;
+				}
+				return replaced;
+			})()` );
+			await wait( 250 );
+			const snapshot = await evaluate( cdp, sessionId, appendixLedgerSnapshotExpression() );
+			snapshot.replacedRoots = replacedRoots;
+			return snapshot;
+		}
+	);
+
+	const historyRemount = await withPlacementScenarioTarget(
+		cdp,
+		{ name: 'the history-remount check' },
+		async ( sessionId ) => {
+			const initialSearch = await evaluate( cdp, sessionId, `location.search` );
+			await evaluate( cdp, sessionId, `history.pushState({}, '', location.pathname + '?hp-history=forward')` );
+			// Let every delayed pushState mount settle before replacing the roots;
+			// otherwise that pending timer could mask a missing popstate listener.
+			await wait( 250 );
+			const replacedRoots = await evaluate( cdp, sessionId, `(() => {
+				const selectors = ['.hp-resume-keyword-bank', '.hp-live-states'];
+				let replaced = 0;
+				for (const selector of selectors) {
+					const root = document.querySelector(selector);
+					if (!root) continue;
+					const replacement = root.cloneNode(true);
+					replacement.querySelectorAll('.hp-evidence-filter, .hp-evidence-filter__status').forEach((node) => node.remove());
+					replacement.querySelectorAll('tbody tr').forEach((row) => row.hidden = false);
+					replacement.querySelectorAll('tbody th[data-state]').forEach((header) => header.removeAttribute('data-state'));
+					root.replaceWith(replacement);
+					replaced++;
+				}
+				return replaced;
+			})()` );
+			const traversal = await evaluate( cdp, sessionId, `new Promise((resolve) => {
+				const timeout = setTimeout(() => resolve({ popstate: false, search: location.search }), 1500);
+				addEventListener('popstate', () => {
+					clearTimeout(timeout);
+					resolve({ popstate: true, search: location.search });
+				}, { once: true });
+				history.back();
+			})` );
+			await wait( 250 );
+			const snapshot = await evaluate( cdp, sessionId, appendixLedgerSnapshotExpression() );
+			snapshot.replacedRoots = replacedRoots;
+			snapshot.initialSearch = initialSearch;
+			snapshot.traversal = traversal;
+			return snapshot;
+		}
+	);
+
+	return {
+		digestNoJs,
+		appendixNoJs,
+		digestFailClosed,
+		keywordFailClosed,
+		marketFailClosed,
+		routerRemount,
+		historyRemount,
+	};
+}
+
+function assertProgressiveEnhancementFallbacks( result ) {
+	const byName = ( snapshot, name ) => snapshot.ledgers.find( ( ledger ) => ledger.name === name );
+	const assertNoJsLedger = ( snapshot, contract, pageLabel ) => {
+		const ledger = byName( snapshot, contract.name );
+		assert( ledger?.rootPresent, `No-JS ${ pageLabel } is missing the ${ contract.name }.` );
+		assert(
+			ledger.rows === contract.rows && ledger.visibleRows === contract.rows,
+			`No-JS ${ contract.name } shows ${ ledger.visibleRows } of ${ ledger.rows } rows; expected all ${ contract.rows }.`
+		);
+		assert( ledger.standings === contract.rows, `No-JS ${ contract.name } loses explicit standing text.` );
+		assert(
+			ledger.filterGroups === 0 && ledger.statuses === 0 && ledger.dataStates === 0,
+			`No-JS ${ contract.name } retains injected filter state.`
+		);
+	};
+	const assertCompleteAndUnmounted = ( ledger, contract, label ) => {
+		assert( ledger?.rootPresent, `${ label } is missing the ${ contract.name } root.` );
+		assert(
+			ledger.rows === contract.rows && ledger.visibleRows === contract.rows &&
+				ledger.filterGroups === 0 && ledger.statuses === 0 && ledger.dataStates === 0,
+			`${ label } did not leave the complete ${ contract.name } untouched: ${ JSON.stringify( ledger ) }.`
+		);
+	};
+	const assertMountedAtDefault = ( ledger, contract, label ) => {
+		assert( ledger?.rootPresent, `${ label } is missing the ${ contract.name } root.` );
+		assert(
+			ledger.filterGroups === 1 && ledger.statuses === 1 && ledger.dataStates === contract.rows &&
+				ledger.visibleRows === contract.initialRows && ledger.pressedState === contract.defaultState &&
+				ledger.statusText === contract.openingStatus,
+			`${ label } did not keep the independent ${ contract.name } enhancement at its exact default.`
+		);
+	};
+
+	assert(
+		result.digestNoJs.pathname === '/job-placement-digest/',
+		`No-JS Digest check resolved to ${ result.digestNoJs.pathname }.`
+	);
+	assertNoJsLedger( result.digestNoJs, DIGEST_LEDGER, 'Digest' );
+
+	assert(
+		result.appendixNoJs.pathname === '/placement-method-and-evidence/',
+		`No-JS appendix check resolved to ${ result.appendixNoJs.pathname }.`
+	);
+	for ( const contract of APPENDIX_LEDGERS ) {
+		assertNoJsLedger( result.appendixNoJs, contract, 'appendix' );
+	}
+
+	assert( result.digestFailClosed.poisonedState, 'Fail-closed scenario did not poison the Digest state before mount.' );
+	assertCompleteAndUnmounted(
+		byName( result.digestFailClosed, DIGEST_LEDGER.name ),
+		DIGEST_LEDGER,
+		'Digest fail-closed scenario'
+	);
+
+	assert( result.keywordFailClosed.poisonedStanding, 'Fail-closed scenario did not poison the keyword standing before mount.' );
+	assertCompleteAndUnmounted(
+		byName( result.keywordFailClosed, 'keyword ledger' ),
+		APPENDIX_LEDGERS[ 0 ],
+		'Keyword fail-closed scenario'
+	);
+	assertMountedAtDefault(
+		byName( result.keywordFailClosed, 'market screen' ),
+		APPENDIX_LEDGERS[ 1 ],
+		'Keyword fail-closed scenario'
+	);
+
+	assert( result.marketFailClosed.poisonedState, 'Fail-closed scenario did not poison the market state before mount.' );
+	assertCompleteAndUnmounted(
+		byName( result.marketFailClosed, 'market screen' ),
+		APPENDIX_LEDGERS[ 1 ],
+		'Market fail-closed scenario'
+	);
+	assertMountedAtDefault(
+		byName( result.marketFailClosed, 'keyword ledger' ),
+		APPENDIX_LEDGERS[ 0 ],
+		'Market fail-closed scenario'
+	);
+
+	assert( result.routerRemount.replacedRoots === 2, 'Router-remount scenario did not replace both appendix ledger roots.' );
+	for ( const contract of APPENDIX_LEDGERS ) {
+		const ledger = byName( result.routerRemount, contract.name );
+		assert( ledger?.rootPresent, `Router-remount scenario is missing the ${ contract.name } root.` );
+		assert(
+			ledger.filterGroups === 1 && ledger.statuses === 1 && ledger.dataStates === contract.rows,
+			`Router remount left ${ contract.name } with ${ ledger.filterGroups } filter groups, ${ ledger.statuses } statuses, and ${ ledger.dataStates } classified rows.`
+		);
+		assert(
+			ledger.visibleRows === contract.initialRows && ledger.pressedState === contract.defaultState &&
+				ledger.statusText === contract.openingStatus,
+			`Router remount did not restore the ${ contract.name } ${ contract.defaultState } default exactly.`
+		);
+	}
+
+	assert( result.historyRemount.replacedRoots === 2, 'History-remount scenario did not replace both appendix ledger roots.' );
+	assert(
+		result.historyRemount.traversal?.popstate &&
+			result.historyRemount.traversal.search === result.historyRemount.initialSearch,
+		`History-remount scenario did not complete an actual Back traversal: ${ JSON.stringify( result.historyRemount.traversal ) }.`
+	);
+	for ( const contract of APPENDIX_LEDGERS ) {
+		const ledger = byName( result.historyRemount, contract.name );
+		assert( ledger?.rootPresent, `History-remount scenario is missing the ${ contract.name } root.` );
+		assert(
+			ledger.filterGroups === 1 && ledger.statuses === 1 && ledger.dataStates === contract.rows,
+			`History traversal left ${ contract.name } with ${ ledger.filterGroups } filter groups, ${ ledger.statuses } statuses, and ${ ledger.dataStates } classified rows.`
+		);
+		assert(
+			ledger.visibleRows === contract.initialRows && ledger.pressedState === contract.defaultState &&
+				ledger.statusText === contract.openingStatus,
+			`History traversal did not restore the ${ contract.name } ${ contract.defaultState } default exactly.`
+		);
+	}
+}
+
 async function withChrome( callback ) {
 	const userDataDir = await fsPromises.mkdtemp( path.join( os.tmpdir(), 'hp-recruiter-pages-chrome-' ) );
 	const chrome = spawn( resolveChrome(), [
@@ -1419,18 +2194,35 @@ async function withChrome( callback ) {
 
 async function verifyRenderedContracts() {
 	await withChrome( async ( cdp ) => {
+		const failures = [];
 		for ( const page of PAGES ) {
 			for ( const viewport of page.viewports ) {
-				const result = await inspectPage( cdp, page, viewport );
-				assertPageMetrics( result, page, viewport );
-				const heightSummary =
-					page.name === 'digest' && ! viewport.zoomPercent
-						? `, document height ${ result.documentHeight }px/${ DIGEST_HEIGHT_BUDGETS[ viewport.name ] }px budget`
-						: '';
-				console.log(
-					`verified ${ result.url } at ${ viewport.width }px: one H1, sequential outline, no document overflow, reduced motion${ heightSummary }`
-				);
+				try {
+					const result = await inspectPage( cdp, page, viewport );
+					assertPageMetrics( result, page, viewport );
+					const heightSummary =
+						page.name === 'digest' && ! viewport.zoomPercent
+							? `, document height ${ result.documentHeight }px/${ DIGEST_HEIGHT_BUDGETS[ viewport.name ] }px budget`
+							: '';
+					console.log(
+						`verified ${ result.url } at ${ viewport.width }px: one H1, sequential outline, no document overflow, reduced motion${ heightSummary }`
+					);
+				} catch ( error ) {
+					failures.push( `${ page.name }/${ viewport.name }: ${ error.message }` );
+					console.error( `failed ${ page.name }/${ viewport.name }: ${ error.message }` );
+				}
 			}
+		}
+		try {
+			const enhancementFallbacks = await inspectProgressiveEnhancementFallbacks( cdp );
+			assertProgressiveEnhancementFallbacks( enhancementFallbacks );
+			console.log( 'verified placement progressive enhancement: complete no-JS ledgers, per-ledger fail-closed behavior, and push/back remounts' );
+		} catch ( error ) {
+			failures.push( `progressive enhancement: ${ error.message }` );
+			console.error( `failed progressive enhancement: ${ error.message }` );
+		}
+		if ( failures.length > 0 ) {
+			throw new Error( `${ failures.length } rendered contract failure(s):\n- ${ failures.join( '\n- ' ) }` );
 		}
 	} );
 }

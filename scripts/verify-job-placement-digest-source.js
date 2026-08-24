@@ -40,17 +40,27 @@ const CLOSING_ACTIONS = [
 	[ 'Review selected WordPress evidence', '#evidence-register' ],
 ];
 
+const DIGEST_CONTENT_LINKS = [
+	[ 'The work I want', '#why-support-engineer-now' ],
+	[ 'The ask, against proof', '#current-support-fit' ],
+	[ 'Three proofs, open to inspection', '#primary-proof' ],
+	[ 'How I debug', '#root-cause-investigation' ],
+	[ 'What prevention looks like', '#theme-governance' ],
+	[ 'Evidence register, dated', '#evidence-register' ],
+	[ 'The appendix', '#appendix' ],
+];
+
 // The dossier's spine. Each section carries a gold ordinal and a label naming
 // the move it makes; the order is the argument, so it is pinned here rather
 // than left to whoever edits the page next.
 const SECTIONS = [
-	{ ordinal: '01', label: 'The work I want', anchor: 'why-support-engineer-now', heading: 'Why Support Engineer now' },
-	{ ordinal: '02', label: 'The ask, against proof', anchor: 'current-support-fit', heading: 'Current Support Engineer fit' },
-	{ ordinal: '03', label: 'Primary proof', anchor: 'primary-proof', heading: 'Three proofs, each open to inspection' },
-	{ ordinal: '04', label: 'How I debug', anchor: 'root-cause-investigation', heading: 'Debugging proof: a request log that silently under-reported' },
-	{ ordinal: '05', label: 'What prevention looks like', anchor: 'theme-governance', heading: 'The constraint is narrower than the slogan' },
-	{ ordinal: '06', label: 'Everything, dated', anchor: 'evidence-register', heading: 'Evidence register' },
-	{ ordinal: '07', label: 'The appendix', anchor: null, heading: 'The method stays inspectable without becoming the pitch' },
+	{ ordinal: '01', label: 'The work I want', anchor: 'why-support-engineer-now', heading: 'Why Support Engineer now', align: 'wide', layoutClass: 'hp-placement-section--text' },
+	{ ordinal: '02', label: 'The ask, against proof', anchor: 'current-support-fit', heading: 'Current Support Engineer fit', align: 'wide', layoutClass: 'hp-placement-section--text' },
+	{ ordinal: '03', label: 'Primary proof', anchor: 'primary-proof', heading: 'Three proofs, each open to inspection', align: 'wide', layoutClass: 'hp-placement-section--wide' },
+	{ ordinal: '04', label: 'How I debug', anchor: 'root-cause-investigation', heading: 'Debugging proof: a request log that silently under-reported', align: 'wide', layoutClass: 'hp-placement-section--text' },
+	{ ordinal: '05', label: 'What prevention looks like', anchor: 'theme-governance', heading: 'The constraint is narrower than the slogan', align: 'wide', layoutClass: 'hp-placement-section--text' },
+	{ ordinal: '06', label: 'Everything, dated', anchor: 'evidence-register', heading: 'Evidence register', align: 'full', layoutClass: 'hp-placement-band--evidence' },
+	{ ordinal: '07', label: 'The appendix', anchor: 'appendix', heading: 'The method stays inspectable without becoming the pitch', align: 'wide', layoutClass: 'hp-placement-section--text' },
 ];
 
 const DEBUG_PROOF_TERMS = [ 'Signal', 'Diagnosis', 'Constraint', 'Result' ];
@@ -103,14 +113,19 @@ const KEYWORD_ROWS = 34;
 const KEYWORD_GROUP_COUNTS = { demonstrated: 10, partial: 11, gap: 13 };
 const MARKET_ROWS = 20;
 const PRIMARY_PROOF_MARKER = 'Primary proof · card above';
+const METHOD_AUDIT_FIGURES = [
+	[ 'Résumé terms audited', KEYWORD_ROWS ],
+	[ 'Market rows screened', MARKET_ROWS ],
+	[ 'Rows failed by hand', 3 ],
+];
 
 // The appendix's spine. Same shape as the dossier's: a gold ordinal, a label
 // naming the move, the anchor, and the heading the anchor has to reach.
 const APPENDIX_SECTIONS = [
-	{ ordinal: '01', label: 'The vocabulary', anchor: 'resume-keyword-bank', heading: 'The 34-term keyword ledger' },
-	{ ordinal: '02', label: 'The screen', anchor: 'what-i-optimize-for', heading: 'What I optimize for in my next role' },
-	{ ordinal: '03', label: 'The application', anchor: 'screening-funnel', heading: 'WordPress Job Market Screen' },
-	{ ordinal: '04', label: 'What I took back', anchor: 'delisted-and-overturned', heading: 'Delisted postings and overturned decisions' },
+	{ ordinal: '01', label: 'The vocabulary', anchor: 'resume-keyword-bank', heading: 'The 34-term keyword ledger', align: 'wide', layoutClass: 'hp-placement-section--wide' },
+	{ ordinal: '02', label: 'The screen', anchor: 'what-i-optimize-for', heading: 'What I optimize for in my next role', align: 'wide', layoutClass: 'hp-placement-section--text' },
+	{ ordinal: '03', label: 'The application', anchor: 'screening-funnel', heading: 'WordPress Job Market Screen', align: 'full', layoutClass: 'hp-placement-band--market' },
+	{ ordinal: '04', label: 'What I took back', anchor: 'delisted-and-overturned', heading: 'Delisted postings and overturned decisions', align: 'wide', layoutClass: 'hp-placement-section--text' },
 ];
 
 // Structure the merged ledgers replaced. Each of these was a way of splitting
@@ -263,6 +278,62 @@ function tableRowMarkup( markup, className ) {
 	);
 }
 
+function verifyNumberedPart( block, section, label ) {
+	assert( getClassCount( block.outer, 'hp-placement-part' ) === 1, `${ label } must contain one hp-placement-part wrapper.` );
+	assert( getClassCount( block.outer, 'hp-placement-part__number' ) === 1, `${ label } must contain one visual section numeral.` );
+	assert( getClassCount( block.outer, 'hp-placement-part__content' ) === 1, `${ label } must contain one section content column.` );
+
+	const number = getScopedElement( block.outer, 'p', 'hp-placement-part__number' );
+	assert( stripMarkup( number ) === section.ordinal, `${ label } must use visual numeral ${ section.ordinal}.` );
+	const kicker = getScopedElement( block.outer, 'p', 'hp-digest-kicker' );
+	assert( stripMarkup( kicker ) === section.label, `${ label } must label the move "${ section.label }" without repeating its numeral.` );
+	assert(
+		block.outer.indexOf( 'hp-placement-part__number' ) < block.outer.indexOf( 'hp-placement-part__content' ),
+		`${ label } must put the numeral before the content column.`
+	);
+}
+
+function verifyCoreTableShape( markup, className, expectedLabels ) {
+	const expression = new RegExp(
+		`<figure\\b[^>]*class=(['"])([^'"]*\\b${ escapeForRegExp( className ) }\\b[^'"]*)\\1[^>]*>([\\s\\S]*?)<\\/figure>`,
+		'i'
+	);
+	const table = expression.exec( markup );
+	assert( table, `Expected one ${ className } table.` );
+	assert(
+		table[ 2 ].split( /\s+/ ).includes( 'hp-placement-ledger' ),
+		`${ className } must carry the shared hp-placement-ledger hook.`
+	);
+	assert(
+		! /\bdata-label\s*=/i.test( table[ 3 ] ),
+		`${ className } must keep core/table cells schema-safe; arbitrary data-label attributes do not round-trip through Gutenberg.`
+	);
+	const head = /<thead\b[^>]*>([\s\S]*?)<\/thead>/i.exec( table[ 3 ] );
+	assert( head, `${ className } must retain its semantic table header.` );
+	const headers = [ ...head[ 1 ].matchAll( /<th\b[^>]*>([\s\S]*?)<\/th>/gi ) ].map( ( match ) => stripMarkup( match[ 1 ] ) );
+	assert(
+		JSON.stringify( headers ) === JSON.stringify( expectedLabels ),
+		`${ className } headers must be ${ expectedLabels.join( ', ' ) }; found ${ headers.join( ', ' ) }.`
+	);
+
+	tableRowMarkup( markup, className ).forEach( ( row, rowIndex ) => {
+		const cells = [ ...row.matchAll( /<(th|td)\b([^>]*)>/gi ) ];
+		assert(
+			cells.length === expectedLabels.length,
+			`${ className } row ${ rowIndex + 1 } must carry ${ expectedLabels.length } cells; found ${ cells.length }.`
+		);
+		assert( cells[ 0 ][ 1 ].toLowerCase() === 'th', `${ className } row ${ rowIndex + 1 } must begin with its row header.` );
+		assert( cells.slice( 1 ).every( ( cell ) => cell[ 1 ].toLowerCase() === 'td' ), `${ className } row ${ rowIndex + 1 } must keep data cells after its row header.` );
+	} );
+}
+
+function verifyUnfilteredSourceLedger( markup, className ) {
+	const body = getTableBody( markup, className );
+	assert( ! /<tr\b[^>]*\bhidden(?:\s|=|>)/i.test( body ), `${ className } must publish every source row without hidden attributes.` );
+	assert( ! /<tr\b[^>]*\baria-hidden=(['"])true\1/i.test( body ), `${ className } must not hide source rows from assistive technology.` );
+	assert( ! /<tr\b[^>]*\bstyle=(['"])[^'"]*display\s*:\s*none[^'"]*\1/i.test( body ), `${ className } must not hide source rows with inline CSS.` );
+}
+
 // Every ledger row has to classify, and the group totals have to match. A row
 // the script cannot file silently disables the filter for the whole ledger, and
 // a total that has drifted means the page and the research disagree about how
@@ -383,6 +454,8 @@ function verifyEvidenceRegister( markup ) {
 		markup.includes( 'filter the register to hold one of those states at a time' ),
 		'The register preamble must tell the reader the states can be held one at a time.'
 	);
+	verifyCoreTableShape( markup, 'hp-evidence-table', [ 'Artifact', 'State', 'Direct evidence' ] );
+	verifyUnfilteredSourceLedger( markup, 'hp-evidence-table' );
 }
 
 // requireEvent is derived from the body, not defaulted: the accepted snapshot
@@ -427,8 +500,19 @@ function verifyMain( markup, _themeVersion, _deployedCommit, options = {} ) {
 	const heroIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-digest__hero' ) );
 	const eventIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-wcus-callout' ) );
 	const closingIndex = topLevelBlocks.findIndex( ( block ) => hasBlockClass( block, 'hp-digest-cta' ) );
+	const heroBlock = topLevelBlocks[ heroIndex ];
 
 	assert( heroIndex === 0, 'The Digest hero must be the first top-level block, so the H1 opens the outline.' );
+	assert( hasBlockClass( heroBlock, 'hp-placement-masthead' ), 'The Digest hero must use the shared placement masthead.' );
+	assert( hasBlockClass( heroBlock, 'hp-placement-masthead--digest' ) && heroBlock.attrs.align === 'wide', 'The Digest hero must keep its wide, route-specific masthead grid.' );
+	assert( getClassCount( heroBlock.outer, 'hp-placement-masthead__main' ) === 1, 'The Digest masthead must contain one main argument column.' );
+	assert( getClassCount( heroBlock.outer, 'hp-placement-contents' ) === 1, 'The Digest masthead must contain one labelled contents plate.' );
+	const contents = getScopedElement( heroBlock.outer, 'nav', 'hp-placement-contents' );
+	assert(
+		JSON.stringify( extractLinks( contents ) ) === JSON.stringify( DIGEST_CONTENT_LINKS ),
+		'The Digest contents plate must link all seven numbered sections in order.'
+	);
+	assert( countMatches( heroBlock.outer, /Published 13 Jul 2026 · Last verified 11 Aug 2026/g ) === 1, 'The Digest masthead must state its publication dateline once, inside the contents plate.' );
 	assert(
 		closingIndex === topLevelBlocks.length - 1,
 		'The closing invitation must be the last top-level block.'
@@ -446,6 +530,9 @@ function verifyMain( markup, _themeVersion, _deployedCommit, options = {} ) {
 		assert( eventBlock.attrs.anchor === 'wordcamp-us-2026', 'The WordCamp aside must own the wordcamp-us-2026 fragment.' );
 		assert( /<aside\b[^>]*aria-label="I’ll be at WordCamp US\."[^>]*>/.test( eventBlock.outer ), 'The WordCamp Group markup must serialize the accessible name.' );
 		assert( getClassCount( eventBlock.outer, 'hp-wcus-callout--event-first' ) === 1, 'The WordCamp aside must carry its event-first modifier.' );
+		assert( hasBlockClass( eventBlock, 'hp-placement-band' ) && hasBlockClass( eventBlock, 'hp-placement-band--event' ), 'The WordCamp aside must become the full-width event band.' );
+		assert( eventBlock.attrs.align === 'full', 'The WordCamp event band must remain alignfull.' );
+		assert( getClassCount( eventBlock.outer, 'hp-placement-band__inner' ) === 1, 'The WordCamp event band must contain one constrained inner plate.' );
 		// The block stays a plain wp:image an editor can still edit: core/image
 		// has no srcset or sizes attribute, so responsive candidates cannot be
 		// written here without failing block validation. inc/content-images.php
@@ -472,28 +559,26 @@ function verifyMain( markup, _themeVersion, _deployedCommit, options = {} ) {
 		assert( JSON.stringify( extractLinks( eventBlock.outer ) ) === JSON.stringify( WCUS_ACTIONS ), 'The WordCamp aside carries one action; the résumé and evidence routes belong to the closing invitation.' );
 	} else {
 		assert( eventIndex === -1, 'Event-removal mode requires the WordCamp block to be absent.' );
-		const heroBlock = topLevelBlocks[ heroIndex ];
 		assert(
 			getClassCount( heroBlock.outer, 'hp-action-rail' ) === 1,
 			'With the WordCamp aside retired, the hero must carry the first-screen action rail it used to own.'
 		);
+		const heroActions = getScopedElement( heroBlock.outer, 'div', 'hp-action-rail' );
 		assert(
-			JSON.stringify( extractLinks( heroBlock.outer ) ) === JSON.stringify( HERO_ACTIONS ),
+			JSON.stringify( extractLinks( heroActions ) ) === JSON.stringify( HERO_ACTIONS ),
 			'The retired-event hero carries one action; the résumé and evidence routes belong to the closing invitation.'
 		);
 	}
 
-	// The seven kickers are the dossier's spine: ordinal, label, anchor, heading.
-	const kickers = [ ...markup.matchAll( /<p class="hp-digest-kicker"><strong>(\d\d)<\/strong> · ([^<]+)<\/p>/g ) ];
-	assert(
-		kickers.length === SECTIONS.length,
-		`The dossier must carry ${ SECTIONS.length } numbered section kickers; found ${ kickers.length }.`
-	);
+	// The seven parts are the dossier's spine: one visual ordinal beside one
+	// content column whose kicker names the argumentative move.
 	SECTIONS.forEach( ( section, index ) => {
-		assert(
-			kickers[ index ][ 1 ] === section.ordinal && kickers[ index ][ 2 ] === section.label,
-			`Section ${ index + 1 } must read "${ section.ordinal } · ${ section.label }"; found "${ kickers[ index ][ 1 ] } · ${ kickers[ index ][ 2 ] }".`
-		);
+		const block = topLevelBlocks.find( ( candidate ) => candidate.attrs.anchor === section.anchor );
+		assert( block, `The dossier is missing the ${ section.anchor } section block.` );
+		assert( hasBlockClass( block, 'hp-placement-section' ), `Section ${ section.ordinal} must use the shared placement-section chassis.` );
+		assert( hasBlockClass( block, section.layoutClass ), `Section ${ section.ordinal} must keep its ${ section.layoutClass } measure.` );
+		assert( block.attrs.align === section.align, `Section ${ section.ordinal} must remain align${ section.align }.` );
+		verifyNumberedPart( block, section, `Section ${ index + 1 }` );
 		assert(
 			markup.includes( `<h2 class="wp-block-heading">${ section.heading }</h2>` ),
 			`The dossier is missing the section heading: ${ section.heading }`
@@ -505,6 +590,11 @@ function verifyMain( markup, _themeVersion, _deployedCommit, options = {} ) {
 			);
 		}
 	} );
+	const evidenceBlock = topLevelBlocks.find( ( block ) => block.attrs.anchor === 'evidence-register' );
+	assert( hasBlockClass( evidenceBlock, 'hp-evidence-ledger' ), 'The evidence register section must keep the filter root class.' );
+	assert( hasBlockClass( evidenceBlock, 'hp-placement-band' ) && hasBlockClass( evidenceBlock, 'hp-placement-band--evidence' ), 'The evidence register must use the full-width Digest band.' );
+	assert( getClassCount( evidenceBlock.outer, 'is-bare' ) === 1, 'The evidence band must use the bare numbered-spine variant.' );
+	assert( getClassCount( markup, 'hp-evidence-filter' ) === 0, 'The Digest source must not author filter controls; JavaScript adds them only after complete classification.' );
 
 	// 02 — the ledger holds five proven rows and the gap is stated outside it,
 	// so nothing in the table reads as evidence that isn't.
@@ -581,18 +671,37 @@ function verifyAppendix( markup ) {
 	verifyNoPublicationPlaceholders( 'Placement Method and Evidence draft', markup );
 	verifyNoMovingGitHubLinks( 'Placement Method and Evidence draft', markup );
 
-	// The four kickers are the appendix's spine, and each anchor has to reach a
-	// section that actually holds its heading.
-	const kickers = [ ...markup.matchAll( /<p class="hp-digest-kicker"><strong>(\d\d)<\/strong> · ([^<]+)<\/p>/g ) ];
+	const topLevelBlocks = parseTopLevelBlocks( markup );
+	const hasBlockClass = ( block, className ) =>
+		( block.attrs.className || '' ).split( /\s+/ ).includes( className );
+	const hero = topLevelBlocks[ 0 ];
+	assert( hero && hasBlockClass( hero, 'hp-method-hero' ) && hasBlockClass( hero, 'hp-placement-masthead' ), 'The Method page must open with the shared placement masthead.' );
+	assert( hasBlockClass( hero, 'hp-placement-masthead--method' ) && hero.attrs.align === 'wide', 'The Method hero must keep its wide, route-specific masthead grid.' );
+	assert( getClassCount( hero.outer, 'hp-placement-masthead__main' ) === 1, 'The Method masthead must contain one main explanation column.' );
+	assert( getClassCount( hero.outer, 'hp-placement-audit' ) === 1, 'The Method masthead must contain one audit figure plate.' );
+	assert( getClassCount( hero.outer, 'hp-method-scope' ) === 0, 'The retired Method scope chips must not survive beside the audit plate.' );
 	assert(
-		kickers.length === APPENDIX_SECTIONS.length,
-		`The appendix must carry ${ APPENDIX_SECTIONS.length } numbered section kickers; found ${ kickers.length }.`
+		JSON.stringify( extractLinks( hero.outer ) ) === JSON.stringify( [ [ 'Back to the Job Placement Digest', '/job-placement-digest/' ] ] ),
+		'The Method masthead must provide one visible back-link to the Digest.'
 	);
-	APPENDIX_SECTIONS.forEach( ( section, index ) => {
+	for ( const [ label, value ] of METHOD_AUDIT_FIGURES ) {
 		assert(
-			kickers[ index ][ 1 ] === section.ordinal && kickers[ index ][ 2 ] === section.label,
-			`Appendix section ${ index + 1 } must read "${ section.ordinal } · ${ section.label }"; found "${ kickers[ index ][ 1 ] } · ${ kickers[ index ][ 2 ] }".`
+			new RegExp( `<dt\\b[^>]*>[\\s\\S]*?${ escapeForRegExp( label ) }[\\s\\S]*?<\\/dt>[\\s\\S]*?<dd\\b[^>]*class=(['"])[^'"]*\\bhp-placement-audit__value\\b[^'"]*\\1[^>]*>[\\s\\S]*?>${ value }<`, 'i' ).test( hero.outer ),
+			`The Method audit plate must derive and display ${ value} for ${ label }.`
 		);
+	}
+	assert( hero.outer.includes( 'Every row retained; delistings kept visible.' ), 'The Method audit plate must use the accurate neutral market-row note.' );
+	assert( ! /Every state dated/i.test( hero.outer ), 'The Method audit plate must not claim that every market state has a recorded date.' );
+
+	// The four numbered parts form the appendix spine, and every fragment has to
+	// land on the real section that owns its heading.
+	APPENDIX_SECTIONS.forEach( ( section, index ) => {
+		const block = topLevelBlocks.find( ( candidate ) => candidate.attrs.anchor === section.anchor );
+		assert( block, `The appendix is missing the ${ section.anchor } section block.` );
+		assert( hasBlockClass( block, 'hp-placement-section' ), `Appendix section ${ section.ordinal } must use the shared placement-section chassis.` );
+		assert( hasBlockClass( block, section.layoutClass ), `Appendix section ${ section.ordinal } must keep its ${ section.layoutClass } measure.` );
+		assert( block.attrs.align === section.align, `Appendix section ${ section.ordinal } must remain align${ section.align }.` );
+		verifyNumberedPart( block, section, `Appendix section ${ index + 1 }` );
 		assert(
 			markup.includes( `>${ section.heading }</h2>` ),
 			`The appendix is missing the section heading: ${ section.heading }`
@@ -617,6 +726,17 @@ function verifyAppendix( markup ) {
 		expected: KEYWORD_GROUP_COUNTS,
 		label: 'The keyword ledger',
 	} );
+	const keywordSection = topLevelBlocks.find( ( block ) => block.attrs.anchor === 'resume-keyword-bank' );
+	assert( hasBlockClass( keywordSection, 'hp-resume-keyword-bank' ), 'The keyword section must keep the Demonstrated-first filter root class.' );
+	verifyCoreTableShape( markup, 'hp-keyword-table', [ 'Keyword', 'Posting signal', 'Evidence boundary' ] );
+	verifyUnfilteredSourceLedger( markup, 'hp-keyword-table' );
+	assert( getClassCount( markup, 'hp-placement-standing-tile' ) === 3, 'The keyword ledger must define three standing tiles.' );
+	for ( const [ standing, count ] of [ [ 'Demonstrated', 10 ], [ 'Partial', 11 ], [ 'Gap', 13 ] ] ) {
+		assert(
+			new RegExp( `${ standing }[\\s\\S]*?hp-placement-standing-tile__count[^>]*>${ count}<`, 'i' ).test( markup ),
+			`The ${ standing } standing tile must show its derived count ${ count }.`
+		);
+	}
 
 	// 03 — the screen, whole. Group totals are checked against the workbook in
 	// verify-placement-artifacts.js; here they only have to be classifiable.
@@ -630,6 +750,18 @@ function verifyAppendix( markup ) {
 			`Market row ${ index + 1 } has a State the filter cannot classify: "${ state }".`
 		);
 	} );
+	verifyCoreTableShape( markup, 'hp-market-table', [ 'Job title', 'Company', 'Posting', 'Last checked', 'State', 'Reasoning' ] );
+	verifyUnfilteredSourceLedger( markup, 'hp-market-table' );
+	assert( getClassCount( markup, 'hp-evidence-filter' ) === 0, 'The Method source must not author filter controls; JavaScript adds them only after complete classification.' );
+	const marketHint = getScopedElementMatch( markup, 'p', 'hp-market-scroll-hint' );
+	const marketFigure = /<figure\b[^>]*class=(['"])[^'"]*\bhp-market-table\b[^'"]*\1/i.exec( markup );
+	assert( stripMarkup( marketHint[ 2 ] ) === 'Scroll the register sideways for reasoning →', 'The market band must carry the approved horizontal-scroll hint.' );
+	assert( marketFigure && marketHint.index < marketFigure.index, 'The market scroll hint must appear before the market ledger.' );
+	const marketSection = topLevelBlocks.find( ( block ) => block.attrs.anchor === 'screening-funnel' );
+	assert( hasBlockClass( marketSection, 'hp-live-states' ), 'The market section must keep the filter root class.' );
+	assert( hasBlockClass( marketSection, 'hp-placement-band' ) && hasBlockClass( marketSection, 'hp-placement-band--market' ), 'The market screen must use the full-width Method band.' );
+	assert( getClassCount( marketSection.outer, 'is-bare' ) === 1, 'The market band must use the bare numbered-spine variant.' );
+	assert( getClassCount( markup, 'hp-callout' ) === 1 && getClassCount( markup, 'is-tone-insight' ) === 1, 'The corrective control must reuse the existing insight callout.' );
 
 	verifyLedgerFilterAgreement();
 

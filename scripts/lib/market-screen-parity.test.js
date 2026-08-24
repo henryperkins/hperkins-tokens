@@ -29,15 +29,15 @@ const workbookRows = [
 // projects it onto this shape rather than the reverse.
 const renderedColumns = [ 'Job title', 'Company', 'Posting', 'Last checked', 'State', 'Reasoning' ];
 
-// The hero chips are derived counts, so the fixture has to carry the keyword
-// ledger they count and the scope bar they live in.
+// The masthead audit figures are derived counts, so the fixture carries the
+// keyword ledger they count and the notes that bound those claims.
 const matchingAppendix = `
 <section class="hp-page-hero hp-method-hero">
-	<div class="wp-block-group hp-proof-bar hp-method-scope">
-		<p class="hp-chip is-status-merged">3 résumé terms audited against five postings</p>
-		<p class="hp-chip is-status-review">7 market rows screened, 5 with a dated check</p>
-		<p class="hp-chip is-status-pending">2 rows failed by hand, 1 overturning an AI pass</p>
-	</div>
+	<aside class="hp-placement-audit">
+		<div class="hp-placement-audit__figure"><dt>Résumé terms audited</dt><dd class="hp-placement-audit__value">3</dd><dd class="hp-placement-audit__note">Each against five Solutions Engineer postings.</dd></div>
+		<div class="hp-placement-audit__figure"><dt>Market rows screened</dt><dd class="hp-placement-audit__value">7</dd><dd class="hp-placement-audit__note">Every row retained; delistings kept visible.</dd></div>
+		<div class="hp-placement-audit__figure"><dt>Rows failed by hand</dt><dd class="hp-placement-audit__value">2</dd><dd class="hp-placement-audit__note">One overturned an AI pass.</dd></div>
+	</aside>
 </section>
 <section id="resume-keyword-bank">
 	<figure class="wp-block-table hp-keyword-table"><table>
@@ -116,22 +116,22 @@ test( 'appendix parity rejects a derived last-checked summary that has drifted',
 	);
 } );
 
-test( 'appendix parity rejects a hero chip whose count has drifted from the workbook', () => {
+test( 'appendix parity rejects a masthead audit figure whose count has drifted from the workbook', () => {
 	assert.throws(
 		() => placementArtifacts.verifyAppendixWorkbookParity(
 			workbookRows,
-			matchingAppendix.replace( '7 market rows screened, 5 with a dated check', '7 market rows screened, every state dated' )
+			matchingAppendix.replace( '<dd class="hp-placement-audit__value">7</dd>', '<dd class="hp-placement-audit__value">6</dd>' )
 		),
-		/scope chip 2 differs/
+		/audit figure 2 value differs/
 	);
 } );
 
-test( 'appendix parity rejects a hero chip that overstates the machine overturns', () => {
+test( 'appendix parity rejects an audit note that overstates the machine overturns', () => {
 	assert.throws(
 		() => placementArtifacts.verifyAppendixWorkbookParity(
 			workbookRows,
-			matchingAppendix.replace( '2 rows failed by hand, 1 overturning an AI pass', '2 machine verdicts overturned by hand' )
+			matchingAppendix.replace( 'One overturned an AI pass.', 'Two overturned an AI pass.' )
 		),
-		/scope chip 3 differs/
+		/audit figure 3 note differs/
 	);
 } );

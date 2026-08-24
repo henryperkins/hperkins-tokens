@@ -3,6 +3,289 @@ const DIGEST_WIDE_CONTEXT = '@media (min-width: 782px)';
 const DIGEST_NARROW_CONTEXT = '@media (max-width: 781px)';
 const DIGEST_PHONE_CONTEXT = '@media (max-width: 600px)';
 const DIGEST_STACK_CONTEXT = '@media (max-width: 359px)';
+const PLACEMENT_MASTHEAD_CONTEXT = '@media (min-width: 940px)';
+const PLACEMENT_FILTER_PHONE_CONTEXT = '@media (max-width: 599px)';
+const PLACEMENT_FILTER_WRAP_CONTEXT = '@media (min-width: 600px)';
+const PLACEMENT_SCROLL_HINT_CONTEXT = '@media (min-width: 782px) and (max-width: 1180px)';
+const PLACEMENT_REDUCED_MOTION_CONTEXT = '@media (prefers-reduced-motion: reduce)';
+
+const PLACEMENT_LEDGER_LABEL_CONTRACTS = [
+	[ '.hp-evidence-table tbody th::before', 'Artifact' ],
+	[ '.hp-evidence-table tbody td:nth-of-type(1)::before', 'State' ],
+	[ '.hp-evidence-table tbody td:nth-of-type(2)::before', 'Direct evidence' ],
+	[ '.hp-keyword-table tbody th::before', 'Keyword' ],
+	[ '.hp-keyword-table tbody td:nth-of-type(1)::before', 'Posting signal' ],
+	[ '.hp-keyword-table tbody td:nth-of-type(2)::before', 'Evidence boundary' ],
+	[ '.hp-market-table tbody th::before', 'Job title' ],
+	[ '.hp-market-table tbody td:nth-of-type(1)::before', 'Company' ],
+	[ '.hp-market-table tbody td:nth-of-type(2)::before', 'Posting' ],
+	[ '.hp-market-table tbody td:nth-of-type(3)::before', 'Last checked' ],
+	[ '.hp-market-table tbody td:nth-of-type(4)::before', 'State' ],
+	[ '.hp-market-table tbody td:nth-of-type(5)::before', 'Reasoning' ],
+].map( ( [ selector, label ] ) => ( {
+	selector,
+	atContext: DIGEST_NARROW_CONTEXT,
+	declarations: { content: `"${ label }"` },
+} ) );
+
+const PLACEMENT_CHASSIS_CONTRACTS = [
+	{
+		selector: '.hp-placement-masthead',
+		declarations: {
+			display: 'grid',
+			'grid-template-columns': 'minmax(0, 1fr)',
+			'row-gap': 'var(--wp--preset--spacing--6)',
+		},
+	},
+	{
+		selector: '.hp-placement-masthead > *',
+		declarations: { 'margin-block': '0' },
+	},
+	{
+		selector: '.hp-placement-masthead--digest',
+		atContext: PLACEMENT_MASTHEAD_CONTEXT,
+		declarations: { 'grid-template-columns': 'minmax(0, 1.6fr) minmax(17rem, 0.85fr)' },
+	},
+	{
+		selector: '.hp-placement-masthead--method',
+		atContext: PLACEMENT_MASTHEAD_CONTEXT,
+		declarations: { 'grid-template-columns': 'minmax(0, 1.6fr) minmax(17rem, 0.8fr)' },
+	},
+	{
+		selector: '.hp-placement-part',
+		declarations: {
+			display: 'grid',
+			'grid-template-columns': 'minmax(0, 1fr)',
+			'row-gap': 'var(--wp--preset--spacing--4)',
+		},
+	},
+	{
+		selector: '.hp-placement-part__number',
+		declarations: {
+			display: 'flex',
+			'align-items': 'center',
+			gap: 'var(--wp--preset--spacing--3)',
+			'font-size': 'var(--wp--preset--font-size--md)',
+		},
+	},
+	{
+		selector: '.hp-placement-part__number::after',
+		declarations: {
+			content: '""',
+			flex: '1 1 auto',
+			'border-block-start': '1px solid var(--wp--custom--border--hair)',
+		},
+	},
+	{
+		selector: '.hp-placement-part',
+		atContext: DIGEST_WIDE_CONTEXT,
+		declarations: {
+			'grid-template-columns': '3rem minmax(0, 1fr)',
+			'column-gap': 'var(--wp--preset--spacing--4)',
+			'row-gap': '0',
+			'padding-block-start': 'var(--wp--preset--spacing--5)',
+			'border-block-start': '1px solid var(--wp--custom--border--hair)',
+		},
+	},
+	{
+		selector: '.hp-placement-part.is-bare',
+		atContext: DIGEST_WIDE_CONTEXT,
+		declarations: {
+			'padding-block-start': '0',
+			'border-block-start': '0',
+		},
+	},
+	{
+		selector: '.hp-placement-part__number',
+		atContext: DIGEST_WIDE_CONTEXT,
+		declarations: {
+			display: 'block',
+			'align-self': 'start',
+		},
+	},
+	{
+		selector: '.hp-placement-section',
+		declarations: {
+			'box-sizing': 'border-box',
+			'margin-block-start': '0',
+			padding: '2.5rem 1rem 0',
+			'scroll-margin-block-start': '72px',
+		},
+	},
+	{
+		selector: '.hp-placement-section [id]',
+		declarations: { 'scroll-margin-block-start': '72px' },
+	},
+	...[
+		'.hp-placement-section',
+		'.hp-placement-section [id]',
+	].map( ( selector ) => ( {
+		selector,
+		atContext: DIGEST_WIDE_CONTEXT,
+		declarations: { 'scroll-margin-block-start': '84px' },
+	} ) ),
+	{
+		selector: '.hp-digest-template .hp-placement-section.hp-placement-section--text',
+		declarations: {
+			'max-inline-size': 'var(--wp--style--global--content-size, 44rem)',
+			'margin-inline': 'auto',
+		},
+	},
+	{
+		selector: '.hp-placement-section--wide',
+		declarations: {
+			'max-inline-size': 'var(--wp--style--global--wide-size, 72rem)',
+			'margin-inline': 'auto',
+		},
+	},
+	{
+		selector: '.hp-placement-band',
+		declarations: {
+			'max-inline-size': 'none !important',
+			background: 'var(--wp--custom--surface--sunken)',
+		},
+	},
+	{
+		selector: '.hp-placement-band--evidence',
+		declarations: { 'padding-block-end': '2.5rem' },
+	},
+	{
+		selector: '.hp-placement-band--evidence',
+		atContext: PLACEMENT_FILTER_WRAP_CONTEXT,
+		declarations: { 'padding-block-end': '4rem' },
+	},
+	{
+		selector: '.hp-placement-band > .hp-placement-part',
+		declarations: {
+			'max-inline-size': 'var(--wp--style--global--wide-size, 72rem)',
+			'margin-inline': 'auto',
+		},
+	},
+	{
+		selector: '.hp-placement-band--market > .hp-placement-part',
+		declarations: { 'max-inline-size': '84rem' },
+	},
+	{
+		selector: '.hp-placement-part__content > h2',
+		declarations: { 'font-size': 'var(--wp--preset--font-size--2-xl)' },
+	},
+	{
+		selector: '.hp-incident-card.hp-placement-section',
+		declarations: {
+			border: '0',
+			'border-radius': '0',
+			background: 'transparent',
+			'box-shadow': 'none',
+		},
+	},
+	{
+		selector: '.hp-evidence-filter',
+		atContext: PLACEMENT_FILTER_PHONE_CONTEXT,
+		declarations: {
+			'flex-wrap': 'nowrap',
+			'overflow-x': 'auto',
+			'scroll-snap-type': 'x proximity',
+			'margin-inline': '-1rem',
+			'padding-inline': '1rem',
+		},
+	},
+	{
+		selector: '.hp-digest-template .wp-element-button',
+		atContext: PLACEMENT_REDUCED_MOTION_CONTEXT,
+		declarations: { 'transition-duration': '0.01ms !important' },
+	},
+	{
+		selector: '.hp-evidence-filter__button',
+		atContext: PLACEMENT_FILTER_PHONE_CONTEXT,
+		declarations: {
+			flex: '0 0 auto',
+			'scroll-snap-align': 'start',
+			'white-space': 'nowrap',
+		},
+	},
+	{
+		selector: '.hp-evidence-filter',
+		atContext: PLACEMENT_FILTER_WRAP_CONTEXT,
+		declarations: {
+			'flex-wrap': 'wrap',
+			overflow: 'visible',
+		},
+	},
+	{
+		selector: '.hp-placement-ledger tbody :is(th, td)::before',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: {
+			display: 'block',
+			'font-size': 'var(--wp--preset--font-size--xs)',
+			'text-transform': 'uppercase',
+		},
+	},
+	{
+		selector: '.hp-placement-ledger tbody th[data-state]',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: { 'padding-inline-start': 'var(--wp--preset--spacing--3)' },
+	},
+	...PLACEMENT_LEDGER_LABEL_CONTRACTS,
+	{
+		selector: '.hp-market-scroll-hint',
+		declarations: { display: 'none' },
+	},
+	{
+		selector: '.hp-market-scroll-hint',
+		atContext: PLACEMENT_SCROLL_HINT_CONTEXT,
+		declarations: { display: 'block' },
+	},
+	{
+		selector: '.hp-market-table table',
+		declarations: { 'min-inline-size': '62rem' },
+	},
+	{
+		selector: '.hp-market-table',
+		atContext: DIGEST_WIDE_CONTEXT,
+		declarations: {
+			'overflow-x': 'auto',
+			'overflow-y': 'hidden',
+		},
+	},
+	{
+		selector: '.hp-placement-standing-tile',
+		declarations: { 'border-inline-start-width': '5px' },
+	},
+	{
+		selector: '.hp-evidence-table a',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: {
+			display: 'inline-flex',
+			'align-items': 'center',
+			'min-block-size': '44px',
+		},
+	},
+	{
+		selector: '.hp-numbered-rule h3',
+		declarations: {
+			'grid-template-columns': 'minmax(0, 1fr)',
+			'row-gap': 'var(--wp--preset--spacing--2)',
+		},
+	},
+	{
+		selector: '.hp-numbered-rule h3',
+		atContext: PLACEMENT_FILTER_WRAP_CONTEXT,
+		declarations: {
+			'grid-template-columns': '3rem minmax(0, 1fr)',
+			'column-gap': 'var(--wp--preset--spacing--3)',
+			'row-gap': '0',
+		},
+	},
+	{
+		selector: '.hp-method-plate',
+		declarations: { padding: '2.5rem 1rem' },
+	},
+	{
+		selector: '.hp-method-plate',
+		atContext: PLACEMENT_FILTER_WRAP_CONTEXT,
+		declarations: { padding: '4rem 2rem' },
+	},
+];
 
 const DIGEST_ACCEPTED_ACTION_CONTRACTS = [
 	{
@@ -43,16 +326,29 @@ const DIGEST_OPENING_CONTRACTS = [
 		selector: '.hp-wcus-callout--event-first',
 		declarations: {
 			'box-sizing': 'border-box',
+			display: 'block',
+			'max-inline-size': 'none',
+			'margin-block-start': '0',
+			padding: '2.5rem 1rem',
+			'border-inline-start': '0',
+			background: 'var(--wp--custom--surface--sunken)',
+		},
+	},
+	{
+		selector: '.hp-wcus-callout__inner',
+		declarations: {
+			'box-sizing': 'border-box',
 			display: 'grid',
 			'grid-template-columns': 'minmax(0, 1fr)',
 			'column-gap': '0',
 			'row-gap': 'var(--wp--preset--spacing--5)',
 			'align-items': 'stretch',
 			'max-inline-size': 'var(--wp--style--global--wide-size, 72rem)',
-			'margin-block-start': '0',
+			'margin-inline': 'auto',
 			padding: 'var(--hp-plate-pad)',
 			'border-inline-start': '0.25rem solid var(--wp--preset--color--gold-600)',
 			background: 'var(--wp--custom--surface--raised)',
+			'box-shadow': 'var(--wp--custom--shadow--sm)',
 		},
 	},
 	{
@@ -110,7 +406,7 @@ const DIGEST_OPENING_CONTRACTS = [
 		},
 	},
 	{
-		selector: '.hp-wcus-callout--event-first',
+		selector: '.hp-wcus-callout__inner',
 		atContext: DIGEST_WIDE_CONTEXT,
 		declarations: {
 			'grid-template-columns': 'minmax(0, 1.35fr) minmax(16rem, 0.65fr)',
@@ -140,7 +436,7 @@ const DIGEST_COMPACT_CONTRACTS = [
 		declarations: { '--hp-plate-pad': 'var(--wp--preset--spacing--5)' },
 	},
 	{
-		selector: '.hp-wcus-callout--event-first',
+		selector: '.hp-wcus-callout__inner',
 		atContext: DIGEST_NARROW_CONTEXT,
 		declarations: {
 			'grid-template-columns': 'minmax(0, 1fr)',
@@ -164,24 +460,26 @@ const DIGEST_COMPACT_CONTRACTS = [
 	{
 		selector: '.hp-wcus-callout--event-first',
 		atContext: DIGEST_PHONE_CONTEXT,
-		declarations: {
-			'--hp-plate-pad': 'var(--wp--preset--spacing--4)',
-			'row-gap': 'var(--wp--preset--spacing--4)',
-		},
+		declarations: { '--hp-plate-pad': 'var(--wp--preset--spacing--4)' },
+	},
+	{
+		selector: '.hp-wcus-callout__inner',
+		atContext: DIGEST_PHONE_CONTEXT,
+		declarations: { 'row-gap': 'var(--wp--preset--spacing--4)' },
 	},
 ];
 
 const DIGEST_LOWER_CONTRACTS = [
 	{
-		selector: '.hp-fit-ledger',
+		selector: '.hp-fit-ledger:not(.hp-placement-section)',
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--6)' },
 	},
 	{
-		selector: '.hp-incident-card',
+		selector: '.hp-incident-card:not(.hp-placement-section)',
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--6)' },
 	},
 	{
-		selector: '.hp-evidence-ledger',
+		selector: '.hp-evidence-ledger:not(.hp-placement-section)',
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--6)' },
 	},
 	// The kicker is the smallest text on the page. 2xs is exactly 12px — the
@@ -236,22 +534,22 @@ const DIGEST_LOWER_CONTRACTS = [
 		declarations: { 'grid-template-columns': 'minmax(0, 1fr)' },
 	},
 	{
-		selector: '.hp-digest-section',
+		selector: '.hp-digest-section:not(.hp-placement-section)',
 		atContext: DIGEST_NARROW_CONTEXT,
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--7)' },
 	},
 	{
-		selector: '.hp-fit-ledger',
+		selector: '.hp-fit-ledger:not(.hp-placement-section)',
 		atContext: DIGEST_NARROW_CONTEXT,
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--5)' },
 	},
 	{
-		selector: '.hp-incident-card',
+		selector: '.hp-incident-card:not(.hp-placement-section)',
 		atContext: DIGEST_NARROW_CONTEXT,
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--5)' },
 	},
 	{
-		selector: '.hp-evidence-ledger',
+		selector: '.hp-evidence-ledger:not(.hp-placement-section)',
 		atContext: DIGEST_NARROW_CONTEXT,
 		declarations: { 'margin-block-start': 'var(--wp--preset--spacing--5)' },
 	},
@@ -261,7 +559,7 @@ const DIGEST_LOWER_CONTRACTS = [
 		declarations: { padding: 'var(--wp--preset--spacing--4)' },
 	},
 	{
-		selector: '.hp-incident-card',
+		selector: '.hp-incident-card:not(.hp-placement-section)',
 		atContext: DIGEST_PHONE_CONTEXT,
 		declarations: { padding: 'var(--wp--preset--spacing--4)' },
 	},
@@ -269,47 +567,15 @@ const DIGEST_LOWER_CONTRACTS = [
 		selector: '.wp-block-table.hp-evidence-table tbody tr',
 		atContext: DIGEST_NARROW_CONTEXT,
 		declarations: {
-			display: 'grid',
-			'grid-template-columns': 'repeat(2, minmax(0, 1fr))',
-			gap: 'var(--wp--preset--spacing--2) var(--wp--preset--spacing--4)',
-		},
-	},
-	{
-		selector: '.wp-block-table.hp-evidence-table tbody td:nth-of-type(1)',
-		atContext: DIGEST_NARROW_CONTEXT,
-		declarations: {
-			'grid-column': '2',
-			'margin-block-start': '0',
-			'text-align': 'end',
-		},
-	},
-	{
-		selector: '.wp-block-table.hp-evidence-table tbody td:nth-of-type(2)',
-		atContext: DIGEST_NARROW_CONTEXT,
-		declarations: {
-			'grid-column': '1 / -1',
-			'margin-block-start': '0',
-			'padding-block-start': 'var(--wp--preset--spacing--2)',
+			display: 'block',
+			padding: 'var(--wp--preset--spacing--4)',
+			'border-block-end': '1px solid var(--wp--custom--border--hair)',
 		},
 	},
 	{
 		selector: '.wp-block-table.hp-evidence-table tbody tr',
 		atContext: DIGEST_PHONE_CONTEXT,
 		declarations: { padding: 'var(--wp--preset--spacing--4)' },
-	},
-	{
-		selector: '.wp-block-table.hp-evidence-table tbody tr',
-		atContext: DIGEST_STACK_CONTEXT,
-		declarations: { 'grid-template-columns': 'minmax(0, 1fr)' },
-	},
-	{
-		selector: '.wp-block-table.hp-evidence-table tbody td:nth-of-type(1)',
-		atContext: DIGEST_STACK_CONTEXT,
-		declarations: {
-			'grid-column': '1',
-			'margin-block-start': 'var(--wp--preset--spacing--2)',
-			'text-align': 'start',
-		},
 	},
 ];
 
@@ -347,11 +613,6 @@ const APPENDIX_LEDGER_CONTRACTS = [
 		atContext: DIGEST_PHONE_CONTEXT,
 		declarations: { display: 'block' },
 	},
-	{
-		selector: '.hp-method-plate',
-		atContext: DIGEST_PHONE_CONTEXT,
-		declarations: { 'padding-inline': 'var(--wp--preset--spacing--3)' },
-	},
 ];
 
 module.exports = {
@@ -365,4 +626,10 @@ module.exports = {
 	DIGEST_PHONE_CONTEXT,
 	DIGEST_STACK_CONTEXT,
 	DIGEST_WIDE_CONTEXT,
+	PLACEMENT_CHASSIS_CONTRACTS,
+	PLACEMENT_FILTER_PHONE_CONTEXT,
+	PLACEMENT_FILTER_WRAP_CONTEXT,
+	PLACEMENT_LEDGER_LABEL_CONTRACTS,
+	PLACEMENT_MASTHEAD_CONTEXT,
+	PLACEMENT_SCROLL_HINT_CONTEXT,
 };

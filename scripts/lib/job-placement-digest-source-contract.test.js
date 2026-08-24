@@ -15,31 +15,64 @@ const {
 	APPENDIX_SECTIONS,
 } = require( '../verify-job-placement-digest-source' );
 const { parseTopLevelBlocks } = require( './about-page-contract' );
+const { PLACEMENT_LEDGER_LABEL_CONTRACTS } = require( './job-placement-page-style-contracts' );
+const { assertRuleDeclarations } = require( './style-coverage' );
 
 const THEME_ROOT = path.join( __dirname, '..', '..' );
 const DIGEST = fs.readFileSync(
 	path.join( THEME_ROOT, 'content', 'page-drafts', 'job-placement-digest.html' ),
 	'utf8'
 ).replace( /\r\n/g, '\n' );
-// The reviewed candidate has retired the WordCamp plate; the accepted mirror of
-// the live body still carries it. Both shapes are contracts right now, so both
-// get a fixture. When the retirement is published and the mirror re-exported,
-// the event tests below fail loudly — which is the moment they should be
-// retired, in that same reviewed change.
-const ACCEPTED_DIGEST = fs.readFileSync(
-	path.join( THEME_ROOT, 'content', 'page-snapshots', 'job-placement-digest.html' ),
-	'utf8'
-).replace( /\r\n/g, '\n' );
 const APPENDIX = fs.readFileSync(
 	path.join( THEME_ROOT, 'content', 'page-drafts', 'placement-method-evidence.html' ),
+	'utf8'
+).replace( /\r\n/g, '\n' );
+const FILTER_SCRIPT = fs.readFileSync(
+	path.join( THEME_ROOT, 'assets', 'js', 'digest-register-filter.js' ),
+	'utf8'
+).replace( /\r\n/g, '\n' );
+const PAGE_CSS = fs.readFileSync(
+	path.join( THEME_ROOT, 'assets', 'imladris-pages.css' ),
 	'utf8'
 ).replace( /\r\n/g, '\n' );
 const CURRENT_PUBLICATION_DATELINE = 'Published 13 Jul 2026 · Last verified 11 Aug 2026';
 const STALE_PUBLICATION_DATELINE = 'Published 13 Jul 2026 · Last verified 10 Aug 2026';
 
+// This is the last complete event shape the transition verifier accepted. Keep
+// it only as a negative fixture: adding the fully formed plate back to an
+// otherwise valid dossier must fail the post-promotion, no-event contract.
+const RETIRED_EVENT_PLATE = `<!-- wp:group {"tagName":"aside","ariaLabel":"I’ll be at WordCamp US.","align":"full","className":"hp-wcus-callout hp-wcus-callout--event-first hp-action-panel hp-placement-band hp-placement-band--event","layout":{"type":"default"},"anchor":"wordcamp-us-2026"} -->
+<aside class="wp-block-group alignfull hp-wcus-callout hp-wcus-callout--event-first hp-action-panel hp-placement-band hp-placement-band--event" id="wordcamp-us-2026" aria-label="I’ll be at WordCamp US."><!-- wp:group {"className":"hp-placement-band__inner hp-wcus-callout__inner","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-placement-band__inner hp-wcus-callout__inner"><!-- wp:image {"sizeSlug":"full","linkDestination":"none","className":"hp-wcus-callout__figure"} -->
+<figure class="wp-block-image size-full hp-wcus-callout__figure"><img src="/wp-content/themes/hperkins-tokens/assets/img/imagery/wcus-2026-phoenix.webp" alt="The West entrance of the Phoenix Convention Center at night, its glass doors dressed in WordCamp US 26 desert artwork under the illuminated building sign."/><figcaption class="wp-element-caption">Phoenix Convention Center, West entrance — WordCamp US 2026, 16–19 August. I’m staffing the Core AI booth.</figcaption></figure>
+<!-- /wp:image -->
+
+<!-- wp:group {"className":"hp-wcus-callout__copy","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-wcus-callout__copy"><!-- wp:heading {"className":"hp-wcus-callout__title"} -->
+<h2 class="wp-block-heading hp-wcus-callout__title">I’ll be at WordCamp US.</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>I’ll be in Phoenix August 16–19, staffing the Core AI booth.</p>
+<!-- /wp:paragraph --></div>
+<!-- /wp:group -->
+
+<!-- wp:buttons {"className":"hp-action-rail hp-wcus-callout__actions hp-digest__primary-actions","layout":{"type":"flex","flexWrap":"wrap"}} -->
+<div class="wp-block-buttons hp-action-rail hp-wcus-callout__actions hp-digest__primary-actions"><!-- wp:button -->
+<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/contact/">Start a WordCamp conversation</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons --></div>
+<!-- /wp:group --></aside>
+<!-- /wp:group -->`;
+
 function replaceOnce( value, search, replacement ) {
 	assert.notEqual( value.indexOf( search ), -1, `Mutation fixture is missing: ${ search }` );
 	return value.replace( search, replacement );
+}
+
+function removeClassEverywhere( value, className ) {
+	const encoded = className.replaceAll( '--', '\\u002d\\u002d' );
+	return value.replaceAll( ` ${ className }`, '' ).replaceAll( ` ${ encoded }`, '' );
 }
 
 function hasBlockClass( block, className ) {
@@ -50,18 +83,10 @@ function findBlock( value, className ) {
 	return parseTopLevelBlocks( value ).find( ( block ) => hasBlockClass( block, className ) );
 }
 
-function removeEventBlock( value ) {
-	const event = findBlock( value, 'hp-wcus-callout' );
-	assert( event, 'Fixture must contain the top-level WordCamp block.' );
-	return value.slice( 0, event.start ) + value.slice( event.end );
-}
-
-function moveEventBeforeHero( value ) {
-	const event = findBlock( value, 'hp-wcus-callout' );
+function insertAfterHero( value, block ) {
 	const hero = findBlock( value, 'hp-digest__hero' );
-	assert( event && hero && hero.end <= event.start, 'Fixture must put the hero before WordCamp.' );
-	return value.slice( 0, hero.start ) + event.outer + '\n\n' +
-		value.slice( hero.start, event.start ) + value.slice( event.end );
+	assert( hero, 'Fixture must contain the Digest hero.' );
+	return `${ value.slice( 0, hero.end ) }\n\n${ block }${ value.slice( hero.end ) }`;
 }
 
 test( 'publishes the full dossier rather than a distilled brief', () => {
@@ -97,110 +122,44 @@ test( 'opens on the H1 and orders hero, seven sections, closing invitation', () 
 		'root-cause-investigation',
 		'theme-governance',
 		'evidence-register',
+		'appendix',
 	] );
 } );
 
 test( 'numbers all seven sections and keeps the ordinals in step with their labels', () => {
-	const kickers = [ ...DIGEST.matchAll( /<p class="hp-digest-kicker"><strong>(\d\d)<\/strong> · ([^<]+)<\/p>/g ) ];
+	const numbers = [ ...DIGEST.matchAll( /<p class="hp-placement-part__number">(\d\d)<\/p>/g ) ];
+	const kickers = [ ...DIGEST.matchAll( /<p class="hp-digest-kicker">([^<]+)<\/p>/g ) ];
 
+	assert.equal( numbers.length, 7 );
 	assert.equal( kickers.length, 7 );
 	assert.deepEqual(
-		kickers.map( ( kicker ) => [ kicker[ 1 ], kicker[ 2 ] ] ),
+		numbers.map( ( number, index ) => [ number[ 1 ], kickers[ index ][ 1 ] ] ),
 		SECTIONS.map( ( section ) => [ section.ordinal, section.label ] )
 	);
 
-	const mutant = replaceOnce( DIGEST, '<strong>04</strong> · How I debug', '<strong>05</strong> · How I debug' );
-	assert.throws( () => verifyMain( mutant ), /Section 4 must read "04 · How I debug"/ );
+	const mutant = replaceOnce( DIGEST, '<p class="hp-placement-part__number">04</p>', '<p class="hp-placement-part__number">05</p>' );
+	assert.throws( () => verifyMain( mutant ), /Section 4 must use visual numeral 04/ );
 } );
 
-test( 'keeps the labelled WordCamp aside after the H1 so it never precedes the outline', () => {
-	const event = parseTopLevelBlocks( ACCEPTED_DIGEST )[ 1 ];
-
-	assert.equal( event.name, 'group' );
-	assert.equal( event.attrs.tagName, 'aside' );
-	assert.equal( event.attrs.ariaLabel, 'I’ll be at WordCamp US.' );
-	assert.equal( event.attrs.anchor, 'wordcamp-us-2026' );
-	assert( hasBlockClass( event, 'hp-wcus-callout--event-first' ) );
-	assert.match( event.outer, /<aside\b[^>]*aria-label="I’ll be at WordCamp US\."[^>]*>/ );
-	assert.equal( [ ...event.outer.matchAll( /<!-- wp:button -->/g ) ].length, 1 );
-
-	// The aside carries the event's own H2. Ahead of the hero it would open the
-	// document on a second-level heading, which is why the order is pinned.
-	assert.throws(
-		() => verifyMain( moveEventBeforeHero( ACCEPTED_DIGEST ) ),
-		/must begin its heading outline with H1/
+test( 'uses a two-column masthead whose contents plate reaches all seven parts', () => {
+	const hero = findBlock( DIGEST, 'hp-digest__hero' );
+	assert( hasBlockClass( hero, 'hp-placement-masthead' ) );
+	assert( hasBlockClass( hero, 'hp-placement-masthead--digest' ) );
+	assert.match( hero.outer, /class="wp-block-group hp-placement-masthead__main"/ );
+	assert.match( hero.outer, /<nav\b[^>]*class="wp-block-group hp-placement-contents"[^>]*aria-label="Contents of this digest"/ );
+	assert.deepEqual(
+		[ ...hero.outer.matchAll( /<a href="(#[^"]+)">/g ) ].map( ( match ) => match[ 1 ] ),
+		[ '#why-support-engineer-now', '#current-support-fit', '#primary-proof', '#root-cause-investigation', '#theme-governance', '#evidence-register', '#appendix' ]
 	);
-} );
+	assert.equal( [ ...hero.outer.matchAll( /Published 13 Jul 2026 · Last verified 11 Aug 2026/g ) ].length, 1 );
 
-test( 'ships the captioned documentary WordCamp photograph inside the event plate', () => {
-	const event = parseTopLevelBlocks( ACCEPTED_DIGEST )[ 1 ];
-	const imagery = path.join( THEME_ROOT, 'assets', 'img', 'imagery' );
-	const asset = path.join( imagery, 'wcus-2026-phoenix.png' );
-	const delivered = path.join( imagery, 'wcus-2026-phoenix.webp' );
-	const candidate = path.join( imagery, 'wcus-2026-phoenix-768.webp' );
-
-	assert( fs.existsSync( asset ), 'The supplied WordCamp documentary photograph must be tracked by the theme.' );
-	const image = fs.readFileSync( asset );
-	assert.equal( image.readUInt32BE( 16 ), 1448, 'The WordCamp photograph must keep its supplied intrinsic width.' );
-	assert.equal( image.readUInt32BE( 20 ), 1086, 'The WordCamp photograph must keep its supplied intrinsic height.' );
-
-	// The block references the WebP, so that is the file a reader downloads.
-	assert( fs.existsSync( delivered ), 'The delivered WebP of the WordCamp photograph must be tracked by the theme.' );
-	const webp = fs.readFileSync( delivered );
-	assert.equal( webp.toString( 'ascii', 8, 12 ), 'WEBP', 'The delivered WordCamp photograph must be a WebP.' );
-	assert.equal( webp.readUInt16LE( 26 ) & 0x3fff, 1448, 'The delivered WordCamp photograph must keep the full frame width.' );
-	assert.equal( webp.readUInt16LE( 28 ) & 0x3fff, 1086, 'The delivered WordCamp photograph must keep the full frame height.' );
-	assert.ok(
-		webp.length * 10 <= image.length,
-		'The delivered WordCamp photograph must stay at least ten times smaller than the archival PNG.'
-	);
-
-	// The srcset's small candidate is what a phone downloads. It keeps the 4:3
-	// frame because the 16/9 crop is CSS (object-fit), not a re-encode.
-	assert.ok( fs.existsSync( candidate ), 'The 768w WordCamp candidate must be tracked by the theme.' );
-	const small = fs.readFileSync( candidate );
-	assert.equal( small.toString( 'ascii', 8, 12 ), 'WEBP', 'The 768w WordCamp candidate must be a WebP.' );
-	assert.equal( small.readUInt16LE( 26 ) & 0x3fff, 768, 'The 768w WordCamp candidate must be 768 wide.' );
-	assert.equal( small.readUInt16LE( 28 ) & 0x3fff, 576, 'The 768w WordCamp candidate must keep the 4:3 frame.' );
-	assert.ok(
-		small.length * 2 <= webp.length,
-		'The 768w WordCamp candidate must be at least half the full file to be worth serving.'
-	);
-
-	// The block stays a plain, editable wp:image. Its responsive candidates are
-	// added at render time by inc/content-images.php, because core/image has no
-	// srcset or sizes attribute to serialize them into.
-	assert.match( event.outer, /<!-- wp:image \{[^\n]*"className":"hp-wcus-callout__figure"[^\n]*\} -->/ );
-	assert.doesNotMatch( event.outer, /<!-- wp:html\b/ );
-	assert.match(
-		event.outer,
-		/<img src="\/wp-content\/themes\/hperkins-tokens\/assets\/img\/imagery\/wcus-2026-phoenix\.webp" alt="The West entrance of the Phoenix Convention Center at night, its glass doors dressed in WordCamp US 26 desert artwork under the illuminated building sign\."\/>/
-	);
-	assert.match(
-		event.outer,
-		/<figcaption class="wp-element-caption">Phoenix Convention Center, West entrance — WordCamp US 2026, 16–19 August\. I’m staffing the Core AI booth\.<\/figcaption>/
-	);
-	assert(
-		event.outer.indexOf( 'hp-wcus-callout__figure' ) < event.outer.indexOf( 'hp-wcus-callout__copy' ),
-		'The photograph must remain the first object inside the event plate.'
-	);
-
-	const imageBlock = /<!-- wp:image \{[^\n]*"className":"hp-wcus-callout__figure"[^\n]*\} -->[\s\S]*?<!-- \/wp:image -->\n\n/.exec( ACCEPTED_DIGEST );
-	assert( imageBlock, 'The mutation fixture must find the WordCamp image block.' );
-	assert.throws(
-		() => verifyMain( ACCEPTED_DIGEST.replace( imageBlock[ 0 ], '' ) ),
-		/captioned documentary WordCamp photograph/
-	);
+	const mutant = replaceOnce( DIGEST, 'class="wp-block-group hp-placement-contents"', 'class="wp-block-group hp-placement-index"' );
+	assert.throws( () => verifyMain( mutant ), /one labelled contents plate/ );
 } );
 
 test( 'the retired candidate carries no event copy and keeps its first-screen action', () => {
 	assert.doesNotMatch( DIGEST, /hp-wcus-callout/ );
 	assert.doesNotMatch( DIGEST, /WordCamp|WCUS|wordcamp-us-2026/ );
-	assert.doesNotThrow( () => verifyMain( DIGEST, undefined, undefined, { requireEvent: false } ) );
-
-	// Removal mode is derived from the body, so the same call with no options
-	// must reach the same verdict. If that derivation ever regressed to a
-	// hardcoded default, this is the assertion that catches it.
 	assert.doesNotThrow( () => verifyMain( DIGEST ) );
 
 	// Removing the aside must not be a way to drop the call to action: the hero
@@ -209,34 +168,15 @@ test( 'the retired candidate carries no event copy and keeps its first-screen ac
 	assert.match( hero.outer, /wp-block-buttons hp-action-rail/ );
 	assert.equal( [ ...hero.outer.matchAll( /<!-- wp:button -->/g ) ].length, 1 );
 	assert.throws(
-		() => verifyMain(
-			replaceOnce( DIGEST, '<div class="wp-block-buttons hp-action-rail">', '<div class="wp-block-buttons">' ),
-			undefined,
-			undefined,
-			{ requireEvent: false }
-		),
+		() => verifyMain( replaceOnce( DIGEST, '<div class="wp-block-buttons hp-action-rail">', '<div class="wp-block-buttons">' ) ),
 		/first-screen action rail/
 	);
 } );
 
-test( 'still rejects an event-bearing body in removal mode', () => {
-	// The accepted mirror keeps the plate until the retirement is published.
-	// verifyMain derives its mode from the body, so the explicit option is the
-	// only way to prove the two branches cannot be confused.
-	assert.match( ACCEPTED_DIGEST, /hp-wcus-callout/ );
-	// The top-level block count is asserted before the mode branch, so an
-	// event-bearing body fails on the count first. Either message proves the
-	// two branches cannot be confused.
+test( 'rejects the fully formed retired event plate if it is reintroduced', () => {
 	assert.throws(
-		() => verifyMain( ACCEPTED_DIGEST, undefined, undefined, { requireEvent: false } ),
+		() => verifyMain( insertAfterHero( DIGEST, RETIRED_EVENT_PLATE ), undefined, undefined, { requireEvent: false } ),
 		/must contain 9 top-level blocks|Event-removal mode requires the WordCamp block to be absent/
-	);
-	// Deleting the plate from the accepted body without relocating its rail is
-	// exactly the mistake the runbook's one-line "remove the complete block"
-	// instruction invites, so it has to be rejected rather than tolerated.
-	assert.throws(
-		() => verifyMain( removeEventBlock( ACCEPTED_DIGEST ), undefined, undefined, { requireEvent: false } ),
-		/hero must carry the first-screen action rail/
 	);
 } );
 
@@ -271,6 +211,19 @@ test( 'publishes all twelve register records, four in each release state', () =>
 	assert.deepEqual( counts, { released: 4, open: 4, unreleased: 4 } );
 } );
 
+test( 'keeps the Digest core/table schema-safe and its phone labels CSS-backed', () => {
+	const body = /hp-evidence-table[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/.exec( DIGEST )[ 1 ];
+	const rows = [ ...body.matchAll( /<tr>([\s\S]*?)<\/tr>/g ) ];
+	assert.equal( rows.length, 12 );
+	for ( const row of rows ) {
+		assert.deepEqual( [ ...row[ 1 ].matchAll( /<(th|td)\b/g ) ].map( ( match ) => match[ 1 ] ), [ 'th', 'td', 'td' ] );
+		assert.doesNotMatch( row[ 1 ], /\bdata-label=/ );
+	}
+	for ( const contract of PLACEMENT_LEDGER_LABEL_CONTRACTS.filter( ( contract ) => contract.selector.includes( 'hp-evidence-table' ) ) ) {
+		assert.doesNotThrow( () => assertRuleDeclarations( PAGE_CSS, contract ) );
+	}
+} );
+
 test( 'refuses a register row the filter script could not classify', () => {
 	const mutant = replaceOnce( DIGEST, '<td>Authored · merged upstream</td>', '<td>Somewhere in progress</td>' );
 
@@ -296,6 +249,16 @@ test( 'keeps the filter script state vocabulary identical to the verifier', () =
 	assert.equal( classifyState( 'Merged to owned main · unreleased' ), 'unreleased' );
 	assert.equal( classifyState( 'Authored · merged upstream' ), 'released' );
 	assert.equal( classifyState( 'Released owned work' ), 'released' );
+} );
+
+test( 'remounts filters after both router pushes and browser history traversal', () => {
+	const script = fs.readFileSync(
+		path.join( THEME_ROOT, 'assets', 'js', 'digest-register-filter.js' ),
+		'utf8'
+	);
+
+	assert.match( script, /wrapHistory\( 'pushState' \)/ );
+	assert.match( script, /window\.addEventListener\( 'popstate', settle \)/ );
 } );
 
 test( 'marks exactly the three records that are argued as proof cards above', () => {
@@ -337,7 +300,7 @@ test( 'requires the current publication-verification date', () => {
 } );
 
 test( 'rejects reintroduced recruiter-brief structure', () => {
-	const marker = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-digest-section hp-fit-ledger"';
+	const marker = '<!-- wp:group {"tagName":"section","align":"wide","className":"hp-digest-section hp-fit-ledger hp-placement-section';
 	const mutant = replaceOnce(
 		DIGEST,
 		marker,
@@ -383,17 +346,32 @@ test( 'the accepted appendix candidate satisfies its own contract', () => {
 	assert.doesNotThrow( () => verifyAppendix( APPENDIX ) );
 } );
 
-test( 'carries the four numbered kickers in order, each reaching its section', () => {
-	APPENDIX_SECTIONS.forEach( ( section ) => {
-		assert.match(
-			APPENDIX,
-			new RegExp( `<strong>${ section.ordinal }</strong> · ${ section.label }` ),
-			`Appendix is missing the ${ section.ordinal } kicker.`
-		);
-	} );
+test( 'opens the Method appendix with a back-link and verifier-backed audit plate', () => {
+	const hero = parseTopLevelBlocks( APPENDIX )[ 0 ];
+	assert( hasBlockClass( hero, 'hp-method-hero' ) );
+	assert( hasBlockClass( hero, 'hp-placement-masthead' ) );
+	assert( hasBlockClass( hero, 'hp-placement-masthead--method' ) );
+	assert.match( hero.outer, /class="wp-block-group hp-placement-audit"/ );
+	assert.match( hero.outer, /href="\/job-placement-digest\/">Back to the Job Placement Digest<\/a>/ );
+	assert.deepEqual(
+		[ ...hero.outer.matchAll( /class="hp-placement-audit__value">(\d+)<\/p>/g ) ].map( ( match ) => Number( match[ 1 ] ) ),
+		[ 34, 20, 3 ]
+	);
+	assert.match( hero.outer, /Every row retained; delistings kept visible\./ );
+	assert.doesNotMatch( hero.outer, /Every state dated/i );
+	assert.doesNotMatch( hero.outer, /hp-method-scope/ );
+} );
 
-	const mutant = replaceOnce( APPENDIX, '<strong>03</strong> · The application', '<strong>03</strong> · The screen again' );
-	assert.throws( () => verifyAppendix( mutant ), /Appendix section 3 must read "03 · The application"/ );
+test( 'carries the four numbered kickers in order, each reaching its section', () => {
+	const numbers = [ ...APPENDIX.matchAll( /<p class="hp-placement-part__number">(\d\d)<\/p>/g ) ];
+	const kickers = [ ...APPENDIX.matchAll( /<p class="hp-digest-kicker">([^<]+)<\/p>/g ) ];
+	assert.deepEqual(
+		numbers.map( ( number, index ) => [ number[ 1 ], kickers[ index ][ 1 ] ] ),
+		APPENDIX_SECTIONS.map( ( section ) => [ section.ordinal, section.label ] )
+	);
+
+	const mutant = replaceOnce( APPENDIX, '<p class="hp-digest-kicker">The application</p>', '<p class="hp-digest-kicker">The screen again</p>' );
+	assert.throws( () => verifyAppendix( mutant ), /Appendix section 3 must label the move "The application"/ );
 } );
 
 test( 'keeps every keyword term and its standing in one ledger', () => {
@@ -404,16 +382,85 @@ test( 'keeps every keyword term and its standing in one ledger', () => {
 	assert.throws( () => verifyAppendix( recount ), /must hold 11 partial rows; found 12/ );
 } );
 
+test( 'shows the 10 / 11 / 13 standing distribution in three teaching tiles', () => {
+	assert.equal( [ ...APPENDIX.matchAll( /<div class="[^"]*\bhp-placement-standing-tile\b[^"]*">/g ) ].length, 3 );
+	assert.deepEqual(
+		[ ...APPENDIX.matchAll( /class="hp-placement-standing-tile__count">(\d+)<\/span>/g ) ].map( ( match ) => Number( match[ 1 ] ) ),
+		[ 10, 11, 13 ]
+	);
+} );
+
+test( 'keeps Method core/table cells schema-safe and phone labels CSS-backed', () => {
+	for ( const [ className, labels, expectedRows ] of [
+		[ 'hp-keyword-table', [ 'Keyword', 'Posting signal', 'Evidence boundary' ], 34 ],
+		[ 'hp-market-table', [ 'Job title', 'Company', 'Posting', 'Last checked', 'State', 'Reasoning' ], 20 ],
+	] ) {
+		const body = new RegExp( `${ className }[\\s\\S]*?<tbody>([\\s\\S]*?)<\\/tbody>` ).exec( APPENDIX )[ 1 ];
+		const rows = [ ...body.matchAll( /<tr>([\s\S]*?)<\/tr>/g ) ];
+		assert.equal( rows.length, expectedRows );
+		for ( const row of rows ) {
+			assert.equal( [ ...row[ 1 ].matchAll( /<(?:th|td)\b/g ) ].length, labels.length );
+			assert.doesNotMatch( row[ 1 ], /\bdata-label=/ );
+		}
+		for ( const contract of PLACEMENT_LEDGER_LABEL_CONTRACTS.filter( ( contract ) => contract.selector.includes( className ) ) ) {
+			assert.doesNotThrow( () => assertRuleDeclarations( PAGE_CSS, contract ) );
+		}
+	}
+} );
+
+test( 'configures the keyword ledger demonstrated-first while keeping All terms last', () => {
+	const ledger = /root: '\.hp-resume-keyword-bank',[\s\S]*?\n\s*\},\n\s*\{\n\s*root: '\.hp-live-states'/.exec( FILTER_SCRIPT );
+	assert( ledger, 'The filter script must expose one keyword-ledger configuration.' );
+	assert.match( ledger[ 0 ], /defaultState: 'demonstrated'/ );
+	assert.deepEqual(
+		[ ...ledger[ 0 ].matchAll( /\{ key: '([^']+)', label: '([^']+)' \}/g ) ].map( ( match ) => [ match[ 1 ], match[ 2 ] ] ),
+		[ [ 'demonstrated', 'Demonstrated' ], [ 'partial', 'Partial' ], [ 'gap', 'Gap' ], [ 'all', 'All terms' ] ]
+	);
+	assert.match( FILTER_SCRIPT, /apply\( ledger\.defaultState \|\| 'all' \)/ );
+} );
+
+test( 'keeps the Method market screen in a band with a bounded scroll hint', () => {
+	const market = findBlock( APPENDIX, 'hp-live-states' );
+	assert( hasBlockClass( market, 'hp-placement-band' ) );
+	assert( hasBlockClass( market, 'hp-placement-band--market' ) );
+	assert.match( market.outer, /<p class="hp-market-scroll-hint">Scroll the register sideways for reasoning →<\/p>[\s\S]*?hp-market-table/ );
+	assert.match( APPENDIX, /<aside class="wp-block-group hp-callout is-tone-insight">/ );
+} );
+
 test( 'rejects a market State cell the filter cannot classify', () => {
 	const mutant = replaceOnce( APPENDIX, '<td>Replaced · Needs new screen</td>', '<td>Replaced</td>' );
 	assert.throws( () => verifyAppendix( mutant ), /has a State the filter cannot classify/ );
 } );
 
+test( 'pins route modifiers, measures, full bands, and filter mount hooks', () => {
+	for ( const [ source, className, verifier, message ] of [
+		[ DIGEST, 'hp-placement-masthead--digest', verifyMain, /route-specific masthead/ ],
+		[ DIGEST, 'hp-placement-section--text', verifyMain, /measure/ ],
+		[ DIGEST, 'hp-evidence-ledger', verifyMain, /filter root class/ ],
+		[ DIGEST, 'hp-placement-ledger', verifyMain, /shared hp-placement-ledger hook/ ],
+		[ APPENDIX, 'hp-placement-masthead--method', verifyAppendix, /route-specific masthead/ ],
+		[ APPENDIX, 'hp-resume-keyword-bank', verifyAppendix, /filter root class/ ],
+		[ APPENDIX, 'hp-live-states', verifyAppendix, /filter root class/ ],
+		[ APPENDIX, 'hp-placement-ledger', verifyAppendix, /shared hp-placement-ledger hook/ ],
+	] ) {
+		assert.throws( () => verifier( removeClassEverywhere( source, className ) ), message );
+	}
+
+	assert.throws(
+		() => verifyMain( replaceOnce( DIGEST, '"align":"full","className":"hp-digest-section hp-evidence-ledger', '"align":"wide","className":"hp-digest-section hp-evidence-ledger' ) ),
+		/alignfull/
+	);
+	assert.throws(
+		() => verifyAppendix( replaceOnce( APPENDIX, '"align":"full","anchor":"screening-funnel"', '"align":"wide","anchor":"screening-funnel"' ) ),
+		/alignfull/
+	);
+} );
+
 test( 'refuses to bring back the three-disclosure split ledger', () => {
 	const mutant = replaceOnce(
 		APPENDIX,
-		'<!-- wp:table {"hasFixedLayout":false,"className":"hp-keyword-table is-style-hperkins-ledger"} -->',
-		'<!-- wp:details {"className":"hp-disclosure hp-keyword-disclosure"} -->\n<details class="wp-block-details hp-disclosure hp-keyword-disclosure"><summary>Demonstrated</summary></details>\n<!-- /wp:details -->\n\n<!-- wp:table {"hasFixedLayout":false,"className":"hp-keyword-table is-style-hperkins-ledger"} -->'
+		'<!-- wp:table {"hasFixedLayout":false,"className":"hp-keyword-table hp-placement-ledger is-style-hperkins-ledger"} -->',
+		'<!-- wp:details {"className":"hp-disclosure hp-keyword-disclosure"} -->\n<details class="wp-block-details hp-disclosure hp-keyword-disclosure"><summary>Demonstrated</summary></details>\n<!-- /wp:details -->\n\n<!-- wp:table {"hasFixedLayout":false,"className":"hp-keyword-table hp-placement-ledger is-style-hperkins-ledger"} -->'
 	);
 	assert.throws( () => verifyAppendix( mutant ), /retired split-ledger structure: hp-disclosure/ );
 } );

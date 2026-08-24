@@ -12,6 +12,7 @@ const {
 	DIGEST_NARROW_CONTEXT,
 	DIGEST_OPENING_CONTRACTS,
 	DIGEST_PHONE_CONTEXT,
+	PLACEMENT_CHASSIS_CONTRACTS,
 } = require( './job-placement-page-style-contracts' );
 
 const {
@@ -95,12 +96,12 @@ function declarationValue( rule, property ) {
 function assertDigestPhoneRowGapWinsCascade( css ) {
 	const effectiveRule = parseRules( css )
 		.filter( ( rule ) =>
-			normalizeSelectors( rule.prelude ).includes( '.hp-wcus-callout--event-first' ) &&
+			normalizeSelectors( rule.prelude ).includes( '.hp-wcus-callout__inner' ) &&
 				[ DIGEST_NARROW_CONTEXT, DIGEST_PHONE_CONTEXT ].includes( rule.atContext ) &&
 				declarationValue( rule, 'row-gap' )
 		)
 		.at( -1 );
-	assert( effectiveRule, 'Digest phone cascade must declare an event-first row gap.' );
+	assert( effectiveRule, 'Digest phone cascade must declare an event-plate row gap.' );
 	assert.equal(
 		effectiveRule.atContext,
 		DIGEST_PHONE_CONTEXT,
@@ -110,6 +111,29 @@ function assertDigestPhoneRowGapWinsCascade( css ) {
 		declarationValue( effectiveRule, 'row-gap' ),
 		'var(--wp--preset--spacing--4)',
 		'The effective <=600px event-first row gap must use spacing--4.'
+	);
+}
+
+function assertNativeAlignfullOwnsBreakoutGeometry( css ) {
+	for ( const selector of [
+		'.hp-wcus-callout--event-first',
+		'.hp-placement-section',
+		'.hp-placement-band',
+	] ) {
+		const rule = ruleForContract( css, { selector } );
+		assert( rule, `${ selector } must have a top-level rule.` );
+		assert.equal(
+			declarationValue( rule, 'inline-size' ),
+			undefined,
+			`${ selector } must leave inline-size to WordPress's native alignfull geometry.`
+		);
+	}
+
+	const band = ruleForContract( css, { selector: '.hp-placement-band' } );
+	assert.equal(
+		declarationValue( band, 'margin-inline' ),
+		undefined,
+		'.hp-placement-band must leave breakout margins to WordPress alignfull.'
 	);
 }
 
@@ -240,7 +264,7 @@ test( 'accepted Digest actions keep three desktop columns and one narrow column'
 test( 'Digest phone row gap wins the overlapping narrow cascade', () => {
 	assertDigestPhoneRowGapWinsCascade( pagesCss );
 
-	const laterNarrowOverride = `${ pagesCss }\n${ DIGEST_NARROW_CONTEXT } {\n  .hp-wcus-callout--event-first {\n    row-gap: var(--wp--preset--spacing--5);\n  }\n}\n`;
+	const laterNarrowOverride = `${ pagesCss }\n${ DIGEST_NARROW_CONTEXT } {\n  .hp-wcus-callout__inner {\n    row-gap: var(--wp--preset--spacing--5);\n  }\n}\n`;
 	assert.throws(
 		() => assertDigestPhoneRowGapWinsCascade( laterNarrowOverride ),
 		/phone row-gap rule must follow|spacing--4/
@@ -259,10 +283,31 @@ test( 'Digest lower-page hierarchy and evidence records are declaration-pinned',
 		}
 	}
 
-	assert(
-		!/\.wp-block-table\.hp-evidence-table tbody td(?:\[[^\]]+\]|:[^{,\s]+)*::before/.test( pagesCss ),
-		'The narrow Digest evidence register must not repeat State or Direct evidence labels in every row.'
-	);
+} );
+
+test( 'placement chassis and phone-label declarations are mutation-pinned', () => {
+	for ( const contract of PLACEMENT_CHASSIS_CONTRACTS ) {
+		assert.doesNotThrow( () => assertRuleDeclarations( pagesCss, contract ) );
+		for ( const [ property, expected ] of Object.entries( contract.declarations ) ) {
+			assert.throws(
+				() => assertRuleDeclarations( mutateDeclaration( pagesCss, contract, property, expected ), contract ),
+				/hp-|placement|content|display|grid|padding|scroll|overflow|font|border|align/
+			);
+		}
+	}
+} );
+
+test( 'placement bands preserve WordPress root-padding-aware alignfull breakout', () => {
+	assert.doesNotThrow( () => assertNativeAlignfullOwnsBreakoutGeometry( pagesCss ) );
+
+	for ( const selector of [ '.hp-wcus-callout--event-first', '.hp-placement-section', '.hp-placement-band' ] ) {
+		const rule = ruleForContract( pagesCss, { selector } );
+		const mutant = `${ pagesCss.slice( 0, rule.end - 1 ) }\n  inline-size: 100%;\n${ pagesCss.slice( rule.end - 1 ) }`;
+		assert.throws(
+			() => assertNativeAlignfullOwnsBreakoutGeometry( mutant ),
+			/native alignfull geometry/
+		);
+	}
 } );
 
 test( 'parseRules returns top-level rules with original offsets', () => {

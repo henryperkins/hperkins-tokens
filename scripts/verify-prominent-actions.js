@@ -138,6 +138,15 @@ function verifySourceContracts() {
 	assertRuleDeclarations( pageCss, {
 		selector: '.hp-wcus-callout--event-first',
 		declarations: {
+			display: 'block',
+			'max-inline-size': 'none',
+			padding: '2.5rem 1rem',
+			'border-inline-start': '0',
+		},
+	} );
+	assertRuleDeclarations( pageCss, {
+		selector: '.hp-wcus-callout__inner',
+		declarations: {
 			display: 'grid',
 			'grid-template-columns': 'minmax(0, 1fr)',
 			'column-gap': '0',
@@ -155,7 +164,7 @@ function verifySourceContracts() {
 		},
 	} );
 	assertRuleDeclarations( pageCss, {
-		selector: '.hp-wcus-callout--event-first',
+		selector: '.hp-wcus-callout__inner',
 		atContext: '@media (min-width: 782px)',
 		declarations: {
 			'grid-template-columns': 'minmax(0, 1.35fr) minmax(16rem, 0.65fr)',

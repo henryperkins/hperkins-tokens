@@ -697,38 +697,51 @@ function lastCheckedSummary( workbookRows ) {
 	return `Last checked distribution: ${ [ ...dated, `not recorded — ${ missing } ${ missing === 1 ? 'row' : 'rows' }` ].join( '; ' ) }.`;
 }
 
-// The hero's three scope chips are counts, and a count on this page is a claim.
-// The funnel table used to be the only derived number checked against the
-// workbook; when it went, the chips became the page's most prominent unchecked
-// arithmetic — and the first draft of them asserted every state was dated when
-// five rows carry no date at all. Derive them here so a chip cannot drift from
-// the ledger it summarizes.
-function verifyAppendixScopeChips( workbookRows, appendixHtml, groups ) {
+// The masthead's three audit figures are claims. Derive each value from the
+// ledgers it summarizes, and pin the two notes that prevent the compact plate
+// from overstating market-date coverage or machine verdicts.
+function verifyAppendixAuditFigures( workbookRows, appendixHtml, groups ) {
 	const dataRows = workbookRows.slice( 1 );
-	const dated = dataRows.filter( ( row ) => row[3] !== '' ).length;
 	const overturned = dataRows.filter( ( row ) => row[5] === 'Fail — overturned' ).length;
 	const keywordRows = htmlTableRows( tableSourceByClass( appendixHtml, 'hp-keyword-table' ) ).length - 1;
 
-	const scopeMatch = /<div\b[^>]*class="[^"]*\bhp-method-scope\b[^"]*"[^>]*>([\s\S]*?)<\/div>/i.exec( appendixHtml );
-	assert( scopeMatch, 'Appendix is missing the hero scope bar.' );
-	const chips = [ ...scopeMatch[1].matchAll( /<p\b[^>]*class="[^"]*\bhp-chip\b[^"]*"[^>]*>([\s\S]*?)<\/p>/gi ) ]
-		.map( ( match ) => stripHtml( match[1] ) );
+	assert( ! /\bhp-method-scope\b/.test( appendixHtml ), 'Appendix still contains the retired hero scope bar.' );
+	const figures = [ ...appendixHtml.matchAll( /<div\b[^>]*class="[^"]*\bhp-placement-audit__figure\b[^"]*"[^>]*>([\s\S]*?)<\/div>/gi ) ]
+		.map( ( match ) => ( {
+			label: stripHtml( ( /<dt\b[^>]*>([\s\S]*?)<\/dt>/i.exec( match[1] ) || [] )[1] || '' ),
+			value: stripHtml( ( /<dd\b[^>]*class="[^"]*\bhp-placement-audit__value\b[^"]*"[^>]*>([\s\S]*?)<\/dd>/i.exec( match[1] ) || [] )[1] || '' ),
+			note: stripHtml( ( /<(p|dd)\b[^>]*class="[^"]*\bhp-placement-audit__note\b[^"]*"[^>]*>([\s\S]*?)<\/\1>/i.exec( match[1] ) || [] )[2] || '' ),
+		} ) );
 
 	const expected = [
-		`${ keywordRows } résumé terms audited against five postings`,
-		`${ dataRows.length } market rows screened, ${ dated } with a dated check`,
-		`${ groups.failed } rows failed by hand, ${ overturned } overturning an AI pass`,
+		{
+			label: 'Résumé terms audited',
+			value: String( keywordRows ),
+			note: 'Each against five Solutions Engineer postings.',
+		},
+		{
+			label: 'Market rows screened',
+			value: String( dataRows.length ),
+			note: 'Every row retained; delistings kept visible.',
+		},
+		{
+			label: 'Rows failed by hand',
+			value: String( groups.failed ),
+			note: `${ overturned === 1 ? 'One' : String( overturned ) } overturned an AI pass.`,
+		},
 	];
 
 	assert(
-		chips.length === expected.length,
-		`Appendix hero states ${ chips.length } scope chips; expected ${ expected.length }.`
+		figures.length === expected.length,
+		`Appendix masthead states ${ figures.length } audit figures; expected ${ expected.length }.`
 	);
-	expected.forEach( ( text, index ) => {
-		assert(
-			chips[index] === text,
-			`Appendix scope chip ${ index + 1 } differs. Derived: "${ text }"; appendix: "${ chips[index] }".`
-		);
+	expected.forEach( ( figure, index ) => {
+		for ( const field of [ 'label', 'value', 'note' ] ) {
+			assert(
+				figures[index][field] === figure[field],
+				`Appendix audit figure ${ index + 1 } ${ field } differs. Derived: "${ figure[field] }"; appendix: "${ figures[index][field] }".`
+			);
+		}
 	} );
 }
 
@@ -750,7 +763,7 @@ function verifyAppendixWorkbookParity( workbookRows, appendixHtml ) {
 		);
 	}
 
-	verifyAppendixScopeChips( workbookRows, appendixHtml, expectedGroups );
+	verifyAppendixAuditFigures( workbookRows, appendixHtml, expectedGroups );
 
 	const dateSummaryMatch = appendixHtml.match(
 		/<p\b[^>]*class="[^"]*\bhp-market-date-summary\b[^"]*"[^>]*>([\s\S]*?)<\/p>/i

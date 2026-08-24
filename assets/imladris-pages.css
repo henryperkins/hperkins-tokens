@@ -413,16 +413,27 @@ p.hp-contact-form__hint {
 
 .hp-wcus-callout--event-first {
   box-sizing: border-box;
+  display: block;
+  max-inline-size: none;
+  margin-block-start: 0;
+  padding: 2.5rem 1rem;
+  border-inline-start: 0;
+  background: var(--wp--custom--surface--sunken);
+}
+
+.hp-wcus-callout__inner {
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   column-gap: 0;
   row-gap: var(--wp--preset--spacing--5);
   align-items: stretch;
   max-inline-size: var(--wp--style--global--wide-size, 72rem);
-  margin-block-start: 0;
+  margin-inline: auto;
   padding: var(--hp-plate-pad);
   border-inline-start: 0.25rem solid var(--wp--preset--color--gold-600);
   background: var(--wp--custom--surface--raised);
+  box-shadow: var(--wp--custom--shadow--sm);
 }
 
 .hp-wcus-callout--event-first .hp-wcus-callout__copy {
@@ -481,15 +492,332 @@ p.hp-contact-form__hint {
 }
 
 @media (min-width: 782px) {
-  .hp-wcus-callout--event-first {
+  .hp-wcus-callout__inner {
     grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 0.65fr);
     column-gap: var(--wp--preset--spacing--6);
     row-gap: 0;
   }
 }
 
-.hp-digest-section,
-.hp-method-section {
+/* Shared placement-page chassis. The block bodies carry the semantics; this
+   sheet supplies the mobile-first measures, numbered spine, bands, and the two
+   masthead plates without creating a second token vocabulary. */
+.hp-placement-masthead {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--wp--preset--spacing--6);
+  inline-size: 100%;
+  padding-inline: 1rem;
+}
+
+.hp-placement-masthead > * {
+  margin-block: 0;
+}
+
+.hp-placement-masthead__main,
+.hp-placement-part__content {
+  min-inline-size: 0;
+}
+
+.hp-placement-contents,
+.hp-placement-audit {
+  box-sizing: border-box;
+  padding: var(--wp--preset--spacing--5);
+  border: 1px solid var(--wp--custom--border--hair);
+  border-radius: var(--hp-radius-register);
+  background: var(--wp--custom--surface--card);
+  box-shadow: var(--wp--custom--shadow--sm);
+}
+
+.hp-placement-contents__label,
+.hp-placement-audit__label {
+  margin: 0 0 var(--wp--preset--spacing--3);
+  padding-block-end: var(--wp--preset--spacing--3);
+  border-block-end: 1px solid var(--wp--custom--border--hair);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  letter-spacing: var(--hp-tracking-label);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--muted);
+}
+
+.hp-placement-contents__list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hp-placement-contents__list li {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: center;
+  border-block-start: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-placement-contents__list li:first-child {
+  border-block-start: 0;
+}
+
+.hp-placement-contents__list span {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--wp--custom--text--accent);
+}
+
+.hp-placement-contents__list a {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  border-block-end: 1px solid transparent;
+  color: var(--wp--custom--text--body);
+  text-decoration: none;
+}
+
+.hp-placement-contents__list a:focus-visible {
+  outline: 2px solid var(--wp--preset--color--gold-700);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .hp-placement-contents__list a:hover {
+    border-block-end-color: var(--wp--custom--rule--gold);
+    color: var(--wp--custom--text--strong);
+  }
+}
+
+.hp-placement-contents .hp-digest__dateline {
+  margin-block-start: var(--wp--preset--spacing--4);
+  padding-block-start: var(--wp--preset--spacing--3);
+  border-block-start: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-placement-audit__figures {
+  display: grid;
+  gap: var(--wp--preset--spacing--4);
+  margin: 0;
+}
+
+.hp-placement-audit__figure {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--hp-gap-xs) var(--wp--preset--spacing--4);
+  margin: 0;
+  padding-block-start: var(--wp--preset--spacing--3);
+  border-block-start: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-placement-audit__figure:first-child {
+  padding-block-start: 0;
+  border-block-start: 0;
+}
+
+.hp-placement-audit__figure dt,
+.hp-placement-audit__figure dd,
+.hp-placement-audit__figure p {
+  margin: 0;
+}
+
+.hp-placement-audit__figure dt {
+  align-self: end;
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  letter-spacing: var(--hp-tracking-label);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--muted);
+}
+
+.hp-placement-audit__figure .hp-placement-audit__value {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xl);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--wp--custom--text--strong);
+}
+
+.hp-placement-audit__note {
+  grid-column: 1;
+  font-size: var(--wp--preset--font-size--sm);
+  line-height: 1.5;
+  color: var(--wp--custom--text--muted);
+}
+
+.hp-placement-back-link {
+  margin-block-start: var(--wp--preset--spacing--4);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--xs);
+}
+
+.hp-placement-back-link a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+}
+
+.hp-placement-section {
+  box-sizing: border-box;
+  margin-block-start: 0;
+  padding: 2.5rem 1rem 0;
+  scroll-margin-block-start: 72px;
+}
+
+.hp-placement-section [id] {
+  scroll-margin-block-start: 72px;
+}
+
+.hp-digest-template .hp-placement-section.hp-placement-section--text {
+  max-inline-size: var(--wp--style--global--content-size, 44rem);
+  margin-inline: auto;
+}
+
+.hp-placement-section--wide {
+  max-inline-size: var(--wp--style--global--wide-size, 72rem);
+  margin-inline: auto;
+}
+
+.hp-placement-band {
+  max-inline-size: none !important;
+  background: var(--wp--custom--surface--sunken);
+}
+
+.hp-placement-band--evidence {
+  padding-block-end: 2.5rem;
+}
+
+.hp-placement-band > .hp-placement-part {
+  max-inline-size: var(--wp--style--global--wide-size, 72rem);
+  margin-inline: auto;
+}
+
+.hp-placement-band--market > .hp-placement-part {
+  max-inline-size: 84rem;
+}
+
+.hp-placement-part {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--wp--preset--spacing--4);
+}
+
+.hp-placement-part__number {
+  display: flex;
+  align-items: center;
+  gap: var(--wp--preset--spacing--3);
+  margin: 0;
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--md);
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  color: var(--wp--custom--text--accent);
+}
+
+.hp-placement-part__number::after {
+  content: "";
+  flex: 1 1 auto;
+  border-block-start: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-placement-part__content > .hp-digest-kicker {
+  margin-block-end: var(--wp--preset--spacing--2);
+}
+
+.hp-placement-part__content > h2 {
+  margin-block-start: 0;
+  font-size: var(--wp--preset--font-size--2-xl);
+  text-wrap: balance;
+}
+
+.hp-incident-card.hp-placement-section {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+@media (min-width: 600px) {
+  .hp-placement-masthead {
+    padding-inline: 2rem;
+  }
+
+  .hp-placement-section {
+    padding: 4rem 2rem 0;
+  }
+
+  .hp-placement-band--evidence {
+    padding-block-end: 4rem;
+  }
+
+  .hp-wcus-callout--event-first {
+    padding: 4rem 2rem;
+  }
+}
+
+@media (min-width: 782px) {
+  .hp-placement-section,
+  .hp-placement-section [id] {
+    scroll-margin-block-start: 84px;
+  }
+
+  .hp-placement-part {
+    grid-template-columns: 3rem minmax(0, 1fr);
+    column-gap: var(--wp--preset--spacing--4);
+    row-gap: 0;
+    padding-block-start: var(--wp--preset--spacing--5);
+    border-block-start: 1px solid var(--wp--custom--border--hair);
+  }
+
+  .hp-placement-part__number {
+    display: block;
+    align-self: start;
+  }
+
+  .hp-placement-part.is-bare {
+    padding-block-start: 0;
+    border-block-start: 0;
+  }
+
+  .hp-placement-part__number::after {
+    display: none;
+  }
+}
+
+@media (min-width: 940px) {
+  .hp-placement-masthead {
+    column-gap: var(--wp--preset--spacing--9);
+    row-gap: var(--wp--preset--spacing--7);
+    align-items: start;
+  }
+
+  .hp-placement-masthead--digest {
+    grid-template-columns: minmax(0, 1.6fr) minmax(17rem, 0.85fr);
+  }
+
+  .hp-placement-masthead--method {
+    grid-template-columns: minmax(0, 1.6fr) minmax(17rem, 0.8fr);
+  }
+
+  .hp-placement-contents__list {
+    gap: var(--wp--preset--spacing--3);
+  }
+
+  .hp-placement-contents__list li {
+    align-items: baseline;
+    border-block-start: 0;
+  }
+
+  .hp-placement-contents__list a {
+    display: inline;
+    min-block-size: 0;
+  }
+}
+
+.hp-digest-section:not(.hp-placement-section),
+.hp-method-section:not(.hp-placement-section) {
   box-sizing: border-box;
   margin-block-start: var(--wp--preset--spacing--9);
   scroll-margin-block-start: calc(var(--hp-header-h-compact) + var(--wp--preset--spacing--4));
@@ -500,9 +828,9 @@ p.hp-contact-form__hint {
   margin-block-start: 0;
 }
 
-.hp-support-now > p,
-.hp-theme-governance > p,
-.hp-method-link > p {
+.hp-support-now .hp-placement-part__content > p,
+.hp-theme-governance .hp-placement-part__content > p,
+.hp-method-link .hp-placement-part__content > p {
   max-inline-size: var(--wp--custom--measure--prose);
 }
 
@@ -529,9 +857,9 @@ p.hp-contact-form__hint {
   margin-block-start: 0;
 }
 
-.hp-fit-ledger,
-.hp-incident-card,
-.hp-evidence-ledger {
+.hp-fit-ledger:not(.hp-placement-section),
+.hp-incident-card:not(.hp-placement-section),
+.hp-evidence-ledger:not(.hp-placement-section) {
   margin-block-start: var(--wp--preset--spacing--6);
 }
 
@@ -576,11 +904,11 @@ p.hp-contact-form__hint {
   flex-basis: 0;
 }
 
-.hp-incident-card > h2 {
+.hp-incident-card .hp-placement-part__content > h2 {
   max-inline-size: 24ch;
 }
 
-.hp-incident-card > p:last-child {
+.hp-incident-card .hp-placement-part__content > p:last-child {
   margin-block-end: 0;
   padding-block-start: var(--wp--preset--spacing--3);
   border-block-start: 1px solid var(--wp--custom--border--hair);
@@ -624,7 +952,7 @@ p.hp-contact-form__hint {
 /* The evidence register is deliberately compact: direct proof, state, link.
    Wide and dense ledgers scroll within their figure rather than widening the
    page. Long repository labels and URLs may wrap at any safe character. */
-.hp-evidence-ledger > p {
+.hp-evidence-ledger .hp-placement-part__content > p {
   max-inline-size: var(--wp--custom--measure--prose);
 }
 
@@ -765,6 +1093,43 @@ p.hp-contact-form__hint {
   color: var(--wp--custom--text--muted);
 }
 
+@media (max-width: 599px) {
+  .hp-evidence-filter {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    scrollbar-width: none;
+  }
+
+  .hp-evidence-filter::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hp-evidence-filter__button {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    white-space: nowrap;
+  }
+}
+
+@media (min-width: 600px) {
+  .hp-evidence-filter {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+}
+
+/* The parent theme gives every wp-element-button a 150ms transition. Keep the
+   placement routes inside the same reduced-motion contract as the child theme
+   even when that parent declaration wins later in a host cascade. */
+@media (prefers-reduced-motion: reduce) {
+  .hp-digest-template .wp-element-button {
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Motion is opt-in, not opt-out: the transition is declared only where the
    visitor has expressed no preference against it. */
 @media (prefers-reduced-motion: no-preference) {
@@ -806,7 +1171,7 @@ p.hp-contact-form__hint {
   text-wrap: pretty;
 }
 
-.hp-method-hero > p:not(.hp-page-hero__eyebrow, .hp-digest__dateline) {
+.hp-method-hero .hp-placement-masthead__main > p:not(.hp-page-hero__eyebrow, .hp-digest__dateline) {
   max-inline-size: var(--wp--custom--measure--prose);
   line-height: var(--wp--custom--leading--relaxed);
 }
@@ -831,8 +1196,13 @@ p.hp-contact-form__hint {
 .hp-standing-legend__item {
   min-inline-size: 0;
   margin-block: 0;
-  padding-inline-start: var(--wp--preset--spacing--4);
-  border-inline-start: var(--hp-rule-entry) solid var(--wp--custom--border--hair);
+  padding: var(--wp--preset--spacing--4);
+  border: 1px solid var(--wp--custom--border--hair);
+  background: var(--wp--custom--surface--card);
+}
+
+.hp-placement-standing-tile {
+  border-inline-start-width: 5px;
 }
 
 .hp-standing-legend__item.is-demonstrated {
@@ -855,6 +1225,14 @@ p.hp-contact-form__hint {
   color: var(--wp--custom--text--strong);
 }
 
+.hp-placement-standing-tile__count {
+  float: inline-end;
+  margin-inline-start: var(--wp--preset--spacing--3);
+  font-size: var(--wp--preset--font-size--md);
+  font-variant-numeric: tabular-nums;
+  color: var(--wp--custom--text--strong);
+}
+
 .hp-standing-legend__item dd {
   margin: var(--hp-gap-xs) 0 0;
   color: var(--wp--custom--text--muted);
@@ -864,7 +1242,7 @@ p.hp-contact-form__hint {
   margin: 0;
 }
 
-.hp-resume-keyword-bank > p {
+.hp-resume-keyword-bank .hp-placement-part__content > p {
   max-inline-size: var(--wp--custom--measure--prose);
 }
 
@@ -880,7 +1258,7 @@ p.hp-contact-form__hint {
   inline-size: 26%;
 }
 
-.hp-screen-rules > p {
+.hp-screen-rules .hp-placement-part__content > p {
   max-inline-size: var(--wp--custom--measure--prose);
 }
 
@@ -894,9 +1272,17 @@ p.hp-contact-form__hint {
    find the same label they clicked. */
 .hp-numbered-rule h3 {
   display: grid;
-  grid-template-columns: 3rem minmax(0, 1fr);
-  column-gap: var(--wp--preset--spacing--3);
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--wp--preset--spacing--2);
   align-items: baseline;
+}
+
+@media (min-width: 600px) {
+  .hp-numbered-rule h3 {
+    grid-template-columns: 3rem minmax(0, 1fr);
+    column-gap: var(--wp--preset--spacing--3);
+    row-gap: 0;
+  }
 }
 
 .hp-numbered-rule h3 strong {
@@ -909,12 +1295,18 @@ p.hp-contact-form__hint {
 /* The screen is the page's densest object, so it sits on its own plate rather
    than on the page ground. */
 .hp-method-plate {
-  padding: var(--wp--preset--spacing--6);
-  border-block: 1px solid var(--wp--custom--border--hair);
+  padding: 2.5rem 1rem;
+  border-block: 0;
   background: var(--wp--custom--surface--sunken);
 }
 
-.hp-live-states > p {
+@media (min-width: 600px) {
+  .hp-method-plate {
+    padding: 4rem 2rem;
+  }
+}
+
+.hp-live-states .hp-placement-part__content > p {
   max-inline-size: var(--wp--custom--measure--prose);
 }
 
@@ -926,8 +1318,18 @@ p.hp-contact-form__hint {
   color: var(--wp--custom--text--muted);
 }
 
+.hp-market-scroll-hint {
+  display: none;
+  margin: 0 0 var(--wp--preset--spacing--3);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--wp--custom--text--muted);
+}
+
 .hp-market-table table {
-  min-inline-size: 74rem;
+  min-inline-size: 62rem;
 }
 
 .hp-market-table :is(th, td):nth-child(1) {
@@ -966,9 +1368,20 @@ p.hp-contact-form__hint {
    so parity against the published workbook still compares "" to "". The dash
    is drawn, never stored — an authored em-dash would read back as data. */
 @media (min-width: 782px) {
+  .hp-market-table {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
   .hp-market-table tbody td:empty::after {
     content: "—";
     color: var(--wp--custom--text--faint);
+  }
+}
+
+@media (min-width: 782px) and (max-width: 1180px) {
+  .hp-market-scroll-hint {
+    display: block;
   }
 }
 
@@ -1037,7 +1450,7 @@ p.hp-contact-form__hint {
   border-block-end: 0;
 }
 
-.hp-decision-audit > p {
+.hp-decision-audit .hp-placement-part__content > p {
   max-inline-size: var(--wp--custom--measure--prose);
 }
 
@@ -1102,19 +1515,19 @@ p.hp-contact-form__hint {
     align-self: start;
   }
 
-  .hp-wcus-callout--event-first {
+  .hp-wcus-callout__inner {
     grid-template-columns: minmax(0, 1fr);
     column-gap: 0;
     row-gap: var(--wp--preset--spacing--5);
   }
 
-  .hp-digest-section {
+  .hp-digest-section:not(.hp-placement-section) {
     margin-block-start: var(--wp--preset--spacing--7);
   }
 
-  .hp-fit-ledger,
-  .hp-incident-card,
-  .hp-evidence-ledger {
+  .hp-fit-ledger:not(.hp-placement-section),
+  .hp-incident-card:not(.hp-placement-section),
+  .hp-evidence-ledger:not(.hp-placement-section) {
     margin-block-start: var(--wp--preset--spacing--5);
   }
 
@@ -1210,37 +1623,17 @@ p.hp-contact-form__hint {
   }
 
   .wp-block-table.hp-evidence-table tbody tr {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--4);
+    display: block;
     padding: var(--wp--preset--spacing--4);
     border-block-end: 1px solid var(--wp--custom--border--hair);
   }
 
   .wp-block-table.hp-evidence-table tbody :is(th, td) {
-    inline-size: auto;
+    inline-size: 100%;
   }
 
-  .wp-block-table.hp-evidence-table tbody th {
-    grid-column: 1;
-  }
-
-  .wp-block-table.hp-evidence-table tbody td:nth-of-type(1) {
-    grid-column: 2;
-    align-self: start;
-    margin-block-start: 0;
-    font-family: var(--wp--preset--font-family--mono);
-    font-size: var(--wp--preset--font-size--xs);
-    line-height: var(--wp--custom--leading--snug);
-    text-align: end;
-    color: var(--wp--custom--text--muted);
-  }
-
-  .wp-block-table.hp-evidence-table tbody td:nth-of-type(2) {
-    grid-column: 1 / -1;
-    margin-block-start: 0;
-    padding-block-start: var(--wp--preset--spacing--2);
-    border-block-start: 1px solid var(--wp--custom--border--hair);
+  .hp-placement-ledger tbody th[data-state] {
+    padding-inline-start: var(--wp--preset--spacing--3);
   }
 
   .wp-block-table.hp-keyword-table tbody th,
@@ -1256,16 +1649,17 @@ p.hp-contact-form__hint {
     margin-block-start: var(--wp--preset--spacing--3);
   }
 
-  /* A workbook cell that is genuinely empty must not leave a naked label. */
+  /* Keyword and evidence cells are complete. A market workbook cell may be
+     genuinely empty; its label remains and the presentation draws the dash. */
   .wp-block-table.hp-keyword-table tbody td:empty,
-  .wp-block-table.hp-market-table tbody td:empty,
   .wp-block-table.hp-evidence-table tbody td:empty {
     display: none;
   }
 
-  /* The relocated column header, set exactly as the real one. */
-  .wp-block-table.hp-keyword-table tbody td::before,
-  .wp-block-table.hp-market-table tbody td::before {
+  /* Core/table does not serialize arbitrary data attributes on cells. Keep the
+     real thead in the accessibility tree and reproduce its fixed, verified
+     columns visually for the stacked phone anatomy. */
+  .hp-placement-ledger tbody :is(th, td)::before {
     display: block;
     font-family: var(--wp--preset--font-family--label);
     font-size: var(--wp--preset--font-size--xs);
@@ -1276,23 +1670,57 @@ p.hp-contact-form__hint {
     color: var(--wp--custom--text--muted);
   }
 
-  .wp-block-table.hp-keyword-table tbody td:nth-of-type(1)::before {
+  .hp-evidence-table tbody th::before {
+    content: "Artifact";
+  }
+
+  .hp-evidence-table tbody td:nth-of-type(1)::before {
+    content: "State";
+  }
+
+  .hp-evidence-table tbody td:nth-of-type(2)::before {
+    content: "Direct evidence";
+  }
+
+  .hp-keyword-table tbody th::before {
+    content: "Keyword";
+  }
+
+  .hp-keyword-table tbody td:nth-of-type(1)::before {
     content: "Posting signal";
   }
 
-  /* One ledger, one boundary column: the three disclosures that each bounded
-     their claims in different words are gone, and the standing that used to be
-     carried by which disclosure a row sat in now rides in the row header. */
-  .wp-block-table.hp-keyword-table tbody td:nth-of-type(2)::before {
+  .hp-keyword-table tbody td:nth-of-type(2)::before {
     content: "Evidence boundary";
   }
 
-  .wp-block-table.hp-market-table tbody td:nth-of-type(3)::before {
+  .hp-market-table tbody th::before {
+    content: "Job title";
+  }
+
+  .hp-market-table tbody td:nth-of-type(1)::before {
+    content: "Company";
+  }
+
+  .hp-market-table tbody td:nth-of-type(2)::before {
+    content: "Posting";
+  }
+
+  .hp-market-table tbody td:nth-of-type(3)::before {
     content: "Last checked";
   }
 
-  .wp-block-table.hp-market-table tbody td:nth-of-type(4)::before {
+  .hp-market-table tbody td:nth-of-type(4)::before {
     content: "State";
+  }
+
+  .hp-market-table tbody td:nth-of-type(5)::before {
+    content: "Reasoning";
+  }
+
+  .wp-block-table.hp-market-table tbody td:empty::after {
+    content: "—";
+    color: var(--wp--custom--text--faint);
   }
 
   /* A short value sits beside its label on one ledger line rather than under
@@ -1306,8 +1734,7 @@ p.hp-contact-form__hint {
     margin-block-start: var(--wp--preset--spacing--2);
   }
 
-  /* Company and the posting link read as the entry's own subtitle; naming
-     those columns would add nothing their values do not already say. */
+  /* Company remains the entry subtitle, now preceded by its explicit label. */
   .wp-block-table.hp-market-table tbody td:nth-of-type(1) {
     margin-block-start: var(--wp--preset--spacing--1);
     color: var(--wp--custom--text--muted);
@@ -1315,6 +1742,29 @@ p.hp-contact-form__hint {
 
   .wp-block-table.hp-market-table tbody td:nth-of-type(2) {
     margin-block-start: var(--wp--preset--spacing--2);
+  }
+
+  .hp-placement-ledger__posting {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+    padding-inline: var(--wp--preset--spacing--3);
+    border: 1px solid var(--wp--custom--border--hair);
+    border-radius: var(--hp-radius-pill);
+    text-decoration: none;
+  }
+
+  .hp-placement-ledger__reference {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+    margin-inline-end: var(--hp-gap-xs);
+  }
+
+  .hp-evidence-table a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
   }
 }
 
@@ -1326,6 +1776,9 @@ p.hp-contact-form__hint {
 
   .hp-wcus-callout--event-first {
     --hp-plate-pad: var(--wp--preset--spacing--4);
+  }
+
+  .hp-wcus-callout__inner {
     row-gap: var(--wp--preset--spacing--4);
   }
 
@@ -1346,7 +1799,7 @@ p.hp-contact-form__hint {
   }
 
   .hp-proof-cards > .hp-proof-card.is-style-hperkins-proof-card,
-  .hp-incident-card,
+  .hp-incident-card:not(.hp-placement-section),
   .hp-research-note,
   .wp-block-group.is-style-hperkins-incident-card,
   .wp-block-group.is-style-hperkins-research-note {
@@ -1355,13 +1808,6 @@ p.hp-contact-form__hint {
 
   .wp-block-table.hp-evidence-table tbody tr {
     padding: var(--wp--preset--spacing--4);
-  }
-
-  /* The plate's inset is a desktop affordance. On a phone it is subtracted from
-     the same budget the stacked ledger rows are already living on: at 320px the
-     full inset left an 18px value column beside a 128px label. */
-  .hp-method-plate {
-    padding-inline: var(--wp--preset--spacing--3);
   }
 
   /* And below the plate's own breakpoint the label goes back above its value.
