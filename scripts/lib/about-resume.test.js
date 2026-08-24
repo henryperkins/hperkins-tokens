@@ -95,4 +95,27 @@ test( 'About v2 contract validates the real candidate structure and evidence map
 	assert.equal( report.skillTermCount, 30 );
 	assert.equal( report.counts.Documentation, 5 );
 	assert.deepEqual( report.sectionOrder, [ 'contributions', 'experience', 'skills', 'showcase', 'contact' ] );
+	assert.equal( report.actionRailCount, 1 );
+	assert.equal( report.actionPanelCount, 1 );
+	assert.deepEqual( report.closingActions, [
+		{ href: '/contact/', text: 'Start a conversation' },
+		{ href: '/one-page-resume/', text: 'Download résumé (PDF)' },
+	] );
+} );
+
+test( 'About v2 contract rejects drift in either closing action', () => {
+	const { verifyAboutV2Body } = require( './about-page-contract' );
+	const source = fs.readFileSync( draftPath, 'utf8' );
+	const approvedPanel = source;
+	assert.doesNotThrow( () => verifyAboutV2Body( approvedPanel ) );
+
+	for ( const [ from, to, message ] of [
+		[ '/contact/', '/contact-me/', /closing action.*contact|\/contact\//i ],
+		[ '/one-page-resume/', '/resume/', /closing action.*résumé|one-page-resume/i ],
+		[ 'Download résumé (PDF)', 'View résumé', /closing action.*résumé|Download résumé/i ],
+	] ) {
+		const changed = approvedPanel.replace( from, to );
+		assert.notEqual( changed, approvedPanel, `closing-action mutation ${ from } must apply` );
+		assert.throws( () => verifyAboutV2Body( changed ), message );
+	}
 } );

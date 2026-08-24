@@ -194,6 +194,8 @@ test( 'runs metadata, Digest, About probe, market parity, and production workflo
 		'scripts/lib/about-page-contract.test.js',
 		'scripts/lib/about-page-rendered-probe.test.js',
 		'scripts/lib/about-gravatar-heading.test.js',
+		'scripts/lib/about-resume-style.test.js',
+		'scripts/lib/about-resume.test.js',
 		'scripts/lib/job-placement-digest-source-contract.test.js',
 		'scripts/lib/job-placement-metadata-contract.test.js',
 		'scripts/lib/journal-route-discovery.test.js',

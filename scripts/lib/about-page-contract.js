@@ -1374,6 +1374,15 @@ function verifyAboutV2Body(body, options = {}) {
 	const skillTermCount = (source.match(/class="[^"]*\bhp-about-skill-term\b[^"]*"/g) || []).length;
 	const h1Matches = source.match(/<h1\b[\s\S]*?<\/h1>/g) || [];
 	const rows = aboutV2RowRecords(source);
+	const contactSections = findBalancedByClass(source, 'hp-about-contact', label);
+	const actionRails = findBalancedByClass(source, 'hp-action-rail', label);
+	const actionPanelCount = Array.from(source.matchAll(/<section\b[^>]*class="([^"]*)"[^>]*>/gi))
+		.filter(function (match) {
+			const classes = match[1].split(/\s+/).filter(Boolean);
+			return classes.indexOf('hp-about-contact') !== -1 &&
+				classes.indexOf('hp-action-panel') !== -1 &&
+				classes.indexOf('is-closing') !== -1;
+		}).length;
 	const counts = {};
 
 	aboutV2Assert(source.includes('hp-about-resume'), label + ': missing hp-about-resume root.');
@@ -1388,6 +1397,31 @@ function verifyAboutV2Body(body, options = {}) {
 	aboutV2Assert(earlierRoleCount === 3, label + ': expected 3 earlier roles, found ' + earlierRoleCount + '.');
 	aboutV2Assert(skillTermCount === 30, label + ': expected 30 skill terms, found ' + skillTermCount + '.');
 	aboutV2Assert(rows.length === 11, label + ': expected 11 evidence-index rows, found ' + rows.length + '.');
+	aboutV2Assert(contactSections.length === 1, label + ': expected one closing contact section, found ' + contactSections.length + '.');
+	aboutV2Assert(actionPanelCount === 1, label + ': closing contact section must carry hp-action-panel is-closing.');
+	aboutV2Assert(actionRails.length === 1, label + ': expected one closing action rail, found ' + actionRails.length + '.');
+	aboutV2Assert(
+		findBalancedByClass(contactSections[0].inner, 'hp-action-rail', label).length === 1,
+		label + ': the action rail must be inside the closing contact panel.'
+	);
+	const actionRailOpening = source.match(/<div\b[^>]*class="([^"]*\bhp-action-rail\b[^"]*)"[^>]*>/i);
+	aboutV2Assert(
+		actionRailOpening && aboutV2Classes(actionRailOpening[0]).indexOf('wp-block-buttons') !== -1,
+		label + ': closing action rail must use the core Buttons wrapper.'
+	);
+	const closingActions = findLinks(actionRails[0].inner, label);
+	const expectedClosingActions = [
+		{ href: '/contact/', text: 'Start a conversation' },
+		{ href: '/one-page-resume/', text: 'Download résumé (PDF)' }
+	];
+	aboutV2Assert(closingActions.length === 2, label + ': closing action rail must contain exactly two actions.');
+	expectedClosingActions.forEach(function (expected, index) {
+		const actual = closingActions[index] || {};
+		aboutV2Assert(
+			actual.href === expected.href && actual.text === expected.text,
+			label + ': closing action ' + (index + 1) + ' must be "' + expected.text + '" to ' + expected.href + '.'
+		);
+	});
 
 	rows.forEach(function (row) {
 		const expected = ABOUT_V2_EVIDENCE[row.title];
@@ -1485,6 +1519,9 @@ function verifyAboutV2Body(body, options = {}) {
 		currentRoleCount,
 		earlierRoleCount,
 		skillTermCount,
+		actionRailCount: actionRails.length,
+		actionPanelCount,
+		closingActions,
 		counts,
 		sectionOrder: sectionIds
 	};

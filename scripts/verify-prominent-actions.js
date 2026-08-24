@@ -7,7 +7,7 @@ const os = require( 'node:os' );
 const path = require( 'node:path' );
 
 const { findHeadings } = require( './lib/about-page-contract' );
-const { assertKnownOptions, selectAboutSource, selectDigestSource } = require( './lib/page-phase-contract' );
+const { assertKnownOptions, deriveAboutActionContract, selectAboutSource, selectDigestSource } = require( './lib/page-phase-contract' );
 const { getOrigin } = require( './lib/site-url' );
 const { assertRuleDeclarations } = require( './lib/style-coverage' );
 
@@ -28,14 +28,12 @@ const ABOUT_SOURCE = selectAboutSource( { drafts: USE_DRAFTS } );
 const ACTION_RAIL_CLASSES = [ 'wp-block-buttons', 'hp-action-rail' ];
 const ACTION_RAIL_SELECTOR = '.wp-block-buttons.hp-action-rail';
 const MALFORMED_ACTION_RAIL_SELECTOR = '.hp-action-rail:not(.wp-block-buttons)';
-// The proof-first About body (marked by its hp-about-nav landmark) carries a
-// hero rail plus a closing invitation; the previous body has one rail and no
-// panel. Deriving the expectation from the selected source keeps every phase
-// of the promotion green without a flag: old snapshot -> 1/0, reviewed
-// candidate and exported redesign snapshot -> 2/1.
-const ABOUT_REDESIGNED = ( () => {
+// Derive the selected body's action topology so legacy snapshots, the earlier
+// proof-first redesign, and the v2 résumé candidate can each be verified
+// without conflating their deliberately different rail counts.
+const ABOUT_ACTION_CONTRACT = ( () => {
 	try {
-		return fs.readFileSync( ABOUT_SOURCE, 'utf8' ).includes( 'hp-about-nav' );
+		return deriveAboutActionContract( fs.readFileSync( ABOUT_SOURCE, 'utf8' ) );
 	} catch ( cause ) {
 		throw new Error( `About source ${ ABOUT_SOURCE } is missing; the prominent-action contract derives its /about/ expectation from it.`, { cause } );
 	}
@@ -53,7 +51,7 @@ const PANEL_FILES = [
 	'content/page-snapshots/front-page.html',
 	DIGEST_SOURCE,
 	'content/page-snapshots/work-flavor-agent-demo.html',
-	...( ABOUT_REDESIGNED ? [ ABOUT_SOURCE ] : [] ),
+	...( ABOUT_ACTION_CONTRACT.panelCount > 0 ? [ ABOUT_SOURCE ] : [] ),
 ];
 
 const EXCLUDED_FILES = [
@@ -82,8 +80,8 @@ const LIVE_PAGES = [
 	{ route: '/', railCount: 2, panelCount: 1 },
 	{
 		route: '/about/',
-		railCount: ABOUT_REDESIGNED ? 2 : 1,
-		panelCount: ABOUT_REDESIGNED ? 1 : 0,
+		railCount: ABOUT_ACTION_CONTRACT.railCount,
+		panelCount: ABOUT_ACTION_CONTRACT.panelCount,
 	},
 	{ route: '/job-placement-digest/', ...DIGEST_ACTION_COUNTS, digest: true },
 	{ route: '/work/flavor-agent/demo/', railCount: 1, panelCount: 1 },

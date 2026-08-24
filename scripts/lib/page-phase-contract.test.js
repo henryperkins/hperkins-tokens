@@ -5,7 +5,7 @@ const path = require( 'node:path' );
 const { spawnSync } = require( 'node:child_process' );
 
 const { DIGEST_OPENING_CONTRACTS } = require( './job-placement-page-style-contracts' );
-const { selectAboutSource, selectDigestSource } = require( './page-phase-contract' );
+const { deriveAboutActionContract, selectAboutSource, selectDigestSource } = require( './page-phase-contract' );
 
 const themeRoot = path.join( __dirname, '..', '..' );
 
@@ -56,6 +56,24 @@ test( 'keeps local About acceptance on drafts and deployed About on snapshots', 
 		selectAboutSource( { drafts: false, requireLocal: false } ),
 		path.join( themeRoot, 'content', 'page-snapshots', 'about.html' )
 	);
+} );
+
+test( 'derives prominent-action counts for legacy, proof-first, and v2 About bodies', () => {
+	assert.deepEqual( deriveAboutActionContract( '<div class="hp-about-legacy"></div>' ), {
+		phase: 'legacy',
+		railCount: 1,
+		panelCount: 0,
+	} );
+	assert.deepEqual( deriveAboutActionContract( '<nav class="hp-about-nav"></nav>' ), {
+		phase: 'proof-first',
+		railCount: 2,
+		panelCount: 1,
+	} );
+	assert.deepEqual( deriveAboutActionContract( '<div class="hp-about-resume hp-about-nav"></div>' ), {
+		phase: 'v2',
+		railCount: 1,
+		panelCount: 1,
+	} );
 } );
 
 test( 'phase-aware page verifiers reject unknown options', () => {

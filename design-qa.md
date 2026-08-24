@@ -149,6 +149,178 @@ header, database-owned Page 6, deployment, or production. The border-box result
 in particular is defensive: it is correct either way, but whether the live page
 overflowed at 390px was not established against a real install.
 
+## Pass 5 result
+
+passed
+
+## Pass 6 — approved handoff fidelity follow-up
+
+### Source visual truth and rendered evidence
+
+- Handoff archive: `C:\Users\htper\hperkins-tokens\aboutredesign.zip`.
+- Source screenshots: `C:\Users\htper\AppData\Local\Temp\about-redesign-reference-20260824\design_handoff_about_skills_index\screenshots\01-identity-header.png` through `04-contributions-dimmed.png`.
+- Rendered preview: `http://127.0.0.1:4179/about/`.
+- Final rendered screenshots:
+  - `C:\Users\htper\AppData\Local\Temp\about-review-identity-909x540-final.png`
+  - `C:\Users\htper\AppData\Local\Temp\about-review-skills-idle-909x540-final.png`
+  - `C:\Users\htper\AppData\Local\Temp\about-review-skills-filtered-909x540-final.png`
+  - `C:\Users\htper\AppData\Local\Temp\about-review-contributions-filtered-909x540-final.png`
+  - `C:\Users\htper\AppData\Local\Temp\about-review-mobile-390x844-final.png`
+  - `C:\Users\htper\AppData\Local\Temp\about-review-mobile-skills-filtered-390x844-final.png`
+  - `C:\Users\htper\AppData\Local\Temp\about-review-desktop-1280x900-final.png`
+
+The four source screenshots and their corresponding 909px implementation
+captures are each 909 x 540 pixels. They were compared at a 909 x 540 CSS
+viewport, scale 1, zoom 1, with no density conversion. The responsive captures
+are 390 x 844 and 1280 x 900 pixels at the matching CSS sizes and density 1.
+The in-app browser was unavailable, so the connected Edge browser was used as
+the Product Design fallback.
+
+The original fixture process held the pre-edit stylesheet in memory. The final
+preview therefore layers the current candidate stylesheet after that fixture;
+the capture-only route also suppresses the native scrollbar so the visible CSS
+width matches the 909px source capture. This normalization changes no repository
+code and is not used as production evidence.
+
+### State and comparison evidence
+
+- Identity, resting Skills, Documentation-filtered Skills, and filtered
+  Contributions were captured at the same viewport and interaction state as
+  their numbered source screenshots. Each source/implementation pair was
+  opened together in one comparison input before this report was updated.
+- Full-view comparison checked composition, section framing, rail behavior,
+  type hierarchy, ledger density, and the active/dimmed state.
+- Focused comparison checked the identity kicker, compact Copy control, Skills
+  readout line fit, Clear filter control, first skill group, and the first two
+  contribution rows. Focused evidence was required because those details are
+  too small to judge reliably from the full page alone.
+- The source identity screenshot includes the full site header while the local
+  candidate fixture begins at `<main>`. The candidate-owned identity region was
+  compared at unchanged scale; header integration remains outside this
+  candidate-only review.
+
+### Comparison history
+
+- Initial P2 — identity metadata drift: the kicker resolved to Marcellus and the
+  Copy control inherited the 15px bold generic action treatment. The scoped fix
+  now resolves both to JetBrains Mono; Copy computes to 12px/400, 1.4 leading,
+  0.06em tracking, uppercase, the card surface and hair border, while retaining
+  a 44px minimum target. Post-fix evidence:
+  `about-review-identity-909x540-final.png`.
+- Initial P2 — resting readout wrapped to two lines: added tracking and an empty
+  explicit grid track consumed the width reserved for the hidden Clear button.
+  The handoff's no-tracking flex-wrap control row and `flex: 1 1 16rem`
+  readout were restored. It now computes to one line at 909px. Post-fix evidence:
+  `about-review-skills-idle-909x540-final.png`.
+- Post-fix comparison found no new P0, P1, or P2 issue. No further visual edits
+  were made after the final comparison.
+
+### Required fidelity surfaces
+
+- Fonts and typography: handoff families, weights, sizes, leading, tracking,
+  and wrapping are retained. The corrected kicker is mono, Copy is compact mono,
+  and the resting Skills readout is one line at 909px.
+- Spacing and layout rhythm: the identity geometry, readout surface, skill-chip
+  flow, contribution ledger, and 13rem desktop rail align with the supplied
+  system. At 1280px the layout computes to `208px 840px`; skill groups compute
+  to `176px 640px`.
+- Colors and tokens: corrected states use the registered Imladris card, hair,
+  faint-text, strong-text, and gold hover tokens. No new literal palette values
+  were introduced.
+- Image quality and asset fidelity: the supplied portrait remains an 80 x 80
+  circular source asset with the approved gold border and shadow. The handoff
+  contains no additional candidate-owned imagery or icons to reproduce.
+- Copy and content: identity, availability, idle/filter readouts, evidence
+  counts, and contribution copy match the reviewed candidate and handoff.
+- Responsiveness and accessibility: 390px and 1280px both report zero horizontal
+  overflow. Mobile terms wrap in one column, the rail remains horizontally
+  scrollable, and Copy/Clear controls retain 44px targets.
+
+### Interaction, console, and detector evidence
+
+- Documentation selection sets `aria-pressed="true"`, reports
+  `Documentation — 5 rows above match; the rest are dimmed.`, and dims 6 of 11
+  evidence rows. Clear filter restores 0 dimmed rows and the one-line idle copy.
+- Earlier roles expands to exactly 3 rows with `aria-expanded="true"` and then
+  returns to the hidden, collapsed state.
+- The final browser error log is empty.
+- The required Impeccable detector ran once after the UI edit. It degraded to
+  regex mode because its optional HTML parser modules are unavailable. Its
+  warnings are pre-existing global literals or the handoff's intentional ledger
+  and education rules; it reported no finding in the selectors changed here.
+
+### Final findings
+
+- P0: none.
+- P1: none.
+- P2: none.
+- P3: the supplied filtered screenshot wraps `Clear filter` onto two lines while
+  this implementation keeps it on one line inside the same 44px target. The
+  difference is non-blocking and keeps the control easier to scan.
+- Expected framing difference: the sticky section rail remains visible in the
+  implementation's Skills captures, as required by the handoff behavior, while
+  the source captures show the preceding disclosure edge in that strip.
+
+## Final result
+
+passed
+
+## Pass 7 — closing action-panel remediation
+
+### Source and implementation evidence
+
+- Approved source: `C:\Users\htper\hperkins-tokens\aboutredesign.zip`,
+  `design_handoff_about_skills_index/About v2.dc.html` lines 281–290 and the
+  handoff README's "Showcase and contact" contract.
+- The source pins a hair border, 3px gold left rule, `--radius-lg`, the
+  `--surface-sunken` → `--surface-card` gradient, `--shadow-md`, and exactly two
+  design-system Buttons: primary `/contact/` "Start a conversation", then
+  secondary `/one-page-resume/` "Download résumé (PDF)".
+- The supplied numbered source screenshots do not include Contact, and the
+  standalone canvas harness exposes imported design-system Buttons as generic
+  placeholders. The source file was therefore inspected directly at 909 x 540,
+  while visual comparison used its explicit inline panel tokens and the site's
+  existing shared `.hp-action-panel.is-closing` / `.hp-action-rail` primitive.
+- Final implementation captures:
+  - `.impeccable/qa/about-v2/implementation-contact-909x540.png`
+  - `.impeccable/qa/about-v2/implementation-contact-mobile-390x844.png`
+
+The candidate's already-reviewed Contact heading and lede remain unchanged;
+the handoff marks that copy as outside this Skills-index change. This pass
+restores only the shared closing-panel composition and its approved actions.
+
+### Responsive, interaction, and accessibility results
+
+- At 909 x 540 the panel is 845.33px wide with the expected gradient, gold
+  left rule, 12px radius, and medium shadow. The two actions share one row in
+  primary-then-secondary order and each computes to 44.875px high.
+- At 390 x 844 the rail becomes a column; both actions compute to 313.33px wide
+  and 44.875px high. At the 320px boundary both still fill the rail, remain at
+  least 44px high, and the document reports `scrollWidth === clientWidth`.
+- The secondary action received keyboard focus with `:focus-visible` matched
+  and a solid gold outline. The exact rendered hrefs are `/contact/` and
+  `/one-page-resume/`.
+- The final browser error/warning log is empty.
+- The candidate-only preview omits WordPress core's block-layout sheet, so the
+  QA proxy supplied only core's canonical `.wp-block-buttons` flex behavior.
+  Theme and page styles remained the repository versions. This is browser
+  evidence for the candidate surface, not database, deployment, or production
+  evidence.
+
+### Detector result
+
+The required Impeccable detector ran once after this UI edit. Optional parser
+modules were unavailable, so it used degraded regex mode. It found no warning
+in the changed Contact selector or markup; reported items are pre-existing
+page-wide literals and intentional ledger/education rules.
+
+### Final findings
+
+- P0: none.
+- P1: none.
+- P2: none.
+- P3: none.
+
 ## Final result
 
 passed

@@ -2,6 +2,8 @@ const SOURCE_UNIT_TEST_FILES = [
 	'scripts/lib/about-page-contract.test.js',
 	'scripts/lib/about-page-rendered-probe.test.js',
 	'scripts/lib/about-gravatar-heading.test.js',
+	'scripts/lib/about-resume-style.test.js',
+	'scripts/lib/about-resume.test.js',
 	'scripts/lib/content-integrity.test.js',
 	'scripts/lib/content-ownership-docs.test.js',
 	'scripts/lib/event-copy-retirement-runbook.test.js',

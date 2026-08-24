@@ -39,7 +39,7 @@ typography and layout, but compact header, form, icon, and specimen controls
 must not opt into either class.
 
 The entire About page layer (`.hp-about-template…` composition, polish, wide
-breakout, and the proof-first redesign selectors) lives in
+breakout, and the proof-first plus v2 résumé selectors) lives in
 `assets/imladris-pages.css` as of 0.3.56 — `style.css` contains no
 `.hp-about-template` selector anymore, and the About source contract enforces
 that split. `verify-style-token-usage.js` validates var() usage across all five
@@ -158,7 +158,10 @@ assets/js/about-resume.js is the fifth deferred frontend controller. It is globa
 
 Focused candidate checks:
 
-    node --test scripts/lib/about-resume.test.js
+    node --test scripts/lib/about-resume-style.test.js scripts/lib/about-resume.test.js
     node scripts/verify-about-page-source.js --drafts
+    node scripts/verify-about-page-rendered.js --source-only --drafts
+    node scripts/verify-prominent-actions.js --source-only --drafts
+    node scripts/verify-resume-route.js --source-only
 
 content/page-drafts/about.html remains the reviewed candidate. Do not copy it to content/page-snapshots/about.html, update database Page 6, deploy, or treat it as public without a separate publication approval.

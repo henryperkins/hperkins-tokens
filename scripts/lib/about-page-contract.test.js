@@ -24,9 +24,9 @@ const {
 } = require( './about-page-contract' );
 
 const themeRoot = path.join( __dirname, '..', '..' );
-const candidate = normalizeContent(
+const acceptedSnapshot = normalizeContent(
 	fs.readFileSync(
-		path.join( themeRoot, 'content', 'page-drafts', 'about.html' ),
+		path.join( themeRoot, 'content', 'page-snapshots', 'about.html' ),
 		'utf8'
 	)
 );
@@ -126,7 +126,7 @@ test( 'dotted tokens stay one word', () => {
 // ---------------------------------------------------------------------------
 
 test( 'parses top-level blocks with nested groups and JSON attributes', () => {
-	const blocks = parseTopLevelBlocks( candidate );
+	const blocks = parseTopLevelBlocks( acceptedSnapshot );
 	assert.equal( blocks.length, 10 );
 	assert.equal( blocks[ 0 ].attrs.className, 'hp-about-hero' );
 	assert.equal( blocks[ 2 ].name, 'group' );
@@ -140,8 +140,8 @@ test( 'parses top-level blocks with nested groups and JSON attributes', () => {
 // The normative body contract
 // ---------------------------------------------------------------------------
 
-test( 'the reviewed candidate satisfies the complete About body contract', () => {
-	const report = verifyAboutBody( candidate, { label: 'candidate' } );
+test( 'the accepted snapshot satisfies the complete legacy About body contract', () => {
+	const report = verifyAboutBody( acceptedSnapshot, { label: 'accepted snapshot' } );
 	assert.ok(
 		report.wordCount >= ABOUT_WORD_RANGE.min && report.wordCount <= ABOUT_WORD_RANGE.max,
 		`total ${ report.wordCount } within ${ ABOUT_WORD_RANGE.min }–${ ABOUT_WORD_RANGE.max }`
@@ -158,8 +158,8 @@ test( 'the expected heading inventory contains one H1 and 21 ordered headings', 
 } );
 
 function mutated( from, to ) {
-	const output = candidate.replace( from, to );
-	assert.notEqual( output, candidate, `fixture mutation ${ String( from ) } must apply` );
+	const output = acceptedSnapshot.replace( from, to );
+	assert.notEqual( output, acceptedSnapshot, `fixture mutation ${ String( from ) } must apply` );
 	return output;
 }
 
@@ -172,7 +172,7 @@ function foundationsBlock( html ) {
 }
 
 test( 'Skills and Foundations has exactly two native Columns in mobile reading order', () => {
-	const foundations = foundationsBlock( candidate );
+	const foundations = foundationsBlock( acceptedSnapshot );
 	const nativeColumns = foundations.outer.match( /<!-- wp:column(?: \{[^\n]*\})? -->/g ) || [];
 	assert.equal( nativeColumns.length, 2 );
 	assert.deepEqual(
@@ -184,13 +184,13 @@ test( 'Skills and Foundations has exactly two native Columns in mobile reading o
 } );
 
 test( 'fails when the first native Skills column is removed', () => {
-	const foundations = foundationsBlock( candidate );
+	const foundations = foundationsBlock( acceptedSnapshot );
 	const withoutSkillsSection = foundations.outer.replace(
 		/<!-- wp:column(?: \{[^\n]*\})? -->\s*<div class="wp-block-column[^">]*">\s*<!-- wp:heading \{"level":3\} -->\s*<h3 class="wp-block-heading">Skills<\/h3>[\s\S]*?<!-- \/wp:column -->\s*/,
 		''
 	);
 	assert.notEqual( withoutSkillsSection, foundations.outer, 'fixture mutation must remove the Skills column' );
-	const withoutSkills = candidate.replace( foundations.outer, withoutSkillsSection );
+	const withoutSkills = acceptedSnapshot.replace( foundations.outer, withoutSkillsSection );
 	assert.throws(
 		() => verifyAboutBody( withoutSkills ),
 		/exactly two columns|first Foundations column|Skills/
@@ -200,11 +200,11 @@ test( 'fails when the first native Skills column is removed', () => {
 test( 'fails when markup is added outside the top-level blocks', () => {
 	// Content between blocks belongs to no section, so no word cap and no
 	// heading inventory moves; only the coverage assertion sees it.
-	const anchor = candidate.lastIndexOf( '<!-- wp:', candidate.indexOf( 'hp-signal-strip hp-about-impact' ) );
+	const anchor = acceptedSnapshot.lastIndexOf( '<!-- wp:', acceptedSnapshot.indexOf( 'hp-signal-strip hp-about-impact' ) );
 	const smuggled =
-		candidate.slice( 0, anchor ) +
+		acceptedSnapshot.slice( 0, anchor ) +
 		'<div class="promo"><p>sponsored filler copy</p><a href="https://evil.example/">Sponsored link</a></div>\n' +
-		candidate.slice( anchor );
+		acceptedSnapshot.slice( anchor );
 	assert.throws( () => verifyAboutBody( smuggled ), /outside its top-level blocks/ );
 } );
 
@@ -220,11 +220,11 @@ test( 'fails when the hero copy drifts', () => {
 } );
 
 test( 'serializes the in-page navigation as editable native blocks', () => {
-	const blocks = parseTopLevelBlocks( candidate );
+	const blocks = parseTopLevelBlocks( acceptedSnapshot );
 	assert.equal(
 		blocks.filter( ( block ) => block.name === 'html' ).length,
 		0,
-		'The candidate must not depend on a Studio-policy-incompatible Custom HTML block.'
+		'The accepted snapshot must not depend on a Studio-policy-incompatible Custom HTML block.'
 	);
 	assert.equal( blocks[ 2 ].name, 'group' );
 	assert.equal( blocks[ 2 ].attrs.tagName, 'nav' );
@@ -232,7 +232,7 @@ test( 'serializes the in-page navigation as editable native blocks', () => {
 	assert.match( blocks[ 2 ].outer, /<!-- wp:list \{"className":"hp-about-nav__list"\} -->/ );
 } );
 
-test( 'rejects a nested Custom HTML block anywhere in the candidate', () => {
+test( 'rejects a nested Custom HTML block anywhere in the accepted snapshot', () => {
 	const strapline = '<p class="hp-about-hero__strapline">For teams building stuff with tokens.</p>\n<!-- /wp:paragraph -->';
 	const nestedHtml = mutated(
 		strapline,
@@ -438,7 +438,7 @@ test( 'fails when the closing invitation loses an action or reorders them', () =
 
 test( 'fails when a removed composition returns', () => {
 	assert.throws(
-		() => verifyAboutBody( candidate + '\n<!-- wp:heading -->\n<h2 class="wp-block-heading">Throughline</h2>\n<!-- /wp:heading -->\n' ),
+		() => verifyAboutBody( acceptedSnapshot + '\n<!-- wp:heading -->\n<h2 class="wp-block-heading">Throughline</h2>\n<!-- /wp:heading -->\n' ),
 		/Throughline|top-level composition/
 	);
 } );

@@ -10,6 +10,8 @@ const {
 } = require( '../verify-about-page-rendered' );
 
 const themeRoot = path.join( __dirname, '..', '..' );
+const acceptedSnapshotPath = path.join( themeRoot, 'content', 'page-snapshots', 'about.html' );
+const draftPath = path.join( themeRoot, 'content', 'page-drafts', 'about.html' );
 
 function browserException( description ) {
 	const exception = {
@@ -84,10 +86,7 @@ test( 'reports a browser exception from the post-hover evaluation', async () => 
 } );
 
 test( 'derives rendered copy from the selected About body', () => {
-	const source = fs.readFileSync(
-		path.join( themeRoot, 'content', 'page-drafts', 'about.html' ),
-		'utf8'
-	);
+	const source = fs.readFileSync( acceptedSnapshotPath, 'utf8' );
 	const changed = source
 		.replace( 'WordPress / AI Implementation &amp; Enablement', 'Selected phase heading' )
 		.replace( '>Get in touch<', '>Selected phase action<' );
@@ -98,10 +97,7 @@ test( 'derives rendered copy from the selected About body', () => {
 } );
 
 test( 'rejects a WCUS callout nested inside an action rail', () => {
-	const source = fs.readFileSync(
-		path.join( themeRoot, 'content', 'page-drafts', 'about.html' ),
-		'utf8'
-	);
+	const source = fs.readFileSync( acceptedSnapshotPath, 'utf8' );
 	const nested = source
 		.replace(
 			'<div class="wp-block-group hp-about-wcus">',
@@ -119,10 +115,7 @@ test( 'rejects a WCUS callout nested inside an action rail', () => {
 } );
 
 test( 'requires the WCUS action link to use one core Button wrapper', () => {
-	const source = fs.readFileSync(
-		path.join( themeRoot, 'content', 'page-drafts', 'about.html' ),
-		'utf8'
-	);
+	const source = fs.readFileSync( acceptedSnapshotPath, 'utf8' );
 	const plainAnchor = source.replace(
 		'<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/contact/">Start a conversation</a></div>',
 		'<div class="not-a-button is-style-secondary"><a href="/contact/">Start a conversation</a></div>'
@@ -132,6 +125,21 @@ test( 'requires the WCUS action link to use one core Button wrapper', () => {
 		() => deriveRenderedExpectations( plainAnchor, { label: 'plain WCUS action fixture' } ),
 		/exactly one.*wp-block-button|core Button/i
 	);
+} );
+
+test( 'derives the v2 rail, showcase, portrait, and closing actions from the selected draft', () => {
+	const source = fs.readFileSync( draftPath, 'utf8' );
+	const expectations = deriveRenderedExpectations( source, { label: 'About v2 draft' } );
+
+	assert.equal( expectations.version, 'v2' );
+	assert.equal( expectations.navLabel, 'About page sections' );
+	assert.deepEqual( expectations.fragments, [ 'contributions', 'experience', 'skills', 'showcase', 'contact' ] );
+	assert.equal( expectations.projects.length, 5 );
+	assert.equal( expectations.projects[ 0 ].title, 'Flavor Agent' );
+	assert.equal( expectations.projects.at( -1 ).title, 'Tableau' );
+	assert.equal( expectations.portraitAlt, 'Henry Perkins' );
+	assert.deepEqual( expectations.heroActionLabels, [] );
+	assert.deepEqual( expectations.closingActionLabels, [ 'Start a conversation', 'Download résumé (PDF)' ] );
 } );
 
 test( 'runs selected-body and CSS contracts in source-only mode without an origin', () => {

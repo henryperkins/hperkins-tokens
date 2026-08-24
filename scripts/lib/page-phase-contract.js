@@ -24,6 +24,17 @@ function selectAboutSource( { drafts = false, requireLocal = false } = {} ) {
 	return path.join( themeRoot, relative );
 }
 
+function deriveAboutActionContract( body ) {
+	const source = String( body || '' );
+	if ( source.includes( 'hp-about-resume' ) ) {
+		return { phase: 'v2', railCount: 1, panelCount: 1 };
+	}
+	if ( source.includes( 'hp-about-nav' ) ) {
+		return { phase: 'proof-first', railCount: 2, panelCount: 1 };
+	}
+	return { phase: 'legacy', railCount: 1, panelCount: 0 };
+}
+
 // The appendix has the same two phases as the Digest. Source-side contracts
 // that compare the stylesheet against the page body have to read the candidate
 // while a redesign is in review, or the reviewed body and the published mirror
@@ -37,6 +48,7 @@ function selectPlacementMethodSource( argv = [] ) {
 
 module.exports = {
 	assertKnownOptions,
+	deriveAboutActionContract,
 	selectAboutSource,
 	selectDigestSource,
 	selectPlacementMethodSource,
