@@ -71,6 +71,84 @@
 - `node scripts/verify-about-page-source.js --drafts`: candidate verified; 701 visible words, 7 contributions, 7 experience rows, 30 skills, 5 showcase items, 1 contact section.
 - `php -l functions.php`: no syntax errors detected.
 
+## Pass 5 — handoff re-read against the implementation
+
+Re-read `design_handoff_about_skills_index/README.md` and the prototype against
+the committed candidate. The publication boundary is unchanged: only
+`content/page-drafts/about.html`, `assets/imladris-pages.css`,
+`assets/js/about-resume.js`, and the contract were touched. The accepted mirror
+`content/page-snapshots/about.html`, WordPress Page 6, deployment, and
+production were not changed.
+
+Corrected in this pass:
+
+- **Evidence links pointed at a GitHub account that is not the author's.** Seven
+  links used `github.com/hperkins`; the repo's own activity audit and every
+  other tracked surface use `github.com/henryperkins`, and the Codex row named
+  the non-existent `hperkins/wp-ai-codex-provider`. Two contribution rows also
+  linked to *filtered search* URLs rather than artifacts, so a row labelled
+  "Merged pull request" resolved to an empty result page. Every row now links
+  the specific artifact the prototype names; each URL is corroborated by
+  `docs/audits/2026-08-10-wordpress-github-activity.md`.
+- **Selected artifacts had drifted from the real project set.** The handoff
+  marks the showcase out of scope and unchanged; the candidate carried five
+  invented cards, one of them a project the repo's own audit classifies as
+  non-WordPress adjacent work. Restored to the five real projects the design
+  carries, which also makes the "5 public projects" signal checkable on the page.
+- **Impact strip was missing half its anatomy.** Section 2 specifies a metric, a
+  mono unit, an explanation, and a jump link to the section that proves it. The
+  cards carried a metric and one label, and were not links.
+- **Education had lost two real records.** The handoff and the currently-live
+  About page both carry College of DuPage (2013) and Columbia College Chicago
+  (2007 – 2008); the candidate had replaced them with two unattributed
+  paragraphs. Restored on the specified `11rem minmax(0, 1fr)` grid.
+- **A superseded CSS layer drew a 3px evergreen rule above every skills group.**
+  The pass-3 override never reset it, so each group carried a heavy rule where
+  the design uses a hairline. Visible in the pass-4 desktop and mobile captures.
+- **An unbacked term could not render as specified.** It showed `0` on a
+  disabled control at `cursor: not-allowed`; the design calls for an em-dash on
+  an inert term at `opacity: 0.55`, `cursor: default`. No term on the page is
+  currently unbacked, so this path was unreachable and unverified.
+- **One authored count contradicted the evidence map.** PHP was authored as `3`
+  where two rows carry it, so the no-JS source and the runtime disagreed.
+- **Contributions and roles dimmed to different opacities** (0.32 vs 0.34) for
+  the same filter state; the design names one value.
+- **The main-column sections size with `width: 100%` and then pad**, so the page
+  depended on a border-box reset it inherits from outside its own stylesheet. A
+  scoped reset makes About independent of it — a no-op wherever the reset
+  already exists, and the removal of a 390px overflow where it does not.
+
+Guards added so each correction stays corrected: `verifyAboutV2Body()` now
+checks every authored count against the derived count (em-dash at zero), that
+each impact card carries a unit, an explanation, and a cue resolving to a real
+section, that both education records are present verbatim, and that no outbound
+GitHub link names an owner outside `WordPress` / `henryperkins`.
+
+Deliberate departures from the handoff prose, kept:
+
+- The readout reads "1 row above matches" at N = 1. The prototype emits "1 row
+  above match"; N = 1 is the common case here, so the grammatical form ships.
+- The section rail marks the current entry `aria-current="location"` rather than
+  `"true"`, which is the more precise value for an in-page scrollspy.
+- Term chips keep the pill radius shown in the reference screenshots rather than
+  the `--radius-chip` (2px) named in the README prose.
+
+Evidence: `.impeccable/qa/about-v2/pass5-impact-strip-1280.png`,
+`.impeccable/qa/about-v2/pass5-skills-education-1280.png`. Measured in a static
+fixture built from the reviewed draft, theme tokens, fonts, page stylesheet, and
+the About controller: 1280px and 390px both report
+`scrollWidth === clientWidth`; the Documentation filter dims 6 of 11 rows at
+0.34 with a 140ms opacity transition; a synthetic unbacked term renders an
+em-dash, no control, `opacity: 0.55`, `cursor: default`, and recomputes its
+group coverage.
+
+## Residual boundary
+
+The fixture still does not prove integration with the complete local WordPress
+header, database-owned Page 6, deployment, or production. The border-box result
+in particular is defensive: it is correct either way, but whether the live page
+overflowed at 390px was not established against a real install.
+
 ## Final result
 
 passed

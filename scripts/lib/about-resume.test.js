@@ -65,6 +65,23 @@ test( 'Skills readout uses the approved idle, singular, and plural language', ()
 	assert.equal( formatReadout( 'Documentation', 5 ), 'Documentation — 5 rows above match; the rest are dimmed.' );
 } );
 
+test( 'A term nothing above backs is unbacked, not zero', () => {
+	const { buildIndex, UNBACKED_COUNT } = require( controllerPath );
+
+	// The design's whole premise: a keyword the record does not evidence has to
+	// be visibly unbacked rather than quietly listed with a 0 beside it.
+	assert.equal( UNBACKED_COUNT, '—' );
+
+	const index = buildIndex( rows, [
+		{ legend: 'Mixed', items: [ 'Documentation', 'Kubernetes' ] },
+	] );
+
+	assert.equal( index.counts.Documentation, 5 );
+	assert.equal( index.counts.Kubernetes, undefined );
+	assert.equal( index.groups[ 0 ].backed, 1 );
+	assert.equal( index.groups[ 0 ].coverage, '1/2 backed above' );
+} );
+
 test( 'About v2 contract validates the real candidate structure and evidence map', () => {
 	const { verifyAboutV2Body } = require( './about-page-contract' );
 	assert.equal( typeof verifyAboutV2Body, 'function', 'about-page-contract must export verifyAboutV2Body().' );

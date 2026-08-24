@@ -1299,6 +1299,16 @@ const ABOUT_V2_TERM_LABELS = {
 	'escalation-triage': 'Escalation triage'
 };
 
+const ABOUT_V2_UNBACKED_COUNT = '—';
+
+const ABOUT_V2_EDUCATION = [
+	{ period: '2013', degree: 'A\\.S\\., Business Administration &amp; Management', school: 'College of DuPage' },
+	{ period: '2007 – 2008', degree: 'Studies in Journalism &amp; Mass Communications', school: 'Columbia College Chicago' }
+];
+
+// The only GitHub accounts this résumé may cite.
+const ABOUT_V2_GITHUB_OWNERS = [ 'WordPress', 'henryperkins' ];
+
 function aboutV2Assert(condition, message) {
 	if (!condition) {
 		throw new Error(message);
@@ -1403,6 +1413,71 @@ function verifyAboutV2Body(body, options = {}) {
 
 	aboutV2Assert(source.includes('6/6 backed above'), label + ': WordPress coverage label is missing.');
 	aboutV2Assert(source.includes('9/9 backed above'), label + ': Workflow coverage label is missing.');
+
+	// Every authored count is the derived count. A hand-edited number that no
+	// longer matches the evidence map above is exactly the drift this index
+	// exists to make impossible, and a term nothing backs owes an em-dash.
+	const termPattern = /<div class="[^"]*\bhp-about-skill-term\b[^"]*\bhp-term--([a-z0-9-]+)\b[^"]*">([\s\S]*?)<\/div>/g;
+	let termMatch;
+	let checkedTerms = 0;
+	while ((termMatch = termPattern.exec(source)) !== null) {
+		const slug = termMatch[1];
+		const termLabel = ABOUT_V2_TERM_LABELS[slug] || slug;
+		const authored = aboutV2Text((termMatch[2].match(/hp-about-skill-term__count">([\s\S]*?)<\/p>/) || [])[1] || '');
+		const derived = counts[termLabel] || 0;
+		const expected = derived > 0 ? String(derived) : ABOUT_V2_UNBACKED_COUNT;
+		aboutV2Assert(
+			authored === expected,
+			label + ': skill term "' + termLabel + '" is authored as ' + JSON.stringify(authored) +
+				' but the rows above back it ' + derived + ' time(s) (expected ' + JSON.stringify(expected) + ').'
+		);
+		checkedTerms += 1;
+	}
+	aboutV2Assert(checkedTerms === 30, label + ': expected 30 authored skill counts, checked ' + checkedTerms + '.');
+
+	// The impact strip is three signals, and each names the section that proves
+	// it. A metric with nowhere to jump is an unbacked claim.
+	const impactPattern = /<div class="wp-block-group hp-about-v2-impact">([\s\S]*?)<\/div>/g;
+	let impactMatch;
+	const impactCues = [];
+	while ((impactMatch = impactPattern.exec(source)) !== null) {
+		const card = impactMatch[1];
+		aboutV2Assert(/hp-about-v2-impact__label">/.test(card), label + ': an impact card is missing its unit label.');
+		aboutV2Assert(/hp-about-v2-impact__note">/.test(card), label + ': an impact card is missing its explanation.');
+		const cue = card.match(/hp-about-v2-impact__cue"><a href="#([a-z-]+)">([^<]+)<\/a>/);
+		aboutV2Assert(cue, label + ': an impact card is missing its jump link to the section that proves it.');
+		aboutV2Assert(
+			sectionIds.indexOf(cue[1]) !== -1,
+			label + ': impact cue "' + cue[2] + '" points at unknown section "#' + cue[1] + '".'
+		);
+		impactCues.push(cue[1]);
+	}
+	aboutV2Assert(impactCues.length === 3, label + ': expected 3 impact signals, found ' + impactCues.length + '.');
+
+	// Education is two records, each carrying a period, a degree, and a school.
+	ABOUT_V2_EDUCATION.forEach(function (record, index) {
+		const pattern = new RegExp(
+			'hp-about-education__period">' + record.period + '<[\\s\\S]*?<h4[^>]*>' + record.degree +
+				'<[\\s\\S]*?hp-about-education__school">' + record.school + '<'
+		);
+		aboutV2Assert(
+			pattern.test(source),
+			label + ': education record ' + (index + 1) + ' (' + record.school + ') is missing or reworded.'
+		);
+	});
+
+	// Outbound repositories belong to accounts that exist. A résumé linking to a
+	// handle its owner does not hold fails its own premise.
+	const unknownOwners = (source.match(/github\.com\/([A-Za-z0-9-]+)/g) || [])
+		.map(function (url) { return url.slice('github.com/'.length); })
+		.filter(function (owner, index, all) {
+			return all.indexOf(owner) === index && ABOUT_V2_GITHUB_OWNERS.indexOf(owner) === -1;
+		});
+	aboutV2Assert(
+		unknownOwners.length === 0,
+		label + ': unrecognised GitHub owner(s) ' + unknownOwners.join(', ') +
+			'; expected one of ' + ABOUT_V2_GITHUB_OWNERS.join(', ') + '.'
+	);
 
 	return {
 		label,

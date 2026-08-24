@@ -3478,6 +3478,15 @@ p.hp-contact-form__hint {
 	color: var(--wp--preset--color--ink-700);
 }
 
+/* The main-column sections are sized with width:100% and then padded, so this
+   page must not depend on a border-box reset it inherits from somewhere else.
+   Scoped to About: a no-op wherever the reset already exists. */
+.hp-about-resume *,
+.hp-about-resume *::before,
+.hp-about-resume *::after {
+	box-sizing: border-box;
+}
+
 .hp-about-resume :where(.wp-block-group, .wp-block-image, .wp-block-list, p, h1, h2, h3, h4) {
 	margin-block-start: 0;
 }
@@ -3685,8 +3694,11 @@ p.hp-contact-form__hint {
 	margin-top: var(--wp--preset--spacing--1);
 	font-family: var(--wp--preset--font-family--mono);
 	font-size: var(--wp--preset--font-size--sm);
+	font-weight: 700;
+	letter-spacing: 0.1em;
 	line-height: 1.4;
-	color: var(--hp-about-muted);
+	text-transform: uppercase;
+	color: var(--wp--preset--color--ink-700);
 }
 
 .hp-about-v2-layout {
@@ -3957,8 +3969,6 @@ p.hp-contact-form__hint {
 	grid-template-columns: minmax(0, 1fr) auto;
 	gap: var(--wp--preset--spacing--1) var(--wp--preset--spacing--3);
 	align-items: baseline;
-	padding-top: var(--wp--preset--spacing--3);
-	border-top: 3px solid var(--wp--preset--color--green-700);
 }
 
 .hp-about-skill-group h3 {
@@ -4015,9 +4025,14 @@ p.hp-contact-form__hint {
 	background: var(--wp--preset--color--green-700);
 }
 
-.hp-about-skill-term__button:disabled {
-	cursor: not-allowed;
-	opacity: 0.45;
+.hp-about-skill-term.is-unbacked {
+	opacity: 0.55;
+}
+
+.hp-about-skill-term.is-unbacked .hp-about-skill-term__label {
+	align-items: center;
+	padding-inline: 0.75rem;
+	cursor: default;
 }
 
 .hp-about-skill-term__count {
@@ -4451,9 +4466,11 @@ p.hp-contact-form__hint {
 	margin: 0.75rem 0 0;
 }
 
+/* One dim level for every filtered row: a contribution and a role that both
+   fail the active term must recede by the same amount. */
 .hp-about-resume .hp-about-contribution.is-dimmed {
 	background: color-mix(in srgb, var(--wp--preset--color--gold-500) 12%, var(--wp--preset--color--parchment-100));
-	opacity: 0.32;
+	opacity: 0.34;
 }
 
 .hp-about-resume .hp-about-skills__controls {
@@ -4626,4 +4643,131 @@ p.hp-contact-form__hint {
 
 .hp-about-resume .hp-about-section {
 	scroll-margin-top: calc(var(--hp-about-header-height, 0px) + 4.5rem);
+}
+
+/* About v2: each impact card states a signal and links to the section that
+   proves it. The cue link carries the accessible name; its ::after makes the
+   whole card the target without wrapping block markup in an anchor. */
+.hp-about-resume .hp-about-v2-impact {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--2);
+	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+	border-top: 3px solid transparent;
+	transition:
+		background var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+		border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+
+.hp-about-resume .hp-about-v2-impact:hover,
+.hp-about-resume .hp-about-v2-impact:focus-within {
+	border-top-color: var(--wp--preset--color--gold-500);
+	background: var(--hp-about-surface);
+}
+
+.hp-about-resume .hp-about-v2-impact__value {
+	font-variant-numeric: tabular-nums;
+}
+
+/* The card's flex gap already spaces the metric from its unit. */
+.hp-about-resume .hp-about-v2-impact__label {
+	margin-top: 0;
+}
+
+.hp-about-resume .hp-about-v2-impact__note {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.5;
+	color: var(--hp-about-muted);
+	text-wrap: pretty;
+}
+
+.hp-about-resume .hp-about-v2-impact__cue {
+	display: flex;
+	align-items: center;
+	gap: 0.4em;
+	min-height: 2.75rem;
+	margin: auto 0 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--river-700);
+}
+
+/* Decorative: the cue already says where the link goes. */
+.hp-about-resume .hp-about-v2-impact__cue::after {
+	content: "↓";
+}
+
+.hp-about-resume .hp-about-v2-impact__cue a {
+	color: inherit;
+	text-decoration: none;
+}
+
+.hp-about-resume .hp-about-v2-impact__cue a::after {
+	position: absolute;
+	inset: 0;
+	content: "";
+}
+
+.hp-about-resume .hp-about-v2-impact__cue a:hover,
+.hp-about-resume .hp-about-v2-impact__cue a:focus-visible {
+	text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hp-about-resume .hp-about-v2-impact {
+		transition: none;
+	}
+}
+
+/* Education: period in the label column, degree and school in the record
+   column, on the same grid the skills index uses at the same breakpoint. The
+   records stack; the wide two-up rule belongs to the retired card layout. */
+.hp-about-resume .hp-about-education {
+	grid-template-columns: minmax(0, 1fr);
+}
+
+.hp-about-resume .hp-about-education__item {
+	display: grid;
+	gap: 0 var(--wp--preset--spacing--5);
+	padding-left: 0;
+	border-left: 0;
+}
+
+.hp-about-resume .hp-about-education__period {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--sm);
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	line-height: 1.6;
+	color: var(--hp-about-muted);
+}
+
+.hp-about-resume .hp-about-education__item h4 {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--display);
+	font-size: var(--wp--preset--font-size--md);
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--wp--preset--color--ink-700);
+}
+
+.hp-about-resume .hp-about-education__school {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--sm);
+	color: var(--hp-about-muted);
+}
+
+@media (min-width: 64rem) {
+	.hp-about-resume .hp-about-education__item {
+		grid-template-columns: 11rem minmax(0, 1fr);
+	}
+
+	.hp-about-resume .hp-about-education__period {
+		grid-row: 1 / span 2;
+	}
 }

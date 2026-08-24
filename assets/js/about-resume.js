@@ -11,6 +11,8 @@
 	'use strict';
 
 	var IDLE_READOUT = 'Pick a term to dim every contribution and role that does not mention it. Numbers count the rows above.';
+	// A term nothing on the page backs owes a count it cannot pay.
+	var UNBACKED_COUNT = '—';
 	var mountedRoots = typeof WeakMap === 'function' ? new WeakMap() : null;
 
 	function termSlug(term) {
@@ -221,22 +223,29 @@
 			});
 			var slug = slugClass ? slugClass.slice('hp-term--'.length) : termSlug(label);
 			var count = countForSlug(slug);
+			var backed = count > 0;
 
 			if (countElement) {
-				countElement.textContent = String(count);
+				countElement.textContent = backed ? String(count) : UNBACKED_COUNT;
 			}
 
 			if (!labelElement || !label) {
 				return;
 			}
 
+			termElement.classList.toggle('is-unbacked', !backed);
+
+			// Nothing above backs this term, so it stays a statement rather than
+			// becoming a control: no button, no hover, no click, an em-dash count.
+			if (!backed) {
+				return;
+			}
+
 			var button = createButton(label, 'hp-about-skill-term__button');
 			button.setAttribute('aria-pressed', 'false');
-			button.disabled = count === 0;
 			button.setAttribute('aria-label', label + ', ' + count + ' matching ' + (count === 1 ? 'row' : 'rows'));
 			labelElement.textContent = '';
 			labelElement.appendChild(button);
-			termElement.classList.toggle('is-unbacked', count === 0);
 			termButtons.push({ button: button, label: label, slug: slug });
 
 			button.addEventListener('click', function () {
@@ -442,6 +451,7 @@
 
 	return {
 		IDLE_READOUT: IDLE_READOUT,
+		UNBACKED_COUNT: UNBACKED_COUNT,
 		buildIndex: buildIndex,
 		deriveDimmedRows: deriveDimmedRows,
 		formatReadout: formatReadout,
