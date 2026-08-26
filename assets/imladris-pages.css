@@ -5453,6 +5453,21 @@ p.hp-contact-form__hint {
 	padding-inline: var(--hp-about-gutter);
 }
 
+.hp-about-resume-v3 .hp-about-v3-hero__masthead {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--wp--preset--spacing--6) var(--wp--preset--spacing--8);
+	align-items: start;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__argument {
+	min-width: 0;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__contents-host:empty {
+	display: none;
+}
+
 .hp-about-resume-v3 .hp-about-v3-hero__identity {
 	display: flex;
 	flex-wrap: wrap;
@@ -5820,6 +5835,10 @@ p.hp-contact-form__hint {
 	margin: 0;
 }
 
+.hp-about-resume-v3 .hp-about-nav__number {
+	display: none;
+}
+
 .hp-about-resume-v3 .hp-about-nav__list a,
 .hp-about-resume-v3 .hp-about-print-control a {
 	display: inline-flex;
@@ -5861,8 +5880,87 @@ p.hp-contact-form__hint {
 	opacity: 0.34;
 }
 
+.hp-about-resume-v3 .hp-about-filter-rail,
 .hp-about-resume-v3 .hp-about-rail__index-host {
 	display: none;
+}
+
+.hp-about-resume-v3 .hp-about-print-view {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--wp--preset--spacing--3);
+	padding: var(--wp--preset--spacing--4);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-inline-start: 3px solid var(--wp--custom--rule--gold);
+	border-radius: var(--wp--custom--radius--md);
+	background: var(--wp--custom--surface--sunken);
+}
+
+.hp-about-resume-v3 .hp-about-print-view[hidden] {
+	display: none !important;
+}
+
+.hp-about-resume-v3 .hp-about-print-view__message {
+	flex: 1 1 14rem;
+	margin: 0;
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.6;
+	color: var(--wp--custom--text--muted);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 :is(.hp-about-print-view__print, .hp-about-print-view__exit) {
+	flex: 1 1 auto;
+	min-height: 44px;
+	padding-inline: var(--wp--preset--spacing--4);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--md);
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--base);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	cursor: pointer;
+}
+
+.hp-about-resume-v3 .hp-about-print-view__print {
+	border-color: var(--wp--custom--brand--default);
+	color: var(--wp--custom--text--inverse);
+	background: var(--wp--custom--brand--default);
+}
+
+.hp-about-resume-v3 .hp-about-print-view__print:hover {
+	background: var(--wp--custom--brand--hover);
+}
+
+.hp-about-resume-v3 .hp-about-print-view__exit {
+	color: var(--wp--custom--text--body);
+	background: var(--wp--custom--surface--card);
+}
+
+.hp-about-resume-v3 .hp-about-print-view__exit:hover {
+	border-color: var(--wp--preset--color--gold-600);
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-about-resume-v3.is-print-mode :is(.hp-about-nav, .hp-about-filter-rail, .hp-about-showcase, .hp-about-contact, .hp-about-v3-hero__cta) {
+	display: none !important;
+}
+
+.hp-about-resume-v3.is-print-mode .hp-about-print-view {
+	display: flex;
+}
+
+.hp-about-resume-v3.is-print-mode .hp-about-v3-main {
+	grid-column: 1 / -1;
+}
+
+html.has-about-v3-print-view :is(.hp-site-header, .hp-footer) {
+	display: none !important;
+}
+
+html.has-about-v3-print-view footer.wp-block-template-part {
+	display: none !important;
 }
 
 .hp-about-resume-v3 .hp-about-v3-main {
@@ -6429,6 +6527,30 @@ p.hp-contact-form__hint {
 		grid-template-columns: minmax(13rem, 15rem) minmax(0, 1fr);
 	}
 
+	.hp-about-resume-v3 .hp-about-v3-layout > .hp-about-filter-rail {
+		grid-column: 1;
+		grid-row: 1;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-layout > .hp-about-v3-main {
+		grid-column: 2;
+		grid-row: 1;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-layout:has(> .hp-about-nav) > .hp-about-nav {
+		grid-column: 1 / -1;
+		grid-row: 1;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-layout:has(> .hp-about-nav) > :is(.hp-about-filter-rail, .hp-about-v3-main) {
+		grid-row: 2;
+	}
+
+	.hp-about-resume-v3.is-print-mode .hp-about-v3-layout > .hp-about-v3-main {
+		grid-column: 1 / -1;
+		grid-row: 1;
+	}
+
 	.hp-about-resume-v3 .hp-about-showcase__grid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
@@ -6455,30 +6577,48 @@ p.hp-contact-form__hint {
 		padding-inline: 0;
 	}
 
-	.hp-about-resume-v3 .hp-about-nav {
-		position: sticky;
-		top: calc(var(--hp-about-header-height, 0px) + var(--wp--preset--spacing--5));
-		z-index: 2;
+	.hp-about-resume-v3 .hp-about-v3-hero__masthead {
+		grid-template-columns: minmax(0, 1.6fr) minmax(17rem, 0.85fr);
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-hero__masthead:has(> .hp-about-v3-hero__contents-host:empty) {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-hero__contents-host {
+		display: block;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-hero__contents-host .hp-about-nav {
+		position: static;
+		top: auto;
+		z-index: auto;
 		display: block;
 		align-self: start;
-		max-height: calc(100vh - var(--hp-about-header-height, 0px) - var(--wp--preset--spacing--8));
+		max-height: none;
 		margin: 0;
-		padding: 0;
+		padding: var(--wp--preset--spacing--5);
 		overflow: visible;
-		border: 0;
-		background: transparent;
+		border: 1px solid var(--wp--custom--border--hair);
+		border-radius: var(--wp--custom--radius--lg);
+		background: var(--wp--custom--surface--card);
+		box-shadow: var(--wp--custom--shadow--gilt), var(--wp--custom--shadow--sm);
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
 	}
 
 	.hp-about-resume-v3 .hp-about-nav__label {
 		position: static;
 		width: auto;
 		height: auto;
-		margin: 0 0 var(--wp--preset--spacing--2);
+		margin: 0 0 var(--wp--preset--spacing--3);
+		padding-block-end: var(--wp--preset--spacing--3);
 		overflow: visible;
 		clip-path: none;
-		font-family: var(--wp--preset--font-family--label);
+		border-block-end: 1px solid var(--wp--custom--border--hair);
+		font-family: var(--wp--preset--font-family--mono);
 		font-size: var(--wp--preset--font-size--2-xs);
-		letter-spacing: var(--wp--custom--tracking--caps);
+		letter-spacing: var(--wp--custom--tracking--label);
 		text-transform: uppercase;
 		white-space: normal;
 		color: var(--wp--preset--color--gold-800);
@@ -6486,52 +6626,106 @@ p.hp-contact-form__hint {
 
 	.hp-about-resume-v3 .hp-about-nav__list {
 		flex-direction: column;
-		gap: 2px;
+		gap: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__list li {
+		display: grid;
+		grid-template-columns: 2rem minmax(0, 1fr);
+		align-items: center;
+		border-block-start: 1px solid var(--wp--custom--border--hair);
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__list li:first-child {
+		border-block-start: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__number {
+		display: block;
+		font-family: var(--wp--preset--font-family--mono);
+		font-size: var(--wp--preset--font-size--2-xs);
+		font-variant-numeric: tabular-nums;
+		color: var(--wp--custom--text--accent);
 	}
 
 	.hp-about-resume-v3 .hp-about-nav__list a {
 		width: 100%;
-		padding-inline: var(--wp--preset--spacing--3);
-		border-color: transparent;
-		border-inline-start: 2px solid transparent;
+		min-height: 44px;
+		padding-inline: 0;
+		border: 0;
+		border-block-end: 1px solid transparent;
 		border-radius: 0;
+		font-family: var(--wp--preset--font-family--body);
+		font-size: var(--wp--preset--font-size--base);
+		letter-spacing: 0;
+		text-transform: none;
+		white-space: normal;
 	}
 
 	.hp-about-resume-v3 .hp-about-nav__list a:hover,
 	.hp-about-resume-v3 .hp-about-nav__list a.is-active,
 	.hp-about-resume-v3 .hp-about-nav__list a[aria-current="location"] {
-		border-color: transparent;
-		border-inline-start-color: var(--wp--preset--color--gold-600);
-		background: var(--wp--custom--surface--sunken);
+		border-color: var(--wp--custom--rule--gold);
+		color: var(--wp--custom--text--strong);
+		background: transparent;
 	}
 
 	.hp-about-resume-v3 .hp-about-print-control {
-		margin-block-start: var(--wp--preset--spacing--3);
-		margin-inline-start: var(--wp--preset--spacing--3);
+		margin: var(--wp--preset--spacing--3) 0 0;
+		padding-block-start: var(--wp--preset--spacing--3);
+		border-block-start: 1px solid var(--wp--custom--border--hair);
 	}
 
 	.hp-about-resume-v3 .hp-about-print-control a {
-		border-radius: var(--wp--custom--radius--md);
+		justify-content: space-between;
+		width: 100%;
+		padding-inline: 0;
+		border: 0;
+		border-radius: 0;
+		white-space: normal;
 	}
 
-	.hp-about-resume-v3 .hp-about-rail__index-host {
+	.hp-about-resume-v3 .hp-about-filter-rail {
+		position: sticky;
+		top: calc(var(--hp-about-header-height, 0px) + var(--wp--preset--spacing--5));
+		display: flex;
+		flex-direction: column;
+		align-self: start;
+		min-width: 0;
+		min-height: 0;
+		max-height: calc(100vh - var(--hp-about-header-height, 0px) - var(--wp--preset--spacing--8));
+	}
+
+	.hp-about-resume-v3 .hp-about-filter-rail__label {
+		flex: 0 0 auto;
+		margin: 0;
+		font-family: var(--wp--preset--font-family--label);
+		font-size: var(--wp--preset--font-size--2-xs);
+		letter-spacing: var(--wp--custom--tracking--caps);
+		text-transform: uppercase;
+		color: var(--wp--preset--color--gold-800);
+	}
+
+	.hp-about-resume-v3 .hp-about-filter-rail .hp-about-rail__index-host {
+		flex: 1 1 auto;
 		display: flex;
 		flex-direction: column;
 		min-height: 0;
-		max-height: calc(100vh - var(--hp-about-header-height, 0px) - 22rem);
-		margin-block-start: var(--wp--preset--spacing--4);
-		padding-block-start: var(--wp--preset--spacing--4);
+		margin-block-start: var(--wp--preset--spacing--2);
 		overflow-y: auto;
 		scrollbar-color: var(--wp--preset--color--gold-600) transparent;
-		border-block-start: 1px solid var(--wp--custom--border--hair);
 	}
 
 	.hp-about-resume-v3 .hp-about-rail__index-host .hp-about-skills__controls {
 		display: block;
+		position: sticky;
+		top: 0;
+		z-index: 1;
 		margin: 0 0 var(--wp--preset--spacing--3);
-		padding: 0;
+		padding: 0 0 var(--wp--preset--spacing--3);
 		border: 0;
-		background: transparent;
+		border-block-end: 1px solid var(--wp--custom--border--hair);
+		background: var(--wp--custom--surface--page);
 	}
 
 	.hp-about-resume-v3 .hp-about-rail__index-host .hp-about-skills__readout {
@@ -6610,10 +6804,12 @@ p.hp-contact-form__hint {
 	}
 
 	.hp-about-resume .hp-about-nav,
+	.hp-about-resume .hp-about-filter-rail,
 	.hp-about-resume .hp-about-showcase,
 	.hp-about-resume .hp-about-contact,
 	.hp-about-resume .hp-about-v3-hero__cta,
 	.hp-about-resume .hp-about-print-control,
+	.hp-about-resume .hp-about-print-view,
 	.hp-about-resume .hp-about-earlier__toggle,
 	.hp-about-resume .hp-about-skills__controls {
 		display: none !important;

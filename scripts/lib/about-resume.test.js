@@ -158,6 +158,56 @@ test( 'desktop Education promotes record headings without losing their content o
 	assert.equal( heading.replacement, replacements[ 0 ] );
 } );
 
+test( 'print view toolbar exposes separate print and exit actions', () => {
+	const { createPrintViewToolbar } = require( controllerPath );
+	assert.equal( typeof createPrintViewToolbar, 'function' );
+
+	function createElement( tagName ) {
+		return {
+			tagName: tagName.toUpperCase(),
+			children: [],
+			attributes: {},
+			listeners: {},
+			appendChild( child ) {
+				this.children.push( child );
+				child.parentNode = this;
+				return child;
+			},
+			setAttribute( name, value ) {
+				this.attributes[ name ] = String( value );
+			},
+			addEventListener( type, listener ) {
+				this.listeners[ type ] = listener;
+			},
+			click() {
+				this.listeners.click();
+			},
+		};
+	}
+
+	const events = [];
+	const toolbar = createPrintViewToolbar( { createElement }, {
+		onPrint: () => events.push( 'print' ),
+		onExit: () => events.push( 'exit' ),
+	} );
+	const [ message, printButton, exitButton ] = toolbar.children;
+
+	assert.equal( toolbar.className, 'hp-about-print-view' );
+	assert.equal( toolbar.attributes[ 'data-hp-about-generated' ], 'print-view' );
+	assert.equal( toolbar.attributes.hidden, '' );
+	assert.equal( message.textContent, 'Print view: every role expanded, showcase and navigation removed.' );
+	assert.equal( printButton.type, 'button' );
+	assert.equal( printButton.className, 'hp-about-print-view__print' );
+	assert.equal( printButton.textContent, 'Print / Save PDF' );
+	assert.equal( exitButton.type, 'button' );
+	assert.equal( exitButton.className, 'hp-about-print-view__exit' );
+	assert.equal( exitButton.textContent, 'Exit print view' );
+
+	printButton.click();
+	exitButton.click();
+	assert.deepEqual( events, [ 'print', 'exit' ] );
+} );
+
 test( 'A term nothing above backs remains visibly unbacked and inert', () => {
 	const { buildIndex, UNBACKED_COUNT } = require( controllerPath );
 	assert.equal( UNBACKED_COUNT, '—' );
@@ -189,6 +239,12 @@ test( 'About v3 contract validates the real candidate and its evidence index', (
 	assert.deepEqual( report.sectionOrder, [ 'contributions', 'experience', 'skills', 'showcase', 'contact' ] );
 	assert.equal( report.actionRailCount, 2 );
 	assert.equal( report.actionPanelCount, 1 );
+	assert.equal( report.heroContentsHostCount, 1 );
+	assert.equal( report.filterRailCount, 1 );
+	assert.equal( report.filterHostInsideNavigation, false );
+	assert.equal( report.navigationListTag, 'ol' );
+	assert.equal( report.navigationLabel, 'In this résumé' );
+	assert.equal( report.printControlText, 'Print view' );
 	assert.deepEqual( report.heroActions, [
 		{ href: '/one-page-resume/', text: 'Download résumé (PDF)' },
 		{ href: '/contact/', text: 'Get in touch' },
@@ -197,8 +253,27 @@ test( 'About v3 contract validates the real candidate and its evidence index', (
 		{ href: '/contact/', text: 'Start a conversation' },
 		{ href: '/one-page-resume/', text: 'Download résumé (PDF)' },
 	] );
-	assert.match( fs.readFileSync( draftPath, 'utf8' ), /class="hp-about-print-control"><a href="\/one-page-resume\/">Print<\/a>/ );
 	assert.match( fs.readFileSync( draftPath, 'utf8' ), /<h3 class="wp-block-heading">HPerkins Tokens<\/h3>[\s\S]*?Live · v0\.3\.60/ );
+} );
+
+test( 'About v3 contract rejects loss of the desktop contents host or filter landmark', () => {
+	const { verifyAboutV3Body } = require( './about-page-contract' );
+	const source = fs.readFileSync( draftPath, 'utf8' );
+	assert.doesNotThrow( () => verifyAboutV3Body( source ) );
+
+	const withoutContentsHost = source.replaceAll(
+		'hp-about-v3-hero__contents-host',
+		'hp-about-v3-hero__contents-missing'
+	);
+	assert.notEqual( withoutContentsHost, source, 'contents-host mutation must apply' );
+	assert.throws( () => verifyAboutV3Body( withoutContentsHost ), /contents host/i );
+
+	const withoutFilterLandmark = source.replace(
+		'"tagName":"aside","ariaLabel":"Filter the record","className":"hp-about-filter-rail"',
+		'"className":"hp-about-filter-rail"'
+	);
+	assert.notEqual( withoutFilterLandmark, source, 'filter-landmark mutation must apply' );
+	assert.throws( () => verifyAboutV3Body( withoutFilterLandmark ), /filter.*aside|filter.*landmark/i );
 } );
 
 test( 'About v3 rejects block className JSON that WordPress would reserialize', () => {

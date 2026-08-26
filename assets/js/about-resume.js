@@ -191,6 +191,32 @@
 		return chip;
 	}
 
+	function createPrintViewToolbar(documentRef, handlers) {
+		var toolbar = documentRef.createElement('div');
+		var message = documentRef.createElement('p');
+		var printButton = documentRef.createElement('button');
+		var exitButton = documentRef.createElement('button');
+
+		toolbar.className = 'hp-about-print-view';
+		toolbar.setAttribute('data-hp-about-generated', 'print-view');
+		toolbar.setAttribute('hidden', '');
+		message.className = 'hp-about-print-view__message';
+		message.textContent = 'Print view: every role expanded, showcase and navigation removed.';
+		printButton.type = 'button';
+		printButton.className = 'hp-about-print-view__print';
+		printButton.textContent = 'Print / Save PDF';
+		exitButton.type = 'button';
+		exitButton.className = 'hp-about-print-view__exit';
+		exitButton.textContent = 'Exit print view';
+		printButton.addEventListener('click', handlers.onPrint);
+		exitButton.addEventListener('click', handlers.onExit);
+		toolbar.appendChild(message);
+		toolbar.appendChild(printButton);
+		toolbar.appendChild(exitButton);
+
+		return toolbar;
+	}
+
 	function setEducationRecordHeadingLevels(rootElement, level) {
 		if (!rootElement || !rootElement.querySelectorAll) {
 			return [];
@@ -218,6 +244,12 @@
 	}
 
 	function resetStaleEnhancement(rootElement) {
+		var layout = rootElement.querySelector('.hp-about-v3-layout');
+		var nav = rootElement.querySelector('.hp-about-nav');
+		var filterRail = rootElement.querySelector('.hp-about-filter-rail');
+		if (layout && nav && nav.parentNode !== layout) {
+			layout.insertBefore(nav, filterRail || layout.firstChild);
+		}
 		var skillSection = rootElement.querySelector('#skills');
 		var skillIndex = rootElement.querySelector('.hp-about-skill-index');
 		var education = skillSection ? skillSection.querySelector('.hp-about-education') : null;
@@ -290,7 +322,7 @@
 			var comments = [];
 			var walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_COMMENT);
 			for (var comment = walker.nextNode(); comment; comment = walker.nextNode()) {
-				if (comment.data === 'hp-about-skill-index-home') {
+				if (comment.data === 'hp-about-skill-index-home' || comment.data === 'hp-about-nav-home') {
 					comments.push(comment);
 				}
 			}
@@ -298,6 +330,7 @@
 		}
 		rootElement.classList.remove('is-enhanced', 'is-print-mode');
 		document.documentElement.classList.remove('has-about-v3');
+		document.documentElement.classList.remove('has-about-v3-print-view');
 		document.documentElement.style.removeProperty('--hp-about-header-height');
 	}
 
@@ -370,6 +403,10 @@
 		var skillSection = rootElement.querySelector('#skills');
 		var skillIndexHome = skillIndex ? document.createComment('hp-about-skill-index-home') : null;
 		var railHost = rootElement.querySelector('.hp-about-rail__index-host');
+		var nav = rootElement.querySelector('.hp-about-nav');
+		var navHome = nav ? document.createComment('hp-about-nav-home') : null;
+		var heroContentsHost = rootElement.querySelector('.hp-about-v3-hero__contents-host');
+		var main = rootElement.querySelector('.hp-about-v3-main');
 		var wideQuery = window.matchMedia('(min-width: 64rem)');
 		var readout = rootElement.querySelector('.hp-about-skills__readout');
 		var controls = rootElement.querySelector('.hp-about-skills__controls');
@@ -388,12 +425,19 @@
 		var flipTimer = null;
 		var mediaListenerBound = false;
 		var sectionObserver = null;
+		var printToolbar = null;
+		var printViewActive = false;
+		var nativePrintWasTemporary = false;
+		var printReturnTarget = null;
 
 		rootElement.classList.add('is-enhanced');
 		document.documentElement.classList.add('has-about-v3');
 
 		if (skillIndex && skillIndex.parentNode) {
 			skillIndex.parentNode.insertBefore(skillIndexHome, skillIndex);
+		}
+		if (nav && nav.parentNode) {
+			nav.parentNode.insertBefore(navHome, nav);
 		}
 
 		if (readout) {
@@ -404,6 +448,14 @@
 			clearButton.setAttribute('data-hp-about-generated', 'clear-filter');
 			controls.appendChild(clearButton);
 			generatedControls.push(clearButton);
+		}
+		if (main) {
+			printToolbar = createPrintViewToolbar(document, {
+				onPrint: printFromView,
+				onExit: exitPrintView
+			});
+			main.insertBefore(printToolbar, main.firstChild);
+			generatedControls.push(printToolbar);
 		}
 
 		function countFor(term) {
@@ -542,7 +594,21 @@
 
 		function moveSkillIndex(event) {
 			var isWide = typeof event.matches === 'boolean' ? event.matches : wideQuery.matches;
-			var usesRail = Boolean(isWide && skillIndex && railHost);
+			var layoutWide = Boolean(isWide && !printViewActive);
+			var usesRail = Boolean(layoutWide && skillIndex && railHost);
+			var focusedNavigation = nav && document.activeElement && nav.contains(document.activeElement) ? document.activeElement : null;
+			if (layoutWide && nav && heroContentsHost) {
+				heroContentsHost.appendChild(nav);
+			} else if (nav && navHome && navHome.parentNode) {
+				navHome.parentNode.insertBefore(nav, navHome.nextSibling);
+			}
+			if (focusedNavigation && document.activeElement !== focusedNavigation) {
+				try {
+					focusedNavigation.focus({ preventScroll: true });
+				} catch (error) {
+					focusedNavigation.focus();
+				}
+			}
 			setEducationRecordHeadingLevels(rootElement, usesRail ? 3 : 4);
 			if (usesRail) {
 				railHost.appendChild( skillIndex );
@@ -637,7 +703,7 @@
 			});
 		});
 
-		function preparePrint() {
+		function preparePrintContent() {
 			applyFilter(null);
 			restoreCanonicalOrder();
 			moveSkillIndex({ matches: false });
@@ -647,7 +713,7 @@
 			}
 		}
 
-		function finishPrint() {
+		function restoreResponsiveContent() {
 			rootElement.classList.remove('is-print-mode');
 			moveSkillIndex(wideQuery);
 			if (earlier && earlierToggle) {
@@ -655,19 +721,72 @@
 			}
 		}
 
-		function handlePrintClick(event) {
-			event.preventDefault();
-			preparePrint();
+		function enterPrintView(event) {
+			if (event && event.preventDefault) {
+				event.preventDefault();
+			}
+			printReturnTarget = event && event.currentTarget ? event.currentTarget : printLink;
+			printViewActive = true;
+			preparePrintContent();
+			document.documentElement.classList.add('has-about-v3-print-view');
+			if (printToolbar) {
+				printToolbar.hidden = false;
+				var printButton = printToolbar.querySelector('.hp-about-print-view__print');
+				if (printButton) {
+					try {
+						printButton.focus({ preventScroll: true });
+					} catch (error) {
+						printButton.focus();
+					}
+				}
+			}
+		}
+
+		function exitPrintView(options) {
+			var restoreFocus = !options || options.restoreFocus !== false;
+			var returnTarget = printReturnTarget;
+			printViewActive = false;
+			document.documentElement.classList.remove('has-about-v3-print-view');
+			if (printToolbar) {
+				printToolbar.hidden = true;
+			}
+			restoreResponsiveContent();
+			printReturnTarget = null;
+			if (restoreFocus && returnTarget && document.documentElement.contains(returnTarget)) {
+				try {
+					returnTarget.focus({ preventScroll: true });
+				} catch (error) {
+					returnTarget.focus();
+				}
+			}
+		}
+
+		function printFromView() {
 			window.print();
+		}
+
+		function prepareNativePrint() {
+			nativePrintWasTemporary = !printViewActive;
+			preparePrintContent();
+		}
+
+		function finishNativePrint() {
+			if (nativePrintWasTemporary) {
+				restoreResponsiveContent();
+			}
+			nativePrintWasTemporary = false;
+		}
+
+		function handlePrintClick(event) {
+			enterPrintView(event);
 		}
 
 		if (printLink) {
 			printLink.addEventListener('click', handlePrintClick);
 		}
-		window.addEventListener('beforeprint', preparePrint);
-		window.addEventListener('afterprint', finishPrint);
+		window.addEventListener('beforeprint', prepareNativePrint);
+		window.addEventListener('afterprint', finishNativePrint);
 
-		var nav = rootElement.querySelector('.hp-about-nav');
 		var links = nav ? Array.prototype.slice.call(nav.querySelectorAll('.hp-about-nav__list a[href^="#"]')) : [];
 		var sections = links.map(function (link) {
 			return rootElement.querySelector(link.getAttribute('href'));
@@ -709,12 +828,15 @@
 			if (printLink) {
 				printLink.removeEventListener('click', handlePrintClick);
 			}
-			window.removeEventListener('beforeprint', preparePrint);
-			window.removeEventListener('afterprint', finishPrint);
+			window.removeEventListener('beforeprint', prepareNativePrint);
+			window.removeEventListener('afterprint', finishNativePrint);
 			if (sectionObserver) {
 				sectionObserver.disconnect();
 			}
 			activeTerm = null;
+			printViewActive = false;
+			printReturnTarget = null;
+			document.documentElement.classList.remove('has-about-v3-print-view');
 			restoreCanonicalOrder();
 			rows.forEach(function (row) { row.removeAttribute('data-hp-about-order'); });
 			repaintCitations(null);
@@ -742,6 +864,9 @@
 			});
 			if (skillIndexHome && skillIndexHome.parentNode) {
 				skillIndexHome.remove();
+			}
+			if (navHome && navHome.parentNode) {
+				navHome.remove();
 			}
 			if (earlier) {
 				earlier.hidden = false;
@@ -776,6 +901,8 @@
 			applyFilter: applyFilter,
 			dispose: dispose,
 			disposed: false,
+			enterPrintView: enterPrintView,
+			exitPrintView: exitPrintView,
 			restoreCanonicalOrder: restoreCanonicalOrder,
 			root: rootElement
 		};
@@ -869,6 +996,7 @@
 		UNBACKED_COUNT: UNBACKED_COUNT,
 		applyDimmedRows: applyDimmedRows,
 		buildIndex: buildIndex,
+		createPrintViewToolbar: createPrintViewToolbar,
 		deriveDimmedRows: deriveDimmedRows,
 		formatReadout: formatReadout,
 		mount: mount,

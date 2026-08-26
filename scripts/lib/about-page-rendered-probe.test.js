@@ -193,7 +193,9 @@ test( 'derives the v3 rail, showcase, portrait, and action rails from the select
 	const expectations = deriveRenderedExpectations( source, { label: 'About v3 draft' } );
 
 	assert.equal( expectations.version, 'v3' );
-	assert.equal( expectations.navLabel, 'On this page' );
+	assert.equal( expectations.navigationRevision, 'contents-plate' );
+	assert.equal( expectations.navLabel, 'In this résumé' );
+	assert.equal( expectations.narrowSourceWordCount, expectations.sourceWordCount - 3 );
 	assert.deepEqual( expectations.fragments, [ 'contributions', 'experience', 'skills', 'showcase', 'contact' ] );
 	assert.equal( expectations.projects.length, 5 );
 	assert.equal( expectations.projects[ 0 ].title, 'Flavor Agent' );

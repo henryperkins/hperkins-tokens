@@ -272,6 +272,10 @@ function deriveV3RenderedExpectations( html, label ) {
 	const navList = findBalancedElementsByClass( navs[ 0 ].inner, 'hp-about-nav__list', label )[ 0 ];
 	assert( navList, `${ label } .hp-about-nav has no native list.` );
 	const navLinks = findLinks( navList.inner, label );
+	const filterRail = findBalancedElementsByClass( html, 'hp-about-filter-rail', label )[ 0 ] || null;
+	const narrowOnlyWordCount = report.navigationRevision === 'contents-plate' && filterRail
+		? countVisibleWords( filterRail.outer, { label: `${ label } desktop filter rail` } )
+		: 0;
 
 	const projects = findBalancedElementsByClass( html, 'hp-about-showcase-card', label ).map( ( card ) => {
 		const actions = findBalancedElementsByClass( card.inner, 'hp-about-showcase-card__link', label )[ 0 ];
@@ -301,7 +305,9 @@ function deriveV3RenderedExpectations( html, label ) {
 		fragments: navLinks.map( ( link ) => link.href.slice( 1 ) ),
 		headings,
 		heroActionLabels: rails[ 0 ].map( ( action ) => action.text ),
-		navLabel: decodeCharacterReferences( navLabelMatch[ 1 ] ),
+		narrowSourceWordCount: report.wordCount - narrowOnlyWordCount,
+		navigationRevision: report.navigationRevision,
+		navLabel: report.navigationLabel,
 		navLinks,
 		portraitAlt: decodeCharacterReferences( portrait[ 1 ] ),
 		projects,
@@ -603,12 +609,16 @@ function buildInspectionExpression( opts ) {
 		out.nav = null;
 		if (nav) {
 			const label = nav.querySelector(isV2 ? '.hp-about-rail__label' : '.hp-about-nav__label');
-			const lists = nav.querySelectorAll('ul');
+			const lists = nav.querySelectorAll('ol, ul');
 			const linkRoot = isV2 ? nav : nav.querySelector('.hp-about-nav__list');
 			out.nav = {
 				labelText: label ? label.textContent.trim() : null,
 				labelIsHeading: !!nav.querySelector('h1,h2,h3,h4,h5,h6'),
+				listTag: lists[0] ? lists[0].tagName.toLowerCase() : null,
 				listCount: lists.length,
+				numberDisplays: Array.from(nav.querySelectorAll('.hp-about-nav__number')).map((number) => getComputedStyle(number).display),
+				parentClass: nav.parentElement ? String(nav.parentElement.className) : '',
+				position: getComputedStyle(nav).position,
 				links: linkRoot ? Array.from(linkRoot.querySelectorAll('a')).map((link) => ({
 					text: link.textContent.trim(),
 					hash: link.getAttribute('href'),
@@ -616,6 +626,13 @@ function buildInspectionExpression( opts ) {
 				})) : [],
 			};
 		}
+		const filterRail = isV3 ? content.querySelector('.hp-about-filter-rail') : null;
+		out.filterRail = filterRail ? {
+			display: getComputedStyle(filterRail).display,
+			parentClass: filterRail.parentElement ? String(filterRail.parentElement.className) : '',
+			position: getComputedStyle(filterRail).position,
+			rect: rect(filterRail),
+		} : null;
 		out.targets = OPTS.fragments.map((fragment) => {
 			const target = document.getElementById(fragment);
 			return target ? {
@@ -956,6 +973,23 @@ function verifyGeometry( result, viewport, expectations ) {
 			);
 		}
 	}
+	if ( isV3 && expectations.navigationRevision === 'contents-plate' ) {
+		assert( result.nav.listTag === 'ol', `${ label }: contents navigation is not an ordered list.` );
+		assert( result.nav.numberDisplays.length === 5, `${ label }: contents navigation does not expose five numbered rows.` );
+		assert( result.filterRail, `${ label }: dedicated filter rail is missing.` );
+		if ( width >= 1024 ) {
+			assert( result.nav.parentClass.includes('hp-about-v3-hero__contents-host'), `${ label }: navigation did not move into the desktop masthead.` );
+			assert( result.nav.position === 'static', `${ label }: masthead navigation remains ${ result.nav.position } instead of static.` );
+			assert( result.nav.numberDisplays.every( ( display ) => display !== 'none' ), `${ label }: desktop navigation numbers are hidden.` );
+			assert( result.filterRail.parentClass.includes('hp-about-v3-layout'), `${ label }: filter rail left the résumé layout.` );
+			assert( result.filterRail.display === 'flex' && result.filterRail.position === 'sticky', `${ label }: filter rail is not the visible sticky desktop rail.` );
+		} else {
+			assert( result.nav.parentClass.includes('hp-about-v3-layout'), `${ label }: navigation did not return to the mobile layout.` );
+			assert( result.nav.position === 'sticky', `${ label }: mobile navigation is ${ result.nav.position } instead of sticky.` );
+			assert( result.nav.numberDisplays.every( ( display ) => display === 'none' ), `${ label }: desktop navigation numbers leaked into the mobile bar.` );
+			assert( result.filterRail.display === 'none', `${ label }: desktop filter rail is visible below 64rem.` );
+		}
+	}
 }
 
 function responsiveHeadingExpectations( expectations, viewportWidth ) {
@@ -1137,6 +1171,7 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 		expression: buildInspectionExpression( {
 			fragments: expectations.fragments,
 			countWords: ! viewport.name.startsWith( 'boundary-' ),
+			navigationRevision: expectations.navigationRevision,
 			version: expectations.version,
 		} ),
 		awaitPromise: true,
@@ -1155,9 +1190,12 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 			`${ viewport.width }px: the page returned no rendered text to count.`
 		);
 		const wordCount = countRenderedText( result.renderedText );
+		const expectedWordCount = viewport.width >= 1024
+			? expectations.sourceWordCount
+			: expectations.narrowSourceWordCount ?? expectations.sourceWordCount;
 		assert(
-			wordCount === expectations.sourceWordCount,
-			`${ viewport.width }px: rendered word count ${ wordCount } does not equal the source count ${ expectations.sourceWordCount }.`
+			wordCount === expectedWordCount,
+			`${ viewport.width }px: rendered word count ${ wordCount } does not equal the responsive source count ${ expectedWordCount }.`
 		);
 		if ( expectations.version === 'proof-first' ) {
 			assert(
@@ -1318,10 +1356,32 @@ async function verifyV3Interactions( cdp, sessionId ) {
 			const nativePrint = window.print;
 			window.print = () => { printCalls += 1; };
 			const printLink = root.querySelector('.hp-about-print-control a');
+			const printToolbar = root.querySelector('.hp-about-print-view');
+			const printButton = printToolbar.querySelector('.hp-about-print-view__print');
+			const exitPrintView = printToolbar.querySelector('.hp-about-print-view__exit');
+			const nav = root.querySelector('.hp-about-nav');
+			const heroContentsHost = root.querySelector('.hp-about-v3-hero__contents-host');
 			printLink.click();
-			const printPrepared = root.classList.contains('is-print-mode') && ! earlier.hidden;
+			const printEntered = root.classList.contains('is-print-mode') &&
+				document.documentElement.classList.contains('has-about-v3-print-view') &&
+				! earlier.hidden && ! printToolbar.hidden;
+			const nativePrintDeferred = printCalls === 0;
+			const printButtonFocused = document.activeElement === printButton;
+			const printChromeRemoved = [
+				root.querySelector('.hp-about-nav'),
+				root.querySelector('.hp-about-filter-rail'),
+				root.querySelector('.hp-about-showcase'),
+				root.querySelector('.hp-about-contact'),
+				root.querySelector('.hp-about-v3-hero__cta'),
+			].every((element) => !element || getComputedStyle(element).display === 'none');
+			printButton.click();
 			window.dispatchEvent(new Event('afterprint'));
-			const printRestored = ! root.classList.contains('is-print-mode') && earlier.hidden;
+			const printPersisted = root.classList.contains('is-print-mode') && ! earlier.hidden && ! printToolbar.hidden;
+			exitPrintView.click();
+			const printRestored = ! root.classList.contains('is-print-mode') &&
+				! document.documentElement.classList.contains('has-about-v3-print-view') &&
+				earlier.hidden && printToolbar.hidden && document.activeElement === printLink &&
+				nav.parentElement === heroContentsHost;
 			window.print = nativePrint;
 
 			const anatomy = {
@@ -1337,7 +1397,16 @@ async function verifyV3Interactions( cdp, sessionId ) {
 				disclosureClosed,
 				disclosureOpen,
 				filtered,
-				print: { calls: printCalls, href: new URL(printLink.href, location.href).pathname, prepared: printPrepared, restored: printRestored },
+				print: {
+					calls: printCalls,
+					entered: printEntered,
+					focused: printButtonFocused,
+					href: new URL(printLink.href, location.href).pathname,
+					nativeDeferred: nativePrintDeferred,
+					printChromeRemoved,
+					persisted: printPersisted,
+					restored: printRestored,
+				},
 			};
 		})()`,
 		awaitPromise: true,
@@ -1357,7 +1426,16 @@ async function verifyV3Interactions( cdp, sessionId ) {
 	assert( result.clearFocus.matches && result.clearFocus.width >= 3 && result.clearFocus.offset >= 2, 'v3 Clear filter has no effective 3px/2px focus ring.' );
 	assert( result.disclosureOpen && result.disclosureClosed, 'v3 earlier-role disclosure did not round-trip its ARIA and hidden state.' );
 	assert( result.copy.copied === 'htperkins@gmail.com' && result.copy.status === 'Copied' && ! result.copy.hidden, 'v3 copy control did not announce success.' );
-	assertJsonEqual( result.print, { calls: 1, href: '/one-page-resume/', prepared: true, restored: true }, 'v3 print enhancement or fallback contract failed.' );
+	assertJsonEqual( result.print, {
+		calls: 1,
+		entered: true,
+		focused: true,
+		href: '/one-page-resume/',
+		nativeDeferred: true,
+		printChromeRemoved: true,
+		persisted: true,
+		restored: true,
+	}, 'v3 print-view entry, native print, exit, focus, or fallback contract failed.' );
 }
 
 async function waitForRuntimeCondition( cdp, sessionId, expression, label, timeout = 10000 ) {

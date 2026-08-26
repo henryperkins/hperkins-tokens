@@ -154,7 +154,7 @@ Three Council header values sit **below the site-wide 12px text floor**, deliber
 
 ## About v3 runtime
 
-assets/js/about-resume.js is the fifth deferred frontend controller. It is globally enqueued so it survives Interactivity Router document swaps, but self-declines unless .hp-about-resume-v3 exists. It progressively upgrades the 34-term evidence filter with stable per-ledger partitioning, relocates the same skills index into the desktop rail, manages the earlier-role disclosure and copy-email status, tracks the active section, and restores canonical order for print. Page-specific presentation remains in assets/imladris-pages.css.
+assets/js/about-resume.js is the fifth deferred frontend controller. It is globally enqueued so it survives Interactivity Router document swaps, but self-declines unless .hp-about-resume-v3 exists. It progressively upgrades the 34-term evidence filter with stable per-ledger partitioning, relocates the same navigation into the desktop hero contents plate and the same skills index into the dedicated desktop filter rail, manages the earlier-role disclosure and copy-email status, tracks the active section, and provides a persistent print view that restores canonical order before invoking native print. Page-specific presentation remains in assets/imladris-pages.css.
 
 Focused About checks:
 

@@ -134,7 +134,7 @@ test( 'About v3 uses contrast-safe text accents on ivory surfaces', () => {
 	);
 } );
 
-test( 'About v3 responsive shell follows the mobile bar and 64rem rail handoff', () => {
+test( 'About v3 responsive shell follows the mobile bar, masthead plate, and dedicated filter rail handoff', () => {
 	assert.match( template, /About v3/ );
 	assert.match( template, /"contentSize":"72rem"/ );
 	assert.match( template, /<!-- wp:post-content \{"align":"full","layout":\{"type":"constrained","contentSize":"72rem"\}\} \/-->/ );
@@ -168,7 +168,13 @@ test( 'About v3 responsive shell follows the mobile bar and 64rem rail handoff',
 	assert.match( aboutV3Css, /\.hp-about-resume-v3 a:focus-visible,[\s\S]*?\.hp-about-resume-v3 button:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--wp--preset--color--gold-700\);[^}]*outline-offset:\s*2px;/s );
 	assert.match( aboutV3Css, /scroll-margin-top:\s*calc\(var\(--hp-about-header-height, 0px\) \+ 96px\)/ );
 	assert.match( aboutV3Css, /@media \(min-width:\s*64rem\)\s*\{[\s\S]*?\.hp-about-resume-v3 \.hp-about-v3-layout\s*\{[^}]*grid-template-columns:\s*minmax\(13rem, 15rem\) minmax\(0, 1fr\);/s );
-	assert.match( aboutV3Css, /@media \(min-width:\s*64rem\)\s*\{[\s\S]*?\.hp-about-resume-v3 \.hp-about-nav\s*\{[^}]*position:\s*sticky;[^}]*overflow:\s*visible;/s );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-nav__number\s*\{[^}]*display:\s*none;/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-nav__number\s*\{[^}]*display:\s*block;/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__masthead\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1\.6fr\) minmax\(17rem, 0\.85fr\);/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__masthead:has\(> \.hp-about-v3-hero__contents-host:empty\)\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__contents-host \.hp-about-nav\s*\{[^}]*position:\s*static;[^}]*overflow:\s*visible;[^}]*border:\s*1px solid var\(--wp--custom--border--hair\);[^}]*border-radius:\s*var\(--wp--custom--radius--lg\);/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-filter-rail\s*\{[^}]*position:\s*sticky;[^}]*top:\s*calc\(var\(--hp-about-header-height, 0px\) \+ var\(--wp--preset--spacing--5\)\);[^}]*max-height:\s*calc\(100vh - var\(--hp-about-header-height, 0px\) - var\(--wp--preset--spacing--8\)\);/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-filter-rail \.hp-about-rail__index-host\s*\{[^}]*overflow-y:\s*auto;/s );
 } );
 
 test( 'About v3 citation filter animates order and repaints the cited row', () => {
@@ -191,8 +197,8 @@ test( 'About v3 controller disposes route-scoped global state and observers', ()
 	assert.match( controller, /button\.hp-about-skill-term__button/ );
 	assert.match( controller, /document\.documentElement\.classList\.remove\('has-about-v3'\)/ );
 	assert.match( controller, /wideQuery\.removeEventListener\('change', moveSkillIndex\)/ );
-	assert.match( controller, /window\.removeEventListener\('beforeprint', preparePrint\)/ );
-	assert.match( controller, /window\.removeEventListener\('afterprint', finishPrint\)/ );
+	assert.match( controller, /window\.removeEventListener\('beforeprint', prepareNativePrint\)/ );
+	assert.match( controller, /window\.removeEventListener\('afterprint', finishNativePrint\)/ );
 	assert.match( controller, /sectionObserver\.disconnect\(\)/ );
 } );
 
@@ -202,9 +208,16 @@ test( 'About v3 retains the exact reviewed contribution and showcase copy', () =
 	assert.match( draft, /server-side \/api\/booking endpoint/ );
 } );
 
-test( 'About v3 print restores the canonical record and removes navigation and closing furniture', () => {
-	assert.match( controller, /beforeprint/ );
+test( 'About v3 print view separates preparation, native printing, and exit restoration', () => {
+	assert.match( controller, /function createPrintViewToolbar\(/ );
+	assert.match( controller, /function enterPrintView\(/ );
+	assert.match( controller, /function exitPrintView\(/ );
+	assert.match( controller, /window\.print\(\)/ );
 	assert.match( controller, /restoreCanonicalOrder/ );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 :is\(\.hp-about-print-view__print, \.hp-about-print-view__exit\)\s*\{[^}]*min-height:\s*44px;[^}]*font-family:\s*var\(--wp--preset--font-family--label\);[^}]*font-size:\s*var\(--wp--preset--font-size--base\);/s );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3\.is-print-mode :is\(\.hp-about-nav, \.hp-about-filter-rail, \.hp-about-showcase, \.hp-about-contact, \.hp-about-v3-hero__cta\)\s*\{[^}]*display:\s*none !important;/s );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3\.is-print-mode \.hp-about-print-view\s*\{[^}]*display:\s*flex;/s );
+	assert.match( aboutV3Css, /html\.has-about-v3-print-view :is\(\.hp-site-header, \.hp-footer\)\s*\{[^}]*display:\s*none !important;/s );
 	assert.match( aboutV3Css, /@media print\s*\{[\s\S]*?\.hp-about-resume \.hp-about-nav,[\s\S]*?\.hp-about-resume \.hp-about-showcase,[\s\S]*?\.hp-about-resume \.hp-about-contact/s );
 	assert.match( aboutV3Css, /@media print\s*\{[\s\S]*?\.hp-about-resume \.hp-about-role\.is-earlier\s*\{[^}]*display:\s*block !important;/s );
 } );

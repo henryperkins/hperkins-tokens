@@ -1669,9 +1669,43 @@ function verifyAboutV3Body(body, options = {}) {
 	);
 	const navs = findBalancedByClass(source, 'hp-about-nav', label);
 	aboutV2Assert(navs.length === 1, label + ': expected exactly one hp-about-nav element.');
-	aboutV2Assert((navs[0].inner.match(/<!-- wp:list \{"className":"hp-about-nav__list"\} -->/g) || []).length === 1, label + ': navigation must use one native List block.');
+	const heroContentsHosts = findBalancedByClass(source, 'hp-about-v3-hero__contents-host', label);
+	const filterRails = findBalancedByClass(source, 'hp-about-filter-rail', label);
+	const filterHosts = findBalancedByClass(source, 'hp-about-rail__index-host', label);
+	const filterHostInsideNavigation = navs[0].inner.includes('hp-about-rail__index-host');
+	aboutV2Assert(filterHosts.length === 1, label + ': expected one capability-index host.');
+	const usesContentsPlateRevision = heroContentsHosts.length > 0 ||
+		filterRails.length > 0 ||
+		navs[0].inner.includes('"ordered":true') ||
+		navs[0].inner.includes('>Print view</a>');
+	if (usesContentsPlateRevision) {
+		aboutV2Assert(heroContentsHosts.length === 1, label + ': expected one empty desktop masthead contents host.');
+		aboutV2Assert(heroContentsHosts[0].text === '', label + ': desktop masthead contents host must remain empty before enhancement.');
+		aboutV2Assert(
+			(source.match(/<!-- wp:group \{"tagName":"aside","ariaLabel":"Filter the record","className":"hp-about-filter-rail"\} -->/g) || []).length === 1,
+			label + ': filter rail must be one native Group rendered as a labelled aside landmark.'
+		);
+		aboutV2Assert(filterRails.length === 1, label + ': expected one dedicated filter aside.');
+		aboutV2Assert(!filterHostInsideNavigation, label + ': capability-index host must not remain inside the navigation.');
+		aboutV2Assert(filterRails[0].inner.includes('hp-about-rail__index-host'), label + ': dedicated filter aside must own the capability-index host.');
+		aboutV2Assert((navs[0].inner.match(/<!-- wp:list \{"ordered":true,"className":"hp-about-nav__list"\} -->/g) || []).length === 1, label + ': navigation must use one native ordered List block.');
+	} else {
+		aboutV2Assert(heroContentsHosts.length === 0, label + ': accepted navigation revision must not contain a masthead contents host.');
+		aboutV2Assert(filterRails.length === 0, label + ': accepted navigation revision must not contain a dedicated filter aside.');
+		aboutV2Assert(filterHostInsideNavigation, label + ': accepted navigation must retain its capability-index host.');
+		aboutV2Assert((navs[0].inner.match(/<!-- wp:list \{"className":"hp-about-nav__list"\} -->/g) || []).length === 1, label + ': accepted navigation must use one native List block.');
+	}
 	aboutV2Assert((navs[0].inner.match(/<!-- wp:list-item -->/g) || []).length === 5, label + ': navigation must use five native List Item blocks.');
-	const navLinks = findLinks((findBalancedByClass(navs[0].inner, 'hp-about-nav__list', label)[0] || {}).inner || '', label);
+	const navList = findBalancedByClass(navs[0].inner, 'hp-about-nav__list', label)[0];
+	aboutV2Assert(navList, label + ': navigation must render one native list element.');
+	aboutV2Assert(
+		navList.tag === (usesContentsPlateRevision ? 'ol' : 'ul'),
+		label + ': navigation list element does not match its accepted revision.'
+	);
+	const navLabel = findByClass(navs[0].inner, 'hp-about-nav__label', label)[0];
+	const expectedNavLabel = usesContentsPlateRevision ? 'In this résumé' : 'On this page';
+	aboutV2Assert(navLabel && navLabel.text === expectedNavLabel, label + ': navigation label must read ' + expectedNavLabel + '.');
+	const navLinks = findLinks(navList.inner, label);
 	const expectedNav = [
 		{ href: '#contributions', text: 'Contributions' },
 		{ href: '#experience', text: 'Experience' },
@@ -1680,9 +1714,12 @@ function verifyAboutV3Body(body, options = {}) {
 		{ href: '#contact', text: 'Contact' }
 	];
 	aboutV2Assert(JSON.stringify(navLinks) === JSON.stringify(expectedNav), label + ': navigation labels, fragments, or order drifted.');
+	const printControls = findByClass(navs[0].inner, 'hp-about-print-control', label);
+	const printLinks = printControls.length === 1 ? findLinks(printControls[0].inner, label) : [];
+	const expectedPrintText = usesContentsPlateRevision ? 'Print view' : 'Print';
 	aboutV2Assert(
-		source.includes('<p class="hp-about-print-control"><a href="/one-page-resume/">Print</a></p>'),
-		label + ': Print control must retain the one-page resume fallback.'
+		JSON.stringify(printLinks) === JSON.stringify([ { href: '/one-page-resume/', text: expectedPrintText } ]),
+		label + ': print control must retain the one-page resume fallback.'
 	);
 
 	for (const exact of [
@@ -1818,6 +1855,13 @@ function verifyAboutV3Body(body, options = {}) {
 		skillGroupCount,
 		actionRailCount: actionRails.length,
 		actionPanelCount: 1,
+		heroContentsHostCount: heroContentsHosts.length,
+		filterRailCount: filterRails.length,
+		filterHostInsideNavigation,
+		navigationListTag: navList.tag,
+		navigationLabel: navLabel.text,
+		navigationRevision: usesContentsPlateRevision ? 'contents-plate' : 'accepted-rail',
+		printControlText: printLinks[0].text,
 		heroActions,
 		closingActions,
 		counts,
