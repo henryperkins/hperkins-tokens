@@ -595,6 +595,8 @@ function buildInspectionExpression( opts ) {
 		const isV2 = OPTS.version === 'v2';
 		const isV3 = OPTS.version === 'v3';
 		const isResume = isV2 || isV3;
+		const skillsIntro = isV3 ? content.querySelector('#skills .hp-about-skills__intro') : null;
+		out.skillsIntroText = skillsIntro ? skillsIntro.textContent.replace(/\\s+/gu, ' ').trim() : null;
 		const navs = content.querySelectorAll(isV2 ? '.hp-about-rail' : '.hp-about-nav');
 		out.navCount = navs.length;
 		const nav = navs[0] || null;
@@ -984,6 +986,15 @@ function verifyContent( result, viewport, expectations ) {
 		actual.length === expected.length && expected.every( ( entry, index ) => actual[ index ] === entry ),
 		`${ label }: heading inventory mismatch.\nexpected:\n${ expected.join( '\n' ) }\nactual:\n${ actual.join( '\n' ) }`
 	);
+	if ( isV3 ) {
+		const expectedSkillsIntro = viewport.width >= 1024
+			? ''
+			: 'Every term is a filter into the record above. Pick one and its evidence travels to the top of each ledger; the rest keep their place below a stated line. Faded terms have nothing on this page behind them yet.';
+		assert(
+			result.skillsIntroText === expectedSkillsIntro,
+			`${ label }: Skills/Education intro reads "${ result.skillsIntroText }"; expected "${ expectedSkillsIntro }".`
+		);
+	}
 
 	// One named navigation with the phase-derived links and unnamed section
 	// targets whose first heading is their H2.

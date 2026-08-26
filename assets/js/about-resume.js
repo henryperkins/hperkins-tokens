@@ -553,7 +553,7 @@
 					eyebrow.textContent = 'Credentials';
 				}
 				if (intro) {
-					intro.textContent = 'The capability index is the filter rail on the left — pick a term there and its evidence travels to the top of the record.';
+					intro.textContent = '';
 				}
 				if (navSkillsLink) {
 					navSkillsLink.textContent = 'Education';
