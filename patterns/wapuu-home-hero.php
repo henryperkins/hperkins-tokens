@@ -50,8 +50,8 @@ $hperkins_wapuu_webp_448_url = esc_url( hperkins_tokens_asset_url( 'assets/img/w
 				<p class="hp-chip is-status-merged"><a href="https://github.com/henryperkins/agent-skills">agent-skills fork</a> — +3 WP AI skills · maintained</p>
 				<!-- /wp:paragraph -->
 
-				<!-- wp:paragraph {"className":"hp-chip is-status-review"} -->
-				<p class="hp-chip is-status-review"><a href="/work/flavor-agent/">flavor-agent</a> — v0.1.0-rc.3 · Jul 2026</p>
+				<!-- wp:paragraph {"className":"hp-chip is-status-merged"} -->
+				<p class="hp-chip is-status-merged"><a href="/work/flavor-agent/">flavor-agent</a> — v0.1.0 · Aug 2026</p>
 				<!-- /wp:paragraph -->
 			</div>
 			<!-- /wp:group -->

@@ -107,8 +107,8 @@ const MARKET_TOKENS = [
 	[ 'pass', 'live' ],
 ];
 
-const REGISTER_ROWS = 12;
-const REGISTER_GROUP_COUNTS = { released: 4, open: 4, unreleased: 4 };
+const REGISTER_ROWS = 11;
+const REGISTER_GROUP_COUNTS = { released: 6, open: 3, unreleased: 2 };
 const KEYWORD_ROWS = 34;
 const KEYWORD_GROUP_COUNTS = { demonstrated: 10, partial: 11, gap: 13 };
 const MARKET_ROWS = 20;
@@ -480,7 +480,7 @@ function verifyMain( markup, _themeVersion, _deployedCommit, options = {} ) {
 		'<h1 class="wp-block-heading">I report WordPress failures so others can fix them.</h1>',
 		'Former WordPress.com Happiness Engineer · WordPress AI contributor · Chicago',
 		'I’m pursuing Support Engineer, WordPress VIP because I want the work itself',
-		'Published 13 Jul 2026 · Last verified 11 Aug 2026',
+		'Published 13 Jul 2026 · Last verified 26 Aug 2026',
 		'A next step, stated plainly.',
 		'Bring me the problem behind the ticket.',
 	] ) {
@@ -512,7 +512,7 @@ function verifyMain( markup, _themeVersion, _deployedCommit, options = {} ) {
 		JSON.stringify( extractLinks( contents ) ) === JSON.stringify( DIGEST_CONTENT_LINKS ),
 		'The Digest contents plate must link all seven numbered sections in order.'
 	);
-	assert( countMatches( heroBlock.outer, /Published 13 Jul 2026 · Last verified 11 Aug 2026/g ) === 1, 'The Digest masthead must state its publication dateline once, inside the contents plate.' );
+	assert( countMatches( heroBlock.outer, /Published 13 Jul 2026 · Last verified 26 Aug 2026/g ) === 1, 'The Digest masthead must state its publication dateline once, inside the contents plate.' );
 	assert(
 		closingIndex === topLevelBlocks.length - 1,
 		'The closing invitation must be the last top-level block.'

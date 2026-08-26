@@ -100,7 +100,7 @@ test( 'rendered text is counted by the same segmenter as the source', () => {
 	for ( const [ rendered, source ] of [
 		[ 'View résumé (PDF)', '<p>View résumé (PDF)</p>' ],
 		[ 'systems—and workflows', '<p>systems—and workflows</p>' ],
-		[ 'Release candidate · v0.1.0-rc.3', '<p>Release candidate · v0.1.0-rc.3</p>' ],
+		[ 'Shipped · v0.1.0', '<p>Shipped · v0.1.0</p>' ],
 		[ 'a b   c', '<p>a b   c</p>' ],
 		[ 'two words', '<p>two&nbsp;words</p>' ],
 		[ 'stacked\nlines', '<p>stacked<br>lines</p>' ],
@@ -309,7 +309,7 @@ test( 'fails when a fragment target section loses its id or gains an aria-label'
 
 test( 'fails when Selected Work order, status, tags, or destinations drift', () => {
 	assert.throws(
-		() => verifyAboutBody( mutated( 'Release candidate · v0.1.0-rc.3', 'Stable · v1.0.0' ) ),
+		() => verifyAboutBody( mutated( 'Shipped · v0.1.0', 'Stable · v1.0.0' ) ),
 		/Project 1 status/
 	);
 	assert.throws(

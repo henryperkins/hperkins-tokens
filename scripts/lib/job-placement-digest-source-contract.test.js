@@ -35,8 +35,8 @@ const PAGE_CSS = fs.readFileSync(
 	path.join( THEME_ROOT, 'assets', 'imladris-pages.css' ),
 	'utf8'
 ).replace( /\r\n/g, '\n' );
-const CURRENT_PUBLICATION_DATELINE = 'Published 13 Jul 2026 · Last verified 11 Aug 2026';
-const STALE_PUBLICATION_DATELINE = 'Published 13 Jul 2026 · Last verified 10 Aug 2026';
+const CURRENT_PUBLICATION_DATELINE = 'Published 13 Jul 2026 · Last verified 26 Aug 2026';
+const STALE_PUBLICATION_DATELINE = 'Published 13 Jul 2026 · Last verified 11 Aug 2026';
 
 // This is the last complete event shape the transition verifier accepted. Keep
 // it only as a negative fixture: adding the fully formed plate back to an
@@ -151,7 +151,7 @@ test( 'uses a two-column masthead whose contents plate reaches all seven parts',
 		[ ...hero.outer.matchAll( /<a href="(#[^"]+)">/g ) ].map( ( match ) => match[ 1 ] ),
 		[ '#why-support-engineer-now', '#current-support-fit', '#primary-proof', '#root-cause-investigation', '#theme-governance', '#evidence-register', '#appendix' ]
 	);
-	assert.equal( [ ...hero.outer.matchAll( /Published 13 Jul 2026 · Last verified 11 Aug 2026/g ) ].length, 1 );
+	assert.equal( [ ...hero.outer.matchAll( /Published 13 Jul 2026 · Last verified 26 Aug 2026/g ) ].length, 1 );
 
 	const mutant = replaceOnce( DIGEST, 'class="wp-block-group hp-placement-contents"', 'class="wp-block-group hp-placement-index"' );
 	assert.throws( () => verifyMain( mutant ), /one labelled contents plate/ );
@@ -196,10 +196,10 @@ test( 'holds five proven fit rows and states the gap outside the ledger', () => 
 	assert.throws( () => verifyMain( mutant ), /Expected one p\.hp-digest-gap element/ );
 } );
 
-test( 'publishes all twelve register records, four in each release state', () => {
+test( 'publishes eleven current register records in their verified release states', () => {
 	const body = /hp-evidence-table[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/.exec( DIGEST );
 	const rows = [ ...body[ 1 ].matchAll( /<tr>([\s\S]*?)<\/tr>/g ) ];
-	assert.equal( rows.length, 12 );
+	assert.equal( rows.length, 11 );
 
 	const counts = { released: 0, open: 0, unreleased: 0 };
 	for ( const row of rows ) {
@@ -208,13 +208,13 @@ test( 'publishes all twelve register records, four in each release state', () =>
 		assert( group, `Register state is unclassifiable: ${ state }` );
 		counts[ group ] += 1;
 	}
-	assert.deepEqual( counts, { released: 4, open: 4, unreleased: 4 } );
+	assert.deepEqual( counts, { released: 6, open: 3, unreleased: 2 } );
 } );
 
 test( 'keeps the Digest core/table schema-safe and its phone labels CSS-backed', () => {
 	const body = /hp-evidence-table[\s\S]*?<tbody>([\s\S]*?)<\/tbody>/.exec( DIGEST )[ 1 ];
 	const rows = [ ...body.matchAll( /<tr>([\s\S]*?)<\/tr>/g ) ];
-	assert.equal( rows.length, 12 );
+	assert.equal( rows.length, 11 );
 	for ( const row of rows ) {
 		assert.deepEqual( [ ...row[ 1 ].matchAll( /<(th|td)\b/g ) ].map( ( match ) => match[ 1 ] ), [ 'th', 'td', 'td' ] );
 		assert.doesNotMatch( row[ 1 ], /\bdata-label=/ );
@@ -321,8 +321,10 @@ test( 'keeps the closing invitation last and its three actions intact', () => {
 	assert.throws( () => verifyMain( mutant ), /contact, résumé, and the evidence register/ );
 } );
 
-test( 'never reintroduces a moving branch URL or a publication placeholder', () => {
+test( 'never reintroduces a moving branch URL, stale Flavor release, or publication placeholder', () => {
 	assert.doesNotMatch( DIGEST, /https:\/\/github\.com\/[^"'\s]+\/(?:blob|tree)\/(?:main|master)(?:[/#?]|$)/ );
+	assert.match( DIGEST, /flavor-agent\/releases\/tag\/v0\.1\.0">Inspect final release v0\.1\.0/ );
+	assert.doesNotMatch( DIGEST, /v0\.1\.0-rc\.3|Flavor Agent post-RC3 main/ );
 
 	const mutant = replaceOnce(
 		DIGEST,

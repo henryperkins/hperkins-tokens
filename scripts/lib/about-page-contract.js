@@ -51,7 +51,7 @@ const EXPECTED_SIGNALS = [
 	},
 	{
 		value: '4 featured projects',
-		label: 'One stable release, two live deployments, and one public release candidate.',
+		label: 'Two stable releases, two live deployments, and no public release candidates.',
 	},
 	{
 		value: '2 upstream outcomes',
@@ -72,12 +72,12 @@ const EXPECTED_NAV_LINKS = [
 const EXPECTED_PROJECTS = [
 	{
 		title: 'Flavor Agent',
-		status: 'Release candidate · v0.1.0-rc.3',
+		status: 'Shipped · v0.1.0',
 		impact: 'Builds governed WordPress AI actions around bounded operations, human review, server-side attribution, freshness checks, and drift-safe rollback before an agent changes live settings or content.',
 		tags: [ 'WordPress', 'AI governance', 'Abilities API', 'MCP' ],
 		actions: [
 			{ text: 'View Flavor Agent case study', href: '/work/flavor-agent/' },
-			{ text: 'View Flavor Agent release', href: 'https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0-rc.3' },
+			{ text: 'View Flavor Agent release', href: 'https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0' },
 			{ text: 'View Flavor Agent source', href: 'https://github.com/henryperkins/flavor-agent' },
 		],
 	},
@@ -1773,7 +1773,7 @@ function verifyAboutV3Body(body, options = {}) {
 	aboutV2Assert(source.includes('server-side /api/booking endpoint'), label + ': DJ Lee showcase endpoint copy drifted.');
 
 	const expectedWork = [
-		[ 'Flavor Agent', 'Release candidate · v0.1.0-rc.3' ],
+		[ 'Flavor Agent', 'Shipped · v0.1.0' ],
 		[ 'AI Provider for Codex', 'Released · stable v2.1' ],
 		[ 'DJ Lee &amp; Voices of Judah', 'Delivered · live site' ],
 		[ 'HPerkins Tokens', 'Live · v0.3.60' ],

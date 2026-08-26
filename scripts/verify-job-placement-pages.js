@@ -382,7 +382,7 @@ function verifyStackedLedgerLabels() {
 	const digest = read( DIGEST_SOURCE );
 	const appendix = read( APPENDIX_SOURCE );
 	const ledgers = [
-		{ source: digest, table: 'hp-evidence-table', expectedRows: 12 },
+		{ source: digest, table: 'hp-evidence-table', expectedRows: 11 },
 		{ source: appendix, table: 'hp-keyword-table', expectedRows: 34 },
 		{ source: appendix, table: 'hp-market-table', expectedRows: 20 },
 	];
@@ -997,7 +997,7 @@ function assertPageMetrics( result, page, viewport ) {
 		assert( result.dossier.gap, context + ' does not render the named gap outside the fit ledger.' );
 		assert( result.dossier.proofCards === 3, `${ context } renders ${ result.dossier.proofCards } proof cards; expected three.` );
 		assert( result.dossier.artifactCells === 6, `${ context } renders ${ result.dossier.artifactCells } incident artifacts; expected six.` );
-		assert( result.dossier.registerRows === 12, `${ context } renders ${ result.dossier.registerRows } register rows; the register publishes twelve.` );
+		assert( result.dossier.registerRows === 11, `${ context } renders ${ result.dossier.registerRows } register rows; the register publishes eleven.` );
 		assert(
 			result.longformCount >= 5,
 			context + ' does not render the dossier\'s long-form sections.'
@@ -1013,8 +1013,8 @@ function assertPageMetrics( result, page, viewport ) {
 			`${ context } renders ${ result.dossier.registerFilterButtons } register filter controls; expected none or all four.`
 		);
 		assert(
-			result.dossier.registerVisibleRows === 12,
-			`${ context } hides ${ 12 - result.dossier.registerVisibleRows } register rows before the reader has filtered anything.`
+			result.dossier.registerVisibleRows === 11,
+			`${ context } hides ${ 11 - result.dossier.registerVisibleRows } register rows before the reader has filtered anything.`
 		);
 		if ( result.dossier.registerFilterButtons === 4 ) {
 			assert(
@@ -1163,10 +1163,10 @@ const DIGEST_LEDGER = {
 	name: 'evidence register',
 	root: '.hp-evidence-ledger',
 	table: '.hp-evidence-table table',
-	rows: 12,
-	initialRows: 12,
+	rows: 11,
+	initialRows: 11,
 	defaultState: 'all',
-	openingStatus: 'Showing all 12 records · states verified 10 Aug 2026',
+	openingStatus: 'Showing all 11 records · states verified 26 Aug 2026',
 	standing: 'td:first-of-type',
 };
 

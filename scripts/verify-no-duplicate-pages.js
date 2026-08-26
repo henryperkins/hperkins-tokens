@@ -36,6 +36,7 @@ const FRONT_PAGE_SNAPSHOT = path.join( SNAPSHOT_DIR, 'front-page.html' );
 const COUNCIL_HEADER = path.join( THEME_PATH, 'inc', 'council-header.php' );
 
 const NUMBER_WORDS = {
+	no: 0,
 	one: 1,
 	two: 2,
 	three: 3,
@@ -53,14 +54,14 @@ const NUMBER_WORDS = {
  *
  * The mapping is editorial, so it is declared rather than inferred: "Shipped" and
  * "Delivered" are both public builds, "Merged" is an upstream contribution, and
- * "Release candidate" is the one open item. Every entry label must be claimed by
+ * No work entry is open. Every entry label must be claimed by
  * exactly one chip, and a chip that states a count must state the right one --
- * that is what stops "shipped: three live" surviving a fourth entry.
+ * that is what stops "shipped: three" surviving a fourth entry.
  */
 const CHIP_EXPECTATIONS = [
 	{ prefix: 'shipped:', labels: [ 'Shipped', 'Delivered' ] },
 	{ prefix: 'merged:', labels: [ 'Merged' ] },
-	{ prefix: 'open:', labels: [ 'Release candidate' ] },
+	{ prefix: 'open:', labels: [] },
 ];
 
 function assert( condition, message ) {

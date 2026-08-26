@@ -12,7 +12,7 @@
  * a copy edit cannot silently mis-file a record. Classification is
  * all-or-nothing per ledger: if any row's text is not recognised, that
  * enhancement declines to mount and the ledger renders exactly as it does
- * without JS. A filter that is 11/12 correct is worse than no filter, because
+ * without JS. A filter that is 10/11 correct is worse than no filter, because
  * the reader cannot tell which row was dropped.
  *
  * Order matters in every token list; the first match wins.
@@ -71,7 +71,7 @@
 			cell: 'td',
 			tokens: STATE_TOKENS,
 			noun: 'records',
-			allSuffix: ' · states verified 10 Aug 2026',
+			allSuffix: ' · states verified 26 Aug 2026',
 			label: 'Filter the evidence register by release state',
 			filters: [
 				{ key: 'all', label: 'All evidence' },

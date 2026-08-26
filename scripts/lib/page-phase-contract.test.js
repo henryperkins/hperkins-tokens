@@ -132,7 +132,7 @@ test( 'rendered recruiter probes pin the dossier as the only Digest shape', () =
 	assert.match( recruiter, /'hero\|why'/ );
 	assert.match( recruiter, /const hasEvent = eventIndex !== -1;/ );
 	assert.doesNotMatch( recruiter, /requireEvent|--retired|--no-event/ );
-	assert.match( recruiter, /result\.dossier\.registerVisibleRows === 12/ );
+	assert.match( recruiter, /result\.dossier\.registerVisibleRows === 11/ );
 	assert.match( recruiter, /zoom-200-from-1024/ );
 
 	const prominent = fs.readFileSync(

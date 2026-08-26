@@ -22,29 +22,29 @@
 <!-- wp:group {"className":"hp-workindex__summary","layout":{"type":"default"}} -->
 <div class="wp-block-group hp-workindex__summary"><!-- wp:group {"className":"hp-proof-bar","layout":{"type":"flex","flexWrap":"wrap","justifyContent":"left"}} -->
 <div class="wp-block-group hp-proof-bar"><!-- wp:paragraph {"className":"hp-chip is-status-merged","fontSize":"xs","fontFamily":"mono"} -->
-<p class="hp-chip is-status-merged has-mono-font-family has-xs-font-size">shipped: two live</p>
+<p class="hp-chip is-status-merged has-mono-font-family has-xs-font-size">shipped: three</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-chip is-status-merged","fontSize":"xs","fontFamily":"mono"} -->
 <p class="hp-chip is-status-merged has-mono-font-family has-xs-font-size">merged: upstream</p>
 <!-- /wp:paragraph -->
 
-<!-- wp:paragraph {"className":"hp-chip is-status-review","fontSize":"xs","fontFamily":"mono"} -->
-<p class="hp-chip is-status-review has-mono-font-family has-xs-font-size">open: one release candidate</p>
+<!-- wp:paragraph {"className":"hp-chip is-status-merged","fontSize":"xs","fontFamily":"mono"} -->
+<p class="hp-chip is-status-merged has-mono-font-family has-xs-font-size">open: no release candidates</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group --></div>
 <!-- /wp:group --></section>
 <!-- /wp:group -->
 
 <!-- wp:group {"align":"wide","className":"hp-work","style":{"spacing":{"margin":{"top":"var:preset|spacing|8"}}},"layout":{"type":"default"}} -->
-<div class="wp-block-group alignwide hp-work" style="margin-top:var(--wp--preset--spacing--8)"><!-- wp:group {"className":"hp-work__entry is-status-review","layout":{"type":"default"}} -->
-<div class="wp-block-group hp-work__entry is-status-review"><!-- wp:group {"className":"hp-work__head","layout":{"type":"flex","justifyContent":"space-between","flexWrap":"wrap"}} -->
+<div class="wp-block-group alignwide hp-work" style="margin-top:var(--wp--preset--spacing--8)"><!-- wp:group {"className":"hp-work__entry is-status-merged","layout":{"type":"default"}} -->
+<div class="wp-block-group hp-work__entry is-status-merged"><!-- wp:group {"className":"hp-work__head","layout":{"type":"flex","justifyContent":"space-between","flexWrap":"wrap"}} -->
 <div class="wp-block-group hp-work__head"><!-- wp:paragraph {"className":"hp-work__label"} -->
-<p class="hp-work__label">Release candidate</p>
+<p class="hp-work__label">Shipped</p>
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-work__meta"} -->
-<p class="hp-work__meta">v0.1.0-rc.3</p>
+<p class="hp-work__meta">v0.1.0</p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
@@ -88,7 +88,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0-rc.3">v0.1.0-rc.3</a></p>
+<p class="hp-artifact__link"><a href="https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0">v0.1.0</a></p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:column --></div>
 <!-- /wp:columns --></div>
