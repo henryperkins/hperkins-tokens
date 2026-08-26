@@ -813,6 +813,26 @@ async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
 					minBlockSize: style.minBlockSize,
 				};
 			}),
+			stateAnatomy: (() => {
+				const row = panel.querySelector('.hp-council-work-row');
+				const originalClassName = row.className;
+				const readState = (state) => {
+					row.classList.remove('is-state-review', 'is-state-done');
+					row.classList.add('review' === state ? 'is-state-review' : 'is-state-done');
+					const style = getComputedStyle(row);
+					return {
+						padding: [style.paddingTop, style.paddingRight, style.paddingBottom, style.paddingLeft].join(' '),
+						radius: style.borderRadius,
+						borderLeftWidth: style.borderLeftWidth,
+						minBlockSize: style.minBlockSize,
+					};
+				};
+				try {
+					return { done: readState('done'), review: readState('review') };
+				} finally {
+					row.className = originalClassName;
+				}
+			})(),
 			eyebrowSize: (() => {
 				const eyebrow = panel.querySelector('.hp-council-work-panel__eyebrow');
 				return eyebrow ? parseFloat(getComputedStyle(eyebrow).fontSize) : null;
@@ -846,15 +866,15 @@ async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
 		work.anatomy.length === WORK_LABELS.length,
 		`${ viewport.name } exposes ${ work.anatomy.length } Work rows; expected ${ WORK_LABELS.length }.`
 	);
-	assert(
-		new Set( work.anatomy.map( ( row ) => row.state ) ).size > 1,
-		`${ viewport.name } Work rows no longer cover more than one state, so the fixed-anatomy check proves nothing.`
-	);
 	for ( const key of [ 'padding', 'radius', 'borderLeftWidth', 'minBlockSize' ] ) {
 		const values = new Set( work.anatomy.map( ( row ) => row[ key ] ) );
 		assert(
 			values.size === 1,
-			`${ viewport.name } Work row ${ key } varies by state (${ [ ...values ].join( ' vs ' ) }); anatomy is fixed per component.`
+			`${ viewport.name } Work row ${ key } varies across rows (${ [ ...values ].join( ' vs ' ) }); anatomy is fixed per component.`
+		);
+		assert(
+			work.stateAnatomy.done[ key ] === work.stateAnatomy.review[ key ],
+			`${ viewport.name } Work row ${ key } varies by state (${ work.stateAnatomy.done[ key ] } vs ${ work.stateAnatomy.review[ key ] }); anatomy is fixed per component.`
 		);
 	}
 	assert( work.left >= -1 && work.right <= initial.clientWidth + 1, `${ viewport.name } Work panel exceeds the viewport.` );
