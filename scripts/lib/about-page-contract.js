@@ -1528,3 +1528,305 @@ function verifyAboutV2Body(body, options = {}) {
 }
 
 module.exports.verifyAboutV2Body = verifyAboutV2Body;
+
+const ABOUT_V3_WORD_RANGE = { min: 980, max: 1010 };
+
+const ABOUT_V3_EVIDENCE = {
+	'Authored the Content Resizing and Title Generation experiment docs': [ 'Documentation', 'Developer enablement' ],
+	'Reported a defect a maintainer then fixed and shipped': [ 'Escalation triage' ],
+	'Built and released the Codex provider other developers install': [ 'Plugin development', 'Provider integrations', 'Sidecar debugging', 'Request logging', 'Release packaging', 'PHPStan', 'Plugin Check', 'PHP', 'AI Client' ],
+	'Root-caused a production-only focus-ring regression': [ 'CSS cascade', 'Browser debugging', 'Release packaging', 'Git' ],
+	'Proposed the AI-skills policy and wrote its reference implementation': [ 'AI Client', 'Abilities API', 'MCP', 'Documentation', 'Developer enablement' ],
+	'Finite-vector validation and model-aware sampling, with regression tests': [ 'PHP', 'Provider integrations', 'AI Client' ],
+	'Reported the request-logging gap, then integration-tested the fix': [ 'Request logging', 'Sidecar debugging', 'Provider integrations', 'Escalation triage', 'Code review' ],
+	'Independent Technology Consultant': [ 'Plugin development', 'Gutenberg', 'REST API', 'WP-CLI', 'JavaScript', 'TypeScript', 'React', 'CSS cascade', 'WooCommerce', 'Cloudflare Workers', 'Prompt design', 'Provider integrations', 'AI workflow prototyping', 'Documentation', 'Release packaging', 'Git', 'GitHub Actions', 'Composer', 'Technical support' ],
+	'Shift Supervisor': [ 'Escalation triage' ],
+	'Happiness Engineer': [ 'HTTP', 'DNS', 'Documentation', 'Escalation triage', 'Technical support' ],
+	'Developer Community Manager': [ 'Developer enablement', 'Documentation', 'Customer onboarding' ]
+};
+
+const ABOUT_V3_TERM_LABELS = {
+	'plugin-development': 'Plugin development',
+	gutenberg: 'Gutenberg',
+	'ai-client': 'AI Client',
+	'abilities-api': 'Abilities API',
+	'rest-api': 'REST API',
+	'wp-cli': 'WP-CLI',
+	php: 'PHP',
+	javascript: 'JavaScript',
+	typescript: 'TypeScript',
+	react: 'React',
+	'css-cascade': 'CSS cascade',
+	'cloudflare-workers': 'Cloudflare Workers',
+	woocommerce: 'WooCommerce',
+	http: 'HTTP',
+	dns: 'DNS',
+	'browser-debugging': 'Browser debugging',
+	'provider-integrations': 'Provider integrations',
+	'ai-workflow-prototyping': 'AI workflow prototyping',
+	mcp: 'MCP',
+	'prompt-design': 'Prompt design',
+	'request-logging': 'Request logging',
+	'sidecar-debugging': 'Sidecar debugging',
+	git: 'Git',
+	'github-actions': 'GitHub Actions',
+	'code-review': 'Code review',
+	'release-packaging': 'Release packaging',
+	'plugin-check': 'Plugin Check',
+	phpstan: 'PHPStan',
+	composer: 'Composer',
+	documentation: 'Documentation',
+	'developer-enablement': 'Developer enablement',
+	'technical-support': 'Technical support',
+	'escalation-triage': 'Escalation triage',
+	'customer-onboarding': 'Customer onboarding'
+};
+
+const ABOUT_V3_SKILL_GROUPS = [
+	[ 'WordPress', [ 'Plugin development', 'Gutenberg', 'AI Client', 'Abilities API', 'REST API', 'WP-CLI' ] ],
+	[ 'Languages & frontend', [ 'PHP', 'JavaScript', 'TypeScript', 'React', 'CSS cascade' ] ],
+	[ 'Platform & delivery', [ 'Cloudflare Workers', 'WooCommerce', 'HTTP', 'DNS', 'Browser debugging' ] ],
+	[ 'AI & integrations', [ 'Provider integrations', 'AI workflow prototyping', 'MCP', 'Prompt design', 'Request logging', 'Sidecar debugging' ] ],
+	[ 'Workflow & enablement', [ 'Git', 'GitHub Actions', 'Code review', 'Release packaging', 'Plugin Check', 'PHPStan', 'Composer', 'Documentation', 'Developer enablement' ] ],
+	[ 'Delivery & support', [ 'Technical support', 'Escalation triage', 'Customer onboarding' ] ]
+];
+
+function aboutV3Terms(openingTag) {
+	return aboutV2Classes(openingTag)
+		.filter(function (className) {
+			return className.indexOf('hp-term--') === 0;
+		})
+		.map(function (className) {
+			const slug = className.slice('hp-term--'.length);
+			return ABOUT_V3_TERM_LABELS[slug] || slug;
+		});
+}
+
+function aboutV3RowRecords(body) {
+	const records = [];
+	const pattern = /(<div\b[^>]*\bhp-about-index-row\b[^>]*>)([\s\S]*?)<\/div>/g;
+	let match;
+
+	while ((match = pattern.exec(body)) !== null) {
+		const heading = match[2].match(/<h3\b[^>]*>([\s\S]*?)<\/h3>/);
+		records.push({
+			title: aboutV2Text(heading ? heading[1] : ''),
+			terms: aboutV3Terms(match[1])
+		});
+	}
+	return records;
+}
+
+function aboutV3WithoutHiddenUtilities(source) {
+	return source
+		.replace(/<div\b[^>]*\bhp-about-ledger__divider\b[^>]*\bhidden\b[^>]*>[\s\S]*?<\/div>/g, '')
+		.replace(/<span\b[^>]*\bhp-about-citation-chip\b[^>]*\bhidden\b[^>]*>[\s\S]*?<\/span>/g, '');
+}
+
+function verifyAboutV3Body(body, options = {}) {
+	const label = options.label || 'About v3 body';
+	const source = String(body || '');
+	aboutV2Assert(
+		! /"className":"[^"]*--[^"]*"/.test( source ),
+		label + ': Gutenberg attributes must use WordPress-safe block className JSON for double-hyphen class names.'
+	);
+	aboutV2Assert(!/\shidden(?:\s|=|>)/i.test(source), label + ': authored v3 markup must not contain hidden attributes.');
+	const sectionIds = [ 'contributions', 'experience', 'skills', 'showcase', 'contact' ];
+	const sectionOrderOffsets = sectionIds.map(function (id) { return source.indexOf('id="' + id + '"'); });
+	const contributionCount = (source.match(/class="[^"]*\bhp-about-contribution\b/g) || []).length;
+	const currentRoleCount = (source.match(/class="[^"]*\bhp-about-role\b[^"]*\bis-current\b/g) || []).length;
+	const earlierRoleCount = (source.match(/class="[^"]*\bhp-about-role\b[^"]*\bis-earlier\b/g) || []).length;
+	const skillTermCount = (source.match(/class="hp-tag hp-about-skill-term hp-term--/g) || []).length;
+	const skillGroupCount = (source.match(/class="wp-block-group hp-about-skill-group"/g) || []).length;
+	const rows = aboutV3RowRecords(source);
+	const counts = {};
+	const actionRails = findBalancedByClass(source, 'hp-action-rail', label);
+	const contactSections = findBalancedByClass(source, 'hp-about-contact', label);
+	const blocks = parseTopLevelBlocks(source);
+
+	aboutV2Assert(source.includes('hp-about-resume-v3'), label + ': missing hp-about-resume-v3 root marker.');
+	aboutV2Assert(!/<\?php|<\?=/i.test(source), label + ': PHP is not allowed.');
+	aboutV2Assert(!/<(?:script|style|template)\b/i.test(source), label + ': inline script, style, and template elements are not allowed.');
+	assertNoCoreHtmlBlocks(source, label);
+	assertBlockCoverage(source, blocks, label);
+	aboutV2Assert(blocks.length === 1 && blocks[0].name === 'group', label + ': the candidate must be one top-level core Group block.');
+	aboutV2Assert((source.match(/<h1\b[\s\S]*?<\/h1>/g) || []).length === 1, label + ': expected exactly one H1.');
+	aboutV2Assert(/<h1\b[^>]*>Henry Perkins<\/h1>/.test(source), label + ': H1 must remain Henry Perkins.');
+	aboutV2Assert(sectionOrderOffsets.every(function (offset) { return offset >= 0; }), label + ': one or more required sections are missing.');
+	aboutV2Assert(sectionOrderOffsets.every(function (offset, index) { return index === 0 || offset > sectionOrderOffsets[index - 1]; }), label + ': sections are not in the required order.');
+
+	sectionIds.forEach(function (id) {
+		const blockPattern = new RegExp('<!-- wp:group \\{"tagName":"section","anchor":"' + id + '","className":"[^"]+"');
+		const sectionPattern = new RegExp('<section id="' + id + '" class="[^"]+">');
+		const opening = (source.match(sectionPattern) || [])[0] || '';
+		aboutV2Assert(blockPattern.test(source), label + ': #' + id + ' must be a native Group block with tagName section and anchor.');
+		aboutV2Assert(opening && !/aria-label(?:ledby)?=/.test(opening), label + ': #' + id + ' must remain an unnamed section target.');
+	});
+
+	aboutV2Assert(
+		(source.match(/<!-- wp:group \{"tagName":"nav","ariaLabel":"On this page","className":"hp-about-nav"\} -->/g) || []).length === 1,
+		label + ': expected one native hp-about-nav Group labelled On this page.'
+	);
+	const navs = findBalancedByClass(source, 'hp-about-nav', label);
+	aboutV2Assert(navs.length === 1, label + ': expected exactly one hp-about-nav element.');
+	aboutV2Assert((navs[0].inner.match(/<!-- wp:list \{"className":"hp-about-nav__list"\} -->/g) || []).length === 1, label + ': navigation must use one native List block.');
+	aboutV2Assert((navs[0].inner.match(/<!-- wp:list-item -->/g) || []).length === 5, label + ': navigation must use five native List Item blocks.');
+	const navLinks = findLinks((findBalancedByClass(navs[0].inner, 'hp-about-nav__list', label)[0] || {}).inner || '', label);
+	const expectedNav = [
+		{ href: '#contributions', text: 'Contributions' },
+		{ href: '#experience', text: 'Experience' },
+		{ href: '#skills', text: 'Skills' },
+		{ href: '#showcase', text: 'Showcase' },
+		{ href: '#contact', text: 'Contact' }
+	];
+	aboutV2Assert(JSON.stringify(navLinks) === JSON.stringify(expectedNav), label + ': navigation labels, fragments, or order drifted.');
+	aboutV2Assert(
+		source.includes('<p class="hp-about-print-control"><a href="/one-page-resume/">Print</a></p>'),
+		label + ': Print control must retain the one-page resume fallback.'
+	);
+
+	for (const exact of [
+		'Developer relations &amp; enablement',
+		'I ship WordPress AI work in public — merged core contributions, provider tooling other developers install, and the documentation that makes both usable.',
+		'Open to WordPress AI, developer-enablement, and support-engineering work — full-time or contract, remote or Chicago.',
+		'Credential · 2026',
+		'AI Leaders Micro-Credential',
+		'Finalist, inaugural cohort — University of Illinois Chicago and the WordPress Foundation, supported by Automattic. Earned by shipping the contributions below.',
+		'In person · Aug 2026',
+		'Staffed the Core AI booth at WordCamp US 2026 in Phoenix — walking maintainers and agency developers through the provider tooling above.'
+	]) {
+		aboutV2Assert(source.includes(exact), label + ': approved hero copy is missing or reworded: ' + exact);
+	}
+	aboutV2Assert(
+		(source.match(/<img\b[^>]*src="\/wp-content\/uploads\/2026\/06\/henry-perkins\.png"[^>]*alt="Henry Perkins"[^>]*>/g) || []).length === 1,
+		label + ': expected one exact portrait source with Henry Perkins alternative text.'
+	);
+	aboutV2Assert(source.includes('href="https://aileaderswp.blog/">Program showcase</a>'), label + ': Program showcase link is missing.');
+	aboutV2Assert(source.includes(IDLE_READOUT_V3), label + ': approved idle Skills readout is missing.');
+	aboutV2Assert(!source.includes('the rest are dimmed'), label + ': stale dimming language must not return.');
+	aboutV2Assert(!source.includes('is-dimmed'), label + ': authored v3 rows must not use the old dimmed state.');
+	aboutV2Assert(!source.includes('hp-about-ledger__divider'), label + ': filter dividers must be generated by the enhancer.');
+	aboutV2Assert(!source.includes('hp-about-citation-chip'), label + ': citation chips must be generated by the enhancer.');
+
+	aboutV2Assert(contributionCount === 7, label + ': expected 7 contribution rows, found ' + contributionCount + '.');
+	aboutV2Assert(currentRoleCount === 4, label + ': expected 4 primary experience rows, found ' + currentRoleCount + '.');
+	aboutV2Assert(earlierRoleCount === 3, label + ': expected 3 earlier roles, found ' + earlierRoleCount + '.');
+	aboutV2Assert(rows.length === 11, label + ': expected 11 evidence-index rows, found ' + rows.length + '.');
+	aboutV2Assert((source.match(/class="hp-about-status__glyph" aria-hidden="true">[●○]<\/span>/g) || []).length === 7, label + ': every contribution status needs an aria-hidden glyph plus status words.');
+	aboutV2Assert((source.match(/<!-- wp:paragraph \{"className":"hp-about-v3-impact"\} -->/g) || []).length === 3, label + ': impact signals must be three native Paragraph blocks.');
+	aboutV2Assert((source.match(/<p class="hp-about-v3-impact"><a href="#[^"]+">/g) || []).length === 3, label + ': each impact signal must be one full-cell section link.');
+
+	rows.forEach(function (row) {
+		const expected = ABOUT_V3_EVIDENCE[row.title];
+		aboutV2Assert(expected, label + ': unexpected evidence row "' + row.title + '".');
+		aboutV2Assert(
+			JSON.stringify(row.terms.slice().sort()) === JSON.stringify(expected.slice().sort()),
+			label + ': evidence terms drifted for "' + row.title + '".'
+		);
+		row.terms.forEach(function (term) {
+			counts[term] = (counts[term] || 0) + 1;
+		});
+	});
+	aboutV2Assert(Object.keys(ABOUT_V3_EVIDENCE).every(function (title) {
+		return rows.some(function (row) { return row.title === title; });
+	}), label + ': one or more required evidence rows are missing.');
+
+	aboutV2Assert(skillGroupCount === 6, label + ': expected 6 skill groups, found ' + skillGroupCount + '.');
+	aboutV2Assert(skillTermCount === 34, label + ': expected 34 skill terms, found ' + skillTermCount + '.');
+	ABOUT_V3_SKILL_GROUPS.forEach(function (group) {
+		aboutV2Assert(source.includes('<p class="hp-about-skill-group__label">' + group[0].replace(/&/g, '&amp;') + '</p>'), label + ': skill group "' + group[0] + '" is missing.');
+		group[1].forEach(function (term) {
+			const slug = Object.keys(ABOUT_V3_TERM_LABELS).find(function (candidate) {
+				return ABOUT_V3_TERM_LABELS[candidate] === term;
+			});
+			const termPattern = new RegExp('class="hp-tag hp-about-skill-term hp-term--' + slug + '">' + term.replace(/&/g, '&amp;') + '<\/span>');
+			aboutV2Assert(termPattern.test(source), label + ': missing static skill term "' + term + '".');
+		});
+	});
+
+	aboutV2Assert(actionRails.length === 2, label + ': expected one hero and one closing action rail.');
+	actionRails.forEach(function (rail, index) {
+		aboutV2Assert(
+			findBalancedByClass(rail.inner, 'wp-block-button', label).length === 2,
+			label + ': action rail ' + (index + 1) + ' must contain exactly two core Button wrappers.'
+		);
+	});
+	const heroActions = findLinks(actionRails[0].inner, label);
+	const closingActions = findLinks(actionRails[1].inner, label);
+	const expectedHeroActions = [
+		{ href: '/one-page-resume/', text: 'Download résumé (PDF)' },
+		{ href: '/contact/', text: 'Get in touch' }
+	];
+	const expectedClosingActions = [
+		{ href: '/contact/', text: 'Start a conversation' },
+		{ href: '/one-page-resume/', text: 'Download résumé (PDF)' }
+	];
+	aboutV2Assert(JSON.stringify(heroActions) === JSON.stringify(expectedHeroActions), label + ': hero action labels, destinations, or order drifted.');
+	aboutV2Assert(JSON.stringify(closingActions) === JSON.stringify(expectedClosingActions), label + ': closing action labels, destinations, or order drifted.');
+	aboutV2Assert((source.match(/<!-- wp:button \{"className":"is-style-secondary"\} -->/g) || []).length === 2, label + ': both secondary actions must use the registered secondary style.');
+	aboutV2Assert(!source.includes('is-style-outline'), label + ': legacy outline actions must not replace the secondary style.');
+	aboutV2Assert(contactSections.length === 1, label + ': expected one closing contact section.');
+	aboutV2Assert(/<section id="contact" class="wp-block-group hp-about-section hp-about-contact hp-action-panel is-closing">/.test(source), label + ': closing contact must compose hp-action-panel is-closing.');
+	aboutV2Assert(source.includes('Build the handoff into the system.'), label + ': closing heading drifted.');
+	aboutV2Assert(source.includes('If your team is shaping WordPress and AI systems that need to ship — and stay operable — let’s compare notes.'), label + ': closing copy drifted.');
+	aboutV2Assert(source.includes('integration-tested a contributor’s fix'), label + ': request-logging contribution copy drifted.');
+	aboutV2Assert(source.includes('server-side /api/booking endpoint'), label + ': DJ Lee showcase endpoint copy drifted.');
+
+	const expectedWork = [
+		[ 'Flavor Agent', 'Release candidate · v0.1.0-rc.3' ],
+		[ 'AI Provider for Codex', 'Released · stable v2.1' ],
+		[ 'DJ Lee &amp; Voices of Judah', 'Delivered · live site' ],
+		[ 'HPerkins Tokens', 'Live · v0.3.60' ],
+		[ 'Tableau', 'Deployed · live application' ]
+	];
+	expectedWork.forEach(function (project) {
+		aboutV2Assert(source.includes('<h3 class="wp-block-heading">' + project[0] + '</h3>'), label + ': Selected work title drifted: ' + project[0]);
+		aboutV2Assert(source.includes('<p class="hp-about-showcase-card__type">' + project[1] + '</p>'), label + ': Selected work status drifted: ' + project[1]);
+	});
+
+	ABOUT_V2_EDUCATION.forEach(function (record, index) {
+		const pattern = new RegExp(
+			'hp-about-education__period">' + record.period + '<[\\s\\S]*?<h4[^>]*>' + record.degree +
+				'<[\\s\\S]*?hp-about-education__school">' + record.school + '<'
+		);
+		aboutV2Assert(pattern.test(source), label + ': education record ' + (index + 1) + ' is missing or reworded.');
+	});
+
+	const visibleSource = aboutV3WithoutHiddenUtilities(source);
+	const wordCount = countVisibleWords(visibleSource, { label });
+	aboutV2Assert(
+		wordCount >= ABOUT_V3_WORD_RANGE.min && wordCount <= ABOUT_V3_WORD_RANGE.max,
+		label + ': visible word count ' + wordCount + ' outside ' + ABOUT_V3_WORD_RANGE.min + '–' + ABOUT_V3_WORD_RANGE.max + '.'
+	);
+	const visibleText = extractVisibleText(visibleSource, { label });
+	const visibleIssueLabels = visibleText.match(/(?:PR|issue)\s+#\d+/g) || [];
+	aboutV2Assert(JSON.stringify(visibleIssueLabels) === JSON.stringify([ 'PR #501' ]), label + ': issue and pull-request numbers belong in hrefs; only the approved PR #501 signal may be visible.');
+
+	const unknownOwners = (source.match(/github\.com\/([A-Za-z0-9-]+)/g) || [])
+		.map(function (url) { return url.slice('github.com/'.length); })
+		.filter(function (owner, index, all) {
+			return all.indexOf(owner) === index && ABOUT_V2_GITHUB_OWNERS.indexOf(owner) === -1;
+		});
+	aboutV2Assert(unknownOwners.length === 0, label + ': unrecognised GitHub owner(s) ' + unknownOwners.join(', ') + '.');
+
+	return {
+		label,
+		contributionCount,
+		currentRoleCount,
+		earlierRoleCount,
+		skillTermCount,
+		skillGroupCount,
+		actionRailCount: actionRails.length,
+		actionPanelCount: 1,
+		heroActions,
+		closingActions,
+		counts,
+		wordCount,
+		sectionOrder: sectionIds
+	};
+}
+
+const IDLE_READOUT_V3 = 'Pick a term to pull its evidence to the top. Nothing is hidden.';
+
+module.exports.ABOUT_V3_WORD_RANGE = ABOUT_V3_WORD_RANGE;
+module.exports.verifyAboutV3Body = verifyAboutV3Body;

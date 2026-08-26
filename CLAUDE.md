@@ -152,16 +152,16 @@ Three Council header values sit **below the site-wide 12px text floor**, deliber
 - **Don't edit the parent as if it's ours:** `assembler` is vendored upstream and lives beside this theme in the target WordPress install's `wp-content/themes/`, not in this repo.
 - **`.design-pull/` is disposable** (gitignored, re-pullable); the durable provenance is `docs/design-system/`.
 
-## About v2 candidate runtime
+## About v3 runtime
 
-assets/js/about-resume.js is the fifth deferred frontend controller. It is globally enqueued so it survives Interactivity Router document swaps, but self-declines unless .hp-about-resume exists. It progressively upgrades the evidence-backed skills index, earlier-role disclosure, copy-email action, section state, and print preparation. Page-specific presentation remains in assets/imladris-pages.css.
+assets/js/about-resume.js is the fifth deferred frontend controller. It is globally enqueued so it survives Interactivity Router document swaps, but self-declines unless .hp-about-resume-v3 exists. It progressively upgrades the 34-term evidence filter with stable per-ledger partitioning, relocates the same skills index into the desktop rail, manages the earlier-role disclosure and copy-email status, tracks the active section, and restores canonical order for print. Page-specific presentation remains in assets/imladris-pages.css.
 
-Focused candidate checks:
+Focused About checks:
 
     node --test scripts/lib/about-resume-style.test.js scripts/lib/about-resume.test.js
-    node scripts/verify-about-page-source.js --drafts
-    node scripts/verify-about-page-rendered.js --source-only --drafts
-    node scripts/verify-prominent-actions.js --source-only --drafts
+    node scripts/verify-about-page-source.js
+    node scripts/verify-about-page-rendered.js --source-only
+    node scripts/verify-prominent-actions.js --source-only
     node scripts/verify-resume-route.js --source-only
 
-content/page-drafts/about.html remains the reviewed candidate. Do not copy it to content/page-snapshots/about.html, update database Page 6, deploy, or treat it as public without a separate publication approval.
+Page 6, content/page-drafts/about.html, and content/page-snapshots/about.html are the published v3 body and its two tracked mirrors. Gutenberg className values containing double-hyphen classes use WordPress's canonical `\u002d\u002d` JSON spelling inside block comments; the rendered HTML class attributes keep their literal `--` spelling. Use `--drafts` only while a future About revision intentionally differs from the accepted snapshot.

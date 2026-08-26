@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Proof-first About source contract (2026-07-28 spec).
+ * Phase-aware About source contract (accepted proof-first, v2, and v3 bodies).
  *
  * With --drafts, validates the reviewed candidate
  * content/page-drafts/about.html. Without --drafts, validates the accepted
@@ -23,6 +23,7 @@ const {
 const {
 	verifyAboutBody,
 	verifyAboutV2Body,
+	verifyAboutV3Body,
 	verifyCssOwnership,
 	verifyPatternAdapter,
 } = require( './lib/about-page-contract' );
@@ -41,6 +42,20 @@ function read( relative ) {
 }
 
 function verifySelectedAboutBody( body, options ) {
+	if ( body.includes( 'hp-about-resume-v3' ) ) {
+		const report = verifyAboutV3Body( body, options );
+		return {
+			...report,
+			sectionCounts: {
+				contributions: report.contributionCount,
+				experience: report.currentRoleCount + report.earlierRoleCount,
+				skills: report.skillTermCount,
+				showcase: ( body.match( /class="[^"]*\bhp-about-showcase-card\b/g ) || [] ).length,
+				contact: 1,
+			},
+		};
+	}
+
 	if ( ! body.includes( 'hp-about-resume' ) ) {
 		return verifyAboutBody( body, options );
 	}

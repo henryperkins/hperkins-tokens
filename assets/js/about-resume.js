@@ -10,10 +10,12 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
 	'use strict';
 
-	var IDLE_READOUT = 'Pick a term to dim every contribution and role that does not mention it. Numbers count the rows above.';
-	// A term nothing on the page backs owes a count it cannot pay.
+	var IDLE_READOUT = 'Pick a term to pull its evidence to the top. Nothing is hidden.';
 	var UNBACKED_COUNT = '—';
 	var mountedRoots = typeof WeakMap === 'function' ? new WeakMap() : null;
+	var activeState = null;
+	var headerResizeObserver = null;
+	var observedHeader = null;
 
 	function termSlug(term) {
 		return String(term || '')
@@ -46,6 +48,13 @@
 		}
 
 		return [];
+	}
+
+	function rowCites(row, activeTerm) {
+		var activeSlug = termSlug(activeTerm);
+		return Boolean(activeSlug) && rowTerms(row).some(function (term) {
+			return termSlug(term) === activeSlug;
+		});
 	}
 
 	function groupEntries(groups) {
@@ -84,15 +93,13 @@
 			var backed = group.terms.filter(function (term) {
 				return (counts[term] || slugCounts[termSlug(term)] || 0) > 0;
 			}).length;
-			var result = {
+			return {
 				name: group.name,
 				terms: group.terms.slice(),
 				backed: backed,
 				total: group.terms.length,
 				coverage: backed + '/' + group.terms.length + ' backed above'
 			};
-
-			return result;
 		});
 
 		indexedGroups.forEach(function (group) {
@@ -111,16 +118,37 @@
 	}
 
 	function deriveDimmedRows(rows, activeTerm) {
+		return (rows || []).map(function (row) {
+			return Boolean(activeTerm) && !rowCites(row, activeTerm);
+		});
+	}
+
+	function applyDimmedRows(rows, activeTerm) {
+		var mountedRows = rows || [];
+		var dimmedRows = deriveDimmedRows(mountedRows, activeTerm);
+		mountedRows.forEach(function (row, index) {
+			row.classList.toggle('is-dimmed', dimmedRows[index]);
+		});
+		return dimmedRows;
+	}
+
+	function partitionEvidenceRows(rows, activeTerm) {
+		var canonical = (rows || []).slice();
 		if (!activeTerm) {
-			return (rows || []).map(function () { return false; });
+			return {
+				ordered: canonical,
+				matchCount: 0,
+				dividerIndex: -1
+			};
 		}
 
-		var activeSlug = termSlug(activeTerm);
-		return (rows || []).map(function (row) {
-			return !rowTerms(row).some(function (term) {
-				return termSlug(term) === activeSlug;
-			});
-		});
+		var matches = canonical.filter(function (row) { return rowCites(row, activeTerm); });
+		var misses = canonical.filter(function (row) { return !rowCites(row, activeTerm); });
+		return {
+			ordered: matches.concat(misses),
+			matchCount: matches.length,
+			dividerIndex: misses.length ? matches.length : -1
+		};
 	}
 
 	function formatReadout(activeTerm, count) {
@@ -128,7 +156,7 @@
 			return IDLE_READOUT;
 		}
 
-		return activeTerm + ' — ' + count + ' ' + (count === 1 ? 'row above matches' : 'rows above match') + '; the rest are dimmed.';
+		return activeTerm + ' — ' + count + ' ' + (count === 1 ? 'row cites it' : 'rows cite it') + ', pulled to the top of each ledger.';
 	}
 
 	function createButton(label, className) {
@@ -137,6 +165,113 @@
 		button.className = className;
 		button.textContent = label;
 		return button;
+	}
+
+	function createLedgerDivider() {
+		var divider = document.createElement('div');
+		var label = document.createElement('p');
+		var rule = document.createElement('span');
+		divider.className = 'hp-about-ledger__divider';
+		divider.hidden = true;
+		divider.setAttribute('data-hp-about-generated', 'divider');
+		label.className = 'hp-about-ledger__divider-label';
+		label.textContent = 'Not cited';
+		rule.setAttribute('aria-hidden', 'true');
+		divider.appendChild(label);
+		divider.appendChild(rule);
+		return divider;
+	}
+
+	function createCitationChip() {
+		var chip = document.createElement('span');
+		chip.className = 'hp-about-citation-chip';
+		chip.hidden = true;
+		chip.setAttribute('data-hp-about-generated', 'citation');
+		chip.textContent = 'cites selected term';
+		return chip;
+	}
+
+	function resetStaleEnhancement(rootElement) {
+		var skillSection = rootElement.querySelector('#skills');
+		var skillIndex = rootElement.querySelector('.hp-about-skill-index');
+		var education = skillSection ? skillSection.querySelector('.hp-about-education') : null;
+		if (skillSection && skillIndex && skillIndex.parentNode !== skillSection) {
+			skillSection.insertBefore(skillIndex, education || null);
+		}
+
+		Array.prototype.forEach.call(rootElement.querySelectorAll('button.hp-about-skill-term__button'), function (button) {
+			var span = document.createElement('span');
+			span.className = button.className.split(/\s+/).filter(function (className) {
+				return className && className !== 'hp-about-skill-term__button' && className !== 'is-unbacked';
+			}).join(' ');
+			span.textContent = button.textContent;
+			button.replaceWith(span);
+		});
+
+		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-skill-term.is-unbacked'), function (term) {
+			term.classList.remove('is-unbacked');
+			term.removeAttribute('aria-disabled');
+		});
+		Array.prototype.forEach.call(rootElement.querySelectorAll('[data-hp-about-generated], .hp-about-skills__clear, .hp-about-earlier__toggle, .hp-about-copy, .hp-about-copy__status'), function (generated) {
+			generated.remove();
+		});
+		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-ledger'), function (ledger) {
+			var rows = Array.prototype.slice.call(ledger.querySelectorAll('.hp-about-index-row'));
+			if (rows.length && rows.every(function (row) { return row.hasAttribute('data-hp-about-order'); })) {
+				rows.sort(function (a, b) {
+					return Number(a.getAttribute('data-hp-about-order')) - Number(b.getAttribute('data-hp-about-order'));
+				}).forEach(function (row) { ledger.appendChild(row); });
+			}
+			rows.forEach(function (row) {
+				row.classList.remove('is-cited', 'is-dimmed');
+				row.removeAttribute('data-hp-about-order');
+				row.style.removeProperty('transform');
+				row.style.removeProperty('transition');
+			});
+		});
+
+		var earlier = rootElement.querySelector('.hp-about-earlier');
+		if (earlier) {
+			earlier.hidden = false;
+			if (earlier.id === 'hp-about-earlier-roles') {
+				earlier.removeAttribute('id');
+			}
+		}
+		var readout = rootElement.querySelector('.hp-about-skills__readout');
+		if (readout) {
+			readout.textContent = IDLE_READOUT;
+			readout.removeAttribute('aria-live');
+		}
+		var heading = skillSection ? skillSection.querySelector('.hp-about-skills__heading') : null;
+		var eyebrow = skillSection ? skillSection.querySelector('.hp-about-skills__eyebrow') : null;
+		var intro = skillSection ? skillSection.querySelector('.hp-about-skills__intro') : null;
+		var educationHeading = skillSection ? skillSection.querySelector('.hp-about-education > h3') : null;
+		var navSkillsLink = rootElement.querySelector('.hp-about-nav__list a[href="#skills"]');
+		if (heading) { heading.textContent = 'Skills index'; }
+		if (eyebrow) { eyebrow.textContent = 'Capabilities'; }
+		if (intro) {
+			intro.textContent = 'Every term is a filter into the record above. Pick one and its evidence travels to the top of each ledger; the rest keep their place below a stated line. Faded terms have nothing on this page behind them yet.';
+		}
+		if (educationHeading) { educationHeading.hidden = false; }
+		if (navSkillsLink) { navSkillsLink.textContent = 'Skills'; }
+		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-nav__list a'), function (link) {
+			link.classList.remove('is-active');
+			link.removeAttribute('aria-current');
+		});
+
+		if (document.createTreeWalker && typeof NodeFilter !== 'undefined') {
+			var comments = [];
+			var walker = document.createTreeWalker(rootElement, NodeFilter.SHOW_COMMENT);
+			for (var comment = walker.nextNode(); comment; comment = walker.nextNode()) {
+				if (comment.data === 'hp-about-skill-index-home') {
+					comments.push(comment);
+				}
+			}
+			comments.forEach(function (comment) { comment.remove(); });
+		}
+		rootElement.classList.remove('is-enhanced', 'is-print-mode');
+		document.documentElement.classList.remove('has-about-v3');
+		document.documentElement.style.removeProperty('--hp-about-header-height');
 	}
 
 	function copyText(text) {
@@ -165,117 +300,276 @@
 	}
 
 	function mount(rootElement) {
-		if (!rootElement || (mountedRoots && mountedRoots.has(rootElement))) {
-			return mountedRoots ? mountedRoots.get(rootElement) : null;
+		if (!rootElement || !rootElement.classList.contains('hp-about-resume-v3')) {
+			return null;
 		}
+		if (mountedRoots && mountedRoots.has(rootElement)) {
+			return mountedRoots.get(rootElement);
+		}
+		resetStaleEnhancement(rootElement);
 
+		var ledgers = Array.prototype.slice.call(rootElement.querySelectorAll('.hp-about-ledger'));
+		ledgers.forEach(function (ledger) {
+			if (!ledger.querySelector('.hp-about-ledger__divider')) {
+				ledger.insertBefore(createLedgerDivider(), ledger.firstChild);
+			}
+		});
 		var rows = Array.prototype.slice.call(rootElement.querySelectorAll('.hp-about-index-row'));
-		var skillTerms = Array.prototype.slice.call(rootElement.querySelectorAll('.hp-about-skill-term'));
-		var activeTerm = null;
-		var printMode = false;
-		var earlier = rootElement.querySelector('.hp-about-earlier');
-		var earlierToggle = null;
-		var readout = document.createElement('p');
-		var clearButton = createButton('Clear filter', 'hp-about-skills__clear');
-		var controls = document.createElement('div');
-		var termButtons = [];
-
-		readout.className = 'hp-about-skills__readout';
-		readout.setAttribute('role', 'status');
-		readout.setAttribute('aria-live', 'polite');
-		readout.textContent = IDLE_READOUT;
-		controls.className = 'hp-about-skills__controls';
-		controls.appendChild(readout);
-		controls.appendChild(clearButton);
-		clearButton.hidden = true;
-
-		var skillGroups = rootElement.querySelector('.hp-about-skill-groups');
-		if (skillGroups) {
-			skillGroups.parentNode.insertBefore(controls, skillGroups);
-		}
-
-		function rowHasSlug(row, slug) {
-			return row.classList.contains('hp-term--' + slug);
-		}
-
-		function countForSlug(slug) {
-			return rows.filter(function (row) { return rowHasSlug(row, slug); }).length;
-		}
-
-		function applyFilter(term, slug) {
-			activeTerm = term || null;
-			rows.forEach(function (row) {
-				row.classList.toggle('is-dimmed', Boolean(slug) && !rowHasSlug(row, slug));
-			});
-			termButtons.forEach(function (entry) {
-				entry.button.setAttribute('aria-pressed', entry.slug === slug ? 'true' : 'false');
-			});
-			readout.textContent = formatReadout(activeTerm, slug ? countForSlug(slug) : 0);
-			clearButton.hidden = !activeTerm;
-		}
-
-		skillTerms.forEach(function (termElement) {
-			var labelElement = termElement.querySelector('.hp-about-skill-term__label');
-			var countElement = termElement.querySelector('.hp-about-skill-term__count');
-			var label = labelElement ? labelElement.textContent.trim() : '';
-			var slugClass = Array.prototype.find.call(termElement.classList, function (className) {
-				return className.indexOf('hp-term--') === 0;
-			});
-			var slug = slugClass ? slugClass.slice('hp-term--'.length) : termSlug(label);
-			var count = countForSlug(slug);
-			var backed = count > 0;
-
-			if (countElement) {
-				countElement.textContent = backed ? String(count) : UNBACKED_COUNT;
-			}
-
-			if (!labelElement || !label) {
-				return;
-			}
-
-			termElement.classList.toggle('is-unbacked', !backed);
-
-			// Nothing above backs this term, so it stays a statement rather than
-			// becoming a control: no button, no hover, no click, an em-dash count.
-			if (!backed) {
-				return;
-			}
-
-			var button = createButton(label, 'hp-about-skill-term__button');
-			button.setAttribute('aria-pressed', 'false');
-			button.setAttribute('aria-label', label + ', ' + count + ' matching ' + (count === 1 ? 'row' : 'rows'));
-			labelElement.textContent = '';
-			labelElement.appendChild(button);
-			termButtons.push({ button: button, label: label, slug: slug });
-
-			button.addEventListener('click', function () {
-				applyFilter(activeTerm === label ? null : label, activeTerm === label ? null : slug);
+		ledgers.forEach(function (ledger) {
+			Array.prototype.forEach.call(ledger.querySelectorAll('.hp-about-index-row'), function (row, index) {
+				row.setAttribute('data-hp-about-order', String(index));
 			});
 		});
-
-		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-skill-group'), function (group) {
-			var terms = Array.prototype.slice.call(group.querySelectorAll('.hp-about-skill-term'));
-			var coverage = group.querySelector('.hp-about-skill-group__coverage');
-			var backed = terms.filter(function (term) { return !term.classList.contains('is-unbacked'); }).length;
-			if (coverage) {
-				coverage.textContent = backed + '/' + terms.length + ' backed above';
+		rows.forEach(function (row) {
+			var chipHost = row.querySelector('.hp-about-contribution__register, .hp-about-role__meta');
+			if (chipHost && !chipHost.querySelector('.hp-about-citation-chip')) {
+				chipHost.appendChild(createCitationChip());
 			}
+		});
+		var canonicalByLedger = ledgers.map(function (ledger) {
+			return {
+				ledger: ledger,
+				divider: ledger.querySelector('.hp-about-ledger__divider'),
+				rows: Array.prototype.slice.call(ledger.querySelectorAll('.hp-about-index-row'))
+			};
+		});
+		var activeTerm = null;
+		var termButtons = [];
+		var unbackedTerms = [];
+		var generatedControls = [];
+		var copyStates = [];
+		var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+		var skillIndex = rootElement.querySelector('.hp-about-skill-index');
+		var skillSection = rootElement.querySelector('#skills');
+		var skillIndexHome = skillIndex ? document.createComment('hp-about-skill-index-home') : null;
+		var railHost = rootElement.querySelector('.hp-about-rail__index-host');
+		var wideQuery = window.matchMedia('(min-width: 64rem)');
+		var readout = rootElement.querySelector('.hp-about-skills__readout');
+		var controls = rootElement.querySelector('.hp-about-skills__controls');
+		var clearButton = createButton('Clear filter', 'hp-about-skills__clear');
+		var earlier = rootElement.querySelector('.hp-about-earlier');
+		var earlierOriginalId = earlier ? earlier.getAttribute('id') : null;
+		var earlierToggle = null;
+		var printLink = rootElement.querySelector('.hp-about-print-control a');
+		var navSkillsLink = rootElement.querySelector('.hp-about-nav__list a[href="#skills"]');
+		var heading = skillSection ? skillSection.querySelector('.hp-about-skills__heading') : null;
+		var eyebrow = skillSection ? skillSection.querySelector('.hp-about-skills__eyebrow') : null;
+		var intro = skillSection ? skillSection.querySelector('.hp-about-skills__intro') : null;
+		var educationHeading = skillSection ? skillSection.querySelector('.hp-about-education > h3') : null;
+		var readoutOriginalText = readout ? readout.textContent : '';
+		var readoutHadAriaLive = readout ? readout.hasAttribute('aria-live') : false;
+		var flipTimer = null;
+		var mediaListenerBound = false;
+		var sectionObserver = null;
+
+		rootElement.classList.add('is-enhanced');
+		document.documentElement.classList.add('has-about-v3');
+
+		if (skillIndex && skillIndex.parentNode) {
+			skillIndex.parentNode.insertBefore(skillIndexHome, skillIndex);
+		}
+
+		if (readout) {
+			readout.setAttribute('aria-live', 'polite');
+		}
+		if (controls) {
+			clearButton.hidden = true;
+			clearButton.setAttribute('data-hp-about-generated', 'clear-filter');
+			controls.appendChild(clearButton);
+			generatedControls.push(clearButton);
+		}
+
+		function countFor(term) {
+			return rows.filter(function (row) { return rowCites(row, term); }).length;
+		}
+
+		function capturePositions() {
+			var positions = new Map();
+			if (reduceMotion.matches) {
+				return positions;
+			}
+			rows.forEach(function (row) {
+				positions.set(row, row.getBoundingClientRect());
+			});
+			return positions;
+		}
+
+		function playFlip(positions) {
+			if (reduceMotion.matches || !positions.size) {
+				return;
+			}
+			window.clearTimeout(flipTimer);
+			rows.forEach(function (row) {
+				var before = positions.get(row);
+				var after = row.getBoundingClientRect();
+				var deltaY = before ? before.top - after.top : 0;
+				if (!deltaY) {
+					return;
+				}
+				row.style.transition = 'transform 0s';
+				row.style.transform = 'translateY(' + deltaY + 'px)';
+			});
+			window.requestAnimationFrame(function () {
+				rows.forEach(function (row) {
+					row.style.transition = 'transform 460ms cubic-bezier(.22, .61, .36, 1)';
+					row.style.transform = '';
+				});
+				flipTimer = window.setTimeout(function () {
+					rows.forEach(function (row) {
+						row.style.removeProperty('transition');
+						row.style.removeProperty('transform');
+					});
+				}, 480);
+			});
+		}
+
+		function repaintCitations(term) {
+			rows.forEach(function (row) {
+				var cited = Boolean(term) && rowCites(row, term);
+				var chip = row.querySelector('.hp-about-citation-chip');
+				row.classList.toggle('is-cited', cited);
+				if (chip) {
+					chip.textContent = cited ? 'cites ' + term : 'cites selected term';
+					chip.hidden = !cited;
+				}
+			});
+		}
+
+		function restoreCanonicalOrder() {
+			canonicalByLedger.forEach(function (record) {
+				if (record.divider) {
+					record.divider.hidden = true;
+					record.ledger.insertBefore(record.divider, record.ledger.firstChild);
+				}
+				record.rows.forEach(function (row) {
+					record.ledger.appendChild(row);
+				});
+			});
+		}
+
+		function reorderLedgers(term) {
+			if (!term) {
+				restoreCanonicalOrder();
+				return;
+			}
+
+			canonicalByLedger.forEach(function (record) {
+				var partition = partitionEvidenceRows(record.rows, term);
+				partition.ordered.forEach(function (row, index) {
+					if (record.divider && index === partition.dividerIndex) {
+						record.divider.querySelector('.hp-about-ledger__divider-label').textContent = 'Not cited by ' + term;
+						record.divider.hidden = false;
+						record.ledger.appendChild(record.divider);
+					}
+					record.ledger.appendChild(row);
+				});
+				if (record.divider && partition.dividerIndex < 0) {
+					record.divider.hidden = true;
+				}
+			});
+		}
+
+		function applyFilter(term) {
+			var nextTerm = term && term === activeTerm ? null : term;
+			var positions = capturePositions();
+			activeTerm = nextTerm;
+			reorderLedgers(activeTerm);
+			repaintCitations(activeTerm);
+			applyDimmedRows(rows, activeTerm);
+			termButtons.forEach(function (entry) {
+				entry.button.setAttribute('aria-pressed', entry.label === activeTerm ? 'true' : 'false');
+			});
+			if (readout) {
+				readout.textContent = formatReadout(activeTerm, activeTerm ? countFor(activeTerm) : 0);
+			}
+			clearButton.hidden = !activeTerm;
+			playFlip(positions);
+		}
+
+		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-skill-term'), function (termElement) {
+			var label = termElement.textContent.trim();
+			var count = countFor(label);
+			if (!count) {
+				termElement.classList.add('is-unbacked');
+				termElement.setAttribute('aria-disabled', 'true');
+				unbackedTerms.push(termElement);
+				return;
+			}
+
+			var button = createButton(label, termElement.className + ' hp-about-skill-term__button');
+			button.setAttribute('aria-pressed', 'false');
+			button.setAttribute('aria-label', label + ', ' + count + ' cited ' + (count === 1 ? 'row' : 'rows'));
+			termElement.replaceWith( button );
+			termButtons.push({ button: button, label: label, source: termElement });
+			button.addEventListener('click', function () {
+				applyFilter(label);
+			});
 		});
 
 		clearButton.addEventListener('click', function () {
-			applyFilter(null, null);
+			applyFilter(null);
 			if (termButtons[0]) {
 				termButtons[0].button.focus();
 			}
 		});
 
+		function moveSkillIndex(event) {
+			var isWide = typeof event.matches === 'boolean' ? event.matches : wideQuery.matches;
+			if (isWide && skillIndex && railHost) {
+				railHost.appendChild( skillIndex );
+				if (heading) {
+					heading.textContent = 'Education';
+				}
+				if (eyebrow) {
+					eyebrow.textContent = 'Credentials';
+				}
+				if (intro) {
+					intro.textContent = 'The capability index is the filter rail on the left — pick a term there and its evidence travels to the top of the record.';
+				}
+				if (navSkillsLink) {
+					navSkillsLink.textContent = 'Education';
+				}
+				if (educationHeading) {
+					educationHeading.hidden = true;
+				}
+			} else if (skillIndex && skillIndexHome && skillIndexHome.parentNode) {
+				skillIndexHome.parentNode.insertBefore(skillIndex, skillIndexHome.nextSibling);
+				if (heading) {
+					heading.textContent = 'Skills index';
+				}
+				if (eyebrow) {
+					eyebrow.textContent = 'Capabilities';
+				}
+				if (intro) {
+					intro.textContent = 'Every term is a filter into the record above. Pick one and its evidence travels to the top of each ledger; the rest keep their place below a stated line. Faded terms have nothing on this page behind them yet.';
+				}
+				if (navSkillsLink) {
+					navSkillsLink.textContent = 'Skills';
+				}
+				if (educationHeading) {
+					educationHeading.hidden = false;
+				}
+			}
+		}
+
+		moveSkillIndex(wideQuery);
+		if (wideQuery.addEventListener) {
+			wideQuery.addEventListener('change', moveSkillIndex);
+			mediaListenerBound = true;
+		} else {
+			wideQuery.addListener(moveSkillIndex);
+			mediaListenerBound = true;
+		}
+
 		if (earlier) {
 			earlier.id = earlier.id || 'hp-about-earlier-roles';
-			earlier.hidden = true;
 			earlierToggle = createButton('Show 3 earlier roles', 'hp-about-earlier__toggle');
+			earlierToggle.setAttribute('data-hp-about-generated', 'earlier-toggle');
 			earlierToggle.setAttribute('aria-controls', earlier.id);
 			earlierToggle.setAttribute('aria-expanded', 'false');
 			earlier.parentNode.insertBefore(earlierToggle, earlier);
+			generatedControls.push(earlierToggle);
+			earlier.hidden = true;
 			earlierToggle.addEventListener('click', function () {
 				var expanded = earlierToggle.getAttribute('aria-expanded') === 'true';
 				earlierToggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
@@ -286,75 +580,71 @@
 
 		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-contact__email'), function (emailLink) {
 			var copyButton = createButton('Copy', 'hp-about-copy');
+			var status = document.createElement('span');
+			var copyState = { button: copyButton, status: status, statusTimer: null };
 			copyButton.setAttribute('aria-label', 'Copy email address');
+			copyButton.setAttribute('data-hp-about-generated', 'copy');
+			status.className = 'hp-about-copy__status';
+			status.setAttribute('role', 'status');
+			status.setAttribute('data-hp-about-generated', 'copy-status');
+			status.hidden = true;
 			emailLink.insertAdjacentElement('afterend', copyButton);
+			copyButton.insertAdjacentElement('afterend', status);
+			generatedControls.push(copyButton, status);
+			copyStates.push(copyState);
 			copyButton.addEventListener('click', function () {
 				copyText(emailLink.textContent.trim()).then(function () {
-					copyButton.textContent = 'Copied';
-					window.setTimeout(function () { copyButton.textContent = 'Copy'; }, 1800);
+					status.textContent = 'Copied';
+					status.hidden = false;
+					window.clearTimeout(copyState.statusTimer);
+					copyState.statusTimer = window.setTimeout(function () {
+						status.hidden = true;
+						status.textContent = '';
+					}, 1800);
 				}).catch(function () {
-					copyButton.textContent = 'Copy failed';
-					window.setTimeout(function () { copyButton.textContent = 'Copy'; }, 1800);
+					status.textContent = 'Copy failed';
+					status.hidden = false;
 				});
 			});
 		});
 
-		var rail = rootElement.querySelector('.hp-about-rail');
-		var printControls = null;
-
-		function exitPrintMode() {
-			printMode = false;
-			rootElement.classList.remove('is-print-mode');
-			if (printControls) {
-				printControls.classList.remove('is-ready');
+		function preparePrint() {
+			applyFilter(null);
+			restoreCanonicalOrder();
+			moveSkillIndex({ matches: false });
+			rootElement.classList.add('is-print-mode');
+			if (earlier) {
+				earlier.hidden = false;
 			}
+		}
+
+		function finishPrint() {
+			rootElement.classList.remove('is-print-mode');
+			moveSkillIndex(wideQuery);
 			if (earlier && earlierToggle) {
 				earlier.hidden = earlierToggle.getAttribute('aria-expanded') !== 'true';
 			}
 		}
 
-		function enterPrintMode() {
-			printMode = true;
-			applyFilter(null, null);
-			rootElement.classList.add('is-print-mode');
-			if (earlier) {
-				earlier.hidden = false;
-			}
-			if (printControls) {
-				printControls.classList.add('is-ready');
-			}
+		function handlePrintClick(event) {
+			event.preventDefault();
+			preparePrint();
+			window.print();
 		}
 
-		if (rail) {
-			printControls = document.createElement('div');
-			printControls.className = 'hp-about-print';
-			var preparePrint = createButton('Print', 'hp-about-print__prepare');
-			var printButton = createButton('Print / Save PDF', 'hp-about-print__submit');
-			var exitButton = createButton('Exit print view', 'hp-about-print__exit');
-			printControls.appendChild(preparePrint);
-			printControls.appendChild(printButton);
-			printControls.appendChild(exitButton);
-			rail.appendChild(printControls);
-			preparePrint.addEventListener('click', enterPrintMode);
-			printButton.addEventListener('click', function () {
-				enterPrintMode();
-				window.print();
-			});
-			exitButton.addEventListener('click', exitPrintMode);
-			window.addEventListener('afterprint', function () {
-				if (printMode) {
-					exitPrintMode();
-				}
-			});
+		if (printLink) {
+			printLink.addEventListener('click', handlePrintClick);
 		}
+		window.addEventListener('beforeprint', preparePrint);
+		window.addEventListener('afterprint', finishPrint);
 
-		var links = rail ? Array.prototype.slice.call(rail.querySelectorAll('a[href^="#"]')) : [];
+		var nav = rootElement.querySelector('.hp-about-nav');
+		var links = nav ? Array.prototype.slice.call(nav.querySelectorAll('.hp-about-nav__list a[href^="#"]')) : [];
 		var sections = links.map(function (link) {
-			return document.getElementById(link.getAttribute('href').slice(1));
+			return rootElement.querySelector(link.getAttribute('href'));
 		}).filter(Boolean);
-
 		if ('IntersectionObserver' in window && sections.length) {
-			var sectionObserver = new IntersectionObserver(function (entries) {
+			sectionObserver = new IntersectionObserver(function (entries) {
 				var visible = entries.filter(function (entry) { return entry.isIntersecting; }).sort(function (a, b) {
 					return a.boundingClientRect.top - b.boundingClientRect.top;
 				});
@@ -370,19 +660,100 @@
 						link.removeAttribute('aria-current');
 					}
 				});
-			}, { rootMargin: '-20% 0px -65% 0px', threshold: [0, 0.01] });
+			}, { rootMargin: '-25% 0px -55% 0px', threshold: 0 });
 			sections.forEach(function (section) { sectionObserver.observe(section); });
+		}
+
+		function dispose() {
+			if (state.disposed) {
+				return;
+			}
+			state.disposed = true;
+			window.clearTimeout(flipTimer);
+			if (mediaListenerBound) {
+				if (wideQuery.removeEventListener) {
+					wideQuery.removeEventListener('change', moveSkillIndex);
+				} else {
+					wideQuery.removeListener(moveSkillIndex);
+				}
+			}
+			if (printLink) {
+				printLink.removeEventListener('click', handlePrintClick);
+			}
+			window.removeEventListener('beforeprint', preparePrint);
+			window.removeEventListener('afterprint', finishPrint);
+			if (sectionObserver) {
+				sectionObserver.disconnect();
+			}
+			activeTerm = null;
+			restoreCanonicalOrder();
+			rows.forEach(function (row) { row.removeAttribute('data-hp-about-order'); });
+			repaintCitations(null);
+			applyDimmedRows(rows, null);
+			moveSkillIndex({ matches: false });
+			termButtons.forEach(function (entry) {
+				if (entry.button.parentNode) {
+					entry.button.replaceWith(entry.source);
+				}
+			});
+			unbackedTerms.forEach(function (term) {
+				term.classList.remove('is-unbacked');
+				term.removeAttribute('aria-disabled');
+			});
+			copyStates.forEach(function (copyState) {
+				window.clearTimeout(copyState.statusTimer);
+			});
+			generatedControls.forEach(function (control) {
+				if (control.parentNode) {
+					control.remove();
+				}
+			});
+			Array.prototype.forEach.call(rootElement.querySelectorAll('[data-hp-about-generated="divider"], [data-hp-about-generated="citation"]'), function (generated) {
+				generated.remove();
+			});
+			if (skillIndexHome && skillIndexHome.parentNode) {
+				skillIndexHome.remove();
+			}
+			if (earlier) {
+				earlier.hidden = false;
+				if (earlierOriginalId === null) {
+					earlier.removeAttribute('id');
+				} else {
+					earlier.setAttribute('id', earlierOriginalId);
+				}
+			}
+			if (readout) {
+				readout.textContent = readoutOriginalText;
+				if (!readoutHadAriaLive) {
+					readout.removeAttribute('aria-live');
+				}
+			}
+			links.forEach(function (link) {
+				link.classList.remove('is-active');
+				link.removeAttribute('aria-current');
+			});
+			rootElement.classList.remove('is-enhanced', 'is-print-mode');
+			document.documentElement.classList.remove('has-about-v3');
+			document.documentElement.style.removeProperty('--hp-about-header-height');
+			if (mountedRoots) {
+				mountedRoots.delete(rootElement);
+			}
+			if (activeState === state) {
+				activeState = null;
+			}
 		}
 
 		var state = {
 			applyFilter: applyFilter,
-			enterPrintMode: enterPrintMode,
-			exitPrintMode: exitPrintMode
+			dispose: dispose,
+			disposed: false,
+			restoreCanonicalOrder: restoreCanonicalOrder,
+			root: rootElement
 		};
 		if (mountedRoots) {
 			mountedRoots.set(rootElement, state);
 		}
-
+		activeState = state;
 		return state;
 	}
 
@@ -398,11 +769,26 @@
 			return;
 		}
 
-		Array.prototype.forEach.call(document.querySelectorAll('.hp-about-resume'), mount);
-		var header = updateHeaderHeight();
-		if (header && 'ResizeObserver' in window && !header.__hpAboutResizeObserver) {
-			header.__hpAboutResizeObserver = new ResizeObserver(updateHeaderHeight);
-			header.__hpAboutResizeObserver.observe(header);
+		var rootElement = document.querySelector('.hp-about-resume-v3');
+		if (activeState && (!rootElement || activeState.root !== rootElement)) {
+			activeState.dispose();
+		}
+		if (rootElement) {
+			activeState = mount(rootElement);
+		} else {
+			document.documentElement.classList.remove('has-about-v3');
+			document.documentElement.style.removeProperty('--hp-about-header-height');
+		}
+
+		var header = rootElement ? updateHeaderHeight() : null;
+		if (header !== observedHeader && headerResizeObserver) {
+			headerResizeObserver.disconnect();
+			headerResizeObserver = null;
+		}
+		observedHeader = header;
+		if (header && 'ResizeObserver' in window && !headerResizeObserver) {
+			headerResizeObserver = new ResizeObserver(updateHeaderHeight);
+			headerResizeObserver.observe(header);
 		}
 	}
 
@@ -452,10 +838,12 @@
 	return {
 		IDLE_READOUT: IDLE_READOUT,
 		UNBACKED_COUNT: UNBACKED_COUNT,
+		applyDimmedRows: applyDimmedRows,
 		buildIndex: buildIndex,
 		deriveDimmedRows: deriveDimmedRows,
 		formatReadout: formatReadout,
 		mount: mount,
+		partitionEvidenceRows: partitionEvidenceRows,
 		settle: settle,
 		termSlug: termSlug
 	};

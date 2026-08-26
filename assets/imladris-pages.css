@@ -5404,3 +5404,1243 @@ p.hp-contact-form__hint {
 		grid-row: 1 / span 2;
 	}
 }
+
+/* About v3: evidence-first resume ledger. Candidate-only until separately promoted. */
+.hp-about-template__content:has(.hp-about-resume-v3) {
+	padding-inline: 0;
+}
+
+.hp-about-template__content:has(.hp-about-resume-v3) > .wp-block-post-content {
+	width: 100% !important;
+	max-width: none !important;
+	margin-inline: 0 !important;
+}
+
+.hp-about-resume-v3 {
+	--hp-about-gutter: clamp(var(--wp--preset--spacing--3), 4vw, var(--wp--preset--spacing--6));
+	--hp-rule-evidence: 5px;
+	width: 100% !important;
+	max-width: var(--wp--custom--container--wide) !important;
+	margin-inline: auto !important;
+	padding-inline: 0 !important;
+	color: var(--wp--custom--text--body);
+	box-sizing: border-box;
+}
+
+.hp-about-resume-v3,
+.hp-about-resume-v3 * {
+	box-sizing: border-box;
+}
+
+.hp-about-resume-v3 ::selection {
+	color: var(--wp--custom--text--strong);
+	background: var(--wp--preset--color--gold-200);
+}
+
+.hp-about-resume-v3 a,
+.hp-about-resume-v3 button {
+	text-underline-offset: 3px;
+}
+
+.hp-about-resume-v3 a:focus-visible,
+.hp-about-resume-v3 button:focus-visible {
+	outline: 3px solid var(--wp--preset--color--gold-700);
+	outline-offset: 2px;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero {
+	padding-block-start: var(--wp--preset--spacing--7);
+	padding-inline: var(--hp-about-gutter);
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__identity {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__portrait-wrap {
+	position: relative;
+	flex: 0 0 auto;
+	display: grid;
+	place-items: center;
+	width: clamp(4rem, 17vw, 5rem);
+	height: clamp(4rem, 17vw, 5rem);
+	overflow: hidden;
+	border: 3px solid var(--wp--preset--color--gold-400);
+	border-radius: var(--wp--custom--radius--pill);
+	background: var(--wp--custom--brand--subtle);
+	box-shadow: var(--wp--custom--shadow--md);
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__fallback,
+.hp-about-resume-v3 .hp-about-v3-hero__portrait {
+	grid-area: 1 / 1;
+	margin: 0;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__fallback {
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--xl);
+	letter-spacing: 0.08em;
+	color: var(--wp--preset--color--green-500);
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__portrait,
+.hp-about-resume-v3 .hp-about-v3-hero__portrait img {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__portrait img {
+	object-fit: cover;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__nameplate {
+	flex: 1 1 12rem;
+	min-width: 0;
+}
+
+.hp-about-resume-v3 .hp-about-kicker,
+.hp-about-resume-v3 .hp-about-section__eyebrow,
+.hp-about-resume-v3 .hp-about-credential__eyebrow,
+.hp-about-resume-v3 .hp-about-wcus__label {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	font-weight: 700;
+	line-height: 1.4;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--gold-700);
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero h1 {
+	margin: 6px 0 0;
+	font-family: var(--wp--preset--font-family--display);
+	font-size: var(--wp--preset--font-size--4-xl);
+	font-weight: 500;
+	line-height: 1.05;
+	letter-spacing: -0.015em;
+	color: var(--wp--custom--text--strong);
+	text-wrap: balance;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__location {
+	margin: 6px 0 0;
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--sm);
+	letter-spacing: var(--wp--custom--tracking--wide);
+	color: var(--wp--custom--text--accent);
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__positioning {
+	max-width: 52ch;
+	margin: var(--wp--preset--spacing--5) 0 0;
+	font-family: var(--wp--preset--font-family--body);
+	font-size: var(--wp--preset--font-size--lg);
+	line-height: 1.6;
+	color: var(--wp--custom--text--body);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__availability {
+	max-width: 52ch;
+	margin: var(--wp--preset--spacing--4) 0 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+	line-height: 1.7;
+	color: var(--wp--custom--text--muted);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__links {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--5);
+	margin: var(--wp--preset--spacing--4) 0 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__links a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	overflow-wrap: anywhere;
+	color: var(--wp--custom--artifact-link);
+	text-decoration-thickness: 1px;
+	text-decoration-color: color-mix(in srgb, var(--wp--custom--artifact-link) 35%, transparent);
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__links a:hover {
+	text-decoration-color: currentcolor;
+}
+
+.hp-about-resume-v3 .hp-about-copy {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 44px;
+	min-height: 44px;
+	padding-inline: var(--wp--preset--spacing--3);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--sm);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	line-height: 1.4;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--wp--custom--text--faint);
+	background: var(--wp--custom--surface--card);
+	cursor: pointer;
+}
+
+.hp-about-resume-v3 .hp-about-copy:hover {
+	border-color: var(--wp--preset--color--gold-600);
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-about-resume-v3 .hp-about-copy__status {
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--wp--preset--color--green-700);
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__cta {
+	margin-block-start: var(--wp--preset--spacing--3);
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__proof {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--wp--preset--spacing--4);
+	margin-block-start: var(--wp--preset--spacing--6);
+}
+
+.hp-about-resume-v3 .hp-about-credential,
+.hp-about-resume-v3 .hp-about-wcus {
+	min-width: 0;
+	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--md);
+	background: var(--wp--custom--surface--card);
+	box-shadow: var(--wp--custom--shadow--sm);
+}
+
+.hp-about-resume-v3 .hp-about-credential {
+	border-block-start: 3px solid var(--wp--custom--rule--gold);
+}
+
+.hp-about-resume-v3 .hp-about-wcus {
+	border-inline-start: 3px solid var(--wp--custom--rule--gold);
+	background: color-mix(in srgb, var(--wp--custom--surface--card) 90%, var(--wp--preset--color--gold-100));
+}
+
+.hp-about-resume-v3 .hp-about-credential__title {
+	margin: var(--wp--preset--spacing--2) 0 0;
+	font-family: var(--wp--preset--font-family--display);
+	font-size: var(--wp--preset--font-size--md);
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--wp--custom--text--strong);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-credential__copy,
+.hp-about-resume-v3 .hp-about-wcus__copy {
+	margin: 4px 0 0;
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.55;
+	color: var(--wp--custom--text--muted);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-credential__link {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+}
+
+.hp-about-resume-v3 .hp-about-credential__link a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	color: var(--wp--custom--artifact-link);
+}
+
+.hp-about-resume-v3 .hp-about-impact-strip {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+	gap: 1px;
+	margin-block-start: var(--wp--preset--spacing--5);
+	overflow: hidden;
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--md);
+	background: var(--wp--custom--border--hair);
+}
+
+.hp-about-resume-v3 .hp-about-v3-impact {
+	min-width: 0;
+	margin: 0;
+	background: var(--wp--custom--surface--card);
+}
+
+.hp-about-resume-v3 .hp-about-v3-impact > a {
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--2);
+	min-height: 100%;
+	min-width: 0;
+	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+	border-block-start: 3px solid transparent;
+	color: inherit;
+	text-decoration: none;
+	background: transparent;
+}
+
+.hp-about-resume-v3 .hp-about-v3-impact > a:hover,
+.hp-about-resume-v3 .hp-about-v3-impact > a:focus-visible {
+	border-block-start-color: var(--wp--custom--rule--gold);
+	background: var(--wp--custom--surface--sunken);
+}
+
+.hp-about-resume-v3 .hp-about-v3-impact__metric {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--wp--preset--spacing--2);
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--wp--custom--text--body);
+}
+
+.hp-about-resume-v3 .hp-about-v3-impact__metric strong {
+	font-family: var(--wp--preset--font-family--display);
+	font-size: var(--wp--preset--font-size--lg);
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-about-resume-v3 .hp-about-v3-impact__note {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.5;
+	color: var(--wp--custom--text--muted);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-v3-impact__cue {
+	margin: auto 0 0;
+	padding-block-start: var(--wp--preset--spacing--2);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.hp-about-resume-v3 .hp-about-v3-impact__cue {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	gap: 6px;
+	color: var(--wp--custom--artifact-link);
+}
+
+.hp-about-resume-v3 .hp-about-v3-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--wp--preset--spacing--6) var(--wp--preset--spacing--8);
+	align-items: start;
+	padding-block-start: var(--wp--preset--spacing--6);
+	padding-inline: var(--hp-about-gutter);
+}
+
+.hp-about-resume-v3 .hp-about-nav {
+	position: sticky;
+	top: var(--hp-about-header-height, 0px);
+	z-index: 4;
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: var(--wp--preset--spacing--2);
+	min-width: 0;
+	margin: 0;
+	margin-inline: calc(-1 * var(--hp-about-gutter));
+	padding: var(--wp--preset--spacing--2) var(--hp-about-gutter);
+	overflow-x: auto;
+	scrollbar-color: var(--wp--preset--color--gold-600) transparent;
+	border: 0;
+	border-radius: 0;
+	background: color-mix(in srgb, var(--wp--custom--surface--page) 92%, transparent);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
+	border-block-end: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-about-resume-v3 .hp-about-nav::-webkit-scrollbar {
+	height: 6px;
+}
+
+.hp-about-resume-v3 .hp-about-nav::-webkit-scrollbar-thumb {
+	background: var(--wp--preset--color--gold-600);
+	border-radius: var(--wp--custom--radius--pill);
+}
+
+.hp-about-resume-v3 .hp-about-nav__label {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+.hp-about-resume-v3 .hp-about-nav__list {
+	display: flex;
+	flex: 0 0 auto;
+	gap: var(--wp--preset--spacing--2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.hp-about-resume-v3 .hp-about-nav__list li {
+	margin: 0;
+}
+
+.hp-about-resume-v3 .hp-about-nav__list a,
+.hp-about-resume-v3 .hp-about-print-control a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding-inline: var(--wp--preset--spacing--4);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--pill);
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	text-decoration: none;
+	color: var(--wp--custom--text--muted);
+	background: transparent;
+}
+
+.hp-about-resume-v3 .hp-about-nav__list a:hover,
+.hp-about-resume-v3 .hp-about-nav__list a.is-active,
+.hp-about-resume-v3 .hp-about-nav__list a[aria-current="location"] {
+	border-color: var(--wp--preset--color--gold-600);
+	color: var(--wp--custom--text--strong);
+	background: var(--wp--custom--surface--card);
+}
+
+.hp-about-resume-v3 .hp-about-print-control {
+	flex: 0 0 auto;
+	margin: 0;
+}
+
+.hp-about-resume-v3 .hp-about-print-control a {
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	color: var(--wp--custom--text--faint);
+}
+
+.hp-about-resume-v3 :is(.hp-about-contribution, .hp-about-role).is-dimmed {
+	opacity: 0.34;
+}
+
+.hp-about-resume-v3 .hp-about-rail__index-host {
+	display: none;
+}
+
+.hp-about-resume-v3 .hp-about-v3-main {
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--7);
+	min-width: 0;
+	padding-inline: 0;
+}
+
+.hp-about-resume-v3 .hp-about-section {
+	min-width: 0;
+	scroll-margin-top: calc(var(--hp-about-header-height, 0px) + 96px);
+	padding-block: 0;
+	border-top: 0;
+}
+
+.hp-about-resume-v3 .hp-about-section h2 {
+	margin: var(--wp--preset--spacing--2) 0;
+	font-family: var(--wp--preset--font-family--display);
+	font-size: var(--wp--preset--font-size--3-xl);
+	font-weight: 500;
+	line-height: 1.2;
+	letter-spacing: -0.01em;
+	color: var(--wp--custom--text--strong);
+	text-wrap: balance;
+}
+
+.hp-about-resume-v3 .hp-about-section__intro {
+	max-width: var(--wp--custom--measure--prose);
+	margin: 0 0 var(--wp--preset--spacing--4);
+	font-size: var(--wp--preset--font-size--md);
+	line-height: 1.65;
+	color: var(--wp--custom--text--muted);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-ledger {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	overflow: hidden;
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--md);
+	background: var(--wp--custom--border--hair);
+}
+
+.hp-about-resume-v3 .hp-about-ledger--experience {
+	gap: 0;
+	overflow: visible;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+}
+
+.hp-about-resume-v3 .hp-about-ledger__divider {
+	display: flex;
+	align-items: center;
+	gap: var(--wp--preset--spacing--3);
+	padding: var(--wp--preset--spacing--3) clamp(var(--wp--preset--spacing--4), 3vw, var(--wp--preset--spacing--5));
+	background: var(--wp--custom--surface--sunken);
+}
+
+.hp-about-resume-v3 .hp-about-ledger__divider[hidden] {
+	display: none;
+}
+
+.hp-about-resume-v3 .hp-about-ledger__divider-label {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	white-space: nowrap;
+	color: var(--wp--custom--text--faint);
+}
+
+.hp-about-resume-v3 .hp-about-ledger__divider > span {
+	flex: 1 1 auto;
+	height: 1px;
+	background: var(--wp--custom--border--hair);
+}
+
+.hp-about-resume-v3 .hp-about-index-row {
+	position: relative;
+	min-width: 0;
+	margin: 0;
+	padding: var(--wp--preset--spacing--4) clamp(var(--wp--preset--spacing--4), 3vw, var(--wp--preset--spacing--5));
+	border-inline-start: var(--hp-rule-evidence) solid var(--wp--custom--status--pending);
+	background: var(--wp--custom--surface--card);
+}
+
+.hp-about-resume-v3 .hp-about-index-row.is-done {
+	border-inline-start-color: var(--wp--custom--status--done);
+}
+
+.hp-about-resume-v3 .hp-about-index-row.is-review {
+	border-inline-start-color: var(--wp--custom--status--review);
+}
+
+.hp-about-resume-v3 .hp-about-index-row.is-cited {
+	background: color-mix(in srgb, var(--wp--preset--color--gold-100) 7%, var(--wp--custom--surface--card));
+}
+
+.hp-about-resume-v3 .hp-about-index-row::after {
+	position: absolute;
+	inset-inline: var(--wp--preset--spacing--4);
+	inset-block-end: 0;
+	height: 2px;
+	content: "";
+	background: var(--wp--custom--rule--gold);
+	transform: scaleX(0);
+	transform-origin: left;
+	transition: transform 300ms var(--wp--custom--ease--calm);
+}
+
+.hp-about-resume-v3 .hp-about-index-row.is-cited::after {
+	transform: scaleX(1);
+	transition-delay: 140ms;
+}
+
+.hp-about-resume-v3 .hp-about-citation-chip {
+	display: inline-flex;
+	align-items: center;
+	min-height: 24px;
+	margin-inline-start: auto;
+	padding-inline: var(--wp--preset--spacing--2);
+	border: 1px solid var(--wp--preset--color--gold-400);
+	border-radius: var(--wp--custom--radius--sm);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	line-height: 1.3;
+	color: var(--wp--preset--color--gold-800);
+	background: var(--wp--preset--color--gold-100);
+	opacity: 0;
+	transition: opacity 180ms var(--wp--custom--ease--calm);
+	transition-delay: 240ms;
+}
+
+.hp-about-resume-v3 .is-cited .hp-about-citation-chip:not([hidden]) {
+	opacity: 1;
+}
+
+.hp-about-resume-v3 .hp-about-contribution__register {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px var(--wp--preset--spacing--4);
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	line-height: 1.45;
+}
+
+.hp-about-resume-v3 .hp-about-contribution__status {
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--wp--custom--on--pending);
+}
+
+.hp-about-resume-v3 .is-done .hp-about-contribution__status {
+	color: var(--wp--custom--on--done);
+}
+
+.hp-about-resume-v3 .is-review .hp-about-contribution__status {
+	color: var(--wp--custom--on--review);
+}
+
+.hp-about-resume-v3 .hp-about-status__glyph {
+	font-variant-numeric: tabular-nums;
+}
+
+.hp-about-resume-v3 .hp-about-contribution__date {
+	color: var(--wp--custom--text--faint);
+}
+
+.hp-about-resume-v3 .hp-about-contribution__repo,
+.hp-about-resume-v3 .hp-about-role__meta {
+	margin: var(--wp--preset--spacing--2) 0 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+	line-height: 1.5;
+	color: var(--wp--custom--text--faint);
+}
+
+.hp-about-resume-v3 .hp-about-role__org {
+	grid-row: auto;
+	margin: 2px 0 0;
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.5;
+	letter-spacing: var(--wp--custom--tracking--wide);
+	color: var(--wp--custom--text--accent);
+}
+
+.hp-about-resume-v3 .hp-about-role.is-current {
+	display: block;
+}
+
+.hp-about-resume-v3 .hp-about-ledger--experience .hp-about-role.is-current {
+	padding: 0 0 var(--wp--preset--spacing--4) var(--wp--preset--spacing--4);
+	border-inline-start: 3px solid var(--wp--custom--border--brand);
+	border-block-end: 1px solid var(--wp--custom--border--hair);
+	background: transparent;
+}
+
+.hp-about-resume-v3 .hp-about-ledger--experience .hp-about-role.is-current + .hp-about-role.is-current {
+	padding-block-start: var(--wp--preset--spacing--4);
+}
+
+.hp-about-resume-v3 .hp-about-contribution h3,
+.hp-about-resume-v3 .hp-about-role h3 {
+	margin: var(--wp--preset--spacing--2) 0 0;
+	font-family: var(--wp--preset--font-family--display);
+	font-size: var(--wp--preset--font-size--lg);
+	font-weight: 600;
+	line-height: 1.25;
+	color: var(--wp--custom--text--strong);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-contribution__summary {
+	max-width: var(--wp--custom--measure--prose);
+	margin: var(--wp--preset--spacing--2) 0 0;
+	font-size: var(--wp--preset--font-size--base);
+	line-height: 1.6;
+	color: var(--wp--custom--text--muted);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-contribution__links,
+.hp-about-resume-v3 .hp-about-showcase-card__link {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 var(--wp--preset--spacing--4);
+	margin: var(--wp--preset--spacing--2) 0 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+}
+
+.hp-about-resume-v3 .hp-about-contribution__links a,
+.hp-about-resume-v3 .hp-about-showcase-card__link a {
+	display: inline-flex;
+	align-items: center;
+	min-width: 44px;
+	min-height: 44px;
+	color: var(--wp--preset--color--river-500);
+}
+
+.hp-about-resume-v3 .hp-about-role__points {
+	margin: var(--wp--preset--spacing--3) 0 0;
+	padding-inline-start: var(--wp--preset--spacing--5);
+	color: var(--wp--custom--text--muted);
+}
+
+.hp-about-resume-v3 .hp-about-role__points li + li {
+	margin-block-start: var(--wp--preset--spacing--2);
+}
+
+.hp-about-resume-v3 .hp-about-earlier {
+	margin-block-start: var(--wp--preset--spacing--5);
+	padding-block-start: var(--wp--preset--spacing--4);
+	border-block-start: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-about-resume-v3 .hp-about-earlier[hidden] {
+	display: none !important;
+}
+
+.hp-about-resume-v3 .hp-about-earlier > h3,
+.hp-about-resume-v3 .hp-about-education > h3 {
+	margin: 0 0 var(--wp--preset--spacing--3);
+	font-family: var(--wp--preset--font-family--display);
+	font-size: var(--wp--preset--font-size--lg);
+	font-weight: 600;
+	line-height: 1.3;
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-about-resume-v3 .hp-about-role.is-earlier {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 2px var(--wp--preset--spacing--5);
+	padding-block: var(--wp--preset--spacing--3);
+	border-block-end: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-about-resume-v3 .hp-about-role.is-earlier h4 {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--display);
+	font-size: var(--wp--preset--font-size--base);
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-about-resume-v3 .hp-about-role.is-earlier p {
+	margin: 0;
+}
+
+.hp-about-resume-v3 .hp-about-earlier__toggle,
+.hp-about-resume-v3 .hp-about-skills__clear {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	margin-block-start: var(--wp--preset--spacing--4);
+	padding-inline: var(--wp--preset--spacing--4);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--md);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--wp--custom--text--body);
+	background: var(--wp--custom--surface--card);
+	cursor: pointer;
+}
+
+.hp-about-resume-v3 .hp-about-earlier__toggle:hover,
+.hp-about-resume-v3 .hp-about-skills__clear:hover {
+	border-color: var(--wp--preset--color--gold-600);
+	color: var(--wp--custom--text--strong);
+}
+
+.hp-about-resume-v3 .hp-about-skills__controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--4);
+	margin-block-end: var(--wp--preset--spacing--5);
+	padding: var(--wp--preset--spacing--3) var(--wp--preset--spacing--4);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-inline-start: 3px solid var(--wp--custom--rule--gold);
+	border-radius: var(--wp--custom--radius--md);
+	background: var(--wp--custom--surface--sunken);
+}
+
+.hp-about-resume-v3 .hp-about-skills__readout {
+	flex: 1 1 16rem;
+	min-width: 0;
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+	line-height: 1.7;
+	color: var(--wp--custom--text--body);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-skills__clear {
+	flex: 0 0 auto;
+	margin: 0;
+}
+
+.hp-about-resume-v3 .hp-about-skill-group {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--5);
+	padding-block-end: var(--wp--preset--spacing--4);
+	border-block-end: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-about-resume-v3 .hp-about-skill-group + .hp-about-skill-group {
+	margin-block-start: var(--wp--preset--spacing--4);
+}
+
+.hp-about-resume-v3 .hp-about-skill-group__label {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+	font-weight: 700;
+	line-height: 1.5;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--wp--custom--text--body);
+	text-wrap: balance;
+}
+
+.hp-about-resume-v3 .hp-about-skill-group__terms {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--2);
+	min-width: 0;
+	margin: 0;
+}
+
+.hp-about-resume-v3 .hp-about-skill-term {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: 10px var(--wp--preset--spacing--3);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--md);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+	line-height: 1.35;
+	color: var(--wp--custom--text--body);
+	background: var(--wp--custom--surface--card);
+}
+
+.hp-about-resume-v3 button.hp-about-skill-term {
+	cursor: pointer;
+}
+
+.hp-about-resume-v3 button.hp-about-skill-term:hover {
+	border-color: var(--wp--preset--color--green-200);
+	color: var(--wp--custom--text--link);
+	background: var(--wp--custom--brand--subtle);
+}
+
+.hp-about-resume-v3 button.hp-about-skill-term[aria-pressed="true"] {
+	border-color: var(--wp--custom--brand--default);
+	color: var(--wp--custom--text--inverse);
+	background: var(--wp--custom--brand--default);
+}
+
+.hp-about-resume-v3 .hp-about-skill-term.is-unbacked {
+	opacity: 0.55;
+	cursor: default;
+}
+
+.hp-about-resume-v3 .hp-about-education {
+	margin-block-start: var(--wp--preset--spacing--6);
+}
+
+.hp-about-resume-v3 .hp-about-education__record {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 2px var(--wp--preset--spacing--5);
+	padding-block: var(--wp--preset--spacing--3);
+	border-block-end: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-about-resume-v3 .hp-about-education__period {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	color: var(--wp--custom--text--body);
+}
+
+.hp-about-resume-v3 .hp-about-education__record h4 {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--display);
+	font-size: var(--wp--preset--font-size--base);
+	font-weight: 600;
+	line-height: 1.35;
+	color: var(--wp--custom--text--strong);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-education__school {
+	margin: 2px 0 0;
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.5;
+	color: var(--wp--custom--text--muted);
+}
+
+.hp-about-resume-v3 .hp-about-showcase {
+	margin-block-start: var(--wp--preset--spacing--8);
+	margin-inline: var(--hp-about-gutter);
+	padding-block-start: var(--wp--preset--spacing--6);
+	border-block-start: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-about-resume-v3 .hp-about-showcase__grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--wp--preset--spacing--4);
+	margin-block-start: var(--wp--preset--spacing--4);
+	border: 0;
+	background: transparent;
+}
+
+.hp-about-resume-v3 .hp-about-showcase-card {
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--2);
+	min-width: 0;
+	min-height: 0;
+	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--md);
+	background: var(--wp--custom--surface--card);
+	box-shadow: var(--wp--custom--shadow--sm);
+}
+
+.hp-about-resume-v3 .hp-about-showcase-card h3 {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--display);
+	font-size: var(--wp--preset--font-size--lg);
+	font-weight: 600;
+	line-height: 1.2;
+	color: var(--wp--custom--text--strong);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-showcase-card__type {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--wp--custom--text--faint);
+}
+
+.hp-about-resume-v3 .hp-about-showcase-card > p:not([class]) {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--base);
+	line-height: 1.6;
+	color: var(--wp--custom--text--muted);
+	text-wrap: pretty;
+}
+
+.hp-about-resume-v3 .hp-about-showcase-card__link {
+	margin-block-start: auto;
+}
+
+.hp-about-resume-v3 .hp-about-contact {
+	margin: var(--wp--preset--spacing--8) var(--hp-about-gutter) var(--wp--preset--spacing--7);
+}
+
+.hp-about-resume-v3 .hp-about-contact h2 {
+	margin-block-start: 0;
+}
+
+/* The legacy About layer gives .hp-about-experience its own wide breakout.
+   V3 breaks out the composition as one unit, so keep this section on its grid
+   track instead of applying the older nested negative margins. */
+.hp-about-resume-v3 .hp-about-experience {
+	width: auto;
+	max-width: 100%;
+	margin-inline: 0 !important;
+}
+
+@media (min-width: 601px) {
+	.hp-about-resume-v3 .hp-about-contact > .hp-action-rail {
+		width: 100%;
+		flex-wrap: nowrap;
+	}
+
+	.hp-about-resume-v3 .hp-about-contact > .hp-action-rail .wp-block-button {
+		flex: 1 1 0;
+		min-width: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-contact > .hp-action-rail .wp-block-button__link {
+		width: 100%;
+		min-width: 0;
+	}
+}
+
+@media (min-width: 40rem) {
+	.hp-about-resume-v3 .hp-about-v3-hero__proof {
+		grid-template-columns: minmax(0, 1.35fr) minmax(14rem, 0.85fr);
+	}
+}
+
+@media (min-width: 64rem) {
+	.hp-about-resume-v3 .hp-about-v3-layout {
+		grid-template-columns: minmax(13rem, 15rem) minmax(0, 1fr);
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase__grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card.is-wide {
+		grid-column: 1 / -1;
+	}
+
+	.hp-about-resume-v3 .hp-about-role.is-earlier,
+	.hp-about-resume-v3 .hp-about-education__record {
+		grid-template-columns: 11rem minmax(0, 1fr);
+	}
+
+	.hp-about-resume-v3 .hp-about-role.is-earlier .hp-about-role__meta,
+	.hp-about-resume-v3 .hp-about-education__school {
+		grid-column: 2;
+	}
+
+	.hp-about-resume-v3 .hp-about-education__period {
+		grid-row: 1 / span 2;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-main {
+		padding-inline: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-nav {
+		position: sticky;
+		top: calc(var(--hp-about-header-height, 0px) + var(--wp--preset--spacing--5));
+		z-index: 2;
+		display: block;
+		align-self: start;
+		max-height: calc(100vh - var(--hp-about-header-height, 0px) - var(--wp--preset--spacing--8));
+		margin: 0;
+		padding: 0;
+		overflow: visible;
+		border: 0;
+		background: transparent;
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__label {
+		position: static;
+		width: auto;
+		height: auto;
+		margin: 0 0 var(--wp--preset--spacing--2);
+		overflow: visible;
+		clip-path: none;
+		font-family: var(--wp--preset--font-family--label);
+		font-size: var(--wp--preset--font-size--2-xs);
+		letter-spacing: var(--wp--custom--tracking--caps);
+		text-transform: uppercase;
+		white-space: normal;
+		color: var(--wp--preset--color--gold-700);
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__list {
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__list a {
+		width: 100%;
+		padding-inline: var(--wp--preset--spacing--3);
+		border-color: transparent;
+		border-inline-start: 2px solid transparent;
+		border-radius: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__list a:hover,
+	.hp-about-resume-v3 .hp-about-nav__list a.is-active,
+	.hp-about-resume-v3 .hp-about-nav__list a[aria-current="location"] {
+		border-color: transparent;
+		border-inline-start-color: var(--wp--preset--color--gold-600);
+		background: var(--wp--custom--surface--sunken);
+	}
+
+	.hp-about-resume-v3 .hp-about-print-control {
+		margin-block-start: var(--wp--preset--spacing--3);
+		margin-inline-start: var(--wp--preset--spacing--3);
+	}
+
+	.hp-about-resume-v3 .hp-about-print-control a {
+		border-radius: var(--wp--custom--radius--md);
+	}
+
+	.hp-about-resume-v3 .hp-about-rail__index-host {
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+		max-height: calc(100vh - var(--hp-about-header-height, 0px) - 22rem);
+		margin-block-start: var(--wp--preset--spacing--4);
+		padding-block-start: var(--wp--preset--spacing--4);
+		overflow-y: auto;
+		scrollbar-color: var(--wp--preset--color--gold-600) transparent;
+		border-block-start: 1px solid var(--wp--custom--border--hair);
+	}
+
+	.hp-about-resume-v3 .hp-about-rail__index-host .hp-about-skills__controls {
+		display: block;
+		margin: 0 0 var(--wp--preset--spacing--3);
+		padding: 0;
+		border: 0;
+		background: transparent;
+	}
+
+	.hp-about-resume-v3 .hp-about-rail__index-host .hp-about-skills__readout {
+		font-size: var(--wp--preset--font-size--2-xs);
+		line-height: 1.6;
+	}
+
+	.hp-about-resume-v3 .hp-about-rail__index-host .hp-about-skills__clear {
+		margin-block-start: var(--wp--preset--spacing--2);
+		padding-inline: var(--wp--preset--spacing--3);
+	}
+
+	.hp-about-resume-v3 .hp-about-rail__index-host .hp-about-skill-group {
+		display: block;
+		padding-block-end: var(--wp--preset--spacing--3);
+		border: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-rail__index-host .hp-about-skill-group + .hp-about-skill-group {
+		margin-block-start: var(--wp--preset--spacing--2);
+	}
+
+	.hp-about-resume-v3 .hp-about-rail__index-host .hp-about-skill-group__label {
+		margin-block-end: 4px;
+		padding-inline-start: var(--wp--preset--spacing--3);
+		font-size: var(--wp--preset--font-size--2-xs);
+		color: var(--wp--custom--text--faint);
+	}
+
+	.hp-about-resume-v3 .hp-about-rail__index-host .hp-about-skill-group__terms {
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+
+	.hp-about-resume-v3 .hp-about-rail__index-host .hp-about-skill-term {
+		width: 100%;
+		min-height: 44px;
+		padding: 6px var(--wp--preset--spacing--3);
+		border-color: transparent;
+		border-inline-start: 2px solid transparent;
+		text-align: start;
+		background: transparent;
+	}
+
+	.hp-about-resume-v3 .hp-about-rail__index-host button.hp-about-skill-term:hover,
+	.hp-about-resume-v3 .hp-about-rail__index-host button.hp-about-skill-term[aria-pressed="true"] {
+		border-inline-start-color: var(--wp--custom--rule--gold);
+		border-block-color: transparent;
+		border-inline-end-color: transparent;
+		color: var(--wp--custom--text--strong);
+		background: var(--wp--custom--surface--sunken);
+	}
+
+	.hp-about-resume-v3 .hp-about-skill-group {
+		grid-template-columns: 11rem minmax(0, 1fr);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hp-about-resume-v3 *,
+	.hp-about-resume-v3 *::before,
+	.hp-about-resume-v3 *::after {
+		scroll-behavior: auto !important;
+		animation-duration: 0.001ms !important;
+		transition-duration: 0.001ms !important;
+		transition-delay: 0ms !important;
+	}
+}
+
+@media print {
+	.hp-about-resume-v3 {
+		max-width: none;
+		color: var(--wp--custom--print--ink);
+		background: var(--wp--custom--print--paper);
+	}
+
+	.hp-about-resume .hp-about-nav,
+	.hp-about-resume .hp-about-showcase,
+	.hp-about-resume .hp-about-contact,
+	.hp-about-resume .hp-about-v3-hero__cta,
+	.hp-about-resume .hp-about-print-control,
+	.hp-about-resume .hp-about-earlier__toggle,
+	.hp-about-resume .hp-about-skills__controls {
+		display: none !important;
+	}
+
+	.hp-about-resume .hp-about-role.is-earlier {
+		display: block !important;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-layout {
+		display: block;
+		padding-inline: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-main,
+	.hp-about-resume-v3 .hp-about-v3-hero {
+		padding-inline: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-index-row,
+	.hp-about-resume-v3 .hp-about-showcase-card {
+		break-inside: avoid;
+		box-shadow: none;
+	}
+
+	body:has(.hp-about-resume-v3) footer,
+	.has-about-v3 footer {
+		display: none !important;
+	}
+}

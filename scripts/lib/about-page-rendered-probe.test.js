@@ -5,8 +5,13 @@ const path = require( 'node:path' );
 const { spawnSync } = require( 'node:child_process' );
 
 const {
+	buildInspectionExpression,
 	deriveRenderedExpectations,
+	navigateDocument,
+	usesWideResumeShowcaseLayout,
 	verifyCardHoverInertia,
+	verifyV3Interactions,
+	verifyV3RouterRoundTrip,
 } = require( '../verify-about-page-rendered' );
 
 const themeRoot = path.join( __dirname, '..', '..' );
@@ -85,15 +90,57 @@ test( 'reports a browser exception from the post-hover evaluation', async () => 
 	);
 } );
 
-test( 'derives rendered copy from the selected About body', () => {
-	const source = fs.readFileSync( acceptedSnapshotPath, 'utf8' );
-	const changed = source
-		.replace( 'WordPress / AI Implementation &amp; Enablement', 'Selected phase heading' )
-		.replace( '>Get in touch<', '>Selected phase action<' );
-	const expectations = deriveRenderedExpectations( changed, { label: 'changed About fixture' } );
+test( 'document navigation reloads an equivalent current path instead of waiting on a same-document navigate', async () => {
+	const calls = [];
+	const cdp = {
+		async once( method ) {
+			calls.push( [ 'once', method ] );
+			return {};
+		},
+		async send( method ) {
+			calls.push( [ 'send', method ] );
+			if (method === 'Runtime.evaluate') {
+				return { result: { value: 'https://example.test/about/?v=cache' } };
+			}
+			return {};
+		},
+	};
 
-	assert.equal( expectations.headings[ 0 ].text, 'Selected phase heading' );
-	assert.equal( expectations.heroActionLabels[ 0 ], 'Selected phase action' );
+	await navigateDocument( cdp, 'session-1', 'https://example.test/about/' );
+	assert.deepEqual( calls.map( ( call ) => call[ 1 ] ), [
+		'Runtime.evaluate',
+		'Page.reload',
+		'Runtime.evaluate',
+	] );
+} );
+
+test( 'document navigation uses Page.navigate when the path changes', async () => {
+	const methods = [];
+	const cdp = {
+		async once( method ) {
+			methods.push( method );
+			return {};
+		},
+		async send( method ) {
+			methods.push( method );
+			if (method === 'Runtime.evaluate') {
+				return { result: { value: 'about:blank' } };
+			}
+			return {};
+		},
+	};
+
+	await navigateDocument( cdp, 'session-1', 'https://example.test/about/' );
+	assert.deepEqual( methods, [ 'Runtime.evaluate', 'Page.navigate', 'Runtime.evaluate' ] );
+} );
+
+test( 'derives rendered copy from the accepted About body', () => {
+	const source = fs.readFileSync( acceptedSnapshotPath, 'utf8' );
+	const expectations = deriveRenderedExpectations( source, { label: 'accepted About fixture' } );
+
+	assert.equal( expectations.version, 'v3' );
+	assert.equal( expectations.headings[ 0 ].text, 'Henry Perkins' );
+	assert.deepEqual( expectations.heroActionLabels, [ 'Download résumé (PDF)', 'Get in touch' ] );
 } );
 
 test( 'rejects a WCUS callout nested inside an action rail', () => {
@@ -110,36 +157,101 @@ test( 'rejects a WCUS callout nested inside an action rail', () => {
 	assert.notEqual( nested, source, 'ancestor mutation must apply' );
 	assert.throws(
 		() => deriveRenderedExpectations( nested, { label: 'nested WCUS fixture' } ),
-		/outside.*hp-action-rail|ancestor/i
+		/outside.*hp-action-rail|ancestor|expected one hero and one closing action rail/i
 	);
 } );
 
-test( 'requires the WCUS action link to use one core Button wrapper', () => {
+test( 'requires the v3 hero contact action to use one core Button wrapper', () => {
 	const source = fs.readFileSync( acceptedSnapshotPath, 'utf8' );
 	const plainAnchor = source.replace(
-		'<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/contact/">Start a conversation</a></div>',
-		'<div class="not-a-button is-style-secondary"><a href="/contact/">Start a conversation</a></div>'
+		'<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/contact/">Get in touch</a></div>',
+		'<div class="not-a-button is-style-secondary"><a href="/contact/">Get in touch</a></div>'
 	);
 	assert.notEqual( plainAnchor, source, 'plain-anchor mutation must apply' );
 	assert.throws(
-		() => deriveRenderedExpectations( plainAnchor, { label: 'plain WCUS action fixture' } ),
-		/exactly one.*wp-block-button|core Button/i
+		() => deriveRenderedExpectations( plainAnchor, { label: 'plain v3 hero action fixture' } ),
+		/hero action|wp-block-button|core Button/i
 	);
 } );
 
-test( 'derives the v2 rail, showcase, portrait, and closing actions from the selected draft', () => {
+test( 'derives the v3 rail, showcase, portrait, and action rails from the selected draft', () => {
 	const source = fs.readFileSync( draftPath, 'utf8' );
-	const expectations = deriveRenderedExpectations( source, { label: 'About v2 draft' } );
+	const expectations = deriveRenderedExpectations( source, { label: 'About v3 draft' } );
 
-	assert.equal( expectations.version, 'v2' );
-	assert.equal( expectations.navLabel, 'About page sections' );
+	assert.equal( expectations.version, 'v3' );
+	assert.equal( expectations.navLabel, 'On this page' );
 	assert.deepEqual( expectations.fragments, [ 'contributions', 'experience', 'skills', 'showcase', 'contact' ] );
 	assert.equal( expectations.projects.length, 5 );
 	assert.equal( expectations.projects[ 0 ].title, 'Flavor Agent' );
 	assert.equal( expectations.projects.at( -1 ).title, 'Tableau' );
 	assert.equal( expectations.portraitAlt, 'Henry Perkins' );
-	assert.deepEqual( expectations.heroActionLabels, [] );
+	assert.deepEqual( expectations.heroActionLabels, [ 'Download résumé (PDF)', 'Get in touch' ] );
 	assert.deepEqual( expectations.closingActionLabels, [ 'Start a conversation', 'Download résumé (PDF)' ] );
+} );
+
+test( 'the rendered v3 probe counts only the five native navigation-list links', () => {
+	const expression = buildInspectionExpression( {
+		fragments: [ 'contributions', 'experience', 'skills', 'showcase', 'contact' ],
+		version: 'v3',
+	} );
+
+	assert.match(
+		expression,
+		/const linkRoot = isV2 \? nav : nav\.querySelector\('\.hp-about-nav__list'\);/
+	);
+	assert.match( expression, /Array\.from\(linkRoot\.querySelectorAll\('a'\)\)/ );
+} );
+
+test( 'the rendered v3 probe restores responsive Skills copy before counting words', () => {
+	const expression = buildInspectionExpression( {
+		fragments: [ 'contributions', 'experience', 'skills', 'showcase', 'contact' ],
+		version: 'v3',
+	} );
+
+	assert.match( expression, /skillsEyebrow\.textContent = 'Capabilities'/ );
+	assert.match(
+		expression,
+		/skillsIntro\.textContent = 'Every term is a filter into the record above\./
+	);
+} );
+
+test( 'the rendered v3 probe includes every generated control in its focus pass', () => {
+	const expression = buildInspectionExpression( {
+		fragments: [ 'contributions', 'experience', 'skills', 'showcase', 'contact' ],
+		version: 'v3',
+	} );
+
+	for ( const selector of [
+		'.hp-about-skill-term__button',
+		'.hp-about-earlier__toggle',
+		'.hp-about-copy',
+		'.hp-about-print-control a',
+	] ) {
+		assert.match( expression, new RegExp( selector.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ) ) );
+	}
+	assert.match( expression, /outlineOffset/ );
+} );
+
+test( 'v3 showcase stays stacked until the 64rem layout handoff', () => {
+	assert.equal( usesWideResumeShowcaseLayout( 'v3', 1023 ), false );
+	assert.equal( usesWideResumeShowcaseLayout( 'v3', 1024 ), true );
+	assert.equal( usesWideResumeShowcaseLayout( 'v2', 639 ), false );
+	assert.equal( usesWideResumeShowcaseLayout( 'v2', 640 ), true );
+} );
+
+test( 'exports the real-browser v3 interaction regression', () => {
+	assert.equal( typeof verifyV3Interactions, 'function' );
+} );
+
+test( 'the v3 router regression drives a trusted away/back flow and pins one remount', () => {
+	assert.equal( typeof verifyV3RouterRoundTrip, 'function' );
+	const source = verifyV3RouterRoundTrip.toString();
+
+	assert.match( source, /Input\.dispatchMouseEvent/ );
+	assert.match( source, /history\.back\(\)/ );
+	assert.match( source, /\.hp-about-skills__controls/ );
+	assert.match( source, /dividers:\s*2/ );
+	assert.match( source, /chips:\s*11/ );
 } );
 
 test( 'runs selected-body and CSS contracts in source-only mode without an origin', () => {

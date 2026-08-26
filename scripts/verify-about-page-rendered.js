@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Phase-aware About rendered contract (proof-first and v2 résumé bodies).
+ * Phase-aware About rendered contract (proof-first, v2, and v3 résumé bodies).
  *
  * Runs against an explicit HPERKINS_ORIGIN using the repository's
  * dependency-free Chrome/CDP approach. --require-local additionally demands a
@@ -32,12 +32,14 @@ const {
 } = require( './lib/site-url' );
 const {
 	ABOUT_WORD_RANGE,
+	ABOUT_V3_WORD_RANGE,
 	countVisibleWords,
 	countRenderedText,
 	decodeCharacterReferences,
 	extractExactText,
 	findHeadings,
 	findLinks,
+	verifyAboutV3Body,
 	verifyCssOwnership,
 } = require( './lib/about-page-contract' );
 const { assertKnownOptions, selectAboutSource } = require( './lib/page-phase-contract' );
@@ -76,6 +78,13 @@ function assert( condition, message ) {
 	if ( ! condition ) {
 		throw new Error( message );
 	}
+}
+
+function assertJsonEqual( actual, expected, message ) {
+	assert(
+		JSON.stringify( actual ) === JSON.stringify( expected ),
+		`${ message } actual=${ JSON.stringify( actual ) } expected=${ JSON.stringify( expected ) }`
+	);
 }
 
 function findBalancedElementsByClass( html, className, label ) {
@@ -253,7 +262,58 @@ function deriveV2RenderedExpectations( html, label ) {
 	};
 }
 
+function deriveV3RenderedExpectations( html, label ) {
+	const report = verifyAboutV3Body( html, { label } );
+	const headings = deriveHeadingExpectations( html, label );
+	const navs = findBalancedElementsByClass( html, 'hp-about-nav', label );
+	assert( navs.length === 1, `${ label } must contain one .hp-about-nav, got ${ navs.length }.` );
+	const navLabelMatch = /\baria-label="([^"]+)"/i.exec( navs[ 0 ].open );
+	assert( navLabelMatch, `${ label } .hp-about-nav has no aria-label.` );
+	const navList = findBalancedElementsByClass( navs[ 0 ].inner, 'hp-about-nav__list', label )[ 0 ];
+	assert( navList, `${ label } .hp-about-nav has no native list.` );
+	const navLinks = findLinks( navList.inner, label );
+
+	const projects = findBalancedElementsByClass( html, 'hp-about-showcase-card', label ).map( ( card ) => {
+		const actions = findBalancedElementsByClass( card.inner, 'hp-about-showcase-card__link', label )[ 0 ];
+		assert( actions, `${ label } showcase card has no .hp-about-showcase-card__link.` );
+		const title = findHeadings( card.inner, label ).find( ( heading ) => heading.level === 3 );
+		assert( title, `${ label } showcase card has no H3 title.` );
+		return {
+			title: title.text,
+			status: textByClass( card.inner, 'hp-about-showcase-card__type', label ),
+			actions: findLinks( actions.inner, label ),
+		};
+	} );
+	assert( projects.length === 5, `${ label } must contain five showcase cards, got ${ projects.length }.` );
+
+	const rails = findBalancedElementsByClass( html, 'hp-action-rail', label ).map( ( rail ) =>
+		findLinks( rail.inner, label )
+	);
+	assert( rails.length === 2, `${ label } must contain hero and closing action rails, got ${ rails.length }.` );
+	const portraitElement = findBalancedElementsByClass( html, 'hp-about-v3-hero__portrait', label )[ 0 ];
+	const portrait = portraitElement && /<img\b[^>]*\balt="([^"]*)"/i.exec( portraitElement.inner );
+	assert( portrait, `${ label } has no v3 portrait alternative text to compare with the render.` );
+
+	return {
+		version: 'v3',
+		closingActionLabels: rails[ 1 ].map( ( action ) => action.text ),
+		foundationsOrder: [],
+		fragments: navLinks.map( ( link ) => link.href.slice( 1 ) ),
+		headings,
+		heroActionLabels: rails[ 0 ].map( ( action ) => action.text ),
+		navLabel: decodeCharacterReferences( navLabelMatch[ 1 ] ),
+		navLinks,
+		portraitAlt: decodeCharacterReferences( portrait[ 1 ] ),
+		projects,
+		sourceWordCount: report.wordCount,
+		wcusActionLabels: [],
+	};
+}
+
 function deriveRenderedExpectations( html, { label = 'selected About body' } = {} ) {
+	if ( html.includes( 'hp-about-resume-v3' ) ) {
+		return deriveV3RenderedExpectations( html, label );
+	}
 	return html.includes( 'hp-about-resume' )
 		? deriveV2RenderedExpectations( html, label )
 		: deriveLegacyRenderedExpectations( html, label );
@@ -472,6 +532,39 @@ async function dispatchKey( cdp, sessionId, key, code, keyCode, text ) {
 	}, sessionId );
 }
 
+async function navigateDocument( cdp, sessionId, url ) {
+	const nonce = `hp-about-document-${ Date.now() }-${ Math.random() }`;
+	const current = await cdp.send( 'Runtime.evaluate', {
+		expression: `document.documentElement.setAttribute('data-hp-about-document-probe', ${ JSON.stringify( nonce ) }); location.href`,
+		returnByValue: true,
+	}, sessionId );
+	assert( ! current.exceptionDetails, `Current-location probe threw: ${ JSON.stringify( current.exceptionDetails ) }` );
+	const currentUrl = new URL( current.result.value );
+	const targetUrl = new URL( url );
+	const sameWebPath = /^https?:$/.test( currentUrl.protocol ) &&
+		currentUrl.origin === targetUrl.origin && currentUrl.pathname === targetUrl.pathname;
+	if ( sameWebPath ) {
+		await cdp.send( 'Page.reload', { ignoreCache: true }, sessionId );
+	} else {
+		await cdp.send( 'Page.navigate', { url }, sessionId );
+	}
+	try {
+		await waitForRuntimeCondition(
+			cdp,
+			sessionId,
+			`document.readyState === 'complete' && location.origin === ${ JSON.stringify( targetUrl.origin ) } && location.pathname === ${ JSON.stringify( targetUrl.pathname ) } && document.documentElement.getAttribute('data-hp-about-document-probe') !== ${ JSON.stringify( nonce ) }`,
+			`the ${ targetUrl.pathname } document to finish loading`,
+			15000
+		);
+	} catch ( error ) {
+		const diagnostic = await cdp.send( 'Runtime.evaluate', {
+			expression: `({ href: location.href, marker: document.documentElement.getAttribute('data-hp-about-document-probe'), readyState: document.readyState })`,
+			returnByValue: true,
+		}, sessionId );
+		throw new Error( `${ error.message } state=${ JSON.stringify( diagnostic.result?.value || diagnostic.exceptionDetails ) }` );
+	}
+}
+
 function buildInspectionExpression( opts ) {
 	// One self-contained battery. Only the OPTS literal is interpolated.
 	return `(async () => {
@@ -500,6 +593,8 @@ function buildInspectionExpression( opts ) {
 
 		// --- named navigation + unnamed section targets -------------------
 		const isV2 = OPTS.version === 'v2';
+		const isV3 = OPTS.version === 'v3';
+		const isResume = isV2 || isV3;
 		const navs = content.querySelectorAll(isV2 ? '.hp-about-rail' : '.hp-about-nav');
 		out.navCount = navs.length;
 		const nav = navs[0] || null;
@@ -507,15 +602,16 @@ function buildInspectionExpression( opts ) {
 		if (nav) {
 			const label = nav.querySelector(isV2 ? '.hp-about-rail__label' : '.hp-about-nav__label');
 			const lists = nav.querySelectorAll('ul');
+			const linkRoot = isV2 ? nav : nav.querySelector('.hp-about-nav__list');
 			out.nav = {
 				labelText: label ? label.textContent.trim() : null,
 				labelIsHeading: !!nav.querySelector('h1,h2,h3,h4,h5,h6'),
 				listCount: lists.length,
-				links: Array.from(nav.querySelectorAll('a')).map((link) => ({
+				links: linkRoot ? Array.from(linkRoot.querySelectorAll('a')).map((link) => ({
 					text: link.textContent.trim(),
 					hash: link.getAttribute('href'),
 					rect: rect(link),
-				})),
+				})) : [],
 			};
 		}
 		out.targets = OPTS.fragments.map((fragment) => {
@@ -532,13 +628,13 @@ function buildInspectionExpression( opts ) {
 		});
 
 		// --- project cards --------------------------------------------------
-		out.cards = Array.from(content.querySelectorAll(isV2 ? '.hp-about-showcase-card' : '.hp-work-card')).map((card) => ({
+		out.cards = Array.from(content.querySelectorAll(isResume ? '.hp-about-showcase-card' : '.hp-work-card')).map((card) => ({
 			rect: rect(card),
-			title: (card.querySelector(isV2 ? 'h3' : '.hp-work-card__title') || {}).textContent?.trim?.() || null,
-			titleHasAnchor: !!card.querySelector(isV2 ? 'h3 a' : '.hp-work-card__title a'),
-			status: (card.querySelector(isV2 ? '.hp-about-showcase-card__type' : '.hp-work-card__status') || {}).textContent?.trim?.() || null,
+			title: (card.querySelector(isResume ? 'h3' : '.hp-work-card__title') || {}).textContent?.trim?.() || null,
+			titleHasAnchor: !!card.querySelector(isResume ? 'h3 a' : '.hp-work-card__title a'),
+			status: (card.querySelector(isResume ? '.hp-about-showcase-card__type' : '.hp-work-card__status') || {}).textContent?.trim?.() || null,
 			insideAnchor: !!card.closest('a'),
-			actions: Array.from(card.querySelectorAll(isV2 ? '.hp-about-showcase-card__link a' : '.hp-work-card__actions a')).map((link) => ({
+			actions: Array.from(card.querySelectorAll(isResume ? '.hp-about-showcase-card__link a' : '.hp-work-card__actions a')).map((link) => ({
 				text: link.textContent.trim(),
 				href: link.getAttribute('href'),
 				rect: rect(link),
@@ -546,12 +642,12 @@ function buildInspectionExpression( opts ) {
 		}));
 
 		// --- capabilities / hero / signals / foundations geometry ----------
-		const capabilityColumns = isV2 ? [] : Array.from(content.querySelectorAll('.hp-capability')).map(rect);
+		const capabilityColumns = isResume ? [] : Array.from(content.querySelectorAll('.hp-capability')).map(rect);
 		out.capabilityColumns = capabilityColumns;
-		const heroCopy = content.querySelector(isV2 ? '.hp-about-v2-hero__nameplate' : '.hp-about-hero__copy');
-		const heroPortrait = content.querySelector(isV2 ? '.hp-about-v2-hero__portrait' : '.hp-about-hero__portrait');
+		const heroCopy = content.querySelector(isV3 ? '.hp-about-v3-hero__nameplate' : isV2 ? '.hp-about-v2-hero__nameplate' : '.hp-about-hero__copy');
+		const heroPortrait = content.querySelector(isV3 ? '.hp-about-v3-hero__portrait' : isV2 ? '.hp-about-v2-hero__portrait' : '.hp-about-hero__portrait');
 		out.hero = heroCopy && heroPortrait ? { copy: rect(heroCopy), portrait: rect(heroPortrait) } : null;
-		out.signals = Array.from(content.querySelectorAll(isV2 ? '.hp-about-impact-strip .hp-about-v2-impact' : '.hp-about-impact .hp-signal')).map(rect);
+		out.signals = Array.from(content.querySelectorAll(isV3 ? '.hp-about-impact-strip .hp-about-v3-impact' : isV2 ? '.hp-about-impact-strip .hp-about-v2-impact' : '.hp-about-impact .hp-signal')).map(rect);
 		const wcus = content.querySelector('.hp-about-hero__copy .hp-about-wcus');
 		out.wcus = wcus ? {
 			insideActionRail: wcus.matches('.hp-action-rail') || !!wcus.closest('.hp-action-rail') || !!wcus.querySelector('.hp-action-rail'),
@@ -593,17 +689,18 @@ function buildInspectionExpression( opts ) {
 		out.panelCount = content.querySelectorAll('.hp-action-panel.is-closing').length;
 
 		// --- portrait -------------------------------------------------------
-		const portraitImg = content.querySelector(isV2 ? '.hp-about-v2-hero__portrait img' : '.hp-about-avatar img');
+		const portraitImg = content.querySelector(isV3 ? '.hp-about-v3-hero__portrait img' : isV2 ? '.hp-about-v2-hero__portrait img' : '.hp-about-avatar img');
 		out.portraitAlt = portraitImg ? portraitImg.getAttribute('alt') : null;
 
 		// --- focus-visible pass (rects above are already captured) --------
 		out.focus = [];
-		const focusTargets = [
+		const focusTargets = Array.from(new Set([
 			...(nav ? Array.from(nav.querySelectorAll('a')) : []),
-			...Array.from(content.querySelectorAll(isV2 ? '.hp-about-showcase-card__link a' : '.hp-work-card__actions a')),
+			...Array.from(content.querySelectorAll(isResume ? '.hp-about-showcase-card__link a' : '.hp-work-card__actions a')),
 			...Array.from(content.querySelectorAll('.hp-action-rail .wp-block-button__link')),
 			...Array.from(content.querySelectorAll('.hp-about-wcus__action .wp-block-button__link')),
-		];
+			...(isV3 ? Array.from(content.querySelectorAll('.hp-about-v3-impact > a, .hp-about-skill-term__button, .hp-about-earlier__toggle, .hp-about-copy, .hp-about-print-control a')) : []),
+		])).filter((control) => ! control.hidden && control.getClientRects().length > 0 && getComputedStyle(control).visibility !== 'hidden');
 		for (const link of focusTargets) {
 			try { link.focus({ preventScroll: true }); } catch (error) { link.focus(); }
 			const style = getComputedStyle(link);
@@ -612,6 +709,8 @@ function buildInspectionExpression( opts ) {
 				matchesFocusVisible: link.matches(':focus-visible'),
 				outlineStyle: style.outlineStyle,
 				outlineWidth: Number.parseFloat(style.outlineWidth) || 0,
+				outlineOffset: Number.parseFloat(style.outlineOffset) || 0,
+				outlineColor: style.outlineColor,
 			});
 		}
 		if (document.activeElement && document.activeElement.blur) { document.activeElement.blur(); }
@@ -622,6 +721,21 @@ function buildInspectionExpression( opts ) {
 		out.renderedText = null;
 		if (OPTS.countWords) {
 			const clone = content.cloneNode(true);
+			if (isV3) {
+				const skillsHeading = clone.querySelector('#skills .hp-about-skills__heading');
+				const skillsEyebrow = clone.querySelector('#skills .hp-about-skills__eyebrow');
+				const skillsIntro = clone.querySelector('#skills .hp-about-skills__intro');
+				const skillsNavLink = clone.querySelector('.hp-about-nav__list a[href="#skills"]');
+				const educationHeading = clone.querySelector('#skills .hp-about-education > h3');
+				const earlierRoles = clone.querySelector('.hp-about-earlier');
+				if (skillsHeading) { skillsHeading.textContent = 'Skills index'; }
+				if (skillsEyebrow) { skillsEyebrow.textContent = 'Capabilities'; }
+				if (skillsIntro) { skillsIntro.textContent = 'Every term is a filter into the record above. Pick one and its evidence travels to the top of each ledger; the rest keep their place below a stated line. Faded terms have nothing on this page behind them yet.'; }
+				if (skillsNavLink) { skillsNavLink.textContent = 'Skills'; }
+				if (educationHeading) { educationHeading.hidden = false; }
+				if (earlierRoles) { earlierRoles.hidden = false; }
+				clone.querySelectorAll('.hp-about-copy, .hp-about-copy__status, .hp-about-earlier__toggle, .hp-about-skills__clear').forEach((node) => node.remove());
+			}
 			clone.querySelectorAll('[hidden], [aria-hidden="true"]').forEach((node) => node.remove());
 			const shellMain = document.createElement('main');
 			shellMain.className = 'hp-about-template';
@@ -679,10 +793,28 @@ function assertStacked( rects, label ) {
 	}
 }
 
+function assertWrappedOrder( rects, label ) {
+	for ( let index = 1; index < rects.length; index++ ) {
+		const previous = rects[ index - 1 ];
+		const current = rects[ index ];
+		const sameRow = Math.abs( current.top - previous.top ) <= 2;
+		assert(
+			( sameRow && current.left > previous.left ) || ( ! sameRow && current.top >= previous.bottom - 1 ),
+			`${ label }: element ${ index + 1 } overlaps or precedes element ${ index }.`
+		);
+	}
+}
+
+function usesWideResumeShowcaseLayout( version, width ) {
+	return width >= ( version === 'v3' ? 1024 : 640 );
+}
+
 function verifyGeometry( result, viewport, expectations ) {
 	const width = viewport.width;
 	const label = `${ width }px`;
 	const isV2 = expectations.version === 'v2';
+	const isV3 = expectations.version === 'v3';
+	const isResume = isV2 || isV3;
 
 	assert(
 		result.scrollWidth <= result.clientWidth + 1,
@@ -695,7 +827,7 @@ function verifyGeometry( result, viewport, expectations ) {
 		result.cards.length === expectations.projects.length,
 		`${ label }: expected ${ expectations.projects.length } project cards, got ${ result.cards.length }.`
 	);
-	if ( ! isV2 ) {
+	if ( ! isResume ) {
 		assert(
 			result.capabilityColumns.length === 3,
 			`${ label }: expected three capability units, got ${ result.capabilityColumns.length }.`
@@ -714,8 +846,8 @@ function verifyGeometry( result, viewport, expectations ) {
 	assert( result.reducedMotion.offenders.length === 0, `${ label }: visible motion remains under reduced motion: ${ result.reducedMotion.offenders.slice( 0, 8 ).join( ', ' ) }.` );
 	const cardRects = result.cards.map( ( card ) => card.rect );
 	const capabilityRects = result.capabilityColumns;
-	if ( isV2 ) {
-		if ( width >= 640 ) {
+	if ( isResume ) {
+		if ( usesWideResumeShowcaseLayout( expectations.version, width ) ) {
 			assertColumnsSideBySide( cardRects.slice( 0, 2 ), 2, `${ label } showcase row 1` );
 			assertColumnsSideBySide( cardRects.slice( 2, 4 ), 2, `${ label } showcase row 2` );
 			assert( cardRects[ 4 ].top >= cardRects[ 2 ].bottom - 1, `${ label }: wide final showcase card does not occupy the last row.` );
@@ -736,13 +868,17 @@ function verifyGeometry( result, viewport, expectations ) {
 	}
 
 	assert( result.hero, `${ label }: hero regions missing.` );
-	if ( isV2 ) {
-		assert( result.signals.length === 3, `${ label }: expected three v2 impact signals, got ${ result.signals.length }.` );
+	if ( isResume ) {
+		assert( result.signals.length === 3, `${ label }: expected three résumé impact signals, got ${ result.signals.length }.` );
 		assert(
 			result.hero.copy.left >= result.hero.portrait.right - 1 && result.hero.copy.top < result.hero.portrait.bottom,
-			`${ label }: v2 portrait and nameplate must render side by side.`
+			`${ label }: portrait and nameplate must render side by side.`
 		);
-		if ( width >= 640 ) {
+		if ( isV3 && width >= 768 ) {
+			assertColumnsSideBySide( result.signals, 3, `${ label } impact strip` );
+		} else if ( isV3 ) {
+			assertWrappedOrder( result.signals, `${ label } impact strip` );
+		} else if ( width >= 640 ) {
 			assertColumnsSideBySide( result.signals, 3, `${ label } impact strip` );
 		} else {
 			assertStacked( result.signals, `${ label } impact strip` );
@@ -767,7 +903,7 @@ function verifyGeometry( result, viewport, expectations ) {
 
 	// Exact 2:1 foundations ratio at the two wide primary widths, after the
 	// inter-column gap is removed from the available width.
-	if ( ! isV2 && ( width === 1440 || width === 1024 ) ) {
+	if ( ! isResume && ( width === 1440 || width === 1024 ) ) {
 		const [ first, second ] = result.foundations;
 		const ratio = first.width / second.width;
 		assert(
@@ -823,10 +959,17 @@ function verifyGeometry( result, viewport, expectations ) {
 function verifyContent( result, viewport, expectations ) {
 	const label = `${ viewport.width }px`;
 	const isV2 = expectations.version === 'v2';
+	const isV3 = expectations.version === 'v3';
+	const isResume = isV2 || isV3;
 
 	// Heading inventory, order, levels, and section ancestry.
 	const actual = result.headings.map( ( heading ) => `${ heading.level }|${ heading.text }|${ heading.section }` );
-	const expected = expectations.headings.map( ( heading ) => `${ heading.level }|${ heading.text }|${ heading.section }` );
+	const expected = expectations.headings.map( ( heading ) => {
+		const responsiveText = isV3 && viewport.width >= 1024 && heading.level === 2 && heading.section === 'skills' && heading.text === 'Skills index'
+			? 'Education'
+			: heading.text;
+		return `${ heading.level }|${ responsiveText }|${ heading.section }`;
+	} );
 	assert(
 		actual.length === expected.length && expected.every( ( entry, index ) => actual[ index ] === entry ),
 		`${ label }: heading inventory mismatch.\nexpected:\n${ expected.join( '\n' ) }\nactual:\n${ actual.join( '\n' ) }`
@@ -844,9 +987,12 @@ function verifyContent( result, viewport, expectations ) {
 	);
 	expectations.navLinks.forEach( ( expectedLink, index ) => {
 		const link = result.nav.links[ index ];
+		const expectedText = isV3 && viewport.width >= 1024 && expectedLink.href === '#skills'
+			? 'Education'
+			: expectedLink.text;
 		assert(
-			link.text === expectedLink.text && link.hash === expectedLink.href,
-			`${ label }: nav link ${ index + 1 } is "${ link.text }" → ${ link.hash }; expected "${ expectedLink.text }" → ${ expectedLink.href }.`
+			link.text === expectedText && link.hash === expectedLink.href,
+			`${ label }: nav link ${ index + 1 } is "${ link.text }" → ${ link.hash }; expected "${ expectedText }" → ${ expectedLink.href }.`
 		);
 		assert(
 			link.rect.width >= 24 && link.rect.height >= 24,
@@ -894,7 +1040,7 @@ function verifyContent( result, viewport, expectations ) {
 	} );
 
 	// Foundations DOM order (Skills, then AI Leaders, then Education).
-	if ( ! isV2 ) {
+	if ( ! isResume ) {
 		assert(
 			( result.foundationsOrder || [] ).join( '|' ) === expectations.foundationsOrder.join( '|' ),
 			`${ label }: Skills and Foundations column order is ${ ( result.foundationsOrder || [] ).join( ', ' ) }.`
@@ -934,6 +1080,12 @@ function verifyContent( result, viewport, expectations ) {
 			focus.matchesFocusVisible && focus.outlineStyle !== 'none' && focus.outlineWidth >= 2,
 			`${ label }: "${ focus.text }" exposes no visible focus indicator.`
 		);
+		if ( isV3 ) {
+			assert(
+				focus.outlineWidth >= 3 && focus.outlineOffset >= 2 && focus.outlineColor !== 'rgba(0, 0, 0, 0)',
+				`${ label }: "${ focus.text }" does not retain the v3 3px/2px-offset focus ring.`
+			);
+		}
 	}
 }
 
@@ -949,9 +1101,7 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 		features: [ { name: 'prefers-reduced-motion', value: 'reduce' } ],
 	}, sessionId );
 
-	const loaded = cdp.once( 'Page.loadEventFired', sessionId );
-	await cdp.send( 'Page.navigate', { url }, sessionId );
-	await loaded;
+	await navigateDocument( cdp, sessionId, url );
 	await cdp.send( 'Runtime.evaluate', {
 		expression: 'document.fonts && document.fonts.ready',
 		awaitPromise: true,
@@ -988,10 +1138,15 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 			wordCount === expectations.sourceWordCount,
 			`${ viewport.width }px: rendered word count ${ wordCount } does not equal the source count ${ expectations.sourceWordCount }.`
 		);
-		if ( expectations.version !== 'v2' ) {
+		if ( expectations.version === 'proof-first' ) {
 			assert(
 				wordCount >= ABOUT_WORD_RANGE.min && wordCount <= ABOUT_WORD_RANGE.max,
 				`${ viewport.width }px: rendered word count ${ wordCount } outside ${ ABOUT_WORD_RANGE.min }–${ ABOUT_WORD_RANGE.max }.`
+			);
+		} else if ( expectations.version === 'v3' ) {
+			assert(
+				wordCount >= ABOUT_V3_WORD_RANGE.min && wordCount <= ABOUT_V3_WORD_RANGE.max,
+				`${ viewport.width }px: rendered word count ${ wordCount } outside ${ ABOUT_V3_WORD_RANGE.min }–${ ABOUT_V3_WORD_RANGE.max }.`
 			);
 		}
 	}
@@ -1071,6 +1226,243 @@ async function verifyCardHoverInertia( cdp, sessionId ) {
 		);
 	}
 	await cdp.send( 'Input.dispatchMouseEvent', { type: 'mouseMoved', x: 0, y: 0 }, sessionId );
+}
+
+async function verifyV3Interactions( cdp, sessionId ) {
+	const evaluated = await cdp.send( 'Runtime.evaluate', {
+		expression: `(async () => {
+			const root = document.querySelector('.hp-about-resume-v3');
+			if (!root) { return { error: 'missing .hp-about-resume-v3' }; }
+			const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+			const ledgers = Array.from(root.querySelectorAll('.hp-about-ledger'));
+			const rowTitle = (row) => (row.querySelector('h3') || {}).textContent?.trim?.() || '';
+			const canonical = ledgers.map((ledger) => Array.from(ledger.querySelectorAll('.hp-about-index-row')).map(rowTitle));
+			const provider = Array.from(root.querySelectorAll('.hp-about-skill-term__button')).find((button) => button.textContent.trim() === 'Provider integrations');
+			if (!provider) { return { error: 'missing Provider integrations filter' }; }
+
+			provider.click();
+			await wait(520);
+			const rows = Array.from(root.querySelectorAll('.hp-about-index-row'));
+			const filtered = {
+				pressed: provider.getAttribute('aria-pressed'),
+				cited: root.querySelectorAll('.hp-about-index-row.is-cited').length,
+				dimmed: root.querySelectorAll('.hp-about-index-row.is-dimmed').length,
+				hiddenRows: rows.filter((row) => getComputedStyle(row).display === 'none' || getComputedStyle(row).visibility === 'hidden').length,
+				dimmedOpacity: Array.from(new Set(rows.filter((row) => row.classList.contains('is-dimmed')).map((row) => getComputedStyle(row).opacity))),
+				dividerLabels: Array.from(root.querySelectorAll('.hp-about-ledger__divider:not([hidden]) .hp-about-ledger__divider-label')).map((label) => label.textContent.trim()),
+				partitioned: ledgers.every((ledger) => {
+					let crossedDivider = false;
+					return Array.from(ledger.children).every((child) => {
+						if (child.classList.contains('hp-about-ledger__divider')) { crossedDivider = true; return ! child.hidden; }
+						if (! child.classList.contains('hp-about-index-row')) { return true; }
+						return crossedDivider ? child.classList.contains('is-dimmed') : child.classList.contains('is-cited');
+					});
+				}),
+			};
+
+			const clear = root.querySelector('.hp-about-skills__clear');
+			clear.focus({ preventScroll: true });
+			const clearStyle = getComputedStyle(clear);
+			const clearFocus = {
+				matches: clear.matches(':focus-visible'),
+				width: Number.parseFloat(clearStyle.outlineWidth) || 0,
+				offset: Number.parseFloat(clearStyle.outlineOffset) || 0,
+			};
+			clear.click();
+			await wait(30);
+			const cleared = {
+				dimmed: root.querySelectorAll('.hp-about-index-row.is-dimmed').length,
+				cited: root.querySelectorAll('.hp-about-index-row.is-cited').length,
+				visibleDividers: root.querySelectorAll('.hp-about-ledger__divider:not([hidden])').length,
+				restored: JSON.stringify(canonical) === JSON.stringify(ledgers.map((ledger) => Array.from(ledger.querySelectorAll('.hp-about-index-row')).map(rowTitle))),
+			};
+
+			const earlierToggle = root.querySelector('.hp-about-earlier__toggle');
+			const earlier = root.querySelector('.hp-about-earlier');
+			earlierToggle.click();
+			const disclosureOpen = earlierToggle.getAttribute('aria-expanded') === 'true' && ! earlier.hidden;
+			earlierToggle.click();
+			const disclosureClosed = earlierToggle.getAttribute('aria-expanded') === 'false' && earlier.hidden;
+
+			let copied = '';
+			try {
+				Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (text) => { copied = text; } } });
+			} catch (error) {}
+			const copy = root.querySelector('.hp-about-copy');
+			copy.click();
+			await wait(30);
+			const copyStatus = root.querySelector('.hp-about-copy__status');
+
+			let printCalls = 0;
+			const nativePrint = window.print;
+			window.print = () => { printCalls += 1; };
+			const printLink = root.querySelector('.hp-about-print-control a');
+			printLink.click();
+			const printPrepared = root.classList.contains('is-print-mode') && ! earlier.hidden;
+			window.dispatchEvent(new Event('afterprint'));
+			const printRestored = ! root.classList.contains('is-print-mode') && earlier.hidden;
+			window.print = nativePrint;
+
+			const anatomy = {
+				dividers: root.querySelectorAll('[data-hp-about-generated="divider"]').length,
+				chips: root.querySelectorAll('[data-hp-about-generated="citation"]').length,
+			};
+
+			return {
+				anatomy,
+				cleared,
+				clearFocus,
+				copy: { copied, status: copyStatus.textContent.trim(), hidden: copyStatus.hidden },
+				disclosureClosed,
+				disclosureOpen,
+				filtered,
+				print: { calls: printCalls, href: new URL(printLink.href, location.href).pathname, prepared: printPrepared, restored: printRestored },
+			};
+		})()`,
+		awaitPromise: true,
+		returnByValue: true,
+	}, sessionId );
+	assert( ! evaluated.exceptionDetails, `v3 interaction probe threw: ${ JSON.stringify( evaluated.exceptionDetails ) }` );
+	const result = evaluated.result.value;
+	assert( ! result.error, result.error );
+	assertJsonEqual( result.anatomy, { dividers: 2, chips: 11 }, 'v3 enhancement anatomy was not generated exactly once.' );
+	assert( result.filtered.pressed === 'true', 'v3 filter did not expose aria-pressed=true.' );
+	assert( result.filtered.cited === 4 && result.filtered.dimmed === 7, `v3 Provider integrations filter produced ${ result.filtered.cited } cited and ${ result.filtered.dimmed } dimmed rows.` );
+	assert( result.filtered.hiddenRows === 0, 'v3 filter hid one or more evidence rows.' );
+	assertJsonEqual( result.filtered.dimmedOpacity, [ '0.34' ], 'v3 non-citing rows do not share the 0.34 opacity contract.' );
+	assertJsonEqual( result.filtered.dividerLabels, [ 'Not cited by Provider integrations', 'Not cited by Provider integrations' ], 'v3 divider labels drifted.' );
+	assert( result.filtered.partitioned, 'v3 cited/non-cited ledger partition is not structurally legible.' );
+	assertJsonEqual( result.cleared, { dimmed: 0, cited: 0, visibleDividers: 0, restored: true }, 'v3 Clear filter did not restore canonical state.' );
+	assert( result.clearFocus.matches && result.clearFocus.width >= 3 && result.clearFocus.offset >= 2, 'v3 Clear filter has no effective 3px/2px focus ring.' );
+	assert( result.disclosureOpen && result.disclosureClosed, 'v3 earlier-role disclosure did not round-trip its ARIA and hidden state.' );
+	assert( result.copy.copied === 'htperkins@gmail.com' && result.copy.status === 'Copied' && ! result.copy.hidden, 'v3 copy control did not announce success.' );
+	assertJsonEqual( result.print, { calls: 1, href: '/one-page-resume/', prepared: true, restored: true }, 'v3 print enhancement or fallback contract failed.' );
+}
+
+async function waitForRuntimeCondition( cdp, sessionId, expression, label, timeout = 10000 ) {
+	const deadline = Date.now() + timeout;
+	while ( Date.now() < deadline ) {
+		const evaluated = await cdp.send( 'Runtime.evaluate', {
+			expression,
+			returnByValue: true,
+		}, sessionId );
+		assert( ! evaluated.exceptionDetails, `${ label } probe threw: ${ JSON.stringify( evaluated.exceptionDetails ) }` );
+		if ( evaluated.result.value ) {
+			return evaluated.result.value;
+		}
+		await wait( 50 );
+	}
+	throw new Error( `Timed out waiting for ${ label }.` );
+}
+
+async function verifyV3RouterRoundTrip( cdp, sessionId ) {
+	const setup = await cdp.send( 'Runtime.evaluate', {
+		expression: `(() => {
+			const root = document.querySelector('.hp-about-resume-v3');
+			const link = document.querySelector('.hp-council-brand[href]');
+			if (!root) { return { error: 'missing .hp-about-resume-v3 before router round-trip' }; }
+			if (!link) { return { error: 'missing Council brand route link' }; }
+			const rect = link.getBoundingClientRect();
+			window.__hpAboutRouterProbe = { initialPath: location.pathname, token: 'about-v3-router-round-trip' };
+			return {
+				error: '',
+				initialPath: location.pathname,
+				x: rect.left + rect.width / 2,
+				y: rect.top + rect.height / 2,
+			};
+		})()`,
+		returnByValue: true,
+	}, sessionId );
+	assert( ! setup.exceptionDetails, `v3 router setup threw: ${ JSON.stringify( setup.exceptionDetails ) }` );
+	const click = setup.result.value;
+	assert( ! click.error, click.error );
+	assert( click.x > 0 && click.y > 0, `v3 route link has no clickable point: ${ JSON.stringify( click ) }.` );
+
+	await cdp.send( 'Input.dispatchMouseEvent', { type: 'mouseMoved', x: click.x, y: click.y }, sessionId );
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mousePressed', x: click.x, y: click.y, button: 'left', buttons: 1, clickCount: 1,
+	}, sessionId );
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mouseReleased', x: click.x, y: click.y, button: 'left', buttons: 0, clickCount: 1,
+	}, sessionId );
+
+	const away = await waitForRuntimeCondition(
+		cdp,
+		sessionId,
+		`(() => {
+			if (location.pathname === ${ JSON.stringify( click.initialPath ) } || document.querySelector('.hp-about-resume-v3')) { return false; }
+			return {
+				copyButtons: document.querySelectorAll('.hp-about-copy').length,
+				controlSets: document.querySelectorAll('.hp-about-skills__controls').length,
+				earlierToggles: document.querySelectorAll('.hp-about-earlier__toggle').length,
+				hasGlobalClass: document.documentElement.classList.contains('has-about-v3'),
+				hasSentinel: window.__hpAboutRouterProbe?.token === 'about-v3-router-round-trip',
+				headerOffset: document.documentElement.style.getPropertyValue('--hp-about-header-height'),
+				path: location.pathname,
+				roots: document.querySelectorAll('.hp-about-resume-v3').length,
+			};
+		})()`,
+		'the real Interactivity Router route-away commit'
+	);
+	assert( away.hasSentinel, 'v3 route-away performed a full navigation instead of an in-document Interactivity Router swap.' );
+	assertJsonEqual(
+		away,
+		{
+			copyButtons: 0,
+			controlSets: 0,
+			earlierToggles: 0,
+			hasGlobalClass: false,
+			hasSentinel: true,
+			headerOffset: '',
+			path: away.path,
+			roots: 0,
+		},
+		'v3 route-away cleanup left page-owned state behind.'
+	);
+
+	await cdp.send( 'Runtime.evaluate', { expression: 'history.back(); true', returnByValue: true }, sessionId );
+	const remounted = await waitForRuntimeCondition(
+		cdp,
+		sessionId,
+		`(() => {
+			const root = document.querySelector('.hp-about-resume-v3.is-enhanced');
+			const hasGlobalClass = document.documentElement.classList.contains('has-about-v3');
+			const headerOffset = document.documentElement.style.getPropertyValue('--hp-about-header-height');
+			if (location.pathname !== ${ JSON.stringify( click.initialPath ) } || !root || !hasGlobalClass || !headerOffset) { return false; }
+			return {
+				chips: root.querySelectorAll('[data-hp-about-generated="citation"]').length,
+				clearButtons: root.querySelectorAll('.hp-about-skills__clear').length,
+				copyButtons: root.querySelectorAll('.hp-about-copy').length,
+				copyStatuses: root.querySelectorAll('.hp-about-copy__status').length,
+				controlSets: root.querySelectorAll('.hp-about-skills__controls').length,
+				dividers: root.querySelectorAll('[data-hp-about-generated="divider"]').length,
+				earlierToggles: root.querySelectorAll('.hp-about-earlier__toggle').length,
+				hasGlobalClass,
+				hasSentinel: window.__hpAboutRouterProbe?.token === 'about-v3-router-round-trip',
+				headerOffset,
+				roots: document.querySelectorAll('.hp-about-resume-v3').length,
+			};
+		})()`,
+		'the real Interactivity Router history-back remount'
+	);
+	assert( /^\d+px$/.test( remounted.headerOffset ), `v3 history-back restored an invalid header offset: ${ remounted.headerOffset }.` );
+	assertJsonEqual(
+		remounted,
+		{
+			chips: 11,
+			clearButtons: 1,
+			copyButtons: 1,
+			copyStatuses: 1,
+			controlSets: 1,
+			dividers: 2,
+			earlierToggles: 1,
+			hasGlobalClass: true,
+			hasSentinel: true,
+			headerOffset: remounted.headerOffset,
+			roots: 1,
+		},
+		'v3 history-back did not remount exactly one enhancement anatomy.'
+	);
 }
 
 // Real-keyboard fragment behavior for every jump link: Enter activates the
@@ -1237,14 +1629,18 @@ async function main() {
 			for ( const viewport of PRIMARY_VIEWPORTS ) {
 				await inspectViewport( cdp, sessionId, url, viewport, expectations );
 				if ( viewport.canonical ) {
-					if ( expectations.version !== 'v2' ) {
+					if ( expectations.version === 'proof-first' ) {
 						await verifyCardHoverInertia( cdp, sessionId );
 					}
 					await verifyKeyboardFragments( cdp, sessionId, expectations.navLinks, expectations.version );
 					// Re-navigate so keyboard-era state never leaks forward.
-					const reloaded = cdp.once( 'Page.loadEventFired', sessionId );
-					await cdp.send( 'Page.navigate', { url }, sessionId );
-					await reloaded;
+					await navigateDocument( cdp, sessionId, url );
+					if ( expectations.version === 'v3' ) {
+						await wait( 300 );
+						await dispatchKey( cdp, sessionId, 'Tab', 'Tab', 9 );
+						await verifyV3Interactions( cdp, sessionId );
+						await verifyV3RouterRoundTrip( cdp, sessionId );
+					}
 				}
 				const capturePath = await captureScreenshot( cdp, sessionId, viewport );
 				console.log( `checked /about/ at ${ viewport.width }px → ${ capturePath }` );
@@ -1269,4 +1665,12 @@ if ( require.main === module ) {
 	} );
 }
 
-module.exports = { deriveRenderedExpectations, verifyCardHoverInertia };
+module.exports = {
+	buildInspectionExpression,
+	deriveRenderedExpectations,
+	navigateDocument,
+	usesWideResumeShowcaseLayout,
+	verifyCardHoverInertia,
+	verifyV3Interactions,
+	verifyV3RouterRoundTrip,
+};

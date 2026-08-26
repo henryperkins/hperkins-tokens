@@ -1,326 +1,91 @@
-# About v2 design QA
+# About v3 design QA
 
-## Scope and publication boundary
+## Scope and release state
 
-- Reviewed surface: `content/page-drafts/about.html`.
-- Supporting implementation: `assets/imladris-pages.css`, `assets/js/about-resume.js`, and the candidate-only enqueue in `functions.php`.
-- Accepted mirror `content/page-snapshots/about.html`, WordPress Page 6, deployment configuration, and production were not changed or treated as verified by this review.
-- The local preview is a read-only fixture assembled from the exact reviewed draft, theme tokens, fonts, portrait, page stylesheet, and About controller. It excludes the full site header because the local WordPress hostname was unavailable.
+- Released body: production Page 6, `content/page-drafts/about.html`, and `content/page-snapshots/about.html` share the same normalized v3 content.
+- Rendered implementation: `https://henry-perkins.wp.local/about/`, using the local WordPress Studio install and the candidate worktree.
+- Production promotion: Page 6 was updated body-only after its previous content matched the accepted snapshot; the supporting theme release and public route verification complete the publication boundary.
 
-## Visual source of truth
+## Source visual truth
 
-- `.impeccable/qa/about-v2/design_handoff_about_skills_index/screenshots/01-identity-header.png`
-- `.impeccable/qa/about-v2/design_handoff_about_skills_index/screenshots/02-skills-index-idle.png`
-- `.impeccable/qa/about-v2/design_handoff_about_skills_index/screenshots/03-skills-index-filtered.png`
-- `.impeccable/qa/about-v2/design_handoff_about_skills_index/screenshots/04-contributions-dimmed.png`
+The source is the extracted v3 handoff at:
 
-## Implementation evidence
+`C:\Users\htper\AppData\Local\Temp\codex-about-v3-handoff-20260825\design_handoff_about_v3`
 
-- `.impeccable/qa/about-v2/implementation-909x540-final.png`
-- `.impeccable/qa/about-v2/implementation-skills-idle-909x540.png`
-- `.impeccable/qa/about-v2/implementation-skills-filtered-909x540.png`
-- `.impeccable/qa/about-v2/implementation-contributions-dimmed-909x540.png`
-- `.impeccable/qa/about-v2/implementation-mobile-390x844.png`
-- `.impeccable/qa/about-v2/implementation-mobile-skills-390x844.png`
+Focused source captures, each 909 x 540 pixels at 96 DPI / 1x density:
 
-## Same-input comparisons
+- `screenshots\01-hero.png`
+- `screenshots\02-signals-and-sticky-nav.png`
+- `screenshots\03-experience.png`
+- `screenshots\04-skills-index.png`
+- `screenshots\05-filter-active-contributions.png`
+- `screenshots\06-selected-work.png`
 
-- `.impeccable/qa/about-v2/compare-identity-final.png`
-- `.impeccable/qa/about-v2/compare-skills-idle.png`
-- `.impeccable/qa/about-v2/compare-skills-filtered.png`
-- `.impeccable/qa/about-v2/compare-contributions-dimmed.png`
+## Implementation evidence and normalization
 
-## Capture normalization
+The matching Edge browser captures are in:
 
-- Browser: the user's connected Edge browser.
-- Desktop review viewport: 909 x 540 CSS pixels with device scale factor 1. The vertical scrollbar leaves a 894 px document client width; every final desktop state reported `scrollWidth === clientWidth === 894`.
-- Mobile review viewport: 390 x 844 CSS pixels with device scale factor 1. The scrollbar leaves a 375 px document client width; both mobile states reported `scrollWidth === clientWidth === 375`.
-- Desktop screenshots were captured through CDP at exact viewport density.
-- The identity comparison uses source pixels y=100..540 beside implementation pixels y=0..440 because the source image includes header context not present in the static fixture. The compared identity content remains at the same scale and state.
+`C:\Users\htper\AppData\Local\Temp\hperkins-about-v3-qa`
 
-## Interaction and responsive evidence
+- `implementation-01-hero.png`
+- `implementation-02-contributions.png`
+- `implementation-03-experience.png`
+- `implementation-04-skills-index.png`
+- `implementation-05-filter-active-contributions.png`
+- `implementation-06-selected-work.png`
 
-- Skills idle: Clear filter is not displayed and all 30 terms remain available as 44 px controls.
-- Documentation filter: selected term is pressed, the live readout is `Documentation — 5 rows above match; the rest are dimmed.`, and exactly 6 of 11 evidence rows are dimmed.
-- Coverage: runtime and source both render `6/6 backed above`; the pure index contract also verifies `9/9 backed above` for Workflow and enablement.
-- Earlier experience: `Show 3 earlier roles` expands to exactly 3 visible roles, updates `aria-expanded` to `true`, and changes its label to `Hide earlier roles`.
-- Print preparation: clears the active filter, exposes `Print / Save PDF` and `Exit print view`, keeps the screen rail reachable, and expands all 3 earlier roles. Exit restores the single `Print` action. Actual `@media print` output continues to suppress the navigation rail.
-- Desktop anchor: rail bottom 55 px, Skills section top 75 px, heading top 159 px; no horizontal overflow.
-- Mobile anchor: rail bottom 55 px, Skills section top 72 px, heading top 147 px; no horizontal overflow.
-- Mobile target sizes: first rail link 44 px high and first skill term 44 px high.
-- Browser console: no warnings or errors in the final desktop or mobile passes.
+The browser was set to a 909 x 540 CSS viewport at device pixel ratio 1. The in-app browser's content-only compositor capture excludes its scrollbar/inset and writes 894 x 531 pixels; source and implementation were aligned to the same content crop and placed together in the same comparison input without changing page scale. The frame inset was treated as browser chrome, not a page mismatch.
 
-## Iteration history
+Full-page responsive evidence from the repository's Edge/CDP verifier:
 
-- Pass 1, P1: About v2 CSS used conceptual preset names not registered by `theme.json`, and the new impact cards collided with the accepted About breakout selector. Corrected to registered Imladris preset slugs and renamed the candidate impact class.
-- Pass 1 fixture note: an apparent spacing failure came from an omitted preset in the temporary preview fixture, not the repository stylesheet. The fixture was corrected before judging layout.
-- Pass 2, P1: the identity surface, copy hierarchy, availability measure, and contact placement drifted from the handoff. Corrected to the supplied portrait, exact identity copy, raw evidence links, and source-aligned spacing.
-- Pass 3, P1: Skills and Contributions used tabular/editorial treatments instead of the supplied grouped chips, bordered readout, stacked evidence cards, and pill rail. Corrected without changing the evidence-map behavior.
-- Pass 4, P1: the inherited desktop breakout overflowed the main grid, runtime coverage text diverged from the source, print preparation hid its own exit control, and mobile anchors landed beneath the sticky rail. Each issue was corrected and recaptured at the same state and viewport.
+- `C:\Users\htper\AppData\Local\Temp\hperkins-about-rendered\about-1440.png` — 1440 x 5978
+- `C:\Users\htper\AppData\Local\Temp\hperkins-about-rendered\about-1024.png` — 1024 x 6109
+- `C:\Users\htper\AppData\Local\Temp\hperkins-about-rendered\about-768.png` — 768 x 7728
+- `C:\Users\htper\AppData\Local\Temp\hperkins-about-rendered\about-390.png` — 390 x 10400
+- `C:\Users\htper\AppData\Local\Temp\hperkins-about-rendered\about-320.png` — 320 x 11974
 
-## Final findings
+## State and comparison evidence
+
+- Full-view comparisons covered the hero, impact strip, sticky page navigation, contributions, experience, Skills/Education, selected work, closing panel, and the page's overall rhythm.
+- Focused comparisons were required because ledger typography, evidence states, skill controls, and work-card details are too small to judge from a full-page image. Each of the six source captures was compared with the corresponding rendered region in one combined visual input.
+- Resting and active filter states were compared. The active state used `Provider integrations`; the readout, cited-row promotion, divider, citation chips, and unchanged total row count were all visible.
+- The global Condensed Council header is intentionally retained from the real theme. Its shape differs from the prototype's framing header, but it is outside the database-owned About body and was not treated as candidate drift.
+- The source's active-filter capture contains a visible overlap artifact. The implementation preserves the specified content and state while keeping the rows legible; reproducing the artifact would create a usability defect.
+
+## Required fidelity surfaces
+
+- Fonts and typography: Cormorant Garamond carries display headings, EB Garamond carries body copy, Marcellus carries labels/actions, and JetBrains Mono carries status/provenance. Family, weight, scale, line height, tracking, wrapping, and hierarchy match the handoff at the reviewed states.
+- Spacing and layout rhythm: the portrait/nameplate, proof panels, impact strip, evidence ledgers, 64rem rail handoff, one-column pre-64rem showcase, education grid, and closing panel match the source structure. The final rendered gate found no overflow at 1440, 1024, 768, 390, or 320 pixels.
+- Colors and visual tokens: v3 uses the registered Imladris surface, text, border, brand, gold, radius, and shadow tokens. The static token test and WordPress token verifier both pass; no parallel palette was introduced.
+- Image quality and asset fidelity: the supplied Henry Perkins portrait is used directly with the intended circular crop, gold border, scale, and shadow. The handoff contains no additional page-owned imagery or icon assets to reproduce.
+- Copy and content: the hero, credential, WordCamp US note, seven contribution rows, seven experience roles, six skill groups / 34 terms, two education records, five selected-work entries, and closing invitation match the v3 contract. Visible source count is 995 words.
+- States and interactions: section navigation, scrollspy, evidence filters, Clear filter, earlier-role disclosure, Copy status, responsive Skills-index relocation, canonical print preparation, and a real Interactivity Router route-away/Back remount were exercised. Filtering stably promotes cited rows, dims the non-citing partition to 0.34, and hides none; Back restores exactly one control set, two dividers, and eleven citation chips.
+- Accessibility and resilience: semantic native navigation and controls remain keyboard reachable; prominent actions and artifact links retain 44px targets; focus styling, reduced motion, portrait alt text, live status messaging, and sticky-target clearance are verified. Console errors and warnings were empty in the final desktop and mobile passes.
+
+## Comparison history
+
+- Pass 1 — P1 layout integration: the parent post-content constraint and legacy About gutters narrowed and offset the v3 composition. The v3-only post-content breakout, owned hero/layout gutters, and mobile sticky-nav offset were corrected. Post-fix hero and contributions comparisons align with `01-hero.png` and `02-signals-and-sticky-nav.png`.
+- Pass 2 — P2 experience drift: inherited v2 card borders, role order, and typography made the experience ledger heavier than the flat source anatomy. The v3 experience layer now uses transparent rows, the 3px evidence rule, Marcellus organization labels, and mono metadata. Post-fix evidence is `implementation-03-experience.png`.
+- Pass 3 — P2 responsive work drift: the showcase switched to two columns too early and inherited inflated card minimum heights. Its handoff moved to 64rem, the fifth item spans only at that breakpoint, and pre-64rem cards are compact and stacked. Post-fix evidence is `implementation-06-selected-work.png` plus the 768/390/320 full-page captures.
+- Pass 4 — P2 interaction integration: the earlier-role wrapper could remain displayed despite `hidden`, and desktop-responsive Skills copy confused canonical word parity. The disclosure rule now wins WordPress block display styles, and the rendered probe restores authored Skills copy before comparing source/rendered counts. Post-fix disclosure and all five primary viewport probes pass.
+- Pass 5 — P2 narrow boundary: at 601px the closing action rail wrapped to two rows even though the shared contract becomes horizontal above 600px. The v3 contact rail now stays nonwrapping with two shrinkable equal button columns. The 601px and 600px boundary probes both pass.
+- Pass 6 — review hardening: enhancement-only dividers and citation chips moved out of authored Gutenberg markup and are generated exactly once at runtime; the phone navigation is the flat 92%-parchment/8px-blur band; full impact cells are native links on the auto-fit grid; secondary actions use the registered style; the 3px Gold 700 focus ring keeps its 2px offset; exact handoff copy, the `/one-page-resume/` fallback, current live v0.3.60 status, and route cleanup are enforced. A real-browser flow now covers filter, clear, disclosure, copy, print, focus, and cleanup.
+- Pass 7 — router lifecycle hardening: a trusted header-link click now drives the real WordPress Interactivity Router away from About, verifies document-global cleanup, traverses Back, and requires one clean remount. The controller normalizes the router's cached pre-teardown DOM snapshot before remounting, preventing duplicate Clear, disclosure, copy, divider, and citation controls.
+- Final comparison: no actionable P0, P1, or P2 mismatch remained after the Pass 6 same-state recaptures. The refreshed 1440px and 390px review artifacts are `.impeccable/review/desktop.png` and `.impeccable/review/mobile.png`.
+
+## Findings
 
 - P0: none.
 - P1: none remaining.
 - P2: none remaining.
-- P3 residual boundary: the static fixture does not prove integration with the complete local WordPress header, database-owned Page 6, deployment, or production. Those surfaces were deliberately outside this candidate review.
+- P3: none requiring candidate changes. The real global header and the implementation's correction of the source overlap artifact are expected, documented differences.
 
-## Fresh verification
+## Implementation checklist
 
-- `node --test scripts/lib/about-resume-style.test.js scripts/lib/about-resume.test.js`: 7 passed, 0 failed.
-- `node scripts/verify-about-page-source.js --drafts`: candidate verified; 701 visible words, 7 contributions, 7 experience rows, 30 skills, 5 showcase items, 1 contact section.
-- `php -l functions.php`: no syntax errors detected.
+- [x] Match all six supplied visual states.
+- [x] Verify desktop, tablet, mobile, and breakpoint geometry.
+- [x] Exercise navigation, filtering, disclosure, copy, print preparation, and a real router away/Back remount.
+- [x] Check fonts, spacing, tokens, portrait quality, copy, focus, targets, reduced motion, overflow, and console output.
+- [x] Promote the exact reviewed body, synchronize the accepted snapshot, and preserve the previous production body for rollback.
 
-## Pass 5 — handoff re-read against the implementation
-
-Re-read `design_handoff_about_skills_index/README.md` and the prototype against
-the committed candidate. The publication boundary is unchanged: only
-`content/page-drafts/about.html`, `assets/imladris-pages.css`,
-`assets/js/about-resume.js`, and the contract were touched. The accepted mirror
-`content/page-snapshots/about.html`, WordPress Page 6, deployment, and
-production were not changed.
-
-Corrected in this pass:
-
-- **Evidence links pointed at a GitHub account that is not the author's.** Seven
-  links used `github.com/hperkins`; the repo's own activity audit and every
-  other tracked surface use `github.com/henryperkins`, and the Codex row named
-  the non-existent `hperkins/wp-ai-codex-provider`. Two contribution rows also
-  linked to *filtered search* URLs rather than artifacts, so a row labelled
-  "Merged pull request" resolved to an empty result page. Every row now links
-  the specific artifact the prototype names; each URL is corroborated by
-  `docs/audits/2026-08-10-wordpress-github-activity.md`.
-- **Selected artifacts had drifted from the real project set.** The handoff
-  marks the showcase out of scope and unchanged; the candidate carried five
-  invented cards, one of them a project the repo's own audit classifies as
-  non-WordPress adjacent work. Restored to the five real projects the design
-  carries, which also makes the "5 public projects" signal checkable on the page.
-- **Impact strip was missing half its anatomy.** Section 2 specifies a metric, a
-  mono unit, an explanation, and a jump link to the section that proves it. The
-  cards carried a metric and one label, and were not links.
-- **Education had lost two real records.** The handoff and the currently-live
-  About page both carry College of DuPage (2013) and Columbia College Chicago
-  (2007 – 2008); the candidate had replaced them with two unattributed
-  paragraphs. Restored on the specified `11rem minmax(0, 1fr)` grid.
-- **A superseded CSS layer drew a 3px evergreen rule above every skills group.**
-  The pass-3 override never reset it, so each group carried a heavy rule where
-  the design uses a hairline. Visible in the pass-4 desktop and mobile captures.
-- **An unbacked term could not render as specified.** It showed `0` on a
-  disabled control at `cursor: not-allowed`; the design calls for an em-dash on
-  an inert term at `opacity: 0.55`, `cursor: default`. No term on the page is
-  currently unbacked, so this path was unreachable and unverified.
-- **One authored count contradicted the evidence map.** PHP was authored as `3`
-  where two rows carry it, so the no-JS source and the runtime disagreed.
-- **Contributions and roles dimmed to different opacities** (0.32 vs 0.34) for
-  the same filter state; the design names one value.
-- **The main-column sections size with `width: 100%` and then pad**, so the page
-  depended on a border-box reset it inherits from outside its own stylesheet. A
-  scoped reset makes About independent of it — a no-op wherever the reset
-  already exists, and the removal of a 390px overflow where it does not.
-
-Guards added so each correction stays corrected: `verifyAboutV2Body()` now
-checks every authored count against the derived count (em-dash at zero), that
-each impact card carries a unit, an explanation, and a cue resolving to a real
-section, that both education records are present verbatim, and that no outbound
-GitHub link names an owner outside `WordPress` / `henryperkins`.
-
-Deliberate departures from the handoff prose, kept:
-
-- The readout reads "1 row above matches" at N = 1. The prototype emits "1 row
-  above match"; N = 1 is the common case here, so the grammatical form ships.
-- The section rail marks the current entry `aria-current="location"` rather than
-  `"true"`, which is the more precise value for an in-page scrollspy.
-- Term chips keep the pill radius shown in the reference screenshots rather than
-  the `--radius-chip` (2px) named in the README prose.
-
-Evidence: `.impeccable/qa/about-v2/pass5-impact-strip-1280.png`,
-`.impeccable/qa/about-v2/pass5-skills-education-1280.png`. Measured in a static
-fixture built from the reviewed draft, theme tokens, fonts, page stylesheet, and
-the About controller: 1280px and 390px both report
-`scrollWidth === clientWidth`; the Documentation filter dims 6 of 11 rows at
-0.34 with a 140ms opacity transition; a synthetic unbacked term renders an
-em-dash, no control, `opacity: 0.55`, `cursor: default`, and recomputes its
-group coverage.
-
-## Residual boundary
-
-The fixture still does not prove integration with the complete local WordPress
-header, database-owned Page 6, deployment, or production. The border-box result
-in particular is defensive: it is correct either way, but whether the live page
-overflowed at 390px was not established against a real install.
-
-## Pass 5 result
-
-passed
-
-## Pass 6 — approved handoff fidelity follow-up
-
-### Source visual truth and rendered evidence
-
-- Handoff archive: `C:\Users\htper\hperkins-tokens\aboutredesign.zip`.
-- Source screenshots: `C:\Users\htper\AppData\Local\Temp\about-redesign-reference-20260824\design_handoff_about_skills_index\screenshots\01-identity-header.png` through `04-contributions-dimmed.png`.
-- Rendered preview: `http://127.0.0.1:4179/about/`.
-- Final rendered screenshots:
-  - `C:\Users\htper\AppData\Local\Temp\about-review-identity-909x540-final.png`
-  - `C:\Users\htper\AppData\Local\Temp\about-review-skills-idle-909x540-final.png`
-  - `C:\Users\htper\AppData\Local\Temp\about-review-skills-filtered-909x540-final.png`
-  - `C:\Users\htper\AppData\Local\Temp\about-review-contributions-filtered-909x540-final.png`
-  - `C:\Users\htper\AppData\Local\Temp\about-review-mobile-390x844-final.png`
-  - `C:\Users\htper\AppData\Local\Temp\about-review-mobile-skills-filtered-390x844-final.png`
-  - `C:\Users\htper\AppData\Local\Temp\about-review-desktop-1280x900-final.png`
-
-The four source screenshots and their corresponding 909px implementation
-captures are each 909 x 540 pixels. They were compared at a 909 x 540 CSS
-viewport, scale 1, zoom 1, with no density conversion. The responsive captures
-are 390 x 844 and 1280 x 900 pixels at the matching CSS sizes and density 1.
-The in-app browser was unavailable, so the connected Edge browser was used as
-the Product Design fallback.
-
-The original fixture process held the pre-edit stylesheet in memory. The final
-preview therefore layers the current candidate stylesheet after that fixture;
-the capture-only route also suppresses the native scrollbar so the visible CSS
-width matches the 909px source capture. This normalization changes no repository
-code and is not used as production evidence.
-
-### State and comparison evidence
-
-- Identity, resting Skills, Documentation-filtered Skills, and filtered
-  Contributions were captured at the same viewport and interaction state as
-  their numbered source screenshots. Each source/implementation pair was
-  opened together in one comparison input before this report was updated.
-- Full-view comparison checked composition, section framing, rail behavior,
-  type hierarchy, ledger density, and the active/dimmed state.
-- Focused comparison checked the identity kicker, compact Copy control, Skills
-  readout line fit, Clear filter control, first skill group, and the first two
-  contribution rows. Focused evidence was required because those details are
-  too small to judge reliably from the full page alone.
-- The source identity screenshot includes the full site header while the local
-  candidate fixture begins at `<main>`. The candidate-owned identity region was
-  compared at unchanged scale; header integration remains outside this
-  candidate-only review.
-
-### Comparison history
-
-- Initial P2 — identity metadata drift: the kicker resolved to Marcellus and the
-  Copy control inherited the 15px bold generic action treatment. The scoped fix
-  now resolves both to JetBrains Mono; Copy computes to 12px/400, 1.4 leading,
-  0.06em tracking, uppercase, the card surface and hair border, while retaining
-  a 44px minimum target. Post-fix evidence:
-  `about-review-identity-909x540-final.png`.
-- Initial P2 — resting readout wrapped to two lines: added tracking and an empty
-  explicit grid track consumed the width reserved for the hidden Clear button.
-  The handoff's no-tracking flex-wrap control row and `flex: 1 1 16rem`
-  readout were restored. It now computes to one line at 909px. Post-fix evidence:
-  `about-review-skills-idle-909x540-final.png`.
-- Post-fix comparison found no new P0, P1, or P2 issue. No further visual edits
-  were made after the final comparison.
-
-### Required fidelity surfaces
-
-- Fonts and typography: handoff families, weights, sizes, leading, tracking,
-  and wrapping are retained. The corrected kicker is mono, Copy is compact mono,
-  and the resting Skills readout is one line at 909px.
-- Spacing and layout rhythm: the identity geometry, readout surface, skill-chip
-  flow, contribution ledger, and 13rem desktop rail align with the supplied
-  system. At 1280px the layout computes to `208px 840px`; skill groups compute
-  to `176px 640px`.
-- Colors and tokens: corrected states use the registered Imladris card, hair,
-  faint-text, strong-text, and gold hover tokens. No new literal palette values
-  were introduced.
-- Image quality and asset fidelity: the supplied portrait remains an 80 x 80
-  circular source asset with the approved gold border and shadow. The handoff
-  contains no additional candidate-owned imagery or icons to reproduce.
-- Copy and content: identity, availability, idle/filter readouts, evidence
-  counts, and contribution copy match the reviewed candidate and handoff.
-- Responsiveness and accessibility: 390px and 1280px both report zero horizontal
-  overflow. Mobile terms wrap in one column, the rail remains horizontally
-  scrollable, and Copy/Clear controls retain 44px targets.
-
-### Interaction, console, and detector evidence
-
-- Documentation selection sets `aria-pressed="true"`, reports
-  `Documentation — 5 rows above match; the rest are dimmed.`, and dims 6 of 11
-  evidence rows. Clear filter restores 0 dimmed rows and the one-line idle copy.
-- Earlier roles expands to exactly 3 rows with `aria-expanded="true"` and then
-  returns to the hidden, collapsed state.
-- The final browser error log is empty.
-- The required Impeccable detector ran once after the UI edit. It degraded to
-  regex mode because its optional HTML parser modules are unavailable. Its
-  warnings are pre-existing global literals or the handoff's intentional ledger
-  and education rules; it reported no finding in the selectors changed here.
-
-### Final findings
-
-- P0: none.
-- P1: none.
-- P2: none.
-- P3: the supplied filtered screenshot wraps `Clear filter` onto two lines while
-  this implementation keeps it on one line inside the same 44px target. The
-  difference is non-blocking and keeps the control easier to scan.
-- Expected framing difference: the sticky section rail remains visible in the
-  implementation's Skills captures, as required by the handoff behavior, while
-  the source captures show the preceding disclosure edge in that strip.
-
-## Final result
-
-passed
-
-## Pass 7 — closing action-panel remediation
-
-### Source and implementation evidence
-
-- Approved source: `C:\Users\htper\hperkins-tokens\aboutredesign.zip`,
-  `design_handoff_about_skills_index/About v2.dc.html` lines 281–290 and the
-  handoff README's "Showcase and contact" contract.
-- The source pins a hair border, 3px gold left rule, `--radius-lg`, the
-  `--surface-sunken` → `--surface-card` gradient, `--shadow-md`, and exactly two
-  design-system Buttons: primary `/contact/` "Start a conversation", then
-  secondary `/one-page-resume/` "Download résumé (PDF)".
-- The supplied numbered source screenshots do not include Contact, and the
-  standalone canvas harness exposes imported design-system Buttons as generic
-  placeholders. The source file was therefore inspected directly at 909 x 540,
-  while visual comparison used its explicit inline panel tokens and the site's
-  existing shared `.hp-action-panel.is-closing` / `.hp-action-rail` primitive.
-- Final implementation captures:
-  - `.impeccable/qa/about-v2/implementation-contact-909x540.png`
-  - `.impeccable/qa/about-v2/implementation-contact-mobile-390x844.png`
-
-The candidate's already-reviewed Contact heading and lede remain unchanged;
-the handoff marks that copy as outside this Skills-index change. This pass
-restores only the shared closing-panel composition and its approved actions.
-
-### Responsive, interaction, and accessibility results
-
-- At 909 x 540 the panel is 845.33px wide with the expected gradient, gold
-  left rule, 12px radius, and medium shadow. The two actions share one row in
-  primary-then-secondary order and each computes to 44.875px high.
-- At 390 x 844 the rail becomes a column; both actions compute to 313.33px wide
-  and 44.875px high. At the 320px boundary both still fill the rail, remain at
-  least 44px high, and the document reports `scrollWidth === clientWidth`.
-- The secondary action received keyboard focus with `:focus-visible` matched
-  and a solid gold outline. The exact rendered hrefs are `/contact/` and
-  `/one-page-resume/`.
-- The final browser error/warning log is empty.
-- The candidate-only preview omits WordPress core's block-layout sheet, so the
-  QA proxy supplied only core's canonical `.wp-block-buttons` flex behavior.
-  Theme and page styles remained the repository versions. This is browser
-  evidence for the candidate surface, not database, deployment, or production
-  evidence.
-
-### Detector result
-
-The required Impeccable detector ran once after this UI edit. Optional parser
-modules were unavailable, so it used degraded regex mode. It found no warning
-in the changed Contact selector or markup; reported items are pre-existing
-page-wide literals and intentional ledger/education rules.
-
-### Final findings
-
-- P0: none.
-- P1: none.
-- P2: none.
-- P3: none.
-
-## Final result
-
-passed
+final result: passed
