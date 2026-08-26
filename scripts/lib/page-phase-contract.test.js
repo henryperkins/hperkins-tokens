@@ -58,7 +58,7 @@ test( 'keeps local About acceptance on drafts and deployed About on snapshots', 
 	);
 } );
 
-test( 'derives prominent-action counts for legacy, proof-first, and v2 About bodies', () => {
+test( 'derives prominent-action counts for legacy, proof-first, v2, and v3 About bodies', () => {
 	assert.deepEqual( deriveAboutActionContract( '<div class="hp-about-legacy"></div>' ), {
 		phase: 'legacy',
 		railCount: 1,
@@ -72,6 +72,11 @@ test( 'derives prominent-action counts for legacy, proof-first, and v2 About bod
 	assert.deepEqual( deriveAboutActionContract( '<div class="hp-about-resume hp-about-nav"></div>' ), {
 		phase: 'v2',
 		railCount: 1,
+		panelCount: 1,
+	} );
+	assert.deepEqual( deriveAboutActionContract( '<div class="hp-about-resume hp-about-resume-v3"></div>' ), {
+		phase: 'v3',
+		railCount: 2,
 		panelCount: 1,
 	} );
 } );

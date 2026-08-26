@@ -107,6 +107,33 @@ test( 'About v3 ships a static six-group, 34-term index before enhancement', () 
 	assert.match( controller, /appendChild\( skillIndex \)/ );
 } );
 
+test( 'About v3 keeps the enhanced Education outline sequential at every breakpoint', () => {
+	assert.match( controller, /setEducationRecordHeadingLevels\(rootElement, usesRail \? 3 : 4\)/ );
+	assert.match( controller, /setEducationRecordHeadingLevels\(rootElement, 4\)/ );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-education__record :is\(h3, h4\)/ );
+} );
+
+test( 'About v3 uses contrast-safe text accents on ivory surfaces', () => {
+	const eyebrowRule = aboutV3Css.match(
+		/\.hp-about-resume-v3 \.hp-about-kicker,[\s\S]*?\.hp-about-resume-v3 \.hp-about-wcus__label\s*\{[^}]*\}/
+	);
+	assert.ok( eyebrowRule );
+	assert.match( eyebrowRule[ 0 ], /color:\s*var\(--wp--preset--color--gold-800\);/ );
+	assert.doesNotMatch( eyebrowRule[ 0 ], /color:\s*var\(--wp--preset--color--gold-700\);/ );
+	assert.match(
+		aboutV3Css,
+		/\.hp-about-resume-v3 \.hp-about-nav__label\s*\{[^}]*color:\s*var\(--wp--preset--color--gold-800\);/s
+	);
+	assert.match(
+		aboutV3Css,
+		/\.hp-about-resume-v3 \.hp-about-contribution\.is-done \.hp-about-contribution__status\s*\{[^}]*color:\s*var\(--wp--custom--on--done\);/s
+	);
+	assert.match(
+		aboutV3Css,
+		/\.hp-about-resume-v3 \.hp-about-contribution\.is-review \.hp-about-contribution__status\s*\{[^}]*color:\s*var\(--wp--custom--on--review\);/s
+	);
+} );
+
 test( 'About v3 responsive shell follows the mobile bar and 64rem rail handoff', () => {
 	assert.match( template, /About v3/ );
 	assert.match( template, /"contentSize":"72rem"/ );

@@ -26,6 +26,9 @@ function selectAboutSource( { drafts = false, requireLocal = false } = {} ) {
 
 function deriveAboutActionContract( body ) {
 	const source = String( body || '' );
+	if ( source.includes( 'hp-about-resume-v3' ) ) {
+		return { phase: 'v3', railCount: 2, panelCount: 1 };
+	}
 	if ( source.includes( 'hp-about-resume' ) ) {
 		return { phase: 'v2', railCount: 1, panelCount: 1 };
 	}

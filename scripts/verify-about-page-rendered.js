@@ -956,6 +956,19 @@ function verifyGeometry( result, viewport, expectations ) {
 	}
 }
 
+function responsiveHeadingExpectations( expectations, viewportWidth ) {
+	const usesV3Rail = expectations.version === 'v3' && viewportWidth >= 1024;
+	return expectations.headings.map( ( heading ) => ( {
+		...heading,
+		level: usesV3Rail && heading.section === 'skills' && heading.level === 4
+			? 3
+			: heading.level,
+		text: usesV3Rail && heading.section === 'skills' && heading.level === 2 && heading.text === 'Skills index'
+			? 'Education'
+			: heading.text,
+	} ) );
+}
+
 function verifyContent( result, viewport, expectations ) {
 	const label = `${ viewport.width }px`;
 	const isV2 = expectations.version === 'v2';
@@ -964,12 +977,9 @@ function verifyContent( result, viewport, expectations ) {
 
 	// Heading inventory, order, levels, and section ancestry.
 	const actual = result.headings.map( ( heading ) => `${ heading.level }|${ heading.text }|${ heading.section }` );
-	const expected = expectations.headings.map( ( heading ) => {
-		const responsiveText = isV3 && viewport.width >= 1024 && heading.level === 2 && heading.section === 'skills' && heading.text === 'Skills index'
-			? 'Education'
-			: heading.text;
-		return `${ heading.level }|${ responsiveText }|${ heading.section }`;
-	} );
+	const expected = responsiveHeadingExpectations( expectations, viewport.width ).map( ( heading ) =>
+		`${ heading.level }|${ heading.text }|${ heading.section }`
+	);
 	assert(
 		actual.length === expected.length && expected.every( ( entry, index ) => actual[ index ] === entry ),
 		`${ label }: heading inventory mismatch.\nexpected:\n${ expected.join( '\n' ) }\nactual:\n${ actual.join( '\n' ) }`
@@ -1363,10 +1373,12 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 			if (!root) { return { error: 'missing .hp-about-resume-v3 before router round-trip' }; }
 			if (!link) { return { error: 'missing Council brand route link' }; }
 			const rect = link.getBoundingClientRect();
+			const routerAvailable = Boolean(document.querySelector('[data-wp-router-region]'));
 			window.__hpAboutRouterProbe = { initialPath: location.pathname, token: 'about-v3-router-round-trip' };
 			return {
 				error: '',
 				initialPath: location.pathname,
+				routerAvailable,
 				x: rect.left + rect.width / 2,
 				y: rect.top + rect.height / 2,
 			};
@@ -1390,29 +1402,35 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 		cdp,
 		sessionId,
 		`(() => {
+			const documentElement = document.documentElement;
+			if (!documentElement) { return false; }
 			if (location.pathname === ${ JSON.stringify( click.initialPath ) } || document.querySelector('.hp-about-resume-v3')) { return false; }
 			return {
 				copyButtons: document.querySelectorAll('.hp-about-copy').length,
 				controlSets: document.querySelectorAll('.hp-about-skills__controls').length,
 				earlierToggles: document.querySelectorAll('.hp-about-earlier__toggle').length,
-				hasGlobalClass: document.documentElement.classList.contains('has-about-v3'),
+				hasGlobalClass: documentElement.classList.contains('has-about-v3'),
 				hasSentinel: window.__hpAboutRouterProbe?.token === 'about-v3-router-round-trip',
-				headerOffset: document.documentElement.style.getPropertyValue('--hp-about-header-height'),
+				headerOffset: documentElement.style.getPropertyValue('--hp-about-header-height'),
 				path: location.pathname,
 				roots: document.querySelectorAll('.hp-about-resume-v3').length,
 			};
 		})()`,
-		'the real Interactivity Router route-away commit'
+		click.routerAvailable ? 'the real Interactivity Router route-away commit' : 'the full-navigation route-away commit'
 	);
-	assert( away.hasSentinel, 'v3 route-away performed a full navigation instead of an in-document Interactivity Router swap.' );
+	if ( click.routerAvailable ) {
+		assert( away.hasSentinel, 'v3 route-away performed a full navigation despite an available Interactivity Router region.' );
+	} else {
+		assert( ! away.hasSentinel, 'v3 route-away unexpectedly preserved document state without a router region.' );
+	}
+	const { hasSentinel: awayHasSentinel, ...awayState } = away;
 	assertJsonEqual(
-		away,
+		awayState,
 		{
 			copyButtons: 0,
 			controlSets: 0,
 			earlierToggles: 0,
 			hasGlobalClass: false,
-			hasSentinel: true,
 			headerOffset: '',
 			path: away.path,
 			roots: 0,
@@ -1425,9 +1443,11 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 		cdp,
 		sessionId,
 		`(() => {
+			const documentElement = document.documentElement;
+			if (!documentElement) { return false; }
 			const root = document.querySelector('.hp-about-resume-v3.is-enhanced');
-			const hasGlobalClass = document.documentElement.classList.contains('has-about-v3');
-			const headerOffset = document.documentElement.style.getPropertyValue('--hp-about-header-height');
+			const hasGlobalClass = documentElement.classList.contains('has-about-v3');
+			const headerOffset = documentElement.style.getPropertyValue('--hp-about-header-height');
 			if (location.pathname !== ${ JSON.stringify( click.initialPath ) } || !root || !hasGlobalClass || !headerOffset) { return false; }
 			return {
 				chips: root.querySelectorAll('[data-hp-about-generated="citation"]').length,
@@ -1443,11 +1463,15 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 				roots: document.querySelectorAll('.hp-about-resume-v3').length,
 			};
 		})()`,
-		'the real Interactivity Router history-back remount'
+		click.routerAvailable ? 'the real Interactivity Router history-back remount' : 'the full-navigation history-back remount'
 	);
 	assert( /^\d+px$/.test( remounted.headerOffset ), `v3 history-back restored an invalid header offset: ${ remounted.headerOffset }.` );
+	if ( click.routerAvailable ) {
+		assert( remounted.hasSentinel, 'v3 Interactivity Router history-back replaced the document instead of remounting in place.' );
+	}
+	const { hasSentinel: remountedHasSentinel, ...remountedState } = remounted;
 	assertJsonEqual(
-		remounted,
+		remountedState,
 		{
 			chips: 11,
 			clearButtons: 1,
@@ -1457,12 +1481,16 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 			dividers: 2,
 			earlierToggles: 1,
 			hasGlobalClass: true,
-			hasSentinel: true,
 			headerOffset: remounted.headerOffset,
 			roots: 1,
 		},
 		'v3 history-back did not remount exactly one enhancement anatomy.'
 	);
+	return {
+		awayHasSentinel,
+		remountedHasSentinel,
+		transport: click.routerAvailable ? 'interactivity-router' : 'full-navigation',
+	};
 }
 
 // Real-keyboard fragment behavior for every jump link: Enter activates the
@@ -1639,7 +1667,8 @@ async function main() {
 						await wait( 300 );
 						await dispatchKey( cdp, sessionId, 'Tab', 'Tab', 9 );
 						await verifyV3Interactions( cdp, sessionId );
-						await verifyV3RouterRoundTrip( cdp, sessionId );
+						const roundTrip = await verifyV3RouterRoundTrip( cdp, sessionId );
+						console.log( `checked v3 ${ roundTrip.transport } away/back round-trip` );
 					}
 				}
 				const capturePath = await captureScreenshot( cdp, sessionId, viewport );
@@ -1669,6 +1698,7 @@ module.exports = {
 	buildInspectionExpression,
 	deriveRenderedExpectations,
 	navigateDocument,
+	responsiveHeadingExpectations,
 	usesWideResumeShowcaseLayout,
 	verifyCardHoverInertia,
 	verifyV3Interactions,

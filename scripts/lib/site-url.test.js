@@ -123,6 +123,13 @@ test( 'strips only the current WordPress.com cache version from rendered same-or
 	);
 	assert.equal(
 		stripWpcomCacheVersionFromRenderedHref?.(
+			'https://hperkins.blog?v=0b3b97fa6688',
+			documentUrl
+		),
+		'https://hperkins.blog'
+	);
+	assert.equal(
+		stripWpcomCacheVersionFromRenderedHref?.(
 			'/contact/?preview=1&v=0b3b97fa6688',
 			documentUrl
 		),

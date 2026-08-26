@@ -67,6 +67,7 @@ function stripWpcomCacheVersionFromRenderedHref( value, documentUrl ) {
 
 	let document;
 	let target;
+	const rootWithoutSlash = /^(?:https?:)?\/\/[^/?#]+(?:[?#]|$)/i.test( value );
 	try {
 		document = new URL( documentUrl );
 		target = new URL( value, document );
@@ -90,7 +91,8 @@ function stripWpcomCacheVersionFromRenderedHref( value, documentUrl ) {
 	// matching cache-preflight key; other query keys remain visible to the
 	// caller's exact comparison.
 	target.searchParams.delete( 'v' );
-	const path = `${ target.pathname }${ target.search }${ target.hash }`;
+	const pathname = rootWithoutSlash && target.pathname === '/' ? '' : target.pathname;
+	const path = `${ pathname }${ target.search }${ target.hash }`;
 	if ( /^https?:\/\//i.test( value ) ) {
 		return `${ target.origin }${ path }`;
 	}

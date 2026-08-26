@@ -191,6 +191,32 @@
 		return chip;
 	}
 
+	function setEducationRecordHeadingLevels(rootElement, level) {
+		if (!rootElement || !rootElement.querySelectorAll) {
+			return [];
+		}
+
+		var targetTagName = 'H' + level;
+		return Array.prototype.map.call(
+			rootElement.querySelectorAll('.hp-about-education__record h3, .hp-about-education__record h4'),
+			function (heading) {
+				if (heading.tagName === targetTagName) {
+					return heading;
+				}
+
+				var replacement = heading.ownerDocument.createElement('h' + level);
+				Array.prototype.forEach.call(heading.attributes || [], function (attribute) {
+					replacement.setAttribute(attribute.name, attribute.value);
+				});
+				while (heading.firstChild) {
+					replacement.appendChild(heading.firstChild);
+				}
+				heading.replaceWith(replacement);
+				return replacement;
+			}
+		);
+	}
+
 	function resetStaleEnhancement(rootElement) {
 		var skillSection = rootElement.querySelector('#skills');
 		var skillIndex = rootElement.querySelector('.hp-about-skill-index');
@@ -198,6 +224,7 @@
 		if (skillSection && skillIndex && skillIndex.parentNode !== skillSection) {
 			skillSection.insertBefore(skillIndex, education || null);
 		}
+		setEducationRecordHeadingLevels(rootElement, 4);
 
 		Array.prototype.forEach.call(rootElement.querySelectorAll('button.hp-about-skill-term__button'), function (button) {
 			var span = document.createElement('span');
@@ -515,7 +542,9 @@
 
 		function moveSkillIndex(event) {
 			var isWide = typeof event.matches === 'boolean' ? event.matches : wideQuery.matches;
-			if (isWide && skillIndex && railHost) {
+			var usesRail = Boolean(isWide && skillIndex && railHost);
+			setEducationRecordHeadingLevels(rootElement, usesRail ? 3 : 4);
+			if (usesRail) {
 				railHost.appendChild( skillIndex );
 				if (heading) {
 					heading.textContent = 'Education';
@@ -844,6 +873,7 @@
 		formatReadout: formatReadout,
 		mount: mount,
 		partitionEvidenceRows: partitionEvidenceRows,
+		setEducationRecordHeadingLevels: setEducationRecordHeadingLevels,
 		settle: settle,
 		termSlug: termSlug
 	};

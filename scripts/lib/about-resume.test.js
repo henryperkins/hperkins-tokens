@@ -97,6 +97,67 @@ test( 'v3 Skills readout uses the approved idle, singular, and plural language',
 	assert.equal( formatReadout( 'Documentation', 5 ), 'Documentation — 5 rows cite it, pulled to the top of each ledger.' );
 } );
 
+test( 'desktop Education promotes record headings without losing their content or attributes', () => {
+	const { setEducationRecordHeadingLevels } = require( controllerPath );
+	assert.equal( typeof setEducationRecordHeadingLevels, 'function' );
+
+	const fakeDocument = {};
+	fakeDocument.createElement = ( tagName ) => {
+		const element = {
+			tagName: tagName.toUpperCase(),
+			ownerDocument: fakeDocument,
+			attributes: [],
+			childNodes: [],
+			setAttribute( name, value ) {
+				const existing = this.attributes.find( ( attribute ) => attribute.name === name );
+				if ( existing ) {
+					existing.value = value;
+				} else {
+					this.attributes.push( { name, value } );
+				}
+			},
+			appendChild( child ) {
+				if ( child.parentNode ) {
+					const index = child.parentNode.childNodes.indexOf( child );
+					child.parentNode.childNodes.splice( index, 1 );
+				}
+				this.childNodes.push( child );
+				child.parentNode = this;
+			},
+			replaceWith( replacement ) {
+				this.replacement = replacement;
+			},
+		};
+		Object.defineProperty( element, 'firstChild', {
+			get() {
+				return this.childNodes[ 0 ] || null;
+			},
+		} );
+		return element;
+	};
+
+	const heading = fakeDocument.createElement( 'h4' );
+	heading.setAttribute( 'class', 'wp-block-heading' );
+	heading.setAttribute( 'data-proof', 'degree' );
+	heading.appendChild( { nodeType: 3, nodeValue: 'A.S., Business Administration & Management' } );
+	const root = {
+		querySelectorAll( selector ) {
+			assert.equal( selector, '.hp-about-education__record h3, .hp-about-education__record h4' );
+			return [ heading ];
+		},
+	};
+
+	const replacements = setEducationRecordHeadingLevels( root, 3 );
+	assert.equal( replacements.length, 1 );
+	assert.equal( replacements[ 0 ].tagName, 'H3' );
+	assert.deepEqual( replacements[ 0 ].attributes, [
+		{ name: 'class', value: 'wp-block-heading' },
+		{ name: 'data-proof', value: 'degree' },
+	] );
+	assert.equal( replacements[ 0 ].childNodes[ 0 ].nodeValue, 'A.S., Business Administration & Management' );
+	assert.equal( heading.replacement, replacements[ 0 ] );
+} );
+
 test( 'A term nothing above backs remains visibly unbacked and inert', () => {
 	const { buildIndex, UNBACKED_COUNT } = require( controllerPath );
 	assert.equal( UNBACKED_COUNT, '—' );

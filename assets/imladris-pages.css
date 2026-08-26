@@ -5514,7 +5514,7 @@ p.hp-contact-form__hint {
 	line-height: 1.4;
 	letter-spacing: 0.12em;
 	text-transform: uppercase;
-	color: var(--wp--preset--color--gold-700);
+	color: var(--wp--preset--color--gold-800);
 }
 
 .hp-about-resume-v3 .hp-about-v3-hero h1 {
@@ -6025,11 +6025,11 @@ p.hp-contact-form__hint {
 	color: var(--wp--custom--on--pending);
 }
 
-.hp-about-resume-v3 .is-done .hp-about-contribution__status {
+.hp-about-resume-v3 .hp-about-contribution.is-done .hp-about-contribution__status {
 	color: var(--wp--custom--on--done);
 }
 
-.hp-about-resume-v3 .is-review .hp-about-contribution__status {
+.hp-about-resume-v3 .hp-about-contribution.is-review .hp-about-contribution__status {
 	color: var(--wp--custom--on--review);
 }
 
@@ -6307,7 +6307,7 @@ p.hp-contact-form__hint {
 	color: var(--wp--custom--text--body);
 }
 
-.hp-about-resume-v3 .hp-about-education__record h4 {
+.hp-about-resume-v3 .hp-about-education__record :is(h3, h4) {
 	margin: 0;
 	font-family: var(--wp--preset--font-family--display);
 	font-size: var(--wp--preset--font-size--base);
@@ -6481,7 +6481,7 @@ p.hp-contact-form__hint {
 		letter-spacing: var(--wp--custom--tracking--caps);
 		text-transform: uppercase;
 		white-space: normal;
-		color: var(--wp--preset--color--gold-700);
+		color: var(--wp--preset--color--gold-800);
 	}
 
 	.hp-about-resume-v3 .hp-about-nav__list {

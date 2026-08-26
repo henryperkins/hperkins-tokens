@@ -8,6 +8,7 @@ const {
 	buildInspectionExpression,
 	deriveRenderedExpectations,
 	navigateDocument,
+	responsiveHeadingExpectations,
 	usesWideResumeShowcaseLayout,
 	verifyCardHoverInertia,
 	verifyV3Interactions,
@@ -143,6 +144,19 @@ test( 'derives rendered copy from the accepted About body', () => {
 	assert.deepEqual( expectations.heroActionLabels, [ 'Download résumé (PDF)', 'Get in touch' ] );
 } );
 
+test( 'v3 heading expectations follow the reversible 64rem Education handoff', () => {
+	const source = fs.readFileSync( acceptedSnapshotPath, 'utf8' );
+	const expectations = deriveRenderedExpectations( source, { label: 'accepted About fixture' } );
+	const degreeText = 'A.S., Business Administration & Management';
+	const desktop = responsiveHeadingExpectations( expectations, 1440 );
+	const mobile = responsiveHeadingExpectations( expectations, 768 );
+
+	assert.equal( desktop.find( ( heading ) => heading.text === 'Education' && heading.level === 2 )?.text, 'Education' );
+	assert.equal( desktop.find( ( heading ) => heading.text === degreeText )?.level, 3 );
+	assert.equal( mobile.find( ( heading ) => heading.text === 'Skills index' && heading.level === 2 )?.text, 'Skills index' );
+	assert.equal( mobile.find( ( heading ) => heading.text === degreeText )?.level, 4 );
+} );
+
 test( 'rejects a WCUS callout nested inside an action rail', () => {
 	const source = fs.readFileSync( acceptedSnapshotPath, 'utf8' );
 	const nested = source
@@ -252,6 +266,47 @@ test( 'the v3 router regression drives a trusted away/back flow and pins one rem
 	assert.match( source, /\.hp-about-skills__controls/ );
 	assert.match( source, /dividers:\s*2/ );
 	assert.match( source, /chips:\s*11/ );
+} );
+
+test( 'the v3 round trip accepts a clean full-navigation fallback when no router is present', async () => {
+	const cdp = {
+		async send( method, payload = {} ) {
+			if ( method === 'Input.dispatchMouseEvent' ) {
+				return {};
+			}
+			if ( method !== 'Runtime.evaluate' ) {
+				throw new Error( `Unexpected CDP method: ${ method }` );
+			}
+
+			const expression = payload.expression || '';
+			if ( expression.includes( 'window.__hpAboutRouterProbe =' ) ) {
+				return { result: { value: {
+					error: '', initialPath: '/about/', routerAvailable: false, x: 24, y: 24,
+				} } };
+			}
+			if ( expression.includes( "document.querySelector('.hp-about-resume-v3.is-enhanced')" ) ) {
+				return { result: { value: {
+					chips: 11, clearButtons: 1, copyButtons: 1, copyStatuses: 1,
+					controlSets: 1, dividers: 2, earlierToggles: 1,
+					hasGlobalClass: true, hasSentinel: false,
+					headerOffset: '72px', roots: 1,
+				} } };
+			}
+			if ( expression.includes( 'copyButtons:' ) ) {
+				return { result: { value: {
+					copyButtons: 0, controlSets: 0, earlierToggles: 0,
+					hasGlobalClass: false, hasSentinel: false,
+					headerOffset: '', path: '/', roots: 0,
+				} } };
+			}
+			if ( expression.includes( 'history.back()' ) ) {
+				return { result: { value: true } };
+			}
+			throw new Error( `Unexpected Runtime.evaluate expression: ${ expression }` );
+		},
+	};
+
+	await assert.doesNotReject( () => verifyV3RouterRoundTrip( cdp, 'session-1' ) );
 } );
 
 test( 'runs selected-body and CSS contracts in source-only mode without an origin', () => {
