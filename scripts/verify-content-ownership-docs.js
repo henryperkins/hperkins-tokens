@@ -45,6 +45,9 @@ const checks = [
 			// in the pages sheet.
 			'one human-authored candidate at `content/page-drafts/about.html`',
 			'thin inserter adapter that reads the',
+			// ai-enablement joined the adapter model: the pattern re-emits the
+			// accepted snapshot instead of carrying a third copy of the essay.
+			'reads the accepted `content/page-snapshots/ai-enablement.html`',
 			'--confirm-local --page=about',
 			'--expect-draft',
 			'assets/imladris-pages.css',
@@ -53,6 +56,9 @@ const checks = [
 			/then appends the Three Rings \(Vilya \/ Narya \/ Nenya\) framework section\./,
 			/renders the\s+"ai-enablement" pattern/i,
 			/wraps the "work-index" pattern/i,
+			// Retired: ai-enablement presented as a reusable full-page seed. It
+			// drifted behind the published essay; it is an adapter now.
+			/`work-index` and `ai-enablement` remain reusable/,
 			// Retired: about-resume presented as one more reusable full-page
 			// seed. It is a thin adapter over the accepted snapshot now.
 			/filesystem patterns \(`about-resume`/,
@@ -75,6 +81,7 @@ const checks = [
 			// About proof-first ownership model (Phase A).
 			'content/page-drafts/about.html',
 			'thin adapter over the accepted snapshot',
+			'scripts/verify-ai-enablement-source.js',
 			'--page=about',
 			'.hp-about-template` selector anymore',
 			'PRODUCT.md',
@@ -90,6 +97,8 @@ const checks = [
 			/page-ai-enablement\.html is a \*\*shadow template\*\*/i,
 			// Retired: about-resume listed among the reusable full-page seeds.
 			/`\/about\/`, `\/work\/`, and `\/ai-enablement\/` content patterns/,
+			// Retired: ai-enablement listed beside work-index as a reusable seed.
+			/The `\/work\/` and `\/ai-enablement\/` content patterns are reusable seeds/,
 			// Retired: the pages-sheet scope list without About — the About
 			// page layer lives in assets/imladris-pages.css now.
 			/design system \(ai-enablement essay, contact, work index, job-placement digest\)/,
@@ -103,6 +112,7 @@ const checks = [
 			'verify-prominent-actions.js',
 			'verify-about-page-source.js',
 			'verify-about-page-rendered.js',
+			'verify-ai-enablement-source.js',
 		],
 		exclude: [],
 	},
@@ -126,6 +136,7 @@ const checks = [
 			// mapped but never presented as deployed.
 			'content/page-drafts/about.html',
 			'thin accepted-snapshot adapter',
+			'`patterns/ai-enablement.php` (thin accepted-snapshot adapter',
 			'About page layer in `assets/imladris-pages.css`',
 			'not the deployed body until it passes review and controlled promotion',
 			// Impeccable authority chain: which artifact owns which decision, plus
@@ -142,6 +153,8 @@ const checks = [
 			/\*\*Shadow template\*\* over live page 175/i,
 			/appended to live \*\*Work\*\* page 13/i,
 			/\*\*add\*\* `job-placement-digest\.php`/i,
+			// Retired: the AI Enablement row without the adapter.
+			/`patterns\/ai-enablement\.php` remains a reusable seed\/reference copy/,
 			// Retired: the two-artifact About row without the candidate,
 			// adapter, and page-layout CSS mapping.
 			/\| `templates\/about` \| `content\/page-snapshots\/about\.html`, `templates\/page-about\.html` \|/,

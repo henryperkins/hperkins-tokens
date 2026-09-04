@@ -232,14 +232,26 @@ than a theme-owned wrapper template. Keep the verified mirrors in sync at
 `content/page-snapshots/work-flavor-agent-demo.html`. After an intentional
 page-body edit, refresh the files with `node scripts/export-page-snapshots.js`
 and verify with `node scripts/verify-content-ownership.js`. The older
-filesystem patterns `work-index` and `ai-enablement` remain reusable
-seeds/reference copies rather than the live route owners for those pages.
-`about-resume` is different: it is a thin inserter adapter that reads the
-accepted `content/page-snapshots/about.html`, substitutes exactly one
+filesystem pattern `work-index` remains a reusable seed/reference copy rather
+than the live route owner for `/work/`; `verify-no-duplicate-pages.js` holds
+it byte-identical to the snapshot. `about-resume` is different: it is a
+thin inserter adapter that reads the accepted
+`content/page-snapshots/about.html`, substitutes exactly one
 filemtime()-derived portrait URL, and fails closed on any mismatch — it carries
 no About page markup of its own, so the About body cannot acquire a third
 maintained copy. Résumé links stay on the stable `/one-page-resume/` route;
-the adapter does not rewrite them. The About redesign flow keeps exactly
+the adapter does not rewrite them. `ai-enablement` is the same kind of
+adapter: it reads the accepted `content/page-snapshots/ai-enablement.html`,
+re-derives exactly the six theme-hosted Three Rings image URLs (three WebP
+sources and three PNG fallbacks) through hperkins_tokens_asset_url(), fails
+closed (emits nothing) unless every one of them is found and rewritten exactly
+once, never reads a draft, and carries no essay markup of its own. The
+previous hand-maintained copy drifted behind the published essay, so
+re-inserting it would have silently reverted `/ai-enablement/` to an older
+draft; `scripts/verify-ai-enablement-source.js` executes the adapter under a
+minimal WordPress shim and requires byte parity with the snapshot on the
+accepted body and empty output on a broken one, so the gate cannot pass while
+the inserter registers an empty pattern. The About redesign flow keeps exactly
 one human-authored candidate at `content/page-drafts/about.html`; it reaches a
 local database only through the explicit, guarded
 `node scripts/apply-local-page-drafts.js --confirm-local --page=about`

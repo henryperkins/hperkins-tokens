@@ -43,6 +43,14 @@ test( 'the About contract carries explicit-only draft, adapter, and integrity me
 	assert.equal( about.deployedIntegrity, true );
 } );
 
+test( 'the AI Enablement contract names its pattern as a thin snapshot adapter', () => {
+	const aie = PAGE_CONTRACTS.find( ( contract ) => contract.key === 'ai-enablement' );
+	assert.ok( aie, 'ai-enablement contract exists' );
+	assert.equal( aie.snapshotFile, 'ai-enablement.html' );
+	assert.equal( aie.pattern.file, 'patterns/ai-enablement.php' );
+	assert.equal( aie.pattern.role, 'thin-snapshot-adapter' );
+} );
+
 test( 'the recruiter drafts stay the default local selection', () => {
 	for ( const key of [ 'job-placement-digest', 'placement-method-evidence' ] ) {
 		const contract = PAGE_CONTRACTS.find( ( candidate ) => candidate.key === key );

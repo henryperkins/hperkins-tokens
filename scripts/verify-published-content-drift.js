@@ -83,11 +83,12 @@ assert(
 	'Home rendered markup must assign four work entries the resolved state.'
 );
 
-for ( const file of [ 'patterns/ai-enablement.php', 'content/page-snapshots/ai-enablement.html' ] ) {
-	const contents = read( file );
-	assert( contents.includes( `href="${ DECK_PATH }"` ), `${ file } must link the public deck.` );
-	assert( ! contents.includes( '<a href="#">Download deck' ), `${ file } still has a placeholder deck link.` );
-}
+// patterns/ai-enablement.php is likewise a thin adapter over the accepted
+// snapshot (scripts/verify-ai-enablement-source.js pins it) and carries no
+// essay copy of its own, so the deck claim is asserted against the snapshot.
+const essay = read( 'content/page-snapshots/ai-enablement.html' );
+assert( essay.includes( `href="${ DECK_PATH }"` ), 'content/page-snapshots/ai-enablement.html must link the public deck.' );
+assert( ! essay.includes( '<a href="#">Download deck' ), 'content/page-snapshots/ai-enablement.html still has a placeholder deck link.' );
 
 const demo = read( 'content/page-snapshots/work-flavor-agent-demo.html' );
 assert(

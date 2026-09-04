@@ -57,6 +57,12 @@ const PAGE_CONTRACTS = [
 		snapshotFile: 'ai-enablement.html',
 		templateId: 'page-ai-enablement',
 		templateFile: 'templates/page-ai-enablement.html',
+		// No draft: the accepted snapshot is the only file-side body, and the
+		// pattern re-emits it (scripts/verify-ai-enablement-source.js).
+		pattern: {
+			file: 'patterns/ai-enablement.php',
+			role: 'thin-snapshot-adapter',
+		},
 	},
 	{
 		key: 'job-placement-digest',

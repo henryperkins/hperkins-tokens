@@ -126,6 +126,9 @@ jobs:
       - name: About page source contract
         run: node scripts/verify-about-page-source.js --drafts
 
+      - name: AI Enablement source contract
+        run: node scripts/verify-ai-enablement-source.js
+
       - name: Recruiter rendered-page source contract
         run: node scripts/verify-job-placement-pages.js --source-only --drafts
 

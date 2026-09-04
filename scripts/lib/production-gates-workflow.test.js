@@ -109,6 +109,11 @@ test( 'runs the About source contract against the reviewed candidate on every br
 	assert.match( sourceJob, /node scripts\/verify-about-page-source\.js --drafts/ );
 } );
 
+test( 'runs the AI Enablement adapter source contract on every branch', () => {
+	const sourceJob = workflow.slice( workflow.indexOf( '\n  verify:' ), workflow.indexOf( '\n  deployed-content:' ) );
+	assertActiveSourceCommand( sourceJob, 'node scripts/verify-ai-enablement-source.js' );
+} );
+
 test( 'includes the research appendix in the rendered typography route matrix', () => {
 	assert.match( typography, /'\/placement-method-and-evidence\/'/ );
 } );
