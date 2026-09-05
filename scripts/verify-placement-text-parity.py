@@ -18,12 +18,20 @@ from pypdf import PdfReader, PdfWriter
 ROOT = Path(__file__).resolve().parents[1]
 DOCX_PATH = ROOT / "assets" / "documents" / "henry-perkins-wordpress-support-engineer-resume.docx"
 PDF_PATH = ROOT / "assets" / "documents" / "henry-perkins-wordpress-support-engineer-resume.pdf"
-EVENT = "WORDCAMP US 2026 — Phoenix, Aug 16–19 · Selected to staff the Core AI booth"
+EVENT = (
+    "WORDCAMP US 2026 — Phoenix · Staffed the Core AI booth, walking maintainers "
+    "and agency developers through AI provider tooling"
+)
 FORBIDDEN = (
     (re.compile(r"as of Jul 30, 2026"), "as of Jul 30, 2026"),
     (re.compile(r"54 commits ahead"), "54 commits ahead"),
     (re.compile(r"\b30 contracts\b"), "30 contracts"),
     (re.compile(r"\b35 contracts\b"), "35 contracts"),
+    # Retired 2026-09-04 with the support-role résumé review.
+    (re.compile(r"Selected to staff the Core AI booth"), "pre-event WCUS copy"),
+    (re.compile(r"v0\.1\.0-rc\.3"), "superseded Flavor Agent prerelease v0.1.0-rc.3"),
+    (re.compile(r"TARGET: SUPPORT ENGINEER"), "retired target line"),
+    (re.compile(r" — Author\b"), "implementation-implying Author role label"),
 )
 
 

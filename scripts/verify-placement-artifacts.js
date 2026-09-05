@@ -37,20 +37,26 @@ const approvedColumns = [
 ];
 const supportPostingUrl = 'https://job-boards.greenhouse.io/automatticcareers/jobs/7875064';
 const providerVersion = '2.1';
+// The résumé is rebuilt from scripts/update-support-resume.py; these strings pin
+// the copy that review settled on 2026-09-04: post-event WCUS wording, the two
+// support investigations named as such, AI-assisted code contributions that are
+// directed and reviewed rather than "authored", Creator rather than Author on
+// the solo projects, and Flavor Agent's shipped v0.1.0.
 const REQUIRED_RESUME_COPY = [
-	'WORDCAMP US 2026 — Phoenix, Aug 16–19 · Selected to staff the Core AI booth',
+	'WORDCAMP US 2026 — Phoenix · Staffed the Core AI booth, walking maintainers and agency developers through AI provider tooling',
 	'WordPress/ai PR #501',
 	'WordPress/php-ai-client PR #263',
 	'WordPress/ai-provider-for-openai PR #40',
 	'Issue #529',
-	'maintainer authored PR #593',
+	'A maintainer’s fix, PR #593',
 	'Issue #732',
-	'Anubhav Anand authored PR #757',
-	'Flavor Agent',
-	'v0.1.0-rc.3',
-	'unreleased',
-	'AI Provider for Codex',
-	'HPerkins Tokens',
+	'Anubhav Anand’s proposed fix (PR #757, open)',
+	'Directed and reviewed an AI-assisted',
+	'Solo projects, built AI-assisted under my direction and review',
+	'Flavor Agent — Creator',
+	'v0.1.0 released Aug 26, 2026',
+	'AI Provider for Codex — Creator',
+	'HPerkins Tokens — Creator',
 ];
 const FORBIDDEN_RESUME_COPY = [
 	[ /as of Jul 30, 2026/, 'as of Jul 30, 2026' ],
@@ -60,6 +66,15 @@ const FORBIDDEN_RESUME_COPY = [
 	[ /my PR #593/, 'my PR #593' ],
 	[ /my PR #757/, 'my PR #757' ],
 	[ /final v0\.1\.0/, 'final v0.1.0' ],
+	// Retired 2026-09-04. A DOCX or PDF that was not rebuilt still carries these,
+	// so they must fail rather than pass on the required copy alone.
+	[ /Selected to staff the Core AI booth/, 'pre-event WCUS copy' ],
+	[ /v0\.1\.0-rc\.3/, 'superseded Flavor Agent prerelease v0.1.0-rc.3' ],
+	[ /post-RC3|\bunreleased\b/, 'branch-inventory status language' ],
+	[ /TARGET: SUPPORT ENGINEER/, 'retired target line' ],
+	[ /OPEN UPSTREAM CODE|RELEASED OWNED WORK|PRERELEASE \+ ACTIVE/, 'all-caps status label' ],
+	[ / — Author\b/, 'implementation-implying Author role label' ],
+	[ /\bauthored (?:regression coverage|model-aware)/, 'implementation-implying authored claim' ],
 ];
 
 function assert( condition, message ) {
@@ -197,15 +212,23 @@ function verifyDocx( path, themeVersion ) {
 		'Résumé must begin with the approved WordPress Support Engineer heading.'
 	);
 	assert(
-		text.includes( 'PHP · JavaScript · Gutenberg · REST/HTTP/DNS · Root-cause debugging · Customer communication' ),
+		text.includes( 'WordPress · Gutenberg · REST/HTTP/DNS · Defect reproduction · Fix validation · Customer communication' ),
 		'Résumé is missing the approved technical-support header line.'
 	);
 	assertOrdered( text, [
-		'WORDPRESS.COM SUPPORT',
-		'NAMED CLIENT DELIVERY',
-		'UPSTREAM WORDPRESS CONTRIBUTION RECORD',
-		'TECHNICAL PROOF',
+		'EXPERIENCE',
+		'SELECTED WORDPRESS INVESTIGATIONS & CONTRIBUTIONS',
+		'SELECTED PROJECTS',
+		'TECHNICAL SKILLS & ADDITIONAL EXPERIENCE',
 	], 'Résumé' );
+	// The two support investigations lead the evidence; the code contributions follow.
+	assertOrdered( text, [
+		'Issue #529',
+		'Issue #732',
+		'WordPress/ai PR #501',
+		'WordPress/ai-provider-for-openai PR #40',
+		'WordPress/php-ai-client PR #263',
+	], 'Résumé evidence' );
 	for ( const claim of [
 		'Automattic — Happiness Engineer',
 		'DJ Lee & Voices of Judah',
@@ -217,8 +240,8 @@ function verifyDocx( path, themeVersion ) {
 	assert( ! forbiddenCopy, `Résumé contains forbidden stale copy: ${ forbiddenCopy }.` );
 
 	const providerSection = text.slice(
-		text.indexOf( 'AI Provider for Codex — Author' ),
-		text.indexOf( 'HPerkins Tokens — Author' )
+		text.indexOf( 'AI Provider for Codex — Creator' ),
+		text.indexOf( 'HPerkins Tokens — Creator' )
 	);
 	assert( providerSection.includes( `v${ providerVersion }` ), `Résumé must name AI Provider for Codex v${ providerVersion }.` );
 	const providerTags = [ ...providerSection.matchAll( /\bv\d+\.\d+(?:\.\d+)?\b/g ) ].map( ( match ) => match[0] );
@@ -228,8 +251,8 @@ function verifyDocx( path, themeVersion ) {
 	);
 
 	const themeSection = text.slice(
-		text.indexOf( 'HPerkins Tokens — Author' ),
-		text.indexOf( 'SKILLS & CAREER CONTEXT' )
+		text.indexOf( 'HPerkins Tokens — Creator' ),
+		text.indexOf( 'TECHNICAL SKILLS & ADDITIONAL EXPERIENCE' )
 	);
 	assert( themeSection.includes( `v${ themeVersion }` ), `Résumé must name the released HPerkins Tokens v${ themeVersion }.` );
 
@@ -264,7 +287,7 @@ function verifyDocx( path, themeVersion ) {
 		'https://github.com/WordPress/ai/releases/tag/1.0.1',
 		'https://github.com/WordPress/ai/issues/732',
 		'https://github.com/WordPress/ai/pull/757',
-		'https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0-rc.3',
+		'https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0',
 		`https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v${ providerVersion }`,
 		`https://github.com/henryperkins/hperkins-tokens/releases/tag/v${ themeVersion }`,
 	] ) {

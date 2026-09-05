@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import datetime
 import io
 import zipfile
 from copy import deepcopy
@@ -20,11 +21,36 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCX_PATH = ROOT / "assets" / "documents" / "henry-perkins-wordpress-support-engineer-resume.docx"
 TITLE = "Henry Perkins — WordPress Support Engineer"
 AUTHOR = "Henry Perkins"
-EVENT = "WORDCAMP US 2026 — Phoenix, Aug 16–19 · Selected to staff the Core AI booth"
+# Document metadata only; the revision date never appears in the visible text.
+REVISED = datetime.datetime(2026, 9, 4, tzinfo=datetime.timezone.utc)
+REVISED_LABEL = "September 4, 2026"
+# Post-event copy, mirroring the published About page. The pre-event
+# "Selected to staff" line is retired and forbidden by the artifact contracts,
+# so a binary that was not rebuilt cannot pass them.
+EVENT = (
+    "WORDCAMP US 2026 — Phoenix · Staffed the Core AI booth, walking maintainers "
+    "and agency developers through AI provider tooling"
+)
+HEADLINE = "WordPress · Gutenberg · REST/HTTP/DNS · Defect reproduction · Fix validation · Customer communication"
+SUMMARY = (
+    "WordPress support professional with prior WordPress.com support experience, current independent "
+    "client delivery, and upstream WordPress contributions. Reproduces defects, tests fixes, and reports "
+    "findings to customers and engineering."
+)
 
+# Type scale in points. Body text is 10.5pt; the event line is the one
+# deliberately smaller run and carries its own floor in assert_resume_event_contract.
+BODY_SIZE = 10.5
+TITLE_SIZE = 17.5
+SECTION_SIZE = 10.5
+EVENT_SIZE = 9.0
+
+# Every entry is (paragraph style, [(visible text, hyperlink URL or None), ...]).
+# A Resume Body whose first plain segment ends in " — " renders that segment as a
+# bold lead-in label; keep labels in their own segment so the body stays regular.
 RESUME = [
-    ("Heading 1", [("Henry Perkins — WordPress Support Engineer", None)]),
-    ("Normal", [("PHP · JavaScript · Gutenberg · REST/HTTP/DNS · Root-cause debugging · Customer communication", None)]),
+    ("Heading 1", [(TITLE, None)]),
+    ("Normal", [(HEADLINE, None)]),
     ("Normal", [
         ("Chicago, IL  ·  ", None),
         ("htperkins@gmail.com", "mailto:htperkins@gmail.com"),
@@ -34,75 +60,114 @@ RESUME = [
         ("GitHub", "https://github.com/henryperkins"),
     ]),
     ("Resume Event", [(EVENT, None)]),
-    ("Normal", [("TARGET: SUPPORT ENGINEER — WordPress support, site delivery, root-cause debugging, and clear handoff between customers and engineering.", None)]),
-    ("Heading 2", [("WORDPRESS.COM SUPPORT", None)]),
-    ("Resume Entry", [("Automattic — Happiness Engineer  |  Remote · Oct–Nov 2012", None)]),
-    ("Resume Body", [("Resolved WordPress.com issues across publishing, configuration, billing, domains, and DNS; wrote root-cause troubleshooting and reproducible details for customers, product, and engineering.", None)]),
-    ("Heading 2", [("NAMED CLIENT DELIVERY", None)]),
-    ("Resume Entry", [("Independent Technology Consultant  |  Oct 2022–Present · selected delivery in 2026", None)]),
+    ("Normal", [(SUMMARY, None)]),
+    ("Heading 2", [("EXPERIENCE", None)]),
+    ("Resume Entry", [("Independent Technology Consultant — Lakefront Digital  |  Oct 2022–Present · Chicago, remote", None)]),
     ("Resume Body", [
-        ("LIVE — Delivered ", None),
+        ("Delivery scope — ", None),
+        ("WordPress builds, API integrations, and documentation from discovery through post-launch support.", None),
+    ]),
+    ("Resume Body", [
+        ("Client launch — ", None),
+        ("Delivered ", None),
         ("DJ Lee & Voices of Judah", "https://thevoicesofjudah.com/"),
-        (" from discovery through launch: a booking-first static JavaScript experience on one Cloudflare Worker with a validated server-side booking route; ", None),
-        ("public source", "https://github.com/henryperkins/dj-judas-v2"),
-        (" keeps the handoff inspectable.", None),
+        ("’s booking-focused website from discovery through launch, including server-side booking validation and ", None),
+        ("publicly available source code", "https://github.com/henryperkins/dj-judas-v2"),
+        (".", None),
     ]),
-    ("Heading 2", [("UPSTREAM WORDPRESS CONTRIBUTION RECORD", None)]),
+    ("Resume Entry", [("Automattic — Happiness Engineer  |  WordPress.com · Remote · Oct–Nov 2012", None)]),
+    ("Resume Body", [(
+        "Resolved WordPress.com issues across publishing, configuration, billing, domains, and DNS, turning recurring "
+        "problems into documentation and reproducible bug reports for customers, product, and engineering.",
+        None,
+    )]),
+    ("Heading 2", [("SELECTED WORDPRESS INVESTIGATIONS & CONTRIBUTIONS", None)]),
     ("Resume Body", [
-        ("MERGED — ", None),
-        ("WordPress/ai PR #501", "https://github.com/WordPress/ai/pull/501"),
-        (": authored Content Resizing and Title Generation experiment documentation; merged May 18, 2026.", None),
-    ]),
-    ("Resume Body", [
-        ("OPEN UPSTREAM CODE — ", None),
-        ("WordPress/php-ai-client PR #263", "https://github.com/WordPress/php-ai-client/pull/263"),
-        (": authored regression coverage and finite-vector validation rejecting NAN, INF, and -INF embedding values.", None),
-    ]),
-    ("Resume Body", [
-        ("OPEN UPSTREAM CODE — ", None),
-        ("WordPress/ai-provider-for-openai PR #40", "https://github.com/WordPress/ai-provider-for-openai/pull/40"),
-        (": authored model-aware sampling compatibility metadata and tests for OpenAI reasoning models.", None),
-    ]),
-    ("Resume Body", [
-        ("REPORTED · FIX SHIPPED — ", None),
+        ("Defect reproduction — ", None),
+        ("Reported and reproduced a WordPress AI Guidelines defect (", None),
         ("Issue #529", "https://github.com/WordPress/ai/issues/529"),
-        (": reported and reproduced a Guidelines content-type defect; a maintainer authored ", None),
+        ("): an artifact guideline could shadow the content guideline. A maintainer’s fix, ", None),
         ("PR #593", "https://github.com/WordPress/ai/pull/593"),
-        (" and ", None),
+        (", shipped in ", None),
         ("WordPress AI 1.0.1", "https://github.com/WordPress/ai/releases/tag/1.0.1"),
-        (" shipped it.", None),
+        (".", None),
     ]),
     ("Resume Body", [
-        ("REPORTED · INTEGRATION TESTED — ", None),
+        ("Fix validation — ", None),
+        ("Reported a WordPress AI request-logging gap (", None),
         ("Issue #732", "https://github.com/WordPress/ai/issues/732"),
-        (": authored the report and reproduction. Anubhav Anand authored ", None),
+        ("); integration-tested Anubhav Anand’s proposed fix (", None),
         ("PR #757", "https://github.com/WordPress/ai/pull/757"),
-        ("; Henry tested lifecycle capture, found duplicate successes and missing failures, and proposed the ownership split.", None),
+        (", open), found duplicate successes and missing failures, and proposed the ownership split.", None),
     ]),
-    ("Heading 2", [("TECHNICAL PROOF", None)]),
-    ("Resume Entry", [("Flavor Agent — Author  |  WordPress agent-governance plugin", None)]),
     ("Resume Body", [
-        ("PRERELEASE + ACTIVE — ", None),
-        ("v0.1.0-rc.3", "https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0-rc.3"),
-        (" is the latest public prerelease; post-RC3 main adds governed content/template apply and undo, schema hardening, and canonical target authorization; unreleased.", None),
+        ("Documentation — ", None),
+        ("Wrote and refined the Content Resizing and Title Generation experiment documentation in ", None),
+        ("WordPress/ai PR #501", "https://github.com/WordPress/ai/pull/501"),
+        ("; merged May 18, 2026 and credited in the 1.0.0 release notes.", None),
     ]),
-    ("Resume Entry", [("AI Provider for Codex — Author  |  independent WordPress plugin", None)]),
     ("Resume Body", [
-        ("RELEASED OWNED WORK — ", None),
+        ("Compatibility fix — ", None),
+        ("Directed and reviewed an AI-assisted fix so the OpenAI provider advertises sampling options only for models that accept them, with tests: ", None),
+        ("WordPress/ai-provider-for-openai PR #40", "https://github.com/WordPress/ai-provider-for-openai/pull/40"),
+        (", merged Aug 16, 2026.", None),
+    ]),
+    ("Resume Body", [
+        ("Input validation — ", None),
+        ("Directed and reviewed an AI-assisted contribution that rejects NAN and infinite embedding values, with a regression test for each: ", None),
+        ("WordPress/php-ai-client PR #263", "https://github.com/WordPress/php-ai-client/pull/263"),
+        (", open contribution.", None),
+    ]),
+    ("Heading 2", [("SELECTED PROJECTS", None)]),
+    ("Resume Body", [("Solo projects, built AI-assisted under my direction and review, with public tagged releases.", None)]),
+    ("Resume Entry", [("Flavor Agent — Creator  |  WordPress agent-governance plugin", None)]),
+    ("Resume Body", [
+        ("v0.1.0", "https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0"),
+        (
+            " released Aug 26, 2026: puts AI-proposed site changes through validation, admin approval, an audit record, "
+            "and safe undo inside the block editor and wp-admin.",
+            None,
+        ),
+    ]),
+    ("Resume Entry", [("AI Provider for Codex — Creator  |  independent WordPress plugin", None)]),
+    ("Resume Body", [
         ("v2.1", "https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v2.1"),
-        (": WordPress AI Client provider for Codex text and capability-gated image generation with isolated per-user runtime state.", None),
+        (" released: connects Codex text and image generation to the WordPress AI Client through a local sidecar.", None),
     ]),
-    ("Resume Entry", [("HPerkins Tokens — Author  |  WordPress theme", None)]),
+    ("Resume Entry", [("HPerkins Tokens — Creator  |  WordPress block theme behind hperkins.blog", None)]),
     ("Resume Body", [
-        ("RELEASED OWNED WORK — ", None),
         ("v0.3.53", "https://github.com/henryperkins/hperkins-tokens/releases/tag/v0.3.53"),
-        (" · ", None),
+        (" released · ", None),
         ("hperkins.blog", "https://hperkins.blog/"),
-        (": token-governed block theme and accessible evidence system. Later commerce work is merged to main and unreleased.", None),
+        (
+            ": a token-governed block theme in which editors choose only named design tokens, "
+            "guarded by verifier scripts for content, typography, and accessibility checks.",
+            None,
+        ),
     ]),
-    ("Heading 2", [("SKILLS & CAREER CONTEXT", None)]),
-    ("Resume Body", [("WordPress: PHP, JavaScript, Gutenberg, REST API, WP-CLI  ·  Support: HTTP, DNS, CSS cascade, browser debugging, escalation triage, customer communication  ·  Tooling: Git/GitHub, GitHub Actions, Plugin Check, PHPStan, Cloudflare Workers.", None)]),
-    ("Resume Body", [("Earlier customer and operations roles: Starbucks Shift Supervisor (2019–2022); Sodexo Starbucks Manager (2018–2019); Clinique Consultant (2015–2017); PageLines Developer Community Manager (2012); Micro Center Customer Service/Sales (2009–2012).", None)]),
+    ("Heading 2", [("TECHNICAL SKILLS & ADDITIONAL EXPERIENCE", None)]),
+    ("Resume Body", [(
+        "Code investigation and review: PHP, JavaScript, Gutenberg, REST API, WP-CLI · "
+        "Support: HTTP, DNS, CSS, browser debugging, escalation triage · "
+        "Tooling: Git/GitHub, GitHub Actions, Plugin Check, PHPStan, Cloudflare Workers.",
+        None,
+    )]),
+    ("Resume Body", [
+        ("Developer community — ", None),
+        (
+            "PageLines Developer Community Manager (May–Oct 2012): onboarding content, tutorials, and day-to-day "
+            "developer relations, turning community feedback into clearer product guidance.",
+            None,
+        ),
+    ]),
+    ("Resume Body", [
+        ("Customer and operations roles — ", None),
+        (
+            "Starbucks Shift Supervisor (2019–2022); Sodexo Starbucks Manager (2018–2019); "
+            "Clinique Consultant (2015–2017); Micro Center Customer Service/Sales (2009–2012).",
+            None,
+        ),
+    ]),
 ]
 
 
@@ -119,6 +184,22 @@ def paragraph_by_style(document, names):
         if paragraph.style.name in names:
             return paragraph
     raise ValueError(f"Résumé has no paragraph using {', '.join(names)}")
+
+
+def plain_body_run_properties(document):
+    """Run properties of plain body text: the first Resume Body paragraph with no lead-in label."""
+    for paragraph in document.paragraphs:
+        if paragraph.style.name == "Resume Body" and " — " not in paragraph.text:
+            return first_run_properties(paragraph)
+    return None
+
+
+def label_body_run_properties(document):
+    """Run properties of the bold lead-in label that opens a Resume Body paragraph."""
+    for paragraph in document.paragraphs:
+        if paragraph.style.name == "Resume Body" and " — " in paragraph.text:
+            return first_run_properties(paragraph)
+    return None
 
 
 def copy_paragraph_format(source, destination):
@@ -141,6 +222,18 @@ def apply_run_properties(run, properties):
     if existing is not None:
         run._r.remove(existing)
     run._r.insert(0, deepcopy(properties))
+
+
+def without_literal_sizes(run_properties):
+    """Copy run properties minus any literal size, so the run inherits its style's scale."""
+    if run_properties is None:
+        return None
+    properties = deepcopy(run_properties)
+    for size_name in ("w:sz", "w:szCs"):
+        size_element = properties.find(qn(size_name))
+        if size_element is not None:
+            properties.remove(size_element)
+    return properties
 
 
 def add_hyperlink(paragraph, text, url, run_properties):
@@ -236,7 +329,7 @@ def minimum_effective_body_size(document):
     return min(sizes)
 
 
-def assert_minimum_body_size(document, floor=9.5):
+def assert_minimum_body_size(document, floor=BODY_SIZE):
     minimum = minimum_effective_body_size(document)
     if minimum < floor:
         raise ValueError(f"Résumé effective non-event text falls below {floor:.1f}pt: {minimum:.1f}pt")
@@ -304,12 +397,10 @@ def main():
     title_run_properties = first_run_properties(first_paragraph)
     section_run_properties = first_run_properties(section_paragraph)
     entry_run_properties = first_run_properties(entry_paragraph)
-    body_run_properties = first_run_properties(body_paragraph)
-    label_run_properties = None
-    for paragraph in document.paragraphs:
-        if paragraph.style.name == "Resume Body" and " — " in paragraph.text:
-            label_run_properties = first_run_properties(paragraph)
-            break
+    # Plain body runs and bold lead-in labels are read from paragraphs of their
+    # own kind, so the choice does not depend on which Resume Body comes first.
+    body_run_properties = plain_body_run_properties(document)
+    label_run_properties = label_body_run_properties(document)
     if label_run_properties is None:
         label_run_properties = section_run_properties
 
@@ -317,20 +408,28 @@ def main():
     for hyperlink_run in document.element.body.xpath(".//w:hyperlink/w:r"):
         candidate = hyperlink_run.find(qn("w:rPr"))
         if candidate is not None:
-            link_run_properties = deepcopy(candidate)
+            # Links inherit the body scale from the style; a literal size copied
+            # from an older document would silently pin them to that older scale.
+            link_run_properties = without_literal_sizes(candidate)
             break
 
     styles = document.styles
     heading_one = styles["Heading 1"]
     heading_two = styles["Heading 2"]
     normal_style = styles["Normal"]
-    set_style_visuals(heading_one, normal_style, size=17.5, bold=True, color="183F5C", paragraph_source=first_paragraph)
-    set_style_visuals(heading_two, normal_style, size=9.5, bold=True, color="183F5C", paragraph_source=section_paragraph)
+    normal_style.font.name = "Calibri"
+    normal_style.font.size = Pt(BODY_SIZE)
+    set_style_visuals(heading_one, normal_style, size=TITLE_SIZE, bold=True, color="183F5C", paragraph_source=first_paragraph)
+    set_style_visuals(heading_two, normal_style, size=SECTION_SIZE, bold=True, color="183F5C", paragraph_source=section_paragraph)
+    # Match the regenerated paragraphs immediately, so an older input does not
+    # leave style spacing that changes again on the next run.
+    heading_two.paragraph_format.space_before = Pt(6)
+    heading_two.paragraph_format.space_after = Pt(2)
     if "Resume Event" in styles:
         event_style = styles["Resume Event"]
     else:
         event_style = styles.add_style("Resume Event", WD_STYLE_TYPE.PARAGRAPH)
-    set_style_visuals(event_style, normal_style, size=8.5, bold=True, color="9A7530")
+    set_style_visuals(event_style, normal_style, size=EVENT_SIZE, bold=True, color="9A7530")
     event_style.paragraph_format.space_before = Pt(0)
     event_style.paragraph_format.space_after = Pt(1.2)
     event_style.paragraph_format.line_spacing = 1.0
@@ -343,18 +442,24 @@ def main():
     for style_name, segments in RESUME:
         paragraph = document.add_paragraph(style=style_name)
         paragraph_text = "".join(visible_text for visible_text, _url in segments)
-        is_summary = style_name == "Normal" and paragraph_text.startswith("PHP · JavaScript")
+        is_headline = style_name == "Normal" and paragraph_text == HEADLINE
         is_contact = style_name == "Normal" and paragraph_text.startswith("Chicago, IL")
-        is_target = style_name == "Normal" and paragraph_text.startswith("TARGET: SUPPORT ENGINEER")
+        is_summary = style_name == "Normal" and paragraph_text == SUMMARY
         if style_name == "Heading 1":
             copy_paragraph_format(first_paragraph, paragraph)
         elif style_name == "Heading 2":
             copy_paragraph_format(section_paragraph, paragraph)
+            paragraph.paragraph_format.space_before = Pt(6)
+            paragraph.paragraph_format.space_after = Pt(2)
         elif style_name == "Resume Entry":
             copy_paragraph_format(entry_paragraph, paragraph)
+            paragraph.paragraph_format.space_before = Pt(3)
+            paragraph.paragraph_format.space_after = Pt(0.5)
         elif style_name == "Resume Body":
             copy_paragraph_format(body_paragraph, paragraph)
-            paragraph.paragraph_format.space_after = Pt(0.6)
+            paragraph.paragraph_format.space_after = Pt(2)
+        elif is_summary:
+            paragraph.paragraph_format.space_after = Pt(3)
 
         for segment_index, (visible_text, url) in enumerate(segments):
             if url is not None:
@@ -376,21 +481,16 @@ def main():
                 apply_run_properties(run, section_run_properties)
             elif style_name == "Resume Event":
                 run.font.name = "Calibri"
-                run.font.size = Pt(8.5)
+                run.font.size = Pt(EVENT_SIZE)
                 run.font.bold = True
                 run.font.color.rgb = RGBColor.from_string("9A7530")
             elif style_name == "Resume Body":
-                apply_run_properties(run, label_run_properties if segment_index == 0 and " — " in visible_text else body_run_properties)
-            elif is_summary:
+                is_label = segment_index == 0 and visible_text.endswith(" — ")
+                apply_run_properties(run, label_run_properties if is_label else body_run_properties)
+            elif is_headline:
                 run.font.bold = True
             elif is_contact:
                 run.font.color.rgb = RGBColor.from_string("525D6B")
-            elif is_target and visible_text.startswith("TARGET: SUPPORT ENGINEER"):
-                prefix, remainder = visible_text.split(" — ", 1)
-                run.text = prefix
-                run.font.bold = True
-                run.font.color.rgb = RGBColor.from_string("183F5C")
-                paragraph.add_run(f" — {remainder}")
 
     section = document.sections[0]
     section.page_width = Inches(8.5)
@@ -401,6 +501,12 @@ def main():
     section.right_margin = Inches(0.60)
     document.core_properties.title = TITLE
     document.core_properties.author = AUTHOR
+    # python-docx exposes dc:description as `comments`.
+    document.core_properties.comments = f"Evidence-bounded résumé revised {REVISED_LABEL}."
+    document.core_properties.keywords = (
+        "WordPress, support engineer, Gutenberg, REST, HTTP, DNS, defect reproduction, fix validation"
+    )
+    document.core_properties.modified = REVISED
 
     assert_resume_event_contract(document)
     assert_minimum_body_size(document)

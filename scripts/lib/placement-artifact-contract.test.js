@@ -18,19 +18,20 @@ const docxPath = path.join( themeRoot, 'assets', 'documents', 'henry-perkins-wor
 const pdfPath = path.join( themeRoot, 'assets', 'documents', 'henry-perkins-wordpress-support-engineer-resume.pdf' );
 
 const REQUIRED_RESUME_COPY = [
-	'WORDCAMP US 2026 — Phoenix, Aug 16–19 · Selected to staff the Core AI booth',
+	'WORDCAMP US 2026 — Phoenix · Staffed the Core AI booth, walking maintainers and agency developers through AI provider tooling',
 	'WordPress/ai PR #501',
 	'WordPress/php-ai-client PR #263',
 	'WordPress/ai-provider-for-openai PR #40',
 	'Issue #529',
-	'maintainer authored PR #593',
+	'A maintainer’s fix, PR #593',
 	'Issue #732',
-	'Anubhav Anand authored PR #757',
-	'Flavor Agent',
-	'v0.1.0-rc.3',
-	'unreleased',
-	'AI Provider for Codex',
-	'HPerkins Tokens',
+	'Anubhav Anand’s proposed fix (PR #757, open)',
+	'Directed and reviewed an AI-assisted',
+	'Solo projects, built AI-assisted under my direction and review',
+	'Flavor Agent — Creator',
+	'v0.1.0 released Aug 26, 2026',
+	'AI Provider for Codex — Creator',
+	'HPerkins Tokens — Creator',
 ];
 
 const FORBIDDEN_RESUME_COPY = [
@@ -41,6 +42,18 @@ const FORBIDDEN_RESUME_COPY = [
 	'my PR #593',
 	'my PR #757',
 	'final v0.1.0',
+	// Retired 2026-09-04 with the support-role résumé review.
+	'Selected to staff the Core AI booth',
+	'v0.1.0-rc.3',
+	'post-RC3',
+	'unreleased',
+	'TARGET: SUPPORT ENGINEER',
+	'OPEN UPSTREAM CODE',
+	'RELEASED OWNED WORK',
+	'PRERELEASE + ACTIVE',
+	' — Author',
+	'authored regression coverage',
+	'authored model-aware',
 ];
 
 const REQUIRED_IMMUTABLE_URLS = [
@@ -49,7 +62,7 @@ const REQUIRED_IMMUTABLE_URLS = [
 	'https://github.com/WordPress/ai/pull/593',
 	'https://github.com/WordPress/ai/releases/tag/1.0.1',
 	'https://github.com/WordPress/ai/pull/757',
-	'https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0-rc.3',
+	'https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0',
 	'https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v2.1',
 	'https://github.com/henryperkins/hperkins-tokens/releases/tag/v0.3.53',
 ];

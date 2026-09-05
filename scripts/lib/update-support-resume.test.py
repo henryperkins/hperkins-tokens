@@ -1,6 +1,10 @@
+import contextlib
 import importlib.util
+import io
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from docx import Document
 from docx.oxml import OxmlElement
@@ -79,6 +83,38 @@ class MinimumEffectiveBodySizeTests(unittest.TestCase):
         undersized.add_paragraph(UPDATER.EVENT, style=undersized_style)
         with self.assertRaisesRegex(ValueError, r"below 8\.5pt: 8\.0pt$"):
             UPDATER.assert_resume_event_contract(undersized)
+
+
+class ResumeRegenerationTests(unittest.TestCase):
+    def test_spacing_upgrade_is_idempotent_after_one_run(self):
+        document = Document()
+        document.styles["Normal"].font.size = Pt(9.5)
+        title = document.add_paragraph("Old title", style="Heading 1")
+        title.runs[0].font.bold = True
+        section = document.add_paragraph("Old section", style="Heading 2")
+        section.runs[0].font.bold = True
+        section.paragraph_format.space_before = Pt(4.3)
+        section.paragraph_format.space_after = Pt(2.2)
+        for style_name in ("Resume Entry", "Resume Body"):
+            style = document.styles.add_style(style_name, 1)
+            style.base_style = document.styles["Normal"]
+            paragraph = document.add_paragraph("Old content", style=style)
+            if style_name == "Resume Entry":
+                paragraph.runs[0].font.bold = True
+
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "resume.docx"
+            document.save(target)
+            with mock.patch.object(UPDATER, "DOCX_PATH", target):
+                with contextlib.redirect_stdout(io.StringIO()):
+                    UPDATER.main()
+                first_result = target.read_bytes()
+                with contextlib.redirect_stdout(io.StringIO()):
+                    UPDATER.main()
+                self.assertEqual(
+                    target.read_bytes(), first_result,
+                    "A second generation must not change the upgraded DOCX",
+                )
 
 
 if __name__ == "__main__":
