@@ -27,11 +27,13 @@ const REQUIRED_RESUME_COPY = [
 	'Issue #732',
 	'Anubhav Anand’s proposed fix (PR #757, open)',
 	'Directed and reviewed an AI-assisted',
-	'Solo projects, built AI-assisted under my direction and review',
+	'Independent projects developed with AI assistance under my direction and review; public tagged releases.',
 	'Flavor Agent — Creator',
 	'v0.1.0 released Aug 26, 2026',
+	'Provides validation, admin approval, audit records, and undo workflows for supported AI-proposed WordPress changes.',
 	'AI Provider for Codex — Creator',
 	'HPerkins Tokens — Creator',
+	'WordPress block theme with token-based editor controls and verifier scripts for content, typography, and accessibility checks.',
 ];
 
 const FORBIDDEN_RESUME_COPY = [
@@ -54,6 +56,9 @@ const FORBIDDEN_RESUME_COPY = [
 	' — Author',
 	'authored regression coverage',
 	'authored model-aware',
+	'safe undo',
+	'editors choose only named design tokens',
+	'Solo projects, built AI-assisted',
 ];
 
 const REQUIRED_IMMUTABLE_URLS = [

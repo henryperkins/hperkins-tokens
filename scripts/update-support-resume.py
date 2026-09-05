@@ -119,13 +119,13 @@ RESUME = [
         (", open contribution.", None),
     ]),
     ("Heading 2", [("SELECTED PROJECTS", None)]),
-    ("Resume Body", [("Solo projects, built AI-assisted under my direction and review, with public tagged releases.", None)]),
+    ("Resume Body", [("Independent projects developed with AI assistance under my direction and review; public tagged releases.", None)]),
     ("Resume Entry", [("Flavor Agent — Creator  |  WordPress agent-governance plugin", None)]),
     ("Resume Body", [
         ("v0.1.0", "https://github.com/henryperkins/flavor-agent/releases/tag/v0.1.0"),
         (
-            " released Aug 26, 2026: puts AI-proposed site changes through validation, admin approval, an audit record, "
-            "and safe undo inside the block editor and wp-admin.",
+            " released Aug 26, 2026. Provides validation, admin approval, audit records, "
+            "and undo workflows for supported AI-proposed WordPress changes.",
             None,
         ),
     ]),
@@ -140,8 +140,8 @@ RESUME = [
         (" released · ", None),
         ("hperkins.blog", "https://hperkins.blog/"),
         (
-            ": a token-governed block theme in which editors choose only named design tokens, "
-            "guarded by verifier scripts for content, typography, and accessibility checks.",
+            ". WordPress block theme with token-based editor controls and verifier scripts "
+            "for content, typography, and accessibility checks.",
             None,
         ),
     ]),

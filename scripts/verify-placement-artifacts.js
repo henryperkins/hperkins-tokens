@@ -41,7 +41,8 @@ const providerVersion = '2.1';
 // the copy that review settled on 2026-09-04: post-event WCUS wording, the two
 // support investigations named as such, AI-assisted code contributions that are
 // directed and reviewed rather than "authored", Creator rather than Author on
-// the solo projects, and Flavor Agent's shipped v0.1.0.
+// the independent projects, and Flavor Agent's shipped v0.1.0. The 2026-09-05
+// final pass bounds the project capabilities and clarifies the AI attribution.
 const REQUIRED_RESUME_COPY = [
 	'WORDCAMP US 2026 — Phoenix · Staffed the Core AI booth, walking maintainers and agency developers through AI provider tooling',
 	'WordPress/ai PR #501',
@@ -52,11 +53,13 @@ const REQUIRED_RESUME_COPY = [
 	'Issue #732',
 	'Anubhav Anand’s proposed fix (PR #757, open)',
 	'Directed and reviewed an AI-assisted',
-	'Solo projects, built AI-assisted under my direction and review',
+	'Independent projects developed with AI assistance under my direction and review; public tagged releases.',
 	'Flavor Agent — Creator',
 	'v0.1.0 released Aug 26, 2026',
+	'Provides validation, admin approval, audit records, and undo workflows for supported AI-proposed WordPress changes.',
 	'AI Provider for Codex — Creator',
 	'HPerkins Tokens — Creator',
+	'WordPress block theme with token-based editor controls and verifier scripts for content, typography, and accessibility checks.',
 ];
 const FORBIDDEN_RESUME_COPY = [
 	[ /as of Jul 30, 2026/, 'as of Jul 30, 2026' ],
@@ -75,6 +78,9 @@ const FORBIDDEN_RESUME_COPY = [
 	[ /OPEN UPSTREAM CODE|RELEASED OWNED WORK|PRERELEASE \+ ACTIVE/, 'all-caps status label' ],
 	[ / — Author\b/, 'implementation-implying Author role label' ],
 	[ /\bauthored (?:regression coverage|model-aware)/, 'implementation-implying authored claim' ],
+	[ /safe undo/, 'unqualified undo assurance' ],
+	[ /editors choose only named design tokens/i, 'absolute editor token restriction' ],
+	[ /Solo projects, built AI-assisted/, 'retired project attribution wording' ],
 ];
 
 function assert( condition, message ) {
