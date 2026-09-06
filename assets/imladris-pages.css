@@ -5453,14 +5453,37 @@ p.hp-contact-form__hint {
 	padding-inline: var(--hp-about-gutter);
 }
 
-.hp-about-resume-v3 .hp-about-v3-hero__masthead {
+/* Letterhead: identity left with the argument under it, and one aside on the
+   right — three 44px channel pills (the Contact route's direct-channels
+   anatomy) from 782px, the contents card beneath them from 64rem. Mobile
+   first: one column, identity → aside → argument. */
+.hp-about-resume-v3 .hp-about-v3-hero__letterhead {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
-	gap: var(--wp--preset--spacing--6) var(--wp--preset--spacing--8);
+	gap: var(--wp--preset--spacing--4) var(--wp--preset--spacing--8);
 	align-items: start;
 }
 
+.hp-about-resume-v3 .hp-about-v3-hero__identity {
+	grid-row: 1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+	min-width: 0;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__aside {
+	grid-row: 2;
+	display: flex;
+	flex-direction: column;
+	gap: var(--wp--preset--spacing--4);
+	min-width: 0;
+}
+
 .hp-about-resume-v3 .hp-about-v3-hero__argument {
+	grid-row: 3;
+	margin-block-start: var(--wp--preset--spacing--4);
 	min-width: 0;
 }
 
@@ -5468,11 +5491,46 @@ p.hp-contact-form__hint {
 	display: none;
 }
 
-.hp-about-resume-v3 .hp-about-v3-hero__identity {
+/* Channel pills: the Contact route's .hp-channels anatomy, restated under the
+   résumé root so the About layer stays exclusively its own. Outline glyphs,
+   one family with the footer. */
+.hp-about-resume-v3 .hp-about-v3-hero__contact {
 	display: flex;
 	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--3);
+	margin: 0;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__contact a {
+	display: inline-flex;
 	align-items: center;
-	gap: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--pill);
+	color: var(--wp--custom--artifact-link);
+	background: var(--wp--custom--surface--card);
+	text-decoration: none;
+	transition: background var(--wp--custom--dur--fast) ease,
+		border-color var(--wp--custom--dur--fast) ease,
+		color var(--wp--custom--dur--fast) ease;
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__contact a:hover {
+	border-color: var(--wp--custom--border--brand);
+	color: var(--wp--custom--text--link);
+	background: var(--wp--custom--brand--subtle);
+}
+
+.hp-about-resume-v3 .hp-about-v3-hero__contact svg {
+	width: 19px;
+	height: 19px;
+	fill: none;
+	stroke: currentcolor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
 }
 
 .hp-about-resume-v3 .hp-about-v3-hero__portrait-wrap {
@@ -5518,10 +5576,7 @@ p.hp-contact-form__hint {
 	min-width: 0;
 }
 
-.hp-about-resume-v3 .hp-about-kicker,
-.hp-about-resume-v3 .hp-about-section__eyebrow,
-.hp-about-resume-v3 .hp-about-credential__eyebrow,
-.hp-about-resume-v3 .hp-about-wcus__label {
+.hp-about-resume-v3 .hp-about-section__eyebrow {
 	margin: 0;
 	font-family: var(--wp--preset--font-family--mono);
 	font-size: var(--wp--preset--font-size--2-xs);
@@ -5532,245 +5587,426 @@ p.hp-contact-form__hint {
 	color: var(--wp--preset--color--gold-800);
 }
 
+/* The letterhead kicker: the label face at the caps tracking. gold-800, not
+   the handoff's gold-700 — at 12px the lighter gold reads 3.7:1 on parchment,
+   under the AA floor verify-typography.js enforces. */
+.hp-about-resume-v3 .hp-about-kicker {
+	margin: 0;
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--2-xs);
+	font-weight: 400;
+	line-height: 1.4;
+	letter-spacing: var(--wp--custom--tracking--caps);
+	text-transform: uppercase;
+	color: var(--wp--preset--color--gold-800);
+}
+
 .hp-about-resume-v3 .hp-about-v3-hero h1 {
-	margin: 6px 0 0;
-	font-family: var(--wp--preset--font-family--display);
-	font-size: var(--wp--preset--font-size--4-xl);
-	font-weight: 500;
-	line-height: 1.05;
-	letter-spacing: -0.015em;
+	margin: var(--wp--preset--spacing--2) 0 0;
+	font: var(--wp--custom--type--h-1);
+	letter-spacing: var(--wp--custom--tracking--tight);
 	color: var(--wp--custom--text--strong);
 	text-wrap: balance;
 }
 
 .hp-about-resume-v3 .hp-about-v3-hero__location {
-	margin: 6px 0 0;
-	font-family: var(--wp--preset--font-family--label);
-	font-size: var(--wp--preset--font-size--sm);
+	margin: var(--wp--preset--spacing--2) 0 0;
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--xs);
 	letter-spacing: var(--wp--custom--tracking--wide);
-	color: var(--wp--custom--text--accent);
+	color: var(--wp--custom--text--muted);
 }
 
 .hp-about-resume-v3 .hp-about-v3-hero__positioning {
 	max-width: 52ch;
-	margin: var(--wp--preset--spacing--5) 0 0;
-	font-family: var(--wp--preset--font-family--body);
-	font-size: var(--wp--preset--font-size--lg);
-	line-height: 1.6;
-	color: var(--wp--custom--text--body);
+	margin: 0;
+	font: var(--wp--custom--type--lead);
+	color: var(--wp--custom--text--strong);
 	text-wrap: pretty;
 }
 
+/* Not muted: the availability line is load-bearing for a recruiter. */
 .hp-about-resume-v3 .hp-about-v3-hero__availability {
 	max-width: 52ch;
 	margin: var(--wp--preset--spacing--4) 0 0;
-	font-family: var(--wp--preset--font-family--mono);
-	font-size: var(--wp--preset--font-size--xs);
-	line-height: 1.7;
-	color: var(--wp--custom--text--muted);
+	font: var(--wp--custom--type--ui);
+	color: var(--wp--custom--text--body);
 	text-wrap: pretty;
-}
-
-.hp-about-resume-v3 .hp-about-v3-hero__links {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--5);
-	margin: var(--wp--preset--spacing--4) 0 0;
-	font-family: var(--wp--preset--font-family--mono);
-	font-size: var(--wp--preset--font-size--xs);
-}
-
-.hp-about-resume-v3 .hp-about-v3-hero__links a {
-	display: inline-flex;
-	align-items: center;
-	min-height: 44px;
-	overflow-wrap: anywhere;
-	color: var(--wp--custom--artifact-link);
-	text-decoration-thickness: 1px;
-	text-decoration-color: color-mix(in srgb, var(--wp--custom--artifact-link) 35%, transparent);
-}
-
-.hp-about-resume-v3 .hp-about-v3-hero__links a:hover {
-	text-decoration-color: currentcolor;
-}
-
-.hp-about-resume-v3 .hp-about-copy {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	min-width: 44px;
-	min-height: 44px;
-	padding-inline: var(--wp--preset--spacing--3);
-	border: 1px solid var(--wp--custom--border--hair);
-	border-radius: var(--wp--custom--radius--sm);
-	font-family: var(--wp--preset--font-family--mono);
-	font-size: var(--wp--preset--font-size--2-xs);
-	line-height: 1.4;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--wp--custom--text--faint);
-	background: var(--wp--custom--surface--card);
-	cursor: pointer;
-}
-
-.hp-about-resume-v3 .hp-about-copy:hover {
-	border-color: var(--wp--preset--color--gold-600);
-	color: var(--wp--custom--text--strong);
-}
-
-.hp-about-resume-v3 .hp-about-copy__status {
-	font-family: var(--wp--preset--font-family--mono);
-	font-size: var(--wp--preset--font-size--2-xs);
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--wp--preset--color--green-700);
 }
 
 .hp-about-resume-v3 .hp-about-v3-hero__cta {
-	margin-block-start: var(--wp--preset--spacing--3);
+	margin-block-start: var(--wp--preset--spacing--5);
 }
 
-.hp-about-resume-v3 .hp-about-v3-hero__proof {
+/* Proof timeline: the five facts in the record's order along one spine, as a
+   stepper. One step is current — its dot lit with a gilt ring, the spine gold
+   up to it — and only its claim is on show: in a reading pane under the spine
+   from 782px, in a fold under its own label on the phone. The markup ships
+   every fold open so the page reads complete without JavaScript;
+   about-resume.js upgrades the labels to buttons, collapses the folds it does
+   not need, and builds the pane. Gold here is the evidence marker, not a
+   status. */
+.hp-about-resume-v3 .hp-about-timeline {
+	margin-block-start: var(--wp--preset--spacing--7);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
-	gap: var(--wp--preset--spacing--4);
-	margin-block-start: var(--wp--preset--spacing--6);
 }
 
-.hp-about-resume-v3 .hp-about-credential,
-.hp-about-resume-v3 .hp-about-wcus {
+.hp-about-resume-v3 .hp-about-timeline__step {
+	position: relative;
 	min-width: 0;
-	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
-	border: 1px solid var(--wp--custom--border--hair);
-	border-radius: var(--wp--custom--radius--md);
-	background: var(--wp--custom--surface--card);
-	box-shadow: var(--wp--custom--shadow--sm);
 }
 
-.hp-about-resume-v3 .hp-about-credential {
-	border-block-start: 3px solid var(--wp--custom--rule--gold);
-}
-
-.hp-about-resume-v3 .hp-about-wcus {
-	border-inline-start: 3px solid var(--wp--custom--rule--gold);
-	background: color-mix(in srgb, var(--wp--custom--surface--card) 90%, var(--wp--preset--color--gold-100));
-}
-
-.hp-about-resume-v3 .hp-about-credential__title {
-	margin: var(--wp--preset--spacing--2) 0 0;
-	font-family: var(--wp--preset--font-family--display);
-	font-size: var(--wp--preset--font-size--md);
-	font-weight: 600;
-	line-height: 1.3;
-	color: var(--wp--custom--text--strong);
-	text-wrap: pretty;
-}
-
-.hp-about-resume-v3 .hp-about-credential__copy,
-.hp-about-resume-v3 .hp-about-wcus__copy {
-	margin: 4px 0 0;
-	font-size: var(--wp--preset--font-size--sm);
-	line-height: 1.55;
-	color: var(--wp--custom--text--muted);
-	text-wrap: pretty;
-}
-
-.hp-about-resume-v3 .hp-about-credential__link {
-	margin: 0;
-	font-family: var(--wp--preset--font-family--mono);
-	font-size: var(--wp--preset--font-size--xs);
-}
-
-.hp-about-resume-v3 .hp-about-credential__link a {
-	display: inline-flex;
-	align-items: center;
-	min-height: 44px;
-	color: var(--wp--custom--artifact-link);
-}
-
-.hp-about-resume-v3 .hp-about-impact-strip {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-	gap: 1px;
-	margin-block-start: var(--wp--preset--spacing--5);
+.hp-about-resume-v3 .hp-about-timeline__seg {
+	position: absolute;
+	top: 22px;
+	inset-inline-start: 5px;
+	width: 1px;
+	height: 100%;
 	overflow: hidden;
-	border: 1px solid var(--wp--custom--border--hair);
-	border-radius: var(--wp--custom--radius--md);
 	background: var(--wp--custom--border--hair);
 }
 
-.hp-about-resume-v3 .hp-about-v3-impact {
-	min-width: 0;
-	margin: 0;
-	background: var(--wp--custom--surface--card);
+.hp-about-resume-v3 .hp-about-timeline__step.is-last .hp-about-timeline__seg {
+	display: none;
 }
 
-.hp-about-resume-v3 .hp-about-v3-impact > a {
+.hp-about-resume-v3 .hp-about-timeline__fill {
+	display: block;
+	width: 100%;
+	height: 0;
+	background: var(--wp--custom--rule--gold);
+	transition: height var(--wp--custom--dur--base) var(--wp--custom--ease--calm),
+		width var(--wp--custom--dur--base) var(--wp--custom--ease--calm);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__step.is-done .hp-about-timeline__fill {
+	height: 100%;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__label {
 	display: flex;
-	flex-direction: column;
-	gap: var(--wp--preset--spacing--2);
-	min-height: 100%;
-	min-width: 0;
-	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
-	border-block-start: 3px solid transparent;
+	align-items: center;
+	gap: var(--wp--preset--spacing--3);
+	width: 100%;
+	min-height: 44px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font: inherit;
 	color: inherit;
-	text-decoration: none;
-	background: transparent;
+	text-align: start;
+	background: none;
 }
 
-.hp-about-resume-v3 .hp-about-v3-impact > a:hover,
-.hp-about-resume-v3 .hp-about-v3-impact > a:focus-visible {
-	border-block-start-color: var(--wp--custom--rule--gold);
-	background: var(--wp--custom--surface--sunken);
+.hp-about-resume-v3 button.hp-about-timeline__label {
+	cursor: pointer;
 }
 
-.hp-about-resume-v3 .hp-about-v3-impact__metric {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: baseline;
-	gap: var(--wp--preset--spacing--2);
-	margin: 0;
+.hp-about-resume-v3 button.hp-about-timeline__label:focus-visible {
+	border-radius: var(--wp--custom--radius--sm);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__dot {
+	position: relative;
+	z-index: 1;
+	flex: 0 0 auto;
+	display: block;
+	width: 11px;
+	height: 11px;
+	border: 1px solid var(--wp--custom--border--strong);
+	border-radius: 50%;
+	background: var(--wp--custom--surface--page);
+	transition: background var(--wp--custom--dur--base) var(--wp--custom--ease--calm),
+		border-color var(--wp--custom--dur--base) var(--wp--custom--ease--calm),
+		transform var(--wp--custom--dur--base) var(--wp--custom--ease--out),
+		box-shadow var(--wp--custom--dur--base) var(--wp--custom--ease--calm);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__step:is(.is-done, .is-current) .hp-about-timeline__dot {
+	border-color: var(--wp--custom--rule--gold);
+	background: var(--wp--custom--rule--gold);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__step.is-current .hp-about-timeline__dot {
+	transform: scale(1.35);
+	box-shadow: 0 0 0 3px var(--wp--custom--surface--page), 0 0 0 4px var(--wp--preset--color--gold-400);
+}
+
+.hp-about-resume-v3 button.hp-about-timeline__label:hover .hp-about-timeline__dot {
+	transform: scale(1.2);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__step.is-current button.hp-about-timeline__label:hover .hp-about-timeline__dot {
+	transform: scale(1.35);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__text {
 	font-family: var(--wp--preset--font-family--mono);
 	font-size: var(--wp--preset--font-size--2-xs);
 	font-weight: 700;
+	line-height: 1.5;
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
+	text-wrap: balance;
+	color: var(--wp--custom--text--muted);
+	transition: color var(--wp--custom--dur--fast) ease;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__step.is-done .hp-about-timeline__text {
 	color: var(--wp--custom--text--body);
 }
 
-.hp-about-resume-v3 .hp-about-v3-impact__metric strong {
-	font-family: var(--wp--preset--font-family--display);
-	font-size: var(--wp--preset--font-size--lg);
-	font-variant-numeric: tabular-nums;
-	letter-spacing: 0;
-	text-transform: none;
+.hp-about-resume-v3 .hp-about-timeline__step.is-current .hp-about-timeline__text,
+.hp-about-resume-v3 button.hp-about-timeline__label:hover .hp-about-timeline__text {
 	color: var(--wp--custom--text--strong);
 }
 
-.hp-about-resume-v3 .hp-about-v3-impact__note {
-	margin: 0;
-	font-size: var(--wp--preset--font-size--sm);
-	line-height: 1.5;
-	color: var(--wp--custom--text--muted);
+/* Folds open by default. Once enhanced, every fold but the current one
+   collapses — grid rows, so the height animates — and its body leaves the tab
+   order once the collapse has run: visibility flips hidden after the slow
+   duration, visible at once when the step is current. */
+.hp-about-resume-v3 .hp-about-timeline__fold {
+	display: grid;
+	grid-template-rows: 1fr;
+	padding-inline-start: calc(11px + var(--wp--preset--spacing--3));
+	transition: grid-template-rows var(--wp--custom--dur--slow) var(--wp--custom--ease--calm);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__fold-body {
+	min-height: 0;
+	overflow: hidden;
+	visibility: visible;
+	transition: visibility 0s var(--wp--custom--dur--slow);
+}
+
+/* :not(.is-print-mode): the print layout opens every fold, and a scoped
+   collapse rule beats fighting these with !important. */
+.hp-about-resume-v3.is-enhanced:not(.is-print-mode) .hp-about-timeline__step:not(.is-current) .hp-about-timeline__fold {
+	grid-template-rows: 0fr;
+}
+
+.hp-about-resume-v3.is-enhanced:not(.is-print-mode) .hp-about-timeline__step:not(.is-current) .hp-about-timeline__fold-body {
+	visibility: hidden;
+}
+
+.hp-about-resume-v3.is-enhanced .hp-about-timeline__step.is-current .hp-about-timeline__fold-body {
+	transition-delay: 0s;
+}
+
+/* Before the boot tick the folds shut with no motion: the sweep, not the
+   collapse, is the first thing a visitor sees move. */
+.hp-about-resume-v3 .hp-about-timeline__steps:not(.is-booted) :is(.hp-about-timeline__fold, .hp-about-timeline__fold-body) {
+	transition: none;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__claim {
+	margin: var(--wp--preset--spacing--1) 0 0;
+	font-size: var(--wp--preset--font-size--base);
+	line-height: 1.55;
+	color: var(--wp--custom--text--body);
 	text-wrap: pretty;
 }
 
-.hp-about-resume-v3 .hp-about-v3-impact__cue {
-	margin: auto 0 0;
-	padding-block-start: var(--wp--preset--spacing--2);
+.hp-about-resume-v3 .hp-about-timeline__where {
+	margin: var(--wp--preset--spacing--2) 0 var(--wp--preset--spacing--4);
 	font-family: var(--wp--preset--font-family--mono);
 	font-size: var(--wp--preset--font-size--2-xs);
+	line-height: 1.6;
 	letter-spacing: 0.08em;
 	text-transform: uppercase;
 }
 
-.hp-about-resume-v3 .hp-about-v3-impact__cue {
+/* In the narrow fold the cue wraps as text, glyph attached; block padding
+   keeps the 44px target without a flex box. */
+.hp-about-resume-v3 .hp-about-timeline__where a {
+	display: inline;
+	padding-block: 12px;
+	color: var(--wp--custom--artifact-link);
+}
+
+/* The one row with nothing to open renders the gap contract (—) rather than a
+   dead anchor, with its reason for screen readers. */
+.hp-about-resume-v3 .hp-about-timeline__gap {
 	display: inline-flex;
 	align-items: center;
-	min-height: 44px;
 	gap: 6px;
-	color: var(--wp--custom--artifact-link);
+	min-height: 44px;
+	color: var(--wp--custom--text--faint);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__sr {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* Reading pane (782px and up): a speech bubble hanging from the lit marker.
+   data-at="<step>/<count>" picks the current dot's x — the centre of its equal
+   column — as the anchor; the bubble centres under it, clamped to the pane's
+   edges, and the tail sits on the anchor. Both slide when the step changes,
+   and the bubble cross-fades while the content swaps. Literal rules per
+   count, so the pane holds without an inline style. */
+.hp-about-resume-v3 .hp-about-timeline__panel {
+	--hp-about-anchor: 50%;
+	display: none;
+	position: relative;
+	margin-block-start: var(--wp--preset--spacing--5);
+	transition: opacity 220ms var(--wp--custom--ease--calm), transform 220ms var(--wp--custom--ease--calm);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__panel.is-out {
+	opacity: 0;
+	transform: translateY(6px);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__panel[data-at="0/5"] {
+	--hp-about-anchor: 10%;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__panel[data-at="1/5"] {
+	--hp-about-anchor: 30%;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__panel[data-at="2/5"] {
+	--hp-about-anchor: 50%;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__panel[data-at="3/5"] {
+	--hp-about-anchor: 70%;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__panel[data-at="4/5"] {
+	--hp-about-anchor: 90%;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__panel[data-at="0/4"] {
+	--hp-about-anchor: 12.5%;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__panel[data-at="1/4"] {
+	--hp-about-anchor: 37.5%;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__panel[data-at="2/4"] {
+	--hp-about-anchor: 62.5%;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__panel[data-at="3/4"] {
+	--hp-about-anchor: 87.5%;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__panel::before {
+	content: "";
+	position: absolute;
+	z-index: 1;
+	top: 0;
+	left: var(--hp-about-anchor);
+	width: 12px;
+	height: 12px;
+	border: 1px solid var(--wp--custom--border--hair);
+	border-right-color: transparent;
+	border-bottom-color: transparent;
+	background: var(--wp--custom--surface--card);
+	transform: translate(-50%, -50%) rotate(45deg);
+	transition: left var(--wp--custom--dur--base) var(--wp--custom--ease--calm);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__bubble {
+	width: max-content;
+	max-width: min(100%, 46ch);
+	margin-inline-start: clamp(0px, calc(var(--hp-about-anchor) - 23ch), calc(100% - 46ch));
+	padding: var(--wp--preset--spacing--3) var(--wp--preset--spacing--4);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--md);
+	background: var(--wp--custom--surface--card);
+	box-shadow: var(--wp--custom--shadow--sm);
+	transition: margin-inline-start var(--wp--custom--dur--base) var(--wp--custom--ease--calm);
+}
+
+.hp-about-resume-v3 .hp-about-timeline__bubble .hp-about-timeline__claim {
+	margin: 0;
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.5;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__bubble .hp-about-timeline__where {
+	margin: var(--wp--preset--spacing--1) 0 0;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__bubble .hp-about-timeline__where a,
+.hp-about-resume-v3 .hp-about-timeline__bubble .hp-about-timeline__gap {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	min-height: 0;
+	padding-block: 0;
+}
+
+/* Intro sweep: for 1.8s after the boot tick the fill and dot transitions
+   stagger by 240ms per step, and the current fold or pane waits until the
+   sweep reaches its step — the spine appears to draw from 2012 up to the lit
+   marker. A selection during the sweep clears the class at once. */
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro .hp-about-timeline__step:nth-child(2) :is(.hp-about-timeline__fill, .hp-about-timeline__dot) {
+	transition-delay: 240ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro .hp-about-timeline__step:nth-child(3) :is(.hp-about-timeline__fill, .hp-about-timeline__dot) {
+	transition-delay: 480ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro .hp-about-timeline__step:nth-child(4) :is(.hp-about-timeline__fill, .hp-about-timeline__dot) {
+	transition-delay: 720ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro .hp-about-timeline__step:nth-child(5) :is(.hp-about-timeline__fill, .hp-about-timeline__dot) {
+	transition-delay: 960ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro .hp-about-timeline__step:nth-child(1) .hp-about-timeline__fold {
+	transition-delay: 140ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro .hp-about-timeline__step:nth-child(2) .hp-about-timeline__fold {
+	transition-delay: 380ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro .hp-about-timeline__step:nth-child(3) .hp-about-timeline__fold {
+	transition-delay: 620ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro .hp-about-timeline__step:nth-child(4) .hp-about-timeline__fold {
+	transition-delay: 860ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro .hp-about-timeline__step:nth-child(5) .hp-about-timeline__fold {
+	transition-delay: 1100ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro + .hp-about-timeline__panel[data-at^="0/"] {
+	transition-delay: 140ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro + .hp-about-timeline__panel[data-at^="1/"] {
+	transition-delay: 380ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro + .hp-about-timeline__panel[data-at^="2/"] {
+	transition-delay: 620ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro + .hp-about-timeline__panel[data-at^="3/"] {
+	transition-delay: 860ms;
+}
+
+.hp-about-resume-v3 .hp-about-timeline__steps.is-intro + .hp-about-timeline__panel[data-at^="4/"] {
+	transition-delay: 1100ms;
 }
 
 .hp-about-resume-v3 .hp-about-v3-layout {
@@ -5839,8 +6075,7 @@ p.hp-contact-form__hint {
 	display: none;
 }
 
-.hp-about-resume-v3 .hp-about-nav__list a,
-.hp-about-resume-v3 .hp-about-print-control a {
+.hp-about-resume-v3 .hp-about-nav__list a {
 	display: inline-flex;
 	align-items: center;
 	min-height: 44px;
@@ -5863,17 +6098,6 @@ p.hp-contact-form__hint {
 	border-color: var(--wp--preset--color--gold-600);
 	color: var(--wp--custom--text--strong);
 	background: var(--wp--custom--surface--card);
-}
-
-.hp-about-resume-v3 .hp-about-print-control {
-	flex: 0 0 auto;
-	margin: 0;
-}
-
-.hp-about-resume-v3 .hp-about-print-control a {
-	font-family: var(--wp--preset--font-family--mono);
-	font-size: var(--wp--preset--font-size--2-xs);
-	color: var(--wp--custom--text--faint);
 }
 
 .hp-about-resume-v3 :is(.hp-about-contribution, .hp-about-role).is-dimmed {
@@ -5953,6 +6177,48 @@ p.hp-contact-form__hint {
 
 .hp-about-resume-v3.is-print-mode .hp-about-v3-main {
 	grid-column: 1 / -1;
+}
+
+/* The timeline is content: it prints with every fold open and the pane hidden
+   — five claims, five destinations — in the stacked phone anatomy. */
+.hp-about-resume-v3.is-print-mode .hp-about-timeline__steps {
+	grid-template-columns: minmax(0, 1fr);
+	grid-auto-flow: row;
+}
+
+.hp-about-resume-v3.is-print-mode .hp-about-timeline__seg {
+	top: 22px;
+	inset-inline-start: 5px;
+	width: 1px;
+	height: 100%;
+}
+
+.hp-about-resume-v3.is-print-mode .hp-about-timeline__fill {
+	width: 100%;
+	height: 0;
+}
+
+.hp-about-resume-v3.is-print-mode .hp-about-timeline__step.is-done .hp-about-timeline__fill {
+	height: 100%;
+}
+
+.hp-about-resume-v3.is-print-mode .hp-about-timeline__label {
+	flex-direction: row;
+	padding: 0;
+	text-align: start;
+}
+
+.hp-about-resume-v3.is-print-mode .hp-about-timeline__fold {
+	display: grid !important;
+	grid-template-rows: 1fr;
+}
+
+.hp-about-resume-v3.is-print-mode .hp-about-timeline__fold-body {
+	visibility: visible;
+}
+
+.hp-about-resume-v3.is-print-mode .hp-about-timeline__panel {
+	display: none !important;
 }
 
 html.has-about-v3-print-view :is(.hp-site-header, .hp-footer) {
@@ -6500,6 +6766,10 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 }
 
 @media (min-width: 601px) {
+	.hp-about-resume-v3 .hp-about-v3-hero {
+		padding-block-start: var(--wp--preset--spacing--9);
+	}
+
 	.hp-about-resume-v3 .hp-about-contact > .hp-action-rail {
 		width: 100%;
 		flex-wrap: nowrap;
@@ -6516,9 +6786,72 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	}
 }
 
-@media (min-width: 40rem) {
-	.hp-about-resume-v3 .hp-about-v3-hero__proof {
-		grid-template-columns: minmax(0, 1.35fr) minmax(14rem, 0.85fr);
+@media (min-width: 782px) {
+	.hp-about-resume-v3 .hp-about-v3-hero__letterhead {
+		grid-template-columns: minmax(0, 1fr) auto;
+		gap: var(--wp--preset--spacing--6) var(--wp--preset--spacing--8);
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-hero__identity {
+		grid-column: 1;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-hero__aside {
+		grid-column: 2;
+		grid-row: 1;
+		align-items: flex-end;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-hero__contact {
+		padding-block-start: var(--wp--preset--spacing--2);
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-hero__argument {
+		grid-column: 1 / -1;
+		grid-row: 2;
+		margin-block-start: 0;
+	}
+
+	/* The horizontal spine and the reading pane are enhancement only: the
+	   pane is built by JavaScript, so hiding the folds without it would leave
+	   five labels and no claims. Unenhanced, every width keeps the stacked,
+	   open register. :where() adds no specificity, so the print-mode stacked
+	   rules above keep winning without !important. */
+	.hp-about-resume-v3:where(.is-enhanced) .hp-about-timeline__steps {
+		grid-template-columns: none;
+		grid-auto-flow: column;
+		grid-auto-columns: minmax(0, 1fr);
+	}
+
+	.hp-about-resume-v3:where(.is-enhanced) .hp-about-timeline__seg {
+		top: 5px;
+		inset-inline-start: 50%;
+		width: 100%;
+		height: 1px;
+	}
+
+	.hp-about-resume-v3:where(.is-enhanced) .hp-about-timeline__fill {
+		width: 0;
+		height: 100%;
+	}
+
+	.hp-about-resume-v3:where(.is-enhanced) .hp-about-timeline__step.is-done .hp-about-timeline__fill {
+		width: 100%;
+	}
+
+	.hp-about-resume-v3:where(.is-enhanced) .hp-about-timeline__label {
+		flex-direction: column;
+		gap: var(--wp--preset--spacing--3);
+		padding: 0 var(--wp--preset--spacing--2) var(--wp--preset--spacing--2);
+		text-align: center;
+	}
+
+	.hp-about-resume-v3:where(.is-enhanced) .hp-about-timeline__fold {
+		display: none;
+	}
+
+	.hp-about-resume-v3:where(.is-enhanced) .hp-about-timeline__panel {
+		display: block;
 	}
 }
 
@@ -6577,16 +6910,50 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		padding-inline: 0;
 	}
 
-	.hp-about-resume-v3 .hp-about-v3-hero__masthead {
+	.hp-about-resume-v3 .hp-about-v3-hero__letterhead {
 		grid-template-columns: minmax(0, 1.6fr) minmax(17rem, 0.85fr);
 	}
 
-	.hp-about-resume-v3 .hp-about-v3-hero__masthead:has(> .hp-about-v3-hero__contents-host:empty) {
-		grid-template-columns: minmax(0, 1fr);
+	/* The aside spans both rows and spreads its two children apart; the
+	   argument stretches to the same height with its CTAs at the foot, so the
+	   card's bottom edge and the buttons' share one line. */
+	.hp-about-resume-v3 .hp-about-v3-hero__aside {
+		grid-row: 1 / span 2;
+		align-self: stretch;
+		justify-content: space-between;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-hero__argument {
+		grid-column: 1;
+		align-self: stretch;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-hero__cta {
+		margin-block-start: auto;
+		padding-block-start: var(--wp--preset--spacing--5);
+	}
+
+	/* No JavaScript, no card: keep the 782px shape rather than leave the wide
+	   card column empty beside the argument. */
+	.hp-about-resume-v3 .hp-about-v3-hero__letterhead:has(> .hp-about-v3-hero__aside > .hp-about-v3-hero__contents-host:empty) {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-hero__letterhead:has(> .hp-about-v3-hero__aside > .hp-about-v3-hero__contents-host:empty) .hp-about-v3-hero__aside {
+		grid-row: 1;
 	}
 
 	.hp-about-resume-v3 .hp-about-v3-hero__contents-host {
 		display: block;
+		align-self: stretch;
+	}
+
+	/* From 64rem the contents card sits in the letterhead, not under the
+	   header, so a jump only needs to clear the header plus a breath. */
+	.hp-about-resume-v3 .hp-about-section {
+		scroll-margin-top: calc(var(--hp-about-header-height, 0px) + var(--wp--preset--spacing--3));
 	}
 
 	.hp-about-resume-v3 .hp-about-v3-hero__contents-host .hp-about-nav {
@@ -6618,7 +6985,8 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		border-block-end: 1px solid var(--wp--custom--border--hair);
 		font-family: var(--wp--preset--font-family--mono);
 		font-size: var(--wp--preset--font-size--2-xs);
-		letter-spacing: var(--wp--custom--tracking--label);
+		/* 0.14em, the design system's label tracking; theme.json carries no tracking.label token. */
+		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		white-space: normal;
 		color: var(--wp--preset--color--gold-800);
@@ -6668,21 +7036,6 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		border-color: var(--wp--custom--rule--gold);
 		color: var(--wp--custom--text--strong);
 		background: transparent;
-	}
-
-	.hp-about-resume-v3 .hp-about-print-control {
-		margin: var(--wp--preset--spacing--3) 0 0;
-		padding-block-start: var(--wp--preset--spacing--3);
-		border-block-start: 1px solid var(--wp--custom--border--hair);
-	}
-
-	.hp-about-resume-v3 .hp-about-print-control a {
-		justify-content: space-between;
-		width: 100%;
-		padding-inline: 0;
-		border: 0;
-		border-radius: 0;
-		white-space: normal;
 	}
 
 	.hp-about-resume-v3 .hp-about-filter-rail {
@@ -6808,7 +7161,6 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	.hp-about-resume .hp-about-showcase,
 	.hp-about-resume .hp-about-contact,
 	.hp-about-resume .hp-about-v3-hero__cta,
-	.hp-about-resume .hp-about-print-control,
 	.hp-about-resume .hp-about-print-view,
 	.hp-about-resume .hp-about-earlier__toggle,
 	.hp-about-resume .hp-about-skills__controls {
@@ -6833,6 +7185,46 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	.hp-about-resume-v3 .hp-about-showcase-card {
 		break-inside: avoid;
 		box-shadow: none;
+	}
+
+	.hp-about-resume-v3 .hp-about-timeline__steps {
+		grid-template-columns: minmax(0, 1fr);
+		grid-auto-flow: row;
+	}
+
+	.hp-about-resume-v3 .hp-about-timeline__seg {
+		top: 22px;
+		inset-inline-start: 5px;
+		width: 1px;
+		height: 100%;
+	}
+
+	.hp-about-resume-v3 .hp-about-timeline__fill {
+		width: 100%;
+		height: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-timeline__step.is-done .hp-about-timeline__fill {
+		height: 100%;
+	}
+
+	.hp-about-resume-v3 .hp-about-timeline__label {
+		flex-direction: row;
+		padding: 0;
+		text-align: start;
+	}
+
+	.hp-about-resume-v3 .hp-about-timeline__fold {
+		display: grid !important;
+		grid-template-rows: 1fr;
+	}
+
+	.hp-about-resume-v3 .hp-about-timeline__fold-body {
+		visibility: visible;
+	}
+
+	.hp-about-resume-v3 .hp-about-timeline__panel {
+		display: none !important;
 	}
 
 	body:has(.hp-about-resume-v3) footer,

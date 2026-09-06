@@ -157,22 +157,35 @@ test( 'v3 heading expectations follow the reversible 64rem Education handoff', (
 	assert.equal( mobile.find( ( heading ) => heading.text === degreeText )?.level, 4 );
 } );
 
-test( 'rejects a WCUS callout nested inside an action rail', () => {
-	const source = fs.readFileSync( acceptedSnapshotPath, 'utf8' );
-	const nested = source
-		.replace(
-			'<div class="wp-block-group hp-about-wcus">',
-			'<div class="hp-action-rail"><div class="wp-block-group hp-about-wcus">'
-		)
-		.replace(
-			'<!-- /wp:buttons --></div>\n<!-- /wp:group -->',
-			'<!-- /wp:buttons --></div>\n<!-- /wp:group --></div>'
-		);
-	assert.notEqual( nested, source, 'ancestor mutation must apply' );
-	assert.throws(
-		() => deriveRenderedExpectations( nested, { label: 'nested WCUS fixture' } ),
-		/outside.*hp-action-rail|ancestor|expected one hero and one closing action rail/i
+test( 'rejects a proof timeline that opts into the action-rail primitive', () => {
+	const source = fs.readFileSync( draftPath, 'utf8' );
+	const railed = source.replace(
+		'<div class="wp-block-group hp-about-timeline">',
+		'<div class="wp-block-group hp-about-timeline hp-action-rail">'
 	);
+	assert.notEqual( railed, source, 'rail mutation must apply' );
+	assert.throws(
+		() => deriveRenderedExpectations( railed, { label: 'railed timeline fixture' } ),
+		/expected one hero and one closing action rail/i
+	);
+} );
+
+test( 'derives the proof timeline and its collapsed-fold word budget from the selected draft', () => {
+	const source = fs.readFileSync( draftPath, 'utf8' );
+	const expectations = deriveRenderedExpectations( source, { label: 'About v3 draft' } );
+
+	assert.deepEqual( expectations.timelineLabels, [
+		'WordPress since 2012',
+		'Credential · 2026',
+		'1 merged upstream',
+		'5 public projects',
+		'In person · Aug 2026',
+	] );
+	assert.equal( expectations.timelineFoldWords.length, 5 );
+	assert.ok( expectations.timelineFoldWords.every( ( count ) => count > 0 ) );
+	const collapsed = expectations.timelineFoldWords.slice( 1 ).reduce( ( sum, count ) => sum + count, 0 );
+	assert.equal( expectations.renderedWordCount, expectations.sourceWordCount - collapsed );
+	assert.equal( expectations.narrowRenderedWordCount, expectations.narrowSourceWordCount - collapsed );
 } );
 
 test( 'requires the v3 hero contact action to use one core Button wrapper', () => {
@@ -238,10 +251,11 @@ test( 'the rendered v3 probe includes every generated control in its focus pass'
 	} );
 
 	for ( const selector of [
+		'.hp-about-v3-hero__contact a',
+		'button.hp-about-timeline__label',
+		'.hp-about-timeline__fold-body a',
 		'.hp-about-skill-term__button',
 		'.hp-about-earlier__toggle',
-		'.hp-about-copy',
-		'.hp-about-print-control a',
 	] ) {
 		assert.match( expression, new RegExp( selector.replace( /[.*+?^${}()|[\]\\]/g, '\\$&' ) ) );
 	}
@@ -283,22 +297,22 @@ test( 'the v3 round trip accepts a clean full-navigation fallback when no router
 			const expression = payload.expression || '';
 			if ( expression.includes( 'window.__hpAboutRouterProbe =' ) ) {
 				return { result: { value: {
-					error: '', initialPath: '/about/', routerAvailable: false, x: 24, y: 24,
+					error: '', initialPath: '/about/', routerAvailable: false,
+					stepButtons: 5, timelinePanels: 1, x: 24, y: 24,
 				} } };
 			}
 			if ( expression.includes( "document.querySelector('.hp-about-resume-v3.is-enhanced')" ) ) {
 				return { result: { value: {
-					chips: 11, clearButtons: 1, copyButtons: 1, copyStatuses: 1,
-					controlSets: 1, dividers: 2, earlierToggles: 1,
-					hasGlobalClass: true, hasSentinel: false,
-					headerOffset: '72px', roots: 1,
+					chips: 11, clearButtons: 1, controlSets: 1, dividers: 2,
+					earlierToggles: 1, hasGlobalClass: true, hasSentinel: false,
+					headerOffset: '72px', roots: 1, stepButtons: 5, timelinePanels: 1,
 				} } };
 			}
-			if ( expression.includes( 'copyButtons:' ) ) {
+			if ( expression.includes( 'stepButtons:' ) ) {
 				return { result: { value: {
-					copyButtons: 0, controlSets: 0, earlierToggles: 0,
-					hasGlobalClass: false, hasSentinel: false,
-					headerOffset: '', path: '/', roots: 0,
+					controlSets: 0, earlierToggles: 0, hasGlobalClass: false,
+					hasSentinel: false, headerOffset: '', path: '/', roots: 0,
+					stepButtons: 0, timelinePanels: 0,
 				} } };
 			}
 			if ( expression.includes( 'history.back()' ) ) {

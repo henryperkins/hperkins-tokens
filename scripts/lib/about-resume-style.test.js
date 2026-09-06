@@ -47,19 +47,61 @@ test( 'About v3 CSS references only registered design tokens', () => {
 	assert.doesNotMatch( aboutV3Css, /border-radius:\s*0\.\d+rem/ );
 } );
 
-test( 'About v3 hero matches the selected identity, actions, credential, and event callout', () => {
+test( 'About v3 hero is the letterhead: identity, channel pills, argument, actions', () => {
 	assert.match( draft, /class="wp-block-group hp-about-resume hp-about-resume-v3"/ );
 	assert.equal( ( draft.match( /<figure class="[^"\n]*\bhp-about-v3-hero__portrait\b/g ) || [] ).length, 1 );
 	assert.match( draft, /src="\/wp-content\/uploads\/2026\/06\/henry-perkins\.png"/ );
 	assert.match( draft, />Developer relations &amp; enablement<\/p>/ );
 	assert.match( draft, /<h1[^>]*>Henry Perkins<\/h1>/ );
+	assert.equal( ( draft.match( /class="wp-block-group hp-about-v3-hero__letterhead"/g ) || [] ).length, 1 );
+	assert.equal( ( draft.match( /class="wp-block-group hp-about-v3-hero__aside"/g ) || [] ).length, 1 );
+	assert.match( draft, /<p class="hp-about-v3-hero__contact"><a href="mailto:htperkins@gmail\.com" aria-label="Email htperkins@gmail\.com" title="htperkins@gmail\.com"><svg/ );
+	assert.equal( ( draft.match( /<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">/g ) || [] ).length, 3 );
 	assert.match( draft, />Download résumé \(PDF\)<\/a>[\s\S]*?>Get in touch<\/a>/ );
 	assert.equal( ( draft.match( /<!-- wp:button \{"className":"is-style-secondary"\} -->/g ) || [] ).length, 2 );
 	assert.doesNotMatch( draft, /<!-- wp:button \{"className":"is-style-outline"\} -->/ );
-	assert.match( draft, />Credential · 2026<\/p>[\s\S]*?<p class="hp-about-credential__title">AI Leaders Micro-Credential<\/p>/ );
-	assert.match( draft, />Program showcase<\/a>/ );
-	assert.match( draft, />In person · Aug 2026<\/p>/ );
+	for ( const retired of [ 'hp-about-v3-hero__masthead', 'hp-about-v3-hero__links', 'hp-about-contact__email', 'hp-about-credential', 'hp-about-wcus', 'hp-about-impact-strip', 'hp-about-v3-impact', 'hp-about-print-control' ] ) {
+		assert.doesNotMatch( draft, new RegExp( retired ), `${ retired } left with the letterhead` );
+		assert.doesNotMatch( aboutV3Css, new RegExp( retired ), `${ retired } CSS left with the letterhead` );
+	}
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-v3-hero__contact a\s*\{[^}]*width:\s*44px;[^}]*height:\s*44px;[^}]*border-radius:\s*var\(--wp--custom--radius--pill\);/s );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-v3-hero h1\s*\{[^}]*font:\s*var\(--wp--custom--type--h-1\);/s );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-v3-hero__positioning\s*\{[^}]*font:\s*var\(--wp--custom--type--lead\);[^}]*color:\s*var\(--wp--custom--text--strong\);/s );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-v3-hero__availability\s*\{[^}]*font:\s*var\(--wp--custom--type--ui\);[^}]*color:\s*var\(--wp--custom--text--body\);/s );
+} );
+
+test( 'About v3 proof timeline ships five open folds and a CSS-anchored reading pane', () => {
+	assert.equal( ( draft.match( /class="wp-block-group hp-about-timeline__step"/g ) || [] ).length, 5 );
+	assert.equal( ( draft.match( /<!-- wp:paragraph \{"className":"hp-about-timeline__label"\} -->/g ) || [] ).length, 5 );
+	assert.equal( ( draft.match( /class="wp-block-group hp-about-timeline__fold-body"/g ) || [] ).length, 5 );
+	assert.match( draft, />WordPress since 2012<\/span>[\s\S]*?>Credential · 2026<\/span>[\s\S]*?>1 merged upstream<\/span>[\s\S]*?>5 public projects<\/span>[\s\S]*?>In person · Aug 2026<\/span>/ );
+	assert.match( draft, />Program showcase <span aria-hidden="true">↗<\/span><\/a>/ );
 	assert.match( draft, /Staffed the Core AI booth at WordCamp US 2026 in Phoenix/ );
+	assert.doesNotMatch( draft, /hp-about-timeline__panel|hp-about-timeline__step[^"]*\bis-(?:current|done|last)\b|<button/ );
+	assert.match( controller, /button\.className = label\.className;/ );
+	assert.match( controller, /'aria-label', TIMELINE_GROUP_LABEL/ );
+	assert.match( controller, /TIMELINE_BOOT_DELAY = 60;/ );
+	assert.match( controller, /TIMELINE_INTRO_WINDOW = 1800;/ );
+	assert.match( controller, /TIMELINE_SWAP_DELAY = 160;/ );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-timeline__fold\s*\{[^}]*grid-template-rows:\s*1fr;/s );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3\.is-enhanced:not\(\.is-print-mode\) \.hp-about-timeline__step:not\(\.is-current\) \.hp-about-timeline__fold\s*\{[^}]*grid-template-rows:\s*0fr;/s );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3\.is-enhanced:not\(\.is-print-mode\) \.hp-about-timeline__step:not\(\.is-current\) \.hp-about-timeline__fold-body\s*\{[^}]*visibility:\s*hidden;/s );
+	assert.match( aboutV3Css, /\.hp-about-timeline__step\.is-current \.hp-about-timeline__dot\s*\{[^}]*transform:\s*scale\(1\.35\);[^}]*0 0 0 4px var\(--wp--preset--color--gold-400\);/s );
+	assert.match( aboutV3Css, /\.hp-about-timeline__panel\[data-at="0\/5"\]\s*\{[^}]*--hp-about-anchor:\s*10%;/s );
+	assert.match( aboutV3Css, /\.hp-about-timeline__panel\[data-at="4\/5"\]\s*\{[^}]*--hp-about-anchor:\s*90%;/s );
+	assert.match( aboutV3Css, /\.hp-about-timeline__steps\.is-intro \.hp-about-timeline__step:nth-child\(5\) :is\(\.hp-about-timeline__fill, \.hp-about-timeline__dot\)\s*\{[^}]*transition-delay:\s*960ms;/s );
+	// The horizontal spine, the fold hiding, and the pane are gated on
+	// enhancement: without JavaScript the pane never exists, so every width
+	// keeps the stacked, open register.
+	assert.match( aboutV3Css, /@media \(min-width: 782px\)\s*\{[\s\S]*?\.hp-about-resume-v3:where\(\.is-enhanced\) \.hp-about-timeline__steps\s*\{[^}]*grid-auto-flow:\s*column;[\s\S]*?\.hp-about-resume-v3:where\(\.is-enhanced\) \.hp-about-timeline__fold\s*\{[^}]*display:\s*none;[\s\S]*?\.hp-about-resume-v3:where\(\.is-enhanced\) \.hp-about-timeline__panel\s*\{[^}]*display:\s*block;/s );
+	const timelineRules = aboutV3Css.match( /\.hp-about-resume-v3(?::where\(\.is-enhanced\))? \.hp-about-timeline__(?:fold|steps)\s*\{[^}]*\}/g ) || [];
+	for ( const rule of timelineRules ) {
+		if ( /display:\s*none|grid-auto-flow:\s*column/.test( rule ) ) {
+			assert.match( rule, /:where\(\.is-enhanced\)/, `timeline rule must not hide folds or lay the spine out horizontally without enhancement: ${ rule.slice( 0, 80 ) }` );
+		}
+	}
+	assert.match( aboutV3Css, /\.hp-about-resume-v3\.is-print-mode \.hp-about-timeline__fold\s*\{[^}]*display:\s*grid !important;/s );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3\.is-print-mode \.hp-about-timeline__panel\s*\{[^}]*display:\s*none !important;/s );
 } );
 
 test( 'About v3 uses one native navigation and five unnamed section targets', () => {
@@ -91,13 +133,6 @@ test( 'About v3 keeps static ledger status while generating filter-only anatomy 
 	assert.match( aboutV3Css, /--hp-rule-evidence:\s*5px/ );
 } );
 
-test( 'About v3 impact cells are full native links on the resilient handoff grid', () => {
-	assert.equal( ( draft.match( /<!-- wp:paragraph \{"className":"hp-about-v3-impact"\} -->/g ) || [] ).length, 3 );
-	assert.equal( ( draft.match( /<p class="hp-about-v3-impact"><a href="#[^"]+">/g ) || [] ).length, 3 );
-	assert.match( aboutV3Css, /\.hp-about-impact-strip\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit, minmax\(14rem, 1fr\)\);/s );
-	assert.match( aboutV3Css, /\.hp-about-v3-impact > a\s*\{[^}]*display:\s*flex;[^}]*min-height:\s*100%;/s );
-} );
-
 test( 'About v3 ships a static six-group, 34-term index before enhancement', () => {
 	assert.equal( ( draft.match( /class="wp-block-group hp-about-skill-group"/g ) || [] ).length, 6 );
 	assert.equal( ( draft.match( /class="hp-tag hp-about-skill-term hp-term--/g ) || [] ).length, 34 );
@@ -114,12 +149,19 @@ test( 'About v3 keeps the enhanced Education outline sequential at every breakpo
 } );
 
 test( 'About v3 uses contrast-safe text accents on ivory surfaces', () => {
-	const eyebrowRule = aboutV3Css.match(
-		/\.hp-about-resume-v3 \.hp-about-kicker,[\s\S]*?\.hp-about-resume-v3 \.hp-about-wcus__label\s*\{[^}]*\}/
-	);
+	const eyebrowRule = aboutV3Css.match( /\.hp-about-resume-v3 \.hp-about-section__eyebrow\s*\{[^}]*\}/ );
 	assert.ok( eyebrowRule );
 	assert.match( eyebrowRule[ 0 ], /color:\s*var\(--wp--preset--color--gold-800\);/ );
 	assert.doesNotMatch( eyebrowRule[ 0 ], /color:\s*var\(--wp--preset--color--gold-700\);/ );
+	// The letterhead kicker takes the label face but keeps the AA gold: 12px
+	// gold-700 on parchment is 3.7:1.
+	const kickerRule = aboutV3Css.match( /\.hp-about-resume-v3 \.hp-about-kicker\s*\{[^}]*\}/ );
+	assert.ok( kickerRule );
+	assert.match( kickerRule[ 0 ], /font-family:\s*var\(--wp--preset--font-family--label\);/ );
+	assert.match( kickerRule[ 0 ], /font-weight:\s*400;/ );
+	assert.match( kickerRule[ 0 ], /letter-spacing:\s*var\(--wp--custom--tracking--caps\);/ );
+	assert.match( kickerRule[ 0 ], /color:\s*var\(--wp--preset--color--gold-800\);/ );
+	assert.doesNotMatch( kickerRule[ 0 ], /gold-700/ );
 	assert.match(
 		aboutV3Css,
 		/\.hp-about-resume-v3 \.hp-about-nav__label\s*\{[^}]*color:\s*var\(--wp--preset--color--gold-800\);/s
@@ -153,9 +195,13 @@ test( 'About v3 responsive shell follows the mobile bar, masthead plate, and ded
 		aboutV3Css.indexOf( '@media (prefers-reduced-motion' )
 	);
 	const tabletCss = aboutV3Css.slice(
-		aboutV3Css.indexOf( '@media (min-width: 40rem)' ),
+		aboutV3Css.indexOf( '@media (min-width: 782px)' ),
 		aboutV3Css.indexOf( '@media (min-width: 64rem)' )
 	);
+	assert.doesNotMatch( aboutV3Css, /@media \(min-width: 40rem\)/ );
+	assert.match( tabletCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__letterhead\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto;/s );
+	assert.match( tabletCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__aside\s*\{[^}]*grid-column:\s*2;[^}]*grid-row:\s*1;[^}]*align-items:\s*flex-end;/s );
+	assert.match( tabletCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__argument\s*\{[^}]*grid-column:\s*1 \/ -1;[^}]*grid-row:\s*2;/s );
 	assert.doesNotMatch( tabletCss, /\.hp-about-resume-v3 \.hp-about-showcase__grid/ );
 	assert.doesNotMatch( tabletCss, /\.hp-about-resume-v3 \.hp-about-education__record/ );
 	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-showcase__grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s );
@@ -170,8 +216,12 @@ test( 'About v3 responsive shell follows the mobile bar, masthead plate, and ded
 	assert.match( aboutV3Css, /@media \(min-width:\s*64rem\)\s*\{[\s\S]*?\.hp-about-resume-v3 \.hp-about-v3-layout\s*\{[^}]*grid-template-columns:\s*minmax\(13rem, 15rem\) minmax\(0, 1fr\);/s );
 	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-nav__number\s*\{[^}]*display:\s*none;/s );
 	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-nav__number\s*\{[^}]*display:\s*block;/s );
-	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__masthead\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1\.6fr\) minmax\(17rem, 0\.85fr\);/s );
-	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__masthead:has\(> \.hp-about-v3-hero__contents-host:empty\)\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\);/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__letterhead\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1\.6fr\) minmax\(17rem, 0\.85fr\);/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__aside\s*\{[^}]*grid-row:\s*1 \/ span 2;[^}]*align-self:\s*stretch;[^}]*justify-content:\s*space-between;/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__argument\s*\{[^}]*align-self:\s*stretch;[^}]*display:\s*flex;[^}]*flex-direction:\s*column;/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__cta\s*\{[^}]*margin-block-start:\s*auto;[^}]*padding-block-start:\s*var\(--wp--preset--spacing--5\);/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__letterhead:has\(> \.hp-about-v3-hero__aside > \.hp-about-v3-hero__contents-host:empty\)\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\) auto;/s );
+	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-section\s*\{[^}]*scroll-margin-top:\s*calc\(var\(--hp-about-header-height, 0px\) \+ var\(--wp--preset--spacing--3\)\);/s );
 	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__contents-host \.hp-about-nav\s*\{[^}]*position:\s*static;[^}]*overflow:\s*visible;[^}]*border:\s*1px solid var\(--wp--custom--border--hair\);[^}]*border-radius:\s*var\(--wp--custom--radius--lg\);/s );
 	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-filter-rail\s*\{[^}]*position:\s*sticky;[^}]*top:\s*calc\(var\(--hp-about-header-height, 0px\) \+ var\(--wp--preset--spacing--5\)\);[^}]*max-height:\s*calc\(100vh - var\(--hp-about-header-height, 0px\) - var\(--wp--preset--spacing--8\)\);/s );
 	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-filter-rail \.hp-about-rail__index-host\s*\{[^}]*overflow-y:\s*auto;/s );
@@ -193,8 +243,12 @@ test( 'About v3 controller disposes route-scoped global state and observers', ()
 	assert.match( controller, /dispose:\s*dispose/ );
 	assert.match( controller, /function resetStaleEnhancement\(rootElement\)/ );
 	assert.match( controller, /resetStaleEnhancement\(rootElement\)/ );
-	assert.match( controller, /\[data-hp-about-generated\].*\.hp-about-skills__clear.*\.hp-about-earlier__toggle.*\.hp-about-copy/s );
+	assert.match( controller, /\[data-hp-about-generated\].*\.hp-about-skills__clear.*\.hp-about-earlier__toggle/s );
+	assert.doesNotMatch( controller, /hp-about-copy|hp-about-print-control|hp-about-contact__email/ );
 	assert.match( controller, /button\.hp-about-skill-term__button/ );
+	assert.match( controller, /button\.hp-about-timeline__label/ );
+	assert.match( controller, /timelineSteps\.removeEventListener\('keydown', handleTimelineKey\)/ );
+	assert.match( controller, /window\.clearTimeout\(timelineBootTimer\);[\s\S]*?window\.clearTimeout\(timelineIntroTimer\);[\s\S]*?window\.clearTimeout\(timelineSwapTimer\);/ );
 	assert.match( controller, /document\.documentElement\.classList\.remove\('has-about-v3'\)/ );
 	assert.match( controller, /wideQuery\.removeEventListener\('change', moveSkillIndex\)/ );
 	assert.match( controller, /window\.removeEventListener\('beforeprint', prepareNativePrint\)/ );

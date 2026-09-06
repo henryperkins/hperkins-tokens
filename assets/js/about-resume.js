@@ -12,6 +12,14 @@
 
 	var IDLE_READOUT = 'Pick a term to pull its evidence to the top. Nothing is hidden.';
 	var UNBACKED_COUNT = '—';
+	var TIMELINE_GROUP_LABEL = 'Proof at a glance, in order';
+	// The proof stepper's clock. First paint is unlit; the state resolves to the
+	// real step after the boot tick, and the intro stagger runs for the window
+	// after that or until the first selection. The swap delay is the reading
+	// pane's fade-out before the step and its content change together.
+	var TIMELINE_BOOT_DELAY = 60;
+	var TIMELINE_INTRO_WINDOW = 1800;
+	var TIMELINE_SWAP_DELAY = 160;
 	var mountedRoots = typeof WeakMap === 'function' ? new WeakMap() : null;
 	var activeState = null;
 	var headerResizeObserver = null;
@@ -167,6 +175,44 @@
 		return button;
 	}
 
+	// Arrow keys move to the previous or next step and wrap; Home and End go to
+	// the first and last. Any other key, or focus outside the steps, is not the
+	// stepper's to handle.
+	function nextTimelineStep(key, index, count) {
+		var delta = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[key];
+		if (!count || index < 0 || index >= count) {
+			return null;
+		}
+		if (delta) {
+			return (index + delta + count) % count;
+		}
+		if (key === 'Home') {
+			return 0;
+		}
+		if (key === 'End') {
+			return count - 1;
+		}
+		return null;
+	}
+
+	// The reading pane's anchor, as "<step>/<count>": the stylesheet maps each
+	// value to the centre of that equal column.
+	function timelineAnchor(index, count) {
+		return index + '/' + count;
+	}
+
+	// The authored step label is a paragraph; enhancement turns it into the
+	// button and this turns it back, children and classes intact.
+	function restoreTimelineLabel(button) {
+		var label = button.ownerDocument.createElement('p');
+		label.className = button.className;
+		while (button.firstChild) {
+			label.appendChild(button.firstChild);
+		}
+		button.replaceWith(label);
+		return label;
+	}
+
 	function createLedgerDivider() {
 		var divider = document.createElement('div');
 		var label = document.createElement('p');
@@ -271,7 +317,19 @@
 			term.classList.remove('is-unbacked');
 			term.removeAttribute('aria-disabled');
 		});
-		Array.prototype.forEach.call(rootElement.querySelectorAll('[data-hp-about-generated], .hp-about-skills__clear, .hp-about-earlier__toggle, .hp-about-copy, .hp-about-copy__status'), function (generated) {
+		Array.prototype.forEach.call(rootElement.querySelectorAll('button.hp-about-timeline__label'), restoreTimelineLabel);
+		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-timeline__step'), function (step) {
+			step.classList.remove('is-done', 'is-current', 'is-last');
+		});
+		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-timeline__fold'), function (fold) {
+			fold.removeAttribute('aria-hidden');
+		});
+		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-timeline__steps'), function (steps) {
+			steps.classList.remove('is-booted', 'is-intro');
+			steps.removeAttribute('role');
+			steps.removeAttribute('aria-label');
+		});
+		Array.prototype.forEach.call(rootElement.querySelectorAll('[data-hp-about-generated], .hp-about-skills__clear, .hp-about-earlier__toggle'), function (generated) {
 			generated.remove();
 		});
 		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-ledger'), function (ledger) {
@@ -334,31 +392,6 @@
 		document.documentElement.style.removeProperty('--hp-about-header-height');
 	}
 
-	function copyText(text) {
-		if (navigator.clipboard && window.isSecureContext) {
-			return navigator.clipboard.writeText(text);
-		}
-
-		return new Promise(function (resolve, reject) {
-			var input = document.createElement('textarea');
-			input.value = text;
-			input.setAttribute('readonly', '');
-			input.style.position = 'fixed';
-			input.style.opacity = '0';
-			document.body.appendChild(input);
-			input.select();
-
-			try {
-				document.execCommand('copy');
-				resolve();
-			} catch (error) {
-				reject(error);
-			}
-
-			input.remove();
-		});
-	}
-
 	function mount(rootElement) {
 		if (!rootElement || !rootElement.classList.contains('hp-about-resume-v3')) {
 			return null;
@@ -397,7 +430,6 @@
 		var termButtons = [];
 		var unbackedTerms = [];
 		var generatedControls = [];
-		var copyStates = [];
 		var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 		var skillIndex = rootElement.querySelector('.hp-about-skill-index');
 		var skillSection = rootElement.querySelector('#skills');
@@ -414,7 +446,16 @@
 		var earlier = rootElement.querySelector('.hp-about-earlier');
 		var earlierOriginalId = earlier ? earlier.getAttribute('id') : null;
 		var earlierToggle = null;
-		var printLink = rootElement.querySelector('.hp-about-print-control a');
+		var timelineSteps = rootElement.querySelector('.hp-about-timeline__steps');
+		var timelineStepElements = timelineSteps ? Array.prototype.slice.call(timelineSteps.querySelectorAll('.hp-about-timeline__step')) : [];
+		var timelineButtons = [];
+		var timelinePanel = null;
+		var timelineBubble = null;
+		var timelineCurrent = -1;
+		var timelineTarget = -1;
+		var timelineBootTimer = null;
+		var timelineIntroTimer = null;
+		var timelineSwapTimer = null;
 		var navSkillsLink = rootElement.querySelector('.hp-about-nav__list a[href="#skills"]');
 		var heading = skillSection ? skillSection.querySelector('.hp-about-skills__heading') : null;
 		var eyebrow = skillSection ? skillSection.querySelector('.hp-about-skills__eyebrow') : null;
@@ -673,35 +714,132 @@
 			});
 		}
 
-		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-contact__email'), function (emailLink) {
-			var copyButton = createButton('Copy', 'hp-about-copy');
-			var status = document.createElement('span');
-			var copyState = { button: copyButton, status: status, statusTimer: null };
-			copyButton.setAttribute('aria-label', 'Copy email address');
-			copyButton.setAttribute('data-hp-about-generated', 'copy');
-			status.className = 'hp-about-copy__status';
-			status.setAttribute('role', 'status');
-			status.setAttribute('data-hp-about-generated', 'copy-status');
-			status.hidden = true;
-			emailLink.insertAdjacentElement('afterend', copyButton);
-			copyButton.insertAdjacentElement('afterend', status);
-			generatedControls.push(copyButton, status);
-			copyStates.push(copyState);
-			copyButton.addEventListener('click', function () {
-				copyText(emailLink.textContent.trim()).then(function () {
-					status.textContent = 'Copied';
-					status.hidden = false;
-					window.clearTimeout(copyState.statusTimer);
-					copyState.statusTimer = window.setTimeout(function () {
-						status.hidden = true;
-						status.textContent = '';
-					}, 1800);
-				}).catch(function () {
-					status.textContent = 'Copy failed';
-					status.hidden = false;
-				});
+		// The proof timeline. The markup ships five labelled steps with every
+		// fold open; enhancement turns each label into a button, collapses the
+		// folds that are not current, and hangs a reading pane under the spine
+		// for the wide layout. `lit` is false for the unlit first paint: the
+		// ARIA state names step 0 from the start, the classes wait for the boot
+		// tick so the spine can sweep up to it.
+		function paintTimeline(index, lit) {
+			timelineStepElements.forEach(function (step, position) {
+				var fold = step.querySelector('.hp-about-timeline__fold');
+				step.classList.toggle('is-done', Boolean(lit) && position < index);
+				step.classList.toggle('is-current', Boolean(lit) && position === index);
+				if (timelineButtons[position]) {
+					timelineButtons[position].button.setAttribute('aria-pressed', position === index ? 'true' : 'false');
+				}
+				if (fold) {
+					fold.setAttribute('aria-hidden', position === index ? 'false' : 'true');
+				}
 			});
-		});
+			if (timelinePanel) {
+				timelinePanel.setAttribute('data-at', timelineAnchor(index, timelineStepElements.length));
+			}
+		}
+
+		function fillTimelinePanel(index) {
+			var step = timelineStepElements[index];
+			var body = step ? step.querySelector('.hp-about-timeline__fold-body') : null;
+			if (!timelineBubble || !body) {
+				return;
+			}
+			while (timelineBubble.firstChild) {
+				timelineBubble.removeChild(timelineBubble.firstChild);
+			}
+			// Child nodes, not children: the whitespace between the claim and
+			// the destination travels too, so the pane reads exactly as the fold.
+			Array.prototype.forEach.call(body.childNodes, function (child) {
+				timelineBubble.appendChild(child.cloneNode(true));
+			});
+		}
+
+		// `timelineTarget` is the latest request; `timelineCurrent` is what is
+		// lit. They differ only while a swap is pending, and the latest request
+		// always supersedes it — including a return to the lit step, which
+		// cancels the pending swap instead of letting it land on the wrong step.
+		function selectTimelineStep(index) {
+			if (index === timelineTarget || !timelineStepElements[index]) {
+				return;
+			}
+			timelineTarget = index;
+			window.clearTimeout(timelineBootTimer);
+			window.clearTimeout(timelineIntroTimer);
+			window.clearTimeout(timelineSwapTimer);
+			timelineSteps.classList.add('is-booted');
+			timelineSteps.classList.remove('is-intro');
+			if (index === timelineCurrent) {
+				paintTimeline(index, true);
+				timelinePanel.classList.remove('is-out');
+				return;
+			}
+			timelinePanel.classList.add('is-out');
+			timelineSwapTimer = window.setTimeout(function () {
+				timelineCurrent = index;
+				paintTimeline(index, true);
+				fillTimelinePanel(index);
+				timelinePanel.classList.remove('is-out');
+			}, TIMELINE_SWAP_DELAY);
+		}
+
+		function handleTimelineKey(event) {
+			var buttons = timelineButtons.map(function (entry) { return entry.button; });
+			var next = nextTimelineStep(event.key, buttons.indexOf(document.activeElement), buttons.length);
+			if (next === null) {
+				return;
+			}
+			event.preventDefault();
+			buttons[next].focus();
+			selectTimelineStep(next);
+		}
+
+		if (timelineSteps && timelineStepElements.length) {
+			timelineSteps.setAttribute('role', 'group');
+			timelineSteps.setAttribute('aria-label', TIMELINE_GROUP_LABEL);
+			timelineStepElements.forEach(function (step, position) {
+				var label = step.querySelector('.hp-about-timeline__label');
+				var button;
+				if (!label) {
+					return;
+				}
+				button = document.createElement('button');
+				button.type = 'button';
+				button.className = label.className;
+				button.setAttribute('aria-pressed', 'false');
+				while (label.firstChild) {
+					button.appendChild(label.firstChild);
+				}
+				label.replaceWith(button);
+				timelineButtons.push({ button: button, source: label });
+				button.addEventListener('click', function () {
+					selectTimelineStep(position);
+				});
+				step.classList.toggle('is-last', position === timelineStepElements.length - 1);
+			});
+			timelinePanel = document.createElement('div');
+			timelinePanel.className = 'hp-about-timeline__panel is-out';
+			timelinePanel.setAttribute('data-hp-about-generated', 'timeline-panel');
+			timelinePanel.setAttribute('aria-live', 'polite');
+			timelineBubble = document.createElement('div');
+			timelineBubble.className = 'hp-about-timeline__bubble';
+			timelinePanel.appendChild(timelineBubble);
+			timelineSteps.insertAdjacentElement('afterend', timelinePanel);
+			generatedControls.push(timelinePanel);
+			timelineSteps.addEventListener('keydown', handleTimelineKey);
+			timelineCurrent = 0;
+			timelineTarget = 0;
+			paintTimeline(timelineCurrent, false);
+			fillTimelinePanel(timelineCurrent);
+			// A timer, not requestAnimationFrame: rAF stalls while the page is
+			// hidden and the spine would never light.
+			timelineBootTimer = window.setTimeout(function () {
+				timelineSteps.classList.add('is-booted', 'is-intro');
+				paintTimeline(timelineCurrent, true);
+				timelinePanel.classList.remove('is-out');
+				timelineIntroTimer = window.setTimeout(function () {
+					timelineSteps.classList.remove('is-intro');
+				}, TIMELINE_INTRO_WINDOW);
+			}, TIMELINE_BOOT_DELAY);
+		}
 
 		function preparePrintContent() {
 			applyFilter(null);
@@ -711,6 +849,14 @@
 			if (earlier) {
 				earlier.hidden = false;
 			}
+			// Every fold prints, so none of them may stay hidden from assistive
+			// technology while the print layout is on screen.
+			timelineStepElements.forEach(function (step) {
+				var fold = step.querySelector('.hp-about-timeline__fold');
+				if (fold) {
+					fold.setAttribute('aria-hidden', 'false');
+				}
+			});
 		}
 
 		function restoreResponsiveContent() {
@@ -719,13 +865,16 @@
 			if (earlier && earlierToggle) {
 				earlier.hidden = earlierToggle.getAttribute('aria-expanded') !== 'true';
 			}
+			if (timelineSteps && timelineCurrent >= 0) {
+				paintTimeline(timelineCurrent, timelineSteps.classList.contains('is-booted'));
+			}
 		}
 
 		function enterPrintView(event) {
 			if (event && event.preventDefault) {
 				event.preventDefault();
 			}
-			printReturnTarget = event && event.currentTarget ? event.currentTarget : printLink;
+			printReturnTarget = event && event.currentTarget ? event.currentTarget : null;
 			printViewActive = true;
 			preparePrintContent();
 			document.documentElement.classList.add('has-about-v3-print-view');
@@ -777,13 +926,6 @@
 			nativePrintWasTemporary = false;
 		}
 
-		function handlePrintClick(event) {
-			enterPrintView(event);
-		}
-
-		if (printLink) {
-			printLink.addEventListener('click', handlePrintClick);
-		}
 		window.addEventListener('beforeprint', prepareNativePrint);
 		window.addEventListener('afterprint', finishNativePrint);
 
@@ -825,9 +967,9 @@
 					wideQuery.removeListener(moveSkillIndex);
 				}
 			}
-			if (printLink) {
-				printLink.removeEventListener('click', handlePrintClick);
-			}
+			window.clearTimeout(timelineBootTimer);
+			window.clearTimeout(timelineIntroTimer);
+			window.clearTimeout(timelineSwapTimer);
 			window.removeEventListener('beforeprint', prepareNativePrint);
 			window.removeEventListener('afterprint', finishNativePrint);
 			if (sectionObserver) {
@@ -851,9 +993,29 @@
 				term.classList.remove('is-unbacked');
 				term.removeAttribute('aria-disabled');
 			});
-			copyStates.forEach(function (copyState) {
-				window.clearTimeout(copyState.statusTimer);
+			if (timelineSteps) {
+				timelineSteps.removeEventListener('keydown', handleTimelineKey);
+				timelineSteps.classList.remove('is-booted', 'is-intro');
+				timelineSteps.removeAttribute('role');
+				timelineSteps.removeAttribute('aria-label');
+			}
+			timelineButtons.forEach(function (entry) {
+				if (entry.button.parentNode) {
+					while (entry.button.firstChild) {
+						entry.source.appendChild(entry.button.firstChild);
+					}
+					entry.button.replaceWith(entry.source);
+				}
 			});
+			timelineStepElements.forEach(function (step) {
+				var fold = step.querySelector('.hp-about-timeline__fold');
+				step.classList.remove('is-done', 'is-current', 'is-last');
+				if (fold) {
+					fold.removeAttribute('aria-hidden');
+				}
+			});
+			timelineCurrent = -1;
+			timelineTarget = -1;
 			generatedControls.forEach(function (control) {
 				if (control.parentNode) {
 					control.remove();
@@ -904,7 +1066,8 @@
 			enterPrintView: enterPrintView,
 			exitPrintView: exitPrintView,
 			restoreCanonicalOrder: restoreCanonicalOrder,
-			root: rootElement
+			root: rootElement,
+			selectTimelineStep: selectTimelineStep
 		};
 		if (mountedRoots) {
 			mountedRoots.set(rootElement, state);
@@ -1000,9 +1163,11 @@
 		deriveDimmedRows: deriveDimmedRows,
 		formatReadout: formatReadout,
 		mount: mount,
+		nextTimelineStep: nextTimelineStep,
 		partitionEvidenceRows: partitionEvidenceRows,
 		setEducationRecordHeadingLevels: setEducationRecordHeadingLevels,
 		settle: settle,
-		termSlug: termSlug
+		termSlug: termSlug,
+		timelineAnchor: timelineAnchor
 	};
 });

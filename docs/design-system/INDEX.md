@@ -738,3 +738,36 @@ The follow-up spec `docs/superpowers/specs/2026-08-18-contact-route-recovery-and
 owns the remaining Contact work — message preservation on handoff, the
 `Send message` label, named profile links, and the contact-to-subscribe bridge
 — and its token contract is the one implemented above.
+
+## 2026-09-06 — About hero: letterhead + proof timeline (`templates/about/About.dc.html` → page 6 body)
+
+Design provenance: the project's `templates/about/About.dc.html` as of 2026-09-06 (the dated
+`design_handoff_about_hero/` export supersedes the 2026-09-05 one). The hero had grown to nine
+blocks in one viewport; the handoff rebuilds it to read who → claim → proof → contents, and
+leaves sections 01–05 untouched.
+
+- **Letterhead** — `hp-about-v3-hero__letterhead` › `__identity` (unchanged), a new `__aside`
+  holding three 44px channel pills (`__contact`: email, GitHub, LinkedIn as the footer's Lucide
+  outlines) plus the existing `__contents-host`, then `__argument` (positioning, availability, the
+  two CTAs). One grid at three breakpoints: one column on the phone; `minmax(0,1fr) auto` from
+  782px with the pills in column 2; `minmax(0,1.6fr) minmax(17rem,0.85fr)` from 64rem with the
+  aside spanning both rows so the contents card's foot lands on the CTAs' baseline. The visible
+  address row, its copy control, the credential plate, the event callout, the impact strip, and
+  the contents card's "Print view" row are retired.
+- **Proof timeline** — `hp-about-timeline` › `__steps` › five `__step`s (`__label` paragraph with
+  the aria-hidden `__seg`/`__fill` spine and `__dot`, then `__fold` › `__fold-body` › `__claim` +
+  `__where`). Body ships every fold open; `about-resume.js` upgrades the labels to buttons,
+  collapses all but the current fold, and generates the reading pane (`__panel` › `__bubble`,
+  `data-at="<step>/<count>"` → the literal `--hp-about-anchor` map) for 782px and up. Clock: 60ms
+  boot from an unlit first paint, 1.8s `is-intro` stagger, 160ms cross-fade; arrow keys, Home,
+  End. Same five facts and copy as the retired plates, redistributed; the event row renders the gap
+  contract (— plus a screen-reader reason).
+- **Deliberate deltas from the handoff:** the kicker is gold-800, not gold-700 (12px gold-700 on
+  parchment is 3.7:1, under the AA floor `verify-typography.js` enforces); the primary CTA stays
+  a plain link to `/one-page-resume/` rather than taking over the in-page print view, so the
+  résumé PDF remains the button's destination. The print toolbar code survives in the controller
+  without a visible entry; native print still gets the prepared layout with every fold open.
+- **Contracts:** `verifyAboutV3Body` pins the letterhead order, the three pills, the five steps
+  with exact labels, claims, and destinations, and the absence of state classes, buttons, and the
+  pane in the authored body; `verify-about-page-rendered.js` checks the stepper's geometry,
+  ARIA, keyboard, and word-count parity (collapsed folds leave the render) at every width.

@@ -276,6 +276,19 @@ function deriveV3RenderedExpectations( html, label ) {
 	const narrowOnlyWordCount = report.navigationRevision === 'contents-plate' && filterRail
 		? countVisibleWords( filterRail.outer, { label: `${ label } desktop filter rail` } )
 		: 0;
+	// Step 1 opens on load; the other folds collapse and their words leave the
+	// render at every width (the reading pane repeats only the open one).
+	const timelineSteps = findBalancedElementsByClass( html, 'hp-about-timeline__step', label );
+	assert(
+		timelineSteps.length === report.timelineStepCount,
+		`${ label } must contain ${ report.timelineStepCount } timeline steps, got ${ timelineSteps.length }.`
+	);
+	const timelineFoldWords = timelineSteps.map( ( step, index ) => {
+		const fold = findBalancedElementsByClass( step.inner, 'hp-about-timeline__fold', label )[ 0 ];
+		assert( fold, `${ label } timeline step ${ index + 1 } has no fold.` );
+		return countVisibleWords( fold.outer, { label: `${ label } timeline fold ${ index + 1 }` } );
+	} );
+	const collapsedFoldWordCount = timelineFoldWords.slice( 1 ).reduce( ( sum, count ) => sum + count, 0 );
 
 	const projects = findBalancedElementsByClass( html, 'hp-about-showcase-card', label ).map( ( card ) => {
 		const actions = findBalancedElementsByClass( card.inner, 'hp-about-showcase-card__link', label )[ 0 ];
@@ -305,13 +318,18 @@ function deriveV3RenderedExpectations( html, label ) {
 		fragments: navLinks.map( ( link ) => link.href.slice( 1 ) ),
 		headings,
 		heroActionLabels: rails[ 0 ].map( ( action ) => action.text ),
+		heroRevision: report.heroRevision,
+		narrowRenderedWordCount: report.wordCount - narrowOnlyWordCount - collapsedFoldWordCount,
 		narrowSourceWordCount: report.wordCount - narrowOnlyWordCount,
 		navigationRevision: report.navigationRevision,
 		navLabel: report.navigationLabel,
 		navLinks,
 		portraitAlt: decodeCharacterReferences( portrait[ 1 ] ),
 		projects,
+		renderedWordCount: report.wordCount - collapsedFoldWordCount,
 		sourceWordCount: report.wordCount,
+		timelineFoldWords,
+		timelineLabels: report.timelineLabels,
 		wcusActionLabels: [],
 	};
 }
@@ -667,7 +685,62 @@ function buildInspectionExpression( opts ) {
 		const heroPortrait = content.querySelector(isV3 ? '.hp-about-v3-hero__portrait' : isV2 ? '.hp-about-v2-hero__portrait' : '.hp-about-hero__portrait');
 		out.hero = heroCopy && heroPortrait ? { copy: rect(heroCopy), portrait: rect(heroPortrait) } : null;
 		out.signals = Array.from(content.querySelectorAll(isV3 ? '.hp-about-impact-strip .hp-about-v3-impact' : isV2 ? '.hp-about-impact-strip .hp-about-v2-impact' : '.hp-about-impact .hp-signal')).map(rect);
-		const wcus = content.querySelector('.hp-about-hero__copy .hp-about-wcus');
+		out.timeline = null;
+		out.channels = [];
+		out.letterhead = null;
+		if (isV3) {
+			// --- letterhead + proof timeline ------------------------------
+			const steps = Array.from(content.querySelectorAll('.hp-about-timeline__step'));
+			const stepsGroup = content.querySelector('.hp-about-timeline__steps');
+			const panel = content.querySelector('.hp-about-timeline__panel');
+			out.timeline = {
+				steps: steps.map(rect),
+				labels: steps.map((step) => ((step.querySelector('.hp-about-timeline__text') || {}).textContent || '').replace(/\\s+/gu, ' ').trim()),
+				buttons: steps.map((step) => {
+					const button = step.querySelector('button.hp-about-timeline__label');
+					return button ? { pressed: button.getAttribute('aria-pressed'), rect: rect(button) } : null;
+				}),
+				current: steps.findIndex((step) => step.classList.contains('is-current')),
+				done: steps.filter((step) => step.classList.contains('is-done')).length,
+				folds: steps.map((step) => {
+					const fold = step.querySelector('.hp-about-timeline__fold');
+					const body = step.querySelector('.hp-about-timeline__fold-body');
+					return {
+						ariaHidden: fold ? fold.getAttribute('aria-hidden') : null,
+						display: fold ? getComputedStyle(fold).display : null,
+						visibility: body ? getComputedStyle(body).visibility : null,
+					};
+				}),
+				panel: panel ? {
+					at: panel.getAttribute('data-at'),
+					display: getComputedStyle(panel).display,
+					opacity: getComputedStyle(panel).opacity,
+					rect: rect(panel),
+				} : null,
+				groupRole: stepsGroup ? stepsGroup.getAttribute('role') : null,
+				groupLabel: stepsGroup ? stepsGroup.getAttribute('aria-label') : null,
+			};
+			const contact = content.querySelector('.hp-about-v3-hero__contact');
+			out.channels = contact ? Array.from(contact.querySelectorAll('a')).map((link) => ({
+				href: link.getAttribute('href'),
+				label: link.getAttribute('aria-label'),
+				glyph: !!link.querySelector('svg'),
+				rect: rect(link),
+			})) : [];
+			const boxOf = (selector) => {
+				const element = content.querySelector(selector);
+				return element ? rect(element) : null;
+			};
+			out.letterhead = {
+				letterhead: boxOf('.hp-about-v3-hero__letterhead'),
+				identity: boxOf('.hp-about-v3-hero__identity'),
+				aside: boxOf('.hp-about-v3-hero__aside'),
+				contact: contact ? rect(contact) : null,
+				contentsHost: boxOf('.hp-about-v3-hero__contents-host'),
+				cta: boxOf('.hp-about-v3-hero__cta'),
+			};
+		}
+		const wcus = isV3 ? null : content.querySelector('.hp-about-hero__copy .hp-about-wcus');
 		out.wcus = wcus ? {
 			insideActionRail: wcus.matches('.hp-action-rail') || !!wcus.closest('.hp-action-rail') || !!wcus.querySelector('.hp-action-rail'),
 			actions: Array.from(wcus.querySelectorAll('.hp-about-wcus__action .wp-block-button__link')).map((link) => {
@@ -718,7 +791,7 @@ function buildInspectionExpression( opts ) {
 			...Array.from(content.querySelectorAll(isResume ? '.hp-about-showcase-card__link a' : '.hp-work-card__actions a')),
 			...Array.from(content.querySelectorAll('.hp-action-rail .wp-block-button__link')),
 			...Array.from(content.querySelectorAll('.hp-about-wcus__action .wp-block-button__link')),
-			...(isV3 ? Array.from(content.querySelectorAll('.hp-about-v3-impact > a, .hp-about-skill-term__button, .hp-about-earlier__toggle, .hp-about-copy, .hp-about-print-control a')) : []),
+			...(isV3 ? Array.from(content.querySelectorAll('.hp-about-v3-hero__contact a, button.hp-about-timeline__label, .hp-about-timeline__fold-body a, .hp-about-skill-term__button, .hp-about-earlier__toggle')) : []),
 		])).filter((control) => ! control.hidden && control.getClientRects().length > 0 && getComputedStyle(control).visibility !== 'hidden');
 		for (const link of focusTargets) {
 			try { link.focus({ preventScroll: true }); } catch (error) { link.focus(); }
@@ -753,7 +826,7 @@ function buildInspectionExpression( opts ) {
 				if (skillsNavLink) { skillsNavLink.textContent = 'Skills'; }
 				if (educationHeading) { educationHeading.hidden = false; }
 				if (earlierRoles) { earlierRoles.hidden = false; }
-				clone.querySelectorAll('.hp-about-copy, .hp-about-copy__status, .hp-about-earlier__toggle, .hp-about-skills__clear').forEach((node) => node.remove());
+				clone.querySelectorAll('.hp-about-earlier__toggle, .hp-about-skills__clear').forEach((node) => node.remove());
 			}
 			clone.querySelectorAll('[hidden], [aria-hidden="true"]').forEach((node) => node.remove());
 			const shellMain = document.createElement('main');
@@ -824,6 +897,100 @@ function assertWrappedOrder( rects, label ) {
 	}
 }
 
+// The letterhead: identity left, the channel pills beside it from 782px and
+// flush with its top, the contents card in the same aside from 64rem with its
+// foot on the CTAs' baseline.
+function verifyLetterheadGeometry( result, width, label, expectations ) {
+	const boxes = result.letterhead;
+	assert(
+		boxes && boxes.letterhead && boxes.identity && boxes.aside && boxes.contact && boxes.cta,
+		`${ label }: letterhead regions missing.`
+	);
+	assert( result.channels.length === 3, `${ label }: expected three channel pills, got ${ result.channels.length }.` );
+	result.channels.forEach( ( channel, index ) => {
+		assert( channel.label && channel.glyph, `${ label }: channel pill ${ index + 1 } needs an accessible name and a glyph.` );
+		assert(
+			channel.rect.width >= 44 && channel.rect.height >= 44,
+			`${ label }: channel pill "${ channel.label }" renders ${ channel.rect.width }×${ channel.rect.height }; the floor is 44×44.`
+		);
+	} );
+	assert( boxes.cta.top >= boxes.identity.bottom - 1, `${ label }: the argument must sit under the identity.` );
+	if ( width >= 782 ) {
+		assert(
+			boxes.contact.left >= boxes.identity.right - 1 && Math.abs( boxes.contact.top - boxes.identity.top ) <= 2,
+			`${ label }: channel pills must sit beside the identity, flush with its top.`
+		);
+		assert( boxes.aside.right >= boxes.letterhead.right - 1, `${ label }: the aside must hold the letterhead's right edge.` );
+	} else {
+		assert( boxes.contact.top >= boxes.identity.bottom - 1, `${ label }: channel pills must stack under the identity on the phone.` );
+	}
+	if ( width >= 1024 && expectations.navigationRevision === 'contents-plate' ) {
+		assert( boxes.contentsHost && boxes.contentsHost.height > 0, `${ label }: the contents card must render in the aside.` );
+		assert( boxes.contentsHost.top >= boxes.contact.bottom - 1, `${ label }: the contents card must sit under the channel pills.` );
+		assert(
+			Math.abs( boxes.contentsHost.bottom - boxes.cta.bottom ) <= 2,
+			`${ label }: the contents card's foot (${ boxes.contentsHost.bottom }) must land on the CTAs' baseline (${ boxes.cta.bottom }).`
+		);
+	}
+}
+
+// The proof timeline: five steps on one spine — side by side with the reading
+// pane under them from 782px, stacked with one open fold on the phone. Step 1
+// is current on load, with the only pressed button and the only exposed fold.
+function verifyTimelineGeometry( result, width, label, expectations ) {
+	const timeline = result.timeline;
+	const count = expectations.timelineLabels.length;
+	assert(
+		timeline && timeline.steps.length === count,
+		`${ label }: expected ${ count } timeline steps, got ${ timeline ? timeline.steps.length : 0 }.`
+	);
+	assert(
+		timeline.labels.join( '|' ) === expectations.timelineLabels.join( '|' ),
+		`${ label }: timeline labels read [${ timeline.labels.join( ', ' ) }].`
+	);
+	assert(
+		timeline.groupRole === 'group' && timeline.groupLabel === 'Proof at a glance, in order',
+		`${ label }: timeline steps must be the labelled group.`
+	);
+	assert(
+		timeline.current === 0 && timeline.done === 0,
+		`${ label }: the timeline must open on step 1 with nothing behind it (current ${ timeline.current + 1 }, done ${ timeline.done }).`
+	);
+	const onlyFirst = [ 'true', ...Array( count - 1 ).fill( 'false' ) ].join( ',' );
+	assert(
+		timeline.buttons.every( Boolean ) && timeline.buttons.map( ( button ) => button.pressed ).join( ',' ) === onlyFirst,
+		`${ label }: exactly the first step button must be pressed.`
+	);
+	timeline.buttons.forEach( ( button, index ) => {
+		assert( button.rect.height >= 44, `${ label }: timeline step ${ index + 1 } is ${ button.rect.height }px high; the floor is 44px.` );
+	} );
+	assert(
+		timeline.folds.map( ( fold ) => fold.ariaHidden ).join( ',' ) === [ 'false', ...Array( count - 1 ).fill( 'true' ) ].join( ',' ),
+		`${ label }: only the current fold may be exposed to assistive technology.`
+	);
+	if ( width >= 782 ) {
+		assertColumnsSideBySide( timeline.steps, count, `${ label } proof timeline` );
+		assert( timeline.folds.every( ( fold ) => fold.display === 'none' ), `${ label }: folds must yield to the reading pane from 782px.` );
+		assert(
+			timeline.panel && timeline.panel.display !== 'none' && Number( timeline.panel.opacity ) === 1,
+			`${ label }: the reading pane must be visible from 782px.`
+		);
+		assert( timeline.panel.at === `0/${ count }`, `${ label }: the reading pane anchors at ${ timeline.panel.at }; expected 0/${ count }.` );
+		assert( timeline.panel.rect.top >= timeline.steps[ 0 ].bottom - 1, `${ label }: the reading pane must hang under the spine.` );
+	} else {
+		assertStacked( timeline.steps, `${ label } proof timeline` );
+		assert( ! timeline.panel || timeline.panel.display === 'none', `${ label }: the reading pane must stay hidden below 782px.` );
+		assert(
+			timeline.folds[ 0 ].display !== 'none' && timeline.folds[ 0 ].visibility === 'visible',
+			`${ label }: the current fold must be open on the phone.`
+		);
+		assert(
+			timeline.folds.slice( 1 ).every( ( fold ) => fold.visibility === 'hidden' ),
+			`${ label }: collapsed folds must leave the tab order on the phone.`
+		);
+	}
+}
+
 function usesWideResumeShowcaseLayout( version, width ) {
 	return width >= ( version === 'v3' ? 1024 : 640 );
 }
@@ -888,19 +1055,25 @@ function verifyGeometry( result, viewport, expectations ) {
 
 	assert( result.hero, `${ label }: hero regions missing.` );
 	if ( isResume ) {
-		assert( result.signals.length === 3, `${ label }: expected three résumé impact signals, got ${ result.signals.length }.` );
 		assert(
 			result.hero.copy.left >= result.hero.portrait.right - 1 && result.hero.copy.top < result.hero.portrait.bottom,
 			`${ label }: portrait and nameplate must render side by side.`
 		);
-		if ( isV3 && width >= 768 ) {
-			assertColumnsSideBySide( result.signals, 3, `${ label } impact strip` );
-		} else if ( isV3 ) {
-			assertWrappedOrder( result.signals, `${ label } impact strip` );
-		} else if ( width >= 640 ) {
-			assertColumnsSideBySide( result.signals, 3, `${ label } impact strip` );
+		if ( isV3 && expectations.heroRevision === 'letterhead' ) {
+			verifyLetterheadGeometry( result, width, label, expectations );
+			verifyTimelineGeometry( result, width, label, expectations );
 		} else {
-			assertStacked( result.signals, `${ label } impact strip` );
+			// The plate-era heroes: three impact signals under the masthead.
+			assert( result.signals.length === 3, `${ label }: expected three résumé impact signals, got ${ result.signals.length }.` );
+			if ( isV3 && width >= 768 ) {
+				assertColumnsSideBySide( result.signals, 3, `${ label } impact strip` );
+			} else if ( isV3 ) {
+				assertWrappedOrder( result.signals, `${ label } impact strip` );
+			} else if ( width >= 640 ) {
+				assertColumnsSideBySide( result.signals, 3, `${ label } impact strip` );
+			} else {
+				assertStacked( result.signals, `${ label } impact strip` );
+			}
 		}
 	} else if ( width >= 782 ) {
 		assert(
@@ -1191,8 +1364,8 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 		);
 		const wordCount = countRenderedText( result.renderedText );
 		const expectedWordCount = viewport.width >= 1024
-			? expectations.sourceWordCount
-			: expectations.narrowSourceWordCount ?? expectations.sourceWordCount;
+				? expectations.renderedWordCount ?? expectations.sourceWordCount
+				: expectations.narrowRenderedWordCount ?? expectations.narrowSourceWordCount ?? expectations.sourceWordCount;
 		assert(
 			wordCount === expectedWordCount,
 			`${ viewport.width }px: rendered word count ${ wordCount } does not equal the responsive source count ${ expectedWordCount }.`
@@ -1203,11 +1376,14 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 				`${ viewport.width }px: rendered word count ${ wordCount } outside ${ ABOUT_WORD_RANGE.min }–${ ABOUT_WORD_RANGE.max }.`
 			);
 		} else if ( expectations.version === 'v3' ) {
-			assert(
-				wordCount >= ABOUT_V3_WORD_RANGE.min && wordCount <= ABOUT_V3_WORD_RANGE.max,
-				`${ viewport.width }px: rendered word count ${ wordCount } outside ${ ABOUT_V3_WORD_RANGE.min }–${ ABOUT_V3_WORD_RANGE.max }.`
-			);
-		}
+				// The collapsed folds are content the visitor can open; they count
+				// toward the body budget even though they leave the render.
+				const collapsed = expectations.sourceWordCount - ( expectations.renderedWordCount ?? expectations.sourceWordCount );
+				assert(
+					wordCount + collapsed >= ABOUT_V3_WORD_RANGE.min && wordCount + collapsed <= ABOUT_V3_WORD_RANGE.max,
+					`${ viewport.width }px: rendered word count ${ wordCount } plus ${ collapsed } collapsed fold words is outside ${ ABOUT_V3_WORD_RANGE.min }–${ ABOUT_V3_WORD_RANGE.max }.`
+				);
+			}
 	}
 
 	return result;
@@ -1343,46 +1519,111 @@ async function verifyV3Interactions( cdp, sessionId ) {
 			earlierToggle.click();
 			const disclosureClosed = earlierToggle.getAttribute('aria-expanded') === 'false' && earlier.hidden;
 
-			let copied = '';
-			try {
-				Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (text) => { copied = text; } } });
-			} catch (error) {}
-			const copy = root.querySelector('.hp-about-copy');
-			copy.click();
-			await wait(30);
-			const copyStatus = root.querySelector('.hp-about-copy__status');
+			// Proof timeline: click, arrow keys, Home, End, and the pane that
+			// follows the lit step. Every wait outlasts the 160ms swap. A
+			// plate-era body (the accepted mirror before promotion) has no
+			// stepper; it reports null and the Node side skips these checks.
+			const timelineSteps = root.querySelector('.hp-about-timeline__steps');
+			const stepButtons = Array.from(root.querySelectorAll('button.hp-about-timeline__label'));
+			const panel = root.querySelector('.hp-about-timeline__panel');
+			if (!timelineSteps || stepButtons.length !== 5 || !panel) {
+				return {
+					anatomy: {
+						dividers: root.querySelectorAll('[data-hp-about-generated="divider"]').length,
+						chips: root.querySelectorAll('[data-hp-about-generated="citation"]').length,
+					},
+					cleared,
+					clearFocus,
+					disclosureClosed,
+					disclosureOpen,
+					filtered,
+					print: null,
+					timeline: null,
+				};
+			}
+			const stepOf = (button) => button.closest('.hp-about-timeline__step');
+			const flags = (values) => values.map((value) => (value ? '1' : '0')).join('');
+			const textOf = (element) => element.textContent.replace(/\\s+/gu, ' ').trim();
+			const timelineState = () => {
+				const current = stepButtons.findIndex((button) => stepOf(button).classList.contains('is-current'));
+				return {
+					current,
+					done: stepButtons.filter((button) => stepOf(button).classList.contains('is-done')).length,
+					pressed: flags(stepButtons.map((button) => button.getAttribute('aria-pressed') === 'true')),
+					exposed: flags(stepButtons.map((button) => stepOf(button).querySelector('.hp-about-timeline__fold').getAttribute('aria-hidden') === 'false')),
+					at: panel.getAttribute('data-at'),
+					intro: timelineSteps.classList.contains('is-intro'),
+					out: panel.classList.contains('is-out'),
+					paneMatchesFold: current >= 0 && textOf(panel) === textOf(stepOf(stepButtons[current]).querySelector('.hp-about-timeline__fold-body')),
+				};
+			};
+			const key = (name) => timelineSteps.dispatchEvent(new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true }));
+			const opened = timelineState();
+			stepButtons[3].click();
+			await wait(260);
+			const clicked = timelineState();
+			stepButtons[3].focus({ preventScroll: true });
+			key('ArrowRight');
+			await wait(260);
+			const arrowed = { ...timelineState(), focused: document.activeElement === stepButtons[4] };
+			key('ArrowRight');
+			await wait(260);
+			const wrapped = { ...timelineState(), focused: document.activeElement === stepButtons[0] };
+			key('End');
+			await wait(260);
+			const ended = { ...timelineState(), focused: document.activeElement === stepButtons[4] };
+			const stepStyle = getComputedStyle(stepButtons[4]);
+			const stepFocus = {
+				matches: stepButtons[4].matches(':focus-visible'),
+				width: Number.parseFloat(stepStyle.outlineWidth) || 0,
+				offset: Number.parseFloat(stepStyle.outlineOffset) || 0,
+			};
+			key('Home');
+			await wait(260);
+			const homed = { ...timelineState(), focused: document.activeElement === stepButtons[0] };
 
-			let printCalls = 0;
-			const nativePrint = window.print;
-			window.print = () => { printCalls += 1; };
-			const printLink = root.querySelector('.hp-about-print-control a');
-			const printToolbar = root.querySelector('.hp-about-print-view');
-			const printButton = printToolbar.querySelector('.hp-about-print-view__print');
-			const exitPrintView = printToolbar.querySelector('.hp-about-print-view__exit');
+			// The latest selection supersedes a pending swap: back to the lit
+			// step within the swap window cancels the swap, and a second target
+			// within the window replaces the first.
+			stepButtons[1].click();
+			stepButtons[0].click();
+			await wait(260);
+			const returned = timelineState();
+			stepButtons[2].click();
+			stepButtons[3].click();
+			await wait(260);
+			const superseded = timelineState();
+
+			// Native print: the controller prepares the layout on beforeprint —
+			// canonical order, every role and every fold open, the pane and the
+			// screen chrome gone — and restores it on afterprint.
 			const nav = root.querySelector('.hp-about-nav');
 			const heroContentsHost = root.querySelector('.hp-about-v3-hero__contents-host');
-			printLink.click();
-			const printEntered = root.classList.contains('is-print-mode') &&
-				document.documentElement.classList.contains('has-about-v3-print-view') &&
-				! earlier.hidden && ! printToolbar.hidden;
-			const nativePrintDeferred = printCalls === 0;
-			const printButtonFocused = document.activeElement === printButton;
-			const printChromeRemoved = [
-				root.querySelector('.hp-about-nav'),
-				root.querySelector('.hp-about-filter-rail'),
-				root.querySelector('.hp-about-showcase'),
-				root.querySelector('.hp-about-contact'),
-				root.querySelector('.hp-about-v3-hero__cta'),
-			].every((element) => !element || getComputedStyle(element).display === 'none');
-			printButton.click();
+			const isHidden = (element) => !element || getComputedStyle(element).display === 'none';
+			const beforePrint = timelineState();
+			window.dispatchEvent(new Event('beforeprint'));
+			const printPrepared = root.classList.contains('is-print-mode') && ! earlier.hidden &&
+				stepButtons.every((button) => {
+					const fold = stepOf(button).querySelector('.hp-about-timeline__fold');
+					const body = fold.querySelector('.hp-about-timeline__fold-body');
+					return fold.getAttribute('aria-hidden') === 'false' && getComputedStyle(fold).display === 'grid' && getComputedStyle(body).visibility === 'visible';
+				}) &&
+				isHidden(panel) &&
+				[
+					nav,
+					root.querySelector('.hp-about-filter-rail'),
+					root.querySelector('.hp-about-showcase'),
+					root.querySelector('.hp-about-contact'),
+					root.querySelector('.hp-about-v3-hero__cta'),
+				].every(isHidden);
 			window.dispatchEvent(new Event('afterprint'));
-			const printPersisted = root.classList.contains('is-print-mode') && ! earlier.hidden && ! printToolbar.hidden;
-			exitPrintView.click();
-			const printRestored = ! root.classList.contains('is-print-mode') &&
-				! document.documentElement.classList.contains('has-about-v3-print-view') &&
-				earlier.hidden && printToolbar.hidden && document.activeElement === printLink &&
-				nav.parentElement === heroContentsHost;
-			window.print = nativePrint;
+			const restoredState = timelineState();
+			// The lit step, its exposed fold, and the pane anchor come back exactly
+			// as they were before the print layout took over.
+			const printRestored = ! root.classList.contains('is-print-mode') && earlier.hidden &&
+				restoredState.current === beforePrint.current && restoredState.exposed === beforePrint.exposed &&
+				restoredState.pressed === beforePrint.pressed && restoredState.at === beforePrint.at &&
+				! isHidden(panel) && nav.parentElement === heroContentsHost;
 
 			const anatomy = {
 				dividers: root.querySelectorAll('[data-hp-about-generated="divider"]').length,
@@ -1393,20 +1634,11 @@ async function verifyV3Interactions( cdp, sessionId ) {
 				anatomy,
 				cleared,
 				clearFocus,
-				copy: { copied, status: copyStatus.textContent.trim(), hidden: copyStatus.hidden },
 				disclosureClosed,
 				disclosureOpen,
 				filtered,
-				print: {
-					calls: printCalls,
-					entered: printEntered,
-					focused: printButtonFocused,
-					href: new URL(printLink.href, location.href).pathname,
-					nativeDeferred: nativePrintDeferred,
-					printChromeRemoved,
-					persisted: printPersisted,
-					restored: printRestored,
-				},
+				print: { prepared: printPrepared, restored: printRestored },
+				timeline: { opened, clicked, arrowed, wrapped, ended, homed, returned, superseded, stepFocus },
 			};
 		})()`,
 		awaitPromise: true,
@@ -1425,17 +1657,71 @@ async function verifyV3Interactions( cdp, sessionId ) {
 	assertJsonEqual( result.cleared, { dimmed: 0, cited: 0, visibleDividers: 0, restored: true }, 'v3 Clear filter did not restore canonical state.' );
 	assert( result.clearFocus.matches && result.clearFocus.width >= 3 && result.clearFocus.offset >= 2, 'v3 Clear filter has no effective 3px/2px focus ring.' );
 	assert( result.disclosureOpen && result.disclosureClosed, 'v3 earlier-role disclosure did not round-trip its ARIA and hidden state.' );
-	assert( result.copy.copied === 'htperkins@gmail.com' && result.copy.status === 'Copied' && ! result.copy.hidden, 'v3 copy control did not announce success.' );
-	assertJsonEqual( result.print, {
-		calls: 1,
-		entered: true,
-		focused: true,
-		href: '/one-page-resume/',
-		nativeDeferred: true,
-		printChromeRemoved: true,
-		persisted: true,
-		restored: true,
-	}, 'v3 print-view entry, native print, exit, focus, or fallback contract failed.' );
+	if ( ! result.timeline ) {
+		console.log( 'plate-era About body: proof timeline and native print probes skipped until the letterhead is promoted.' );
+		return;
+	}
+	const { intro: openedIntro, ...opened } = result.timeline.opened;
+	assertJsonEqual( opened, { current: 0, done: 0, pressed: '10000', exposed: '10000', at: '0/5', out: false, paneMatchesFold: true }, 'v3 proof timeline did not open on step 1.' );
+	assertJsonEqual( result.timeline.clicked, { current: 3, done: 3, pressed: '00010', exposed: '00010', at: '3/5', intro: false, out: false, paneMatchesFold: true }, 'v3 proof timeline click did not light step 4 and clear the intro.' );
+	assertJsonEqual( result.timeline.arrowed, { current: 4, done: 4, pressed: '00001', exposed: '00001', at: '4/5', intro: false, out: false, paneMatchesFold: true, focused: true }, 'v3 proof timeline ArrowRight did not move to step 5.' );
+	assertJsonEqual( result.timeline.wrapped, { current: 0, done: 0, pressed: '10000', exposed: '10000', at: '0/5', intro: false, out: false, paneMatchesFold: true, focused: true }, 'v3 proof timeline ArrowRight did not wrap to step 1.' );
+	assertJsonEqual( result.timeline.ended, { current: 4, done: 4, pressed: '00001', exposed: '00001', at: '4/5', intro: false, out: false, paneMatchesFold: true, focused: true }, 'v3 proof timeline End did not jump to the last step.' );
+	assertJsonEqual( result.timeline.homed, { current: 0, done: 0, pressed: '10000', exposed: '10000', at: '0/5', intro: false, out: false, paneMatchesFold: true, focused: true }, 'v3 proof timeline Home did not jump to the first step.' );
+	assertJsonEqual( result.timeline.returned, { current: 0, done: 0, pressed: '10000', exposed: '10000', at: '0/5', intro: false, out: false, paneMatchesFold: true }, 'v3 proof timeline let a pending swap land after a return to the lit step.' );
+	assertJsonEqual( result.timeline.superseded, { current: 3, done: 3, pressed: '00010', exposed: '00010', at: '3/5', intro: false, out: false, paneMatchesFold: true }, 'v3 proof timeline did not let the latest selection supersede a pending swap.' );
+	assert(
+		result.timeline.stepFocus.matches && result.timeline.stepFocus.width >= 3 && result.timeline.stepFocus.offset >= 2,
+		'v3 proof timeline step has no effective 3px/2px focus ring.'
+	);
+	assertJsonEqual( result.print, { prepared: true, restored: true }, 'v3 native print preparation or restoration failed.' );
+	void openedIntro;
+}
+
+// Without JavaScript the reading pane never exists, so the timeline must stay
+// the stacked register with every fold open and every evidence link reachable
+// at desktop width too. Loads the route with script execution disabled.
+async function verifyTimelineNoScriptFallback( cdp, sessionId, url, expectations ) {
+	await cdp.send( 'Emulation.setScriptExecutionDisabled', { value: true }, sessionId );
+	try {
+		await navigateDocument( cdp, sessionId, url );
+		const evaluated = await cdp.send( 'Runtime.evaluate', {
+			expression: `(() => {
+				const root = document.querySelector('.hp-about-resume-v3');
+				if (!root) { return { error: 'missing .hp-about-resume-v3 without scripts' }; }
+				const steps = Array.from(root.querySelectorAll('.hp-about-timeline__step'));
+				const boxes = steps.map((step) => step.getBoundingClientRect());
+				return {
+					enhanced: root.classList.contains('is-enhanced'),
+					steps: steps.length,
+					buttons: root.querySelectorAll('button.hp-about-timeline__label').length,
+					panels: root.querySelectorAll('.hp-about-timeline__panel').length,
+					openFolds: steps.filter((step) => {
+						const fold = step.querySelector('.hp-about-timeline__fold');
+						const body = step.querySelector('.hp-about-timeline__fold-body');
+						return fold && body && getComputedStyle(fold).display !== 'none' &&
+							getComputedStyle(body).visibility === 'visible' && body.getBoundingClientRect().height > 0;
+					}).length,
+					links: root.querySelectorAll('.hp-about-timeline__fold-body a').length,
+					stacked: boxes.every((box, index) => index === 0 || box.top >= boxes[index - 1].bottom - 1),
+					width: document.documentElement.clientWidth,
+				};
+			})()`,
+			returnByValue: true,
+		}, sessionId );
+		assert( ! evaluated.exceptionDetails, `no-script timeline probe threw: ${ JSON.stringify( evaluated.exceptionDetails ) }` );
+		const result = evaluated.result.value;
+		assert( ! result.error, result.error );
+		const count = expectations.timelineLabels.length;
+		assert( result.width >= 782, `no-script timeline probe ran at ${ result.width }px; it needs the desktop layout.` );
+		assert( ! result.enhanced && result.buttons === 0 && result.panels === 0, 'no-script About page still carries enhancement state.' );
+		assert( result.steps === count && result.openFolds === count, `no-script timeline shows ${ result.openFolds } of ${ result.steps } folds open; expected all ${ count }.` );
+		assert( result.links === count - 1, `no-script timeline exposes ${ result.links } evidence links; expected ${ count - 1 }.` );
+		assert( result.stacked, 'no-script timeline must stay the stacked register at desktop width.' );
+		console.log( `checked the no-script timeline fallback at ${ result.width }px` );
+	} finally {
+		await cdp.send( 'Emulation.setScriptExecutionDisabled', { value: false }, sessionId );
+	}
 }
 
 async function waitForRuntimeCondition( cdp, sessionId, expression, label, timeout = 10000 ) {
@@ -1468,6 +1754,10 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 				error: '',
 				initialPath: location.pathname,
 				routerAvailable,
+				// The stepper anatomy the remount must reproduce exactly: five
+				// buttons and one pane for the letterhead, none for a plate-era body.
+				stepButtons: document.querySelectorAll('button.hp-about-timeline__label').length,
+				timelinePanels: document.querySelectorAll('.hp-about-timeline__panel').length,
 				x: rect.left + rect.width / 2,
 				y: rect.top + rect.height / 2,
 			};
@@ -1478,6 +1768,10 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 	const click = setup.result.value;
 	assert( ! click.error, click.error );
 	assert( click.x > 0 && click.y > 0, `v3 route link has no clickable point: ${ JSON.stringify( click ) }.` );
+	assert(
+		( click.stepButtons === 5 && click.timelinePanels === 1 ) || ( click.stepButtons === 0 && click.timelinePanels === 0 ),
+		`v3 stepper anatomy before route-away is ${ click.stepButtons } buttons and ${ click.timelinePanels } panes.`
+	);
 
 	await cdp.send( 'Input.dispatchMouseEvent', { type: 'mouseMoved', x: click.x, y: click.y }, sessionId );
 	await cdp.send( 'Input.dispatchMouseEvent', {
@@ -1495,7 +1789,6 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 			if (!documentElement) { return false; }
 			if (location.pathname === ${ JSON.stringify( click.initialPath ) } || document.querySelector('.hp-about-resume-v3')) { return false; }
 			return {
-				copyButtons: document.querySelectorAll('.hp-about-copy').length,
 				controlSets: document.querySelectorAll('.hp-about-skills__controls').length,
 				earlierToggles: document.querySelectorAll('.hp-about-earlier__toggle').length,
 				hasGlobalClass: documentElement.classList.contains('has-about-v3'),
@@ -1503,6 +1796,8 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 				headerOffset: documentElement.style.getPropertyValue('--hp-about-header-height'),
 				path: location.pathname,
 				roots: document.querySelectorAll('.hp-about-resume-v3').length,
+				stepButtons: document.querySelectorAll('button.hp-about-timeline__label').length,
+				timelinePanels: document.querySelectorAll('.hp-about-timeline__panel').length,
 			};
 		})()`,
 		click.routerAvailable ? 'the real Interactivity Router route-away commit' : 'the full-navigation route-away commit'
@@ -1516,13 +1811,14 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 	assertJsonEqual(
 		awayState,
 		{
-			copyButtons: 0,
 			controlSets: 0,
 			earlierToggles: 0,
 			hasGlobalClass: false,
 			headerOffset: '',
 			path: away.path,
 			roots: 0,
+			stepButtons: 0,
+			timelinePanels: 0,
 		},
 		'v3 route-away cleanup left page-owned state behind.'
 	);
@@ -1541,8 +1837,6 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 			return {
 				chips: root.querySelectorAll('[data-hp-about-generated="citation"]').length,
 				clearButtons: root.querySelectorAll('.hp-about-skills__clear').length,
-				copyButtons: root.querySelectorAll('.hp-about-copy').length,
-				copyStatuses: root.querySelectorAll('.hp-about-copy__status').length,
 				controlSets: root.querySelectorAll('.hp-about-skills__controls').length,
 				dividers: root.querySelectorAll('[data-hp-about-generated="divider"]').length,
 				earlierToggles: root.querySelectorAll('.hp-about-earlier__toggle').length,
@@ -1550,6 +1844,8 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 				hasSentinel: window.__hpAboutRouterProbe?.token === 'about-v3-router-round-trip',
 				headerOffset,
 				roots: document.querySelectorAll('.hp-about-resume-v3').length,
+				stepButtons: root.querySelectorAll('button.hp-about-timeline__label').length,
+				timelinePanels: root.querySelectorAll('.hp-about-timeline__panel').length,
 			};
 		})()`,
 		click.routerAvailable ? 'the real Interactivity Router history-back remount' : 'the full-navigation history-back remount'
@@ -1564,14 +1860,14 @@ async function verifyV3RouterRoundTrip( cdp, sessionId ) {
 		{
 			chips: 11,
 			clearButtons: 1,
-			copyButtons: 1,
-			copyStatuses: 1,
 			controlSets: 1,
 			dividers: 2,
 			earlierToggles: 1,
 			hasGlobalClass: true,
 			headerOffset: remounted.headerOffset,
 			roots: 1,
+			stepButtons: click.stepButtons,
+			timelinePanels: click.timelinePanels,
 		},
 		'v3 history-back did not remount exactly one enhancement anatomy.'
 	);
@@ -1758,6 +2054,12 @@ async function main() {
 						await verifyV3Interactions( cdp, sessionId );
 						const roundTrip = await verifyV3RouterRoundTrip( cdp, sessionId );
 						console.log( `checked v3 ${ roundTrip.transport } away/back round-trip` );
+						if ( expectations.heroRevision === 'letterhead' ) {
+							await verifyTimelineNoScriptFallback( cdp, sessionId, url, expectations );
+							// Back to the enhanced page before the screenshot.
+							await navigateDocument( cdp, sessionId, url );
+							await wait( 300 );
+						}
 					}
 				}
 				const capturePath = await captureScreenshot( cdp, sessionId, viewport );

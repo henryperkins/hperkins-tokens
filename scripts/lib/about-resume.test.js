@@ -244,7 +244,19 @@ test( 'About v3 contract validates the real candidate and its evidence index', (
 	assert.equal( report.filterHostInsideNavigation, false );
 	assert.equal( report.navigationListTag, 'ol' );
 	assert.equal( report.navigationLabel, 'In this résumé' );
-	assert.equal( report.printControlText, 'Print view' );
+	assert.equal( report.timelineStepCount, 5 );
+	assert.deepEqual( report.timelineLabels, [
+		'WordPress since 2012',
+		'Credential · 2026',
+		'1 merged upstream',
+		'5 public projects',
+		'In person · Aug 2026',
+	] );
+	assert.deepEqual( report.channelHrefs, [
+		'mailto:htperkins@gmail.com',
+		'https://github.com/henryperkins',
+		'https://www.linkedin.com/in/henryperkins',
+	] );
 	assert.deepEqual( report.heroActions, [
 		{ href: '/one-page-resume/', text: 'Download résumé (PDF)' },
 		{ href: '/contact/', text: 'Get in touch' },
@@ -274,6 +286,47 @@ test( 'About v3 contract rejects loss of the desktop contents host or filter lan
 	);
 	assert.notEqual( withoutFilterLandmark, source, 'filter-landmark mutation must apply' );
 	assert.throws( () => verifyAboutV3Body( withoutFilterLandmark ), /filter.*aside|filter.*landmark/i );
+} );
+
+test( 'About v3 contract pins the letterhead and the authored proof timeline', () => {
+	const { verifyAboutV3Body } = require( './about-page-contract' );
+	const source = fs.readFileSync( draftPath, 'utf8' );
+	assert.doesNotThrow( () => verifyAboutV3Body( source ) );
+
+	for ( const [ from, to, message ] of [
+		// A state class in the body would pre-empt the sweep the enhancer paints.
+		[ '<div class="wp-block-group hp-about-timeline__step">', '<div class="wp-block-group hp-about-timeline__step is-current">', /state classes/ ],
+		// The reading pane is generated: shipping it would double the current claim.
+		[ '<div class="wp-block-group hp-about-timeline__steps">', '<div class="wp-block-group hp-about-timeline__panel"></div><div class="wp-block-group hp-about-timeline__steps">', /reading pane.*generated/ ],
+		// The one row with nothing to open must say so, not point elsewhere.
+		[ '<span class="hp-about-timeline__gap"><span aria-hidden="true">—</span><span class="hp-about-timeline__sr">No artifact to open</span></span>', '<a href="#contact">Contact</a>', /gap contract/ ],
+		// Destinations cross-reference the contents card's numbering.
+		[ '>01 Contributions <span', '>See contributions <span', /destination drifted/ ],
+		// The pills keep their names and their order: email, GitHub, LinkedIn.
+		[ 'rel="me" aria-label="GitHub profile"', 'rel="me" aria-label="GitHub"', /accessible names drifted/ ],
+		[ 'href="https://github.com/henryperkins" rel="me" aria-label="GitHub profile"', 'href="https://gitlab.com/henryperkins" rel="me" aria-label="GitHub profile"', /GitHub, and LinkedIn in that order|unrecognised/ ],
+		// The retired plates and address row must not return beside the timeline.
+		[ '<div class="wp-block-group hp-about-timeline">', '<p class="hp-about-credential__eyebrow">Credential · 2026</p><div class="wp-block-group hp-about-timeline">', /retired hero anatomy/ ],
+	] ) {
+		const changed = source.replace( from, to );
+		assert.notEqual( changed, source, `v3 mutation ${ from } must apply` );
+		assert.throws( () => verifyAboutV3Body( changed ), message );
+	}
+} );
+
+test( 'the proof stepper wraps on arrow keys and jumps on Home and End', () => {
+	const { nextTimelineStep, timelineAnchor } = require( controllerPath );
+	assert.equal( nextTimelineStep( 'ArrowRight', 0, 5 ), 1 );
+	assert.equal( nextTimelineStep( 'ArrowDown', 4, 5 ), 0, 'ArrowDown wraps forward from the last step' );
+	assert.equal( nextTimelineStep( 'ArrowLeft', 0, 5 ), 4, 'ArrowLeft wraps back from the first step' );
+	assert.equal( nextTimelineStep( 'ArrowUp', 2, 5 ), 1 );
+	assert.equal( nextTimelineStep( 'Home', 3, 5 ), 0 );
+	assert.equal( nextTimelineStep( 'End', 0, 5 ), 4 );
+	assert.equal( nextTimelineStep( 'Enter', 2, 5 ), null, 'other keys are not the stepper\'s' );
+	assert.equal( nextTimelineStep( 'ArrowRight', -1, 5 ), null, 'focus outside the steps is ignored' );
+	assert.equal( nextTimelineStep( 'ArrowRight', 0, 0 ), null );
+	assert.equal( timelineAnchor( 0, 5 ), '0/5' );
+	assert.equal( timelineAnchor( 3, 4 ), '3/4' );
 } );
 
 test( 'About v3 rejects block className JSON that WordPress would reserialize', () => {

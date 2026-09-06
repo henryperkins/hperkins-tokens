@@ -1591,6 +1591,27 @@ const ABOUT_V3_SKILL_GROUPS = [
 	[ 'Delivery & support', [ 'Technical support', 'Escalation triage', 'Customer onboarding' ] ]
 ];
 
+// The letterhead's channel pills, in order, with their accessible names.
+const ABOUT_V3_CHANNELS = [
+	{ href: 'mailto:htperkins@gmail.com', label: 'Email htperkins@gmail.com' },
+	{ href: 'https://github.com/henryperkins', label: 'GitHub profile' },
+	{ href: 'https://www.linkedin.com/in/henryperkins', label: 'LinkedIn profile' }
+];
+
+// The proof timeline in the record's order. The claims are the retired
+// credential plate, event callout, and impact notes, redistributed; the
+// in-page destinations cross-reference the contents card's numbering, and
+// the one row with nothing to open renders the gap contract instead.
+const ABOUT_V3_TIMELINE = [
+	{ label: 'WordPress since 2012', claim: 'Community, support, delivery — now core AI.', where: { href: '#experience', text: '02 Experience', glyph: '↓' } },
+	{ label: 'Credential · 2026', claim: 'AI Leaders Micro-Credential. Finalist, inaugural cohort — University of Illinois Chicago and the WordPress Foundation, supported by Automattic. Earned by shipping the contributions below.', where: { href: 'https://aileaderswp.blog/', text: 'Program showcase', glyph: '↗' } },
+	{ label: '1 merged upstream', claim: 'PR #501, credited in AI Plugin 1.0.0 — plus a reported defect a maintainer fixed and shipped.', where: { href: '#contributions', text: '01 Contributions', glyph: '↓' } },
+	{ label: '5 public projects', claim: 'Two stable releases, three live deployments, no release candidates.', where: { href: '#showcase', text: '04 Showcase', glyph: '↓' } },
+	{ label: 'In person · Aug 2026', claim: 'Staffed the Core AI booth at WordCamp US 2026 in Phoenix — walking maintainers and agency developers through the provider tooling above.', where: null }
+];
+
+const ABOUT_V3_TIMELINE_GAP = '<span class="hp-about-timeline__gap"><span aria-hidden="true">—</span><span class="hp-about-timeline__sr">No artifact to open</span></span>';
+
 function aboutV3Terms(openingTag) {
 	return aboutV2Classes(openingTag)
 		.filter(function (className) {
@@ -1621,6 +1642,103 @@ function aboutV3WithoutHiddenUtilities(source) {
 	return source
 		.replace(/<div\b[^>]*\bhp-about-ledger__divider\b[^>]*\bhidden\b[^>]*>[\s\S]*?<\/div>/g, '')
 		.replace(/<span\b[^>]*\bhp-about-citation-chip\b[^>]*\bhidden\b[^>]*>[\s\S]*?<\/span>/g, '');
+}
+
+// The 2026-09-06 hero: letterhead (identity, channel-pill aside, argument) and
+// the proof timeline. Returns the pieces the report carries.
+function verifyAboutV3Letterhead(source, label) {
+	// --- letterhead ------------------------------------------------------------
+	const letterheads = findBalancedByClass(source, 'hp-about-v3-hero__letterhead', label);
+	const asides = findBalancedByClass(source, 'hp-about-v3-hero__aside', label);
+	const contacts = findByClass(source, 'hp-about-v3-hero__contact', label);
+	aboutV2Assert(letterheads.length === 1, label + ': expected one letterhead group.');
+	aboutV2Assert(asides.length === 1 && letterheads[0].inner.includes('hp-about-v3-hero__aside'), label + ': expected one aside inside the letterhead.');
+	aboutV2Assert(asides[0].inner.includes('hp-about-v3-hero__contents-host'), label + ': the contents host must sit inside the letterhead aside.');
+	aboutV2Assert(contacts.length === 1 && contacts[0].tag === 'p' && asides[0].inner.includes('hp-about-v3-hero__contact'), label + ': expected one channel-pill paragraph inside the aside.');
+	aboutV2Assert(
+		letterheads[0].inner.indexOf('hp-about-v3-hero__identity') < letterheads[0].inner.indexOf('hp-about-v3-hero__aside') &&
+			letterheads[0].inner.indexOf('hp-about-v3-hero__aside') < letterheads[0].inner.indexOf('hp-about-v3-hero__argument'),
+		label + ': the letterhead reads identity, aside, argument.'
+	);
+	const channelLinks = findLinks(contacts[0].inner, label);
+	const channelNames = (contacts[0].inner.match(/<a\b[^>]*>/g) || []).map(function (tag) {
+		const name = / aria-label="([^"]*)"/.exec(tag);
+		return name ? decodeCharacterReferences(name[1], label) : null;
+	});
+	aboutV2Assert(
+		JSON.stringify(channelLinks.map(function (link) { return link.href; })) === JSON.stringify(ABOUT_V3_CHANNELS.map(function (channel) { return channel.href; })),
+		label + ': channel pills must link email, GitHub, and LinkedIn in that order.'
+	);
+	aboutV2Assert(
+		JSON.stringify(channelNames) === JSON.stringify(ABOUT_V3_CHANNELS.map(function (channel) { return channel.label; })),
+		label + ': channel pill accessible names drifted: ' + JSON.stringify(channelNames)
+	);
+	aboutV2Assert(
+		(contacts[0].inner.match(/<a\b[^>]*\baria-label="[^"]+"[^>]*\btitle="[^"]+"[^>]*><svg\b[^>]*\baria-hidden="true"[^>]*\bfocusable="false"[^>]*>/g) || []).length === 3,
+		label + ': each channel pill needs an accessible name, a title, and an aria-hidden outline glyph.'
+	);
+	aboutV2Assert((contacts[0].inner.match(/\brel="me"/g) || []).length === 2, label + ': both profile pills must carry rel="me".');
+	[
+		'hp-about-v3-hero__masthead',
+		'hp-about-v3-hero__links',
+		'hp-about-contact__email',
+		'hp-about-v3-hero__proof',
+		'hp-about-credential',
+		'hp-about-wcus',
+		'hp-about-impact-strip',
+		'hp-about-v3-impact',
+		'hp-about-print-control'
+	].forEach(function (retired) {
+		aboutV2Assert(!source.includes(retired), label + ': retired hero anatomy must not return: ' + retired);
+	});
+
+	// --- proof timeline --------------------------------------------------------
+	const timelines = findBalancedByClass(source, 'hp-about-timeline', label);
+	aboutV2Assert(timelines.length === 1, label + ': expected one proof timeline.');
+	aboutV2Assert(source.indexOf('hp-about-timeline') > source.indexOf('hp-about-v3-hero__cta'), label + ': the proof timeline must follow the letterhead.');
+	aboutV2Assert(source.indexOf('hp-about-timeline') < source.indexOf('hp-about-v3-layout'), label + ': the proof timeline belongs to the hero.');
+	const stepGroups = findBalancedByClass(timelines[0].inner, 'hp-about-timeline__steps', label);
+	aboutV2Assert(stepGroups.length === 1, label + ': expected one timeline steps group.');
+	const steps = findBalancedByClass(stepGroups[0].inner, 'hp-about-timeline__step', label);
+	aboutV2Assert(steps.length === ABOUT_V3_TIMELINE.length, label + ': expected ' + ABOUT_V3_TIMELINE.length + ' timeline steps, found ' + steps.length + '.');
+	aboutV2Assert(!/hp-about-timeline__(?:panel|bubble)/.test(source), label + ': the reading pane must be generated by the enhancer.');
+	aboutV2Assert(!/class="[^"]*\bhp-about-timeline__step\b[^"]*\bis-(?:current|done|last)\b/.test(source), label + ': authored timeline steps must carry no state classes.');
+	aboutV2Assert(!/<button\b/i.test(timelines[0].inner), label + ': timeline step buttons must be generated by the enhancer.');
+	steps.forEach(function (step, index) {
+		const expected = ABOUT_V3_TIMELINE[index];
+		const ordinal = 'timeline step ' + (index + 1);
+		const labels = findByClass(step.inner, 'hp-about-timeline__label', label);
+		const texts = findByClass(step.inner, 'hp-about-timeline__text', label);
+		const folds = findBalancedByClass(step.inner, 'hp-about-timeline__fold', label);
+		aboutV2Assert(step.inner.includes('<!-- wp:paragraph {"className":"hp-about-timeline__label"} -->'), label + ': ' + ordinal + ' label must be a native Paragraph block.');
+		aboutV2Assert(labels.length === 1 && labels[0].tag === 'p', label + ': ' + ordinal + ' must ship exactly one paragraph label.');
+		aboutV2Assert(
+			/^<span class="hp-about-timeline__seg" aria-hidden="true"><span class="hp-about-timeline__fill"><\/span><\/span><span class="hp-about-timeline__dot" aria-hidden="true"><\/span><span class="hp-about-timeline__text">/.test(labels[0].inner),
+			label + ': ' + ordinal + ' label must open with the hidden spine segment and dot.'
+		);
+		aboutV2Assert(texts.length === 1 && texts[0].text === expected.label, label + ': ' + ordinal + ' label drifted: ' + (texts[0] ? texts[0].text : '(missing)'));
+		aboutV2Assert(folds.length === 1, label + ': ' + ordinal + ' must ship one fold.');
+		const bodies = findBalancedByClass(folds[0].inner, 'hp-about-timeline__fold-body', label);
+		aboutV2Assert(bodies.length === 1, label + ': ' + ordinal + ' fold must wrap one body.');
+		const claims = findByClass(bodies[0].inner, 'hp-about-timeline__claim', label);
+		const wheres = findByClass(bodies[0].inner, 'hp-about-timeline__where', label);
+		aboutV2Assert(claims.length === 1 && claims[0].text === expected.claim, label + ': ' + ordinal + ' claim drifted.');
+		aboutV2Assert(wheres.length === 1, label + ': ' + ordinal + ' must say where to check it.');
+		if (expected.where) {
+			aboutV2Assert(
+				JSON.stringify(findLinks(wheres[0].inner, label)) === JSON.stringify([ { href: expected.where.href, text: expected.where.text } ]),
+				label + ': ' + ordinal + ' destination drifted.'
+			);
+			aboutV2Assert(
+				wheres[0].inner.endsWith(' <span aria-hidden="true">' + expected.where.glyph + '</span></a>'),
+				label + ': ' + ordinal + ' destination must end with its aria-hidden ' + expected.where.glyph + ' glyph.'
+			);
+		} else {
+			aboutV2Assert(wheres[0].inner === ABOUT_V3_TIMELINE_GAP, label + ': ' + ordinal + ' must render the gap contract with its screen-reader reason.');
+		}
+	});
+
+	return { channelLinks, steps };
 }
 
 function verifyAboutV3Body(body, options = {}) {
@@ -1714,13 +1832,24 @@ function verifyAboutV3Body(body, options = {}) {
 		{ href: '#contact', text: 'Contact' }
 	];
 	aboutV2Assert(JSON.stringify(navLinks) === JSON.stringify(expectedNav), label + ': navigation labels, fragments, or order drifted.');
+	// The letterhead (2026-09-06) retired the contents card's print row — the
+	// résumé PDF is the primary action beside the card. The plate-era contents
+	// card kept a "Print view" row and the older rail revision a "Print"
+	// fallback; both still verify while the accepted mirror waits on promotion,
+	// so the candidate and the snapshot can hold different heroes without a
+	// mode flag.
+	const usesLetterhead = source.includes('hp-about-v3-hero__letterhead');
 	const printControls = findByClass(navs[0].inner, 'hp-about-print-control', label);
-	const printLinks = printControls.length === 1 ? findLinks(printControls[0].inner, label) : [];
-	const expectedPrintText = usesContentsPlateRevision ? 'Print view' : 'Print';
-	aboutV2Assert(
-		JSON.stringify(printLinks) === JSON.stringify([ { href: '/one-page-resume/', text: expectedPrintText } ]),
-		label + ': print control must retain the one-page resume fallback.'
-	);
+	if (usesLetterhead) {
+		aboutV2Assert(printControls.length === 0, label + ': the contents card must not carry a print control.');
+	} else {
+		const printLinks = printControls.length === 1 ? findLinks(printControls[0].inner, label) : [];
+		const expectedPrintText = usesContentsPlateRevision ? 'Print view' : 'Print';
+		aboutV2Assert(
+			JSON.stringify(printLinks) === JSON.stringify([ { href: '/one-page-resume/', text: expectedPrintText } ]),
+			label + ': print control must retain the one-page resume fallback.'
+		);
+	}
 
 	for (const exact of [
 		'Developer relations &amp; enablement',
@@ -1738,7 +1867,12 @@ function verifyAboutV3Body(body, options = {}) {
 		(source.match(/<img\b[^>]*src="\/wp-content\/uploads\/2026\/06\/henry-perkins\.png"[^>]*alt="Henry Perkins"[^>]*>/g) || []).length === 1,
 		label + ': expected one exact portrait source with Henry Perkins alternative text.'
 	);
-	aboutV2Assert(source.includes('href="https://aileaderswp.blog/">Program showcase</a>'), label + ': Program showcase link is missing.');
+	aboutV2Assert(
+		source.includes(usesLetterhead
+			? 'href="https://aileaderswp.blog/">Program showcase <span aria-hidden="true">↗</span></a>'
+			: 'href="https://aileaderswp.blog/">Program showcase</a>'),
+		label + ': Program showcase link is missing.'
+	);
 	aboutV2Assert(source.includes(IDLE_READOUT_V3), label + ': approved idle Skills readout is missing.');
 	aboutV2Assert(!source.includes('the rest are dimmed'), label + ': stale dimming language must not return.');
 	aboutV2Assert(!source.includes('is-dimmed'), label + ': authored v3 rows must not use the old dimmed state.');
@@ -1750,8 +1884,13 @@ function verifyAboutV3Body(body, options = {}) {
 	aboutV2Assert(earlierRoleCount === 3, label + ': expected 3 earlier roles, found ' + earlierRoleCount + '.');
 	aboutV2Assert(rows.length === 11, label + ': expected 11 evidence-index rows, found ' + rows.length + '.');
 	aboutV2Assert((source.match(/class="hp-about-status__glyph" aria-hidden="true">[●○]<\/span>/g) || []).length === 7, label + ': every contribution status needs an aria-hidden glyph plus status words.');
-	aboutV2Assert((source.match(/<!-- wp:paragraph \{"className":"hp-about-v3-impact"\} -->/g) || []).length === 3, label + ': impact signals must be three native Paragraph blocks.');
-	aboutV2Assert((source.match(/<p class="hp-about-v3-impact"><a href="#[^"]+">/g) || []).length === 3, label + ': each impact signal must be one full-cell section link.');
+	let letterhead = { channelLinks: [], steps: [] };
+	if (usesLetterhead) {
+		letterhead = verifyAboutV3Letterhead(source, label);
+	} else {
+		aboutV2Assert((source.match(/<!-- wp:paragraph \{"className":"hp-about-v3-impact"\} -->/g) || []).length === 3, label + ': impact signals must be three native Paragraph blocks.');
+		aboutV2Assert((source.match(/<p class="hp-about-v3-impact"><a href="#[^"]+">/g) || []).length === 3, label + ': each impact signal must be one full-cell section link.');
+	}
 
 	rows.forEach(function (row) {
 		const expected = ABOUT_V3_EVIDENCE[row.title];
@@ -1861,7 +2000,10 @@ function verifyAboutV3Body(body, options = {}) {
 		navigationListTag: navList.tag,
 		navigationLabel: navLabel.text,
 		navigationRevision: usesContentsPlateRevision ? 'contents-plate' : 'accepted-rail',
-		printControlText: printLinks[0].text,
+		heroRevision: usesLetterhead ? 'letterhead' : 'plates',
+		channelHrefs: letterhead.channelLinks.map(function (link) { return link.href; }),
+		timelineStepCount: letterhead.steps.length,
+		timelineLabels: usesLetterhead ? ABOUT_V3_TIMELINE.map(function (step) { return step.label; }) : [],
 		heroActions,
 		closingActions,
 		counts,
@@ -1872,5 +2014,6 @@ function verifyAboutV3Body(body, options = {}) {
 
 const IDLE_READOUT_V3 = 'Pick a term to pull its evidence to the top. Nothing is hidden.';
 
+module.exports.ABOUT_V3_TIMELINE = ABOUT_V3_TIMELINE;
 module.exports.ABOUT_V3_WORD_RANGE = ABOUT_V3_WORD_RANGE;
 module.exports.verifyAboutV3Body = verifyAboutV3Body;
