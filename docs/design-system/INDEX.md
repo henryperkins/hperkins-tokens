@@ -804,7 +804,7 @@ than becoming WordPress dependencies.
 | Rings | Oversized inherited description type; full-width instrument rule and widely tracked actions crowded the review row | Home-scoped component type and inline instrument links reproduce the reference; existing accessible tint colors and mobile touch targets remain. |
 | Work ledger | Inline 36px padding, extra block margins, 19px descriptions and nested constrained layouts made rows much taller | Native flow Groups let component CSS own 16px/24px row padding, compact spacing, body-font titles and the card surface. Existing status words, prose and destinations are preserved. |
 | Closing panel | Oversized centred, 16ch headline and one action | Left-aligned token-sized headline, 24px panel inset, independent section spacing, Contact plus `/one-page-resume/`, and open wrapping buttons. |
-| Footer | Saved override had icon-only links and obsolete search; the scrim was faded along with the image | Current canonical labelled footer is restored locally. Separate image and scrim pseudo-elements reproduce the twilight surface. Current colophon facts remain. |
+| Footer | Saved override had icon-only links and obsolete search; the scrim was faded along with the image | Current canonical labelled footer is restored locally and in production. Separate image and scrim pseudo-elements reproduce the twilight surface. Current colophon facts remain. |
 | Assets/tokens | Potential duplicate assets or stale token authority | All six fonts and nine corresponding image/mark files match the theme byte for byte. The two extra source PNG marks are unused by Home. No asset import or token duplication is needed. `theme.json` remains authoritative. |
 
 ### Deliberate current-theme differences
@@ -836,17 +836,19 @@ canonical theme template and footer to resolve; they remain reversible.
 Backups, candidate markup, before/after screenshots and geometry measurements
 are retained under `.design-pull/home-containers/full-review/`.
 
-Production has not been written. Deployment must coordinate the theme files,
-the current production Home body, and saved Front Page/footer overrides. Capture
-fresh production backups, preserve any intervening content, and verify the
-resolved templates and rendered page after publication. A theme-only deploy
-cannot replace database-owned page content or saved template parts.
+Production publication completed on 2026-09-07 for release commit `01d381b`
+(0.3.61). The initial upload attempt was blocked by expired Studio authentication
+and a GitHub Actions billing lock. On resumption, fresh public HTTP checks proved
+the release stylesheet, Front Page template and canonical footer were already
+deployed byte for byte; the transport responsible was not established.
 
-The authorized release preparation captured production Home, Front Page and
-footer backups under `.design-pull/home-containers/release/`. Upload is blocked:
-Studio reports an expired authentication token, and GitHub Actions cannot start
-the publish job because the account is locked for billing. No production body
-or template changes were made while theme upload remained unavailable.
+Fresh production Home, Front Page and footer reads matched the saved backups.
+Home page 36 was then updated to the approved snapshot, and only the saved
+Front Page and footer overrides were removed. Fresh reads confirmed exact Home
+body parity and the canonical template's expanded hero pattern, including its
+new responsive image sizes. The About draft was not promoted. Production
+backups, responses, hashes, screenshots and verifier logs are retained under
+`.design-pull/home-containers/release/`.
 
 ### Verification
 
@@ -871,6 +873,18 @@ floor, both closing destinations, labelled footer, the 900px art transition,
 and complete content without JavaScript. The action verifier distinguishes
 Home's open button rows from the framed rails on other pages. The responsive
 asset contract follows the new Home art geometry.
+
+Production passed the same eleven-width Home composition check and no-JS
+case, Home's three-width prominent-action checks, both 320px ring-card routes,
+and the public GET/HEAD résumé redirect and PDF checks. Broader gates retain
+three independent failures: the accepted About body's adjacent hero links
+overflow at 390px (581px scroll width with both the release and pre-release
+stylesheets); the Council header selects its fallback because navigation 237
+does not validate; and the Method/Evidence body differs from its accepted
+snapshot. About and Digest passed the public body-hash comparison. These
+other page bodies and the navigation database record were not changed by the
+Home publication. Independent keyboard checks opened the fallback Work panel
+at 1440px and mobile drawer at 390px; both remained operable.
 
 Impeccable exceptions remain value- and file-specific: the exact prototype
 hero clamp, documented 8/9px Council labels, the comment-only `rgb(16,16,16)`
