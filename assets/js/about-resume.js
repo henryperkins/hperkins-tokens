@@ -11,6 +11,11 @@
 	'use strict';
 
 	var IDLE_READOUT = 'Pick a term to pull its evidence to the top. Nothing is hidden.';
+	// The rail is 13–15rem of 12px mono: one line is about thirty characters, and
+	// the term is already lit in the list below, so the rail's readout states only
+	// the count and the section's intro is what says where the index went.
+	var RAIL_IDLE_READOUT = 'Pick a term to filter.';
+	var RAIL_EDUCATION_INTRO = 'The capability index is the filter rail on the left — pick a term there and its evidence travels to the top of the record.';
 	var UNBACKED_COUNT = '—';
 	var TIMELINE_GROUP_LABEL = 'Proof at a glance, in order';
 	// The proof stepper's clock. First paint is unlit; the state resolves to the
@@ -125,21 +130,6 @@
 		};
 	}
 
-	function deriveDimmedRows(rows, activeTerm) {
-		return (rows || []).map(function (row) {
-			return Boolean(activeTerm) && !rowCites(row, activeTerm);
-		});
-	}
-
-	function applyDimmedRows(rows, activeTerm) {
-		var mountedRows = rows || [];
-		var dimmedRows = deriveDimmedRows(mountedRows, activeTerm);
-		mountedRows.forEach(function (row, index) {
-			row.classList.toggle('is-dimmed', dimmedRows[index]);
-		});
-		return dimmedRows;
-	}
-
 	function partitionEvidenceRows(rows, activeTerm) {
 		var canonical = (rows || []).slice();
 		if (!activeTerm) {
@@ -165,6 +155,14 @@
 		}
 
 		return activeTerm + ' — ' + count + ' ' + (count === 1 ? 'row cites it' : 'rows cite it') + ', pulled to the top of each ledger.';
+	}
+
+	function formatRailReadout(activeTerm, count) {
+		if (!activeTerm) {
+			return RAIL_IDLE_READOUT;
+		}
+
+		return count + ' ' + (count === 1 ? 'row cites it.' : 'rows cite it.');
 	}
 
 	function createButton(label, className) {
@@ -263,6 +261,24 @@
 		return toolbar;
 	}
 
+	// The contents-card link opens on its ordinal — `<a><span class="…__number">03
+	// </span> Skills</a>` — so writing textContent would take the numeral with the
+	// label. Rewrite only what follows the numeral.
+	function setNavLinkLabel(link, label) {
+		if (!link) {
+			return;
+		}
+		var number = link.querySelector('.hp-about-nav__number');
+		if (!number) {
+			link.textContent = label;
+			return;
+		}
+		while (number.nextSibling) {
+			link.removeChild(number.nextSibling);
+		}
+		link.appendChild(link.ownerDocument.createTextNode(' ' + label));
+	}
+
 	function setEducationRecordHeadingLevels(rootElement, level) {
 		if (!rootElement || !rootElement.querySelectorAll) {
 			return [];
@@ -340,7 +356,7 @@
 				}).forEach(function (row) { ledger.appendChild(row); });
 			}
 			rows.forEach(function (row) {
-				row.classList.remove('is-cited', 'is-dimmed');
+				row.classList.remove('is-cited');
 				row.removeAttribute('data-hp-about-order');
 				row.style.removeProperty('transform');
 				row.style.removeProperty('transition');
@@ -370,7 +386,7 @@
 			intro.textContent = 'Every term is a filter into the record above. Pick one and its evidence travels to the top of each ledger; the rest keep their place below a stated line. Faded terms have nothing on this page behind them yet.';
 		}
 		if (educationHeading) { educationHeading.hidden = false; }
-		if (navSkillsLink) { navSkillsLink.textContent = 'Skills'; }
+		setNavLinkLabel(navSkillsLink, 'Skills');
 		Array.prototype.forEach.call(rootElement.querySelectorAll('.hp-about-nav__list a'), function (link) {
 			link.classList.remove('is-active');
 			link.removeAttribute('aria-current');
@@ -427,6 +443,7 @@
 			};
 		});
 		var activeTerm = null;
+		var indexInRail = false;
 		var termButtons = [];
 		var unbackedTerms = [];
 		var generatedControls = [];
@@ -503,13 +520,28 @@
 			return rows.filter(function (row) { return rowCites(row, term); }).length;
 		}
 
+		// One readout element, two voices: the rail's count and the section's full
+		// sentence. Every write goes through here, keyed to where the index is
+		// sitting now, or the next pick overwrites the rail string with the inline
+		// one — and a breakpoint change leaves the wrong one standing.
+		function writeReadout() {
+			if (!readout) {
+				return;
+			}
+			var count = activeTerm ? countFor(activeTerm) : 0;
+			readout.textContent = indexInRail ? formatRailReadout(activeTerm, count) : formatReadout(activeTerm, count);
+		}
+
+		// Document-relative tops, so a scroll the browser makes between the measure
+		// and the replay — anchoring, when showing the divider changes a ledger's
+		// height — cannot fake a move.
 		function capturePositions() {
 			var positions = new Map();
 			if (reduceMotion.matches) {
 				return positions;
 			}
 			rows.forEach(function (row) {
-				positions.set(row, row.getBoundingClientRect());
+				positions.set(row, row.getBoundingClientRect().top + window.scrollY);
 			});
 			return positions;
 		}
@@ -521,15 +553,20 @@
 			window.clearTimeout(flipTimer);
 			rows.forEach(function (row) {
 				var before = positions.get(row);
-				var after = row.getBoundingClientRect();
-				var deltaY = before ? before.top - after.top : 0;
+				var after = row.getBoundingClientRect().top + window.scrollY;
+				var deltaY = typeof before === 'number' ? before - after : 0;
 				if (!deltaY) {
 					return;
 				}
 				row.style.transition = 'transform 0s';
 				row.style.transform = 'translateY(' + deltaY + 'px)';
 			});
-			window.requestAnimationFrame(function () {
+			// A forced reflow, then a timer, releases the pin. rAF runs before style
+			// recalc, so the last pinned row's transform and its release can coalesce
+			// into one change and that row lands with no travel; rAF also stalls in a
+			// hidden document, which would leave every row pinned.
+			void document.body.offsetHeight;
+			flipTimer = window.setTimeout(function () {
 				rows.forEach(function (row) {
 					row.style.transition = 'transform 460ms cubic-bezier(.22, .61, .36, 1)';
 					row.style.transform = '';
@@ -540,7 +577,7 @@
 						row.style.removeProperty('transform');
 					});
 				}, 480);
-			});
+			}, 20);
 		}
 
 		function repaintCitations(term) {
@@ -595,13 +632,10 @@
 			activeTerm = nextTerm;
 			reorderLedgers(activeTerm);
 			repaintCitations(activeTerm);
-			applyDimmedRows(rows, activeTerm);
 			termButtons.forEach(function (entry) {
 				entry.button.setAttribute('aria-pressed', entry.label === activeTerm ? 'true' : 'false');
 			});
-			if (readout) {
-				readout.textContent = formatReadout(activeTerm, activeTerm ? countFor(activeTerm) : 0);
-			}
+			writeReadout();
 			clearButton.hidden = !activeTerm;
 			playFlip(positions);
 		}
@@ -651,6 +685,7 @@
 				}
 			}
 			setEducationRecordHeadingLevels(rootElement, usesRail ? 3 : 4);
+			indexInRail = usesRail;
 			if (usesRail) {
 				railHost.appendChild( skillIndex );
 				if (heading) {
@@ -660,14 +695,13 @@
 					eyebrow.textContent = 'Credentials';
 				}
 				if (intro) {
-					intro.textContent = '';
+					intro.textContent = RAIL_EDUCATION_INTRO;
 				}
-				if (navSkillsLink) {
-					navSkillsLink.textContent = 'Education';
-				}
+				setNavLinkLabel(navSkillsLink, 'Education');
 				if (educationHeading) {
 					educationHeading.hidden = true;
 				}
+				writeReadout();
 			} else if (skillIndex && skillIndexHome && skillIndexHome.parentNode) {
 				skillIndexHome.parentNode.insertBefore(skillIndex, skillIndexHome.nextSibling);
 				if (heading) {
@@ -679,12 +713,11 @@
 				if (intro) {
 					intro.textContent = 'Every term is a filter into the record above. Pick one and its evidence travels to the top of each ledger; the rest keep their place below a stated line. Faded terms have nothing on this page behind them yet.';
 				}
-				if (navSkillsLink) {
-					navSkillsLink.textContent = 'Skills';
-				}
+				setNavLinkLabel(navSkillsLink, 'Skills');
 				if (educationHeading) {
 					educationHeading.hidden = false;
 				}
+				writeReadout();
 			}
 		}
 
@@ -982,7 +1015,6 @@
 			restoreCanonicalOrder();
 			rows.forEach(function (row) { row.removeAttribute('data-hp-about-order'); });
 			repaintCitations(null);
-			applyDimmedRows(rows, null);
 			moveSkillIndex({ matches: false });
 			termButtons.forEach(function (entry) {
 				if (entry.button.parentNode) {
@@ -1157,10 +1189,9 @@
 	return {
 		IDLE_READOUT: IDLE_READOUT,
 		UNBACKED_COUNT: UNBACKED_COUNT,
-		applyDimmedRows: applyDimmedRows,
 		buildIndex: buildIndex,
 		createPrintViewToolbar: createPrintViewToolbar,
-		deriveDimmedRows: deriveDimmedRows,
+		formatRailReadout: formatRailReadout,
 		formatReadout: formatReadout,
 		mount: mount,
 		nextTimelineStep: nextTimelineStep,

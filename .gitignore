@@ -37,6 +37,12 @@ coverage/
 # patterns/proof-product.php is re-included.
 /assets/screenshots/*
 !/assets/screenshots/flavor-agent-activity-log.png
+# The About showcase's two evidence cards render downscaled WebP derivatives
+# of the runtime screenshots; inc/content-images.php names all four.
+!/assets/screenshots/flavor-agent-activity-log.webp
+!/assets/screenshots/flavor-agent-activity-log-640.webp
+!/assets/screenshots/ai-provider-codex-runtime-settings.webp
+!/assets/screenshots/ai-provider-codex-runtime-settings-640.webp
 /assets/wapuu/_backup-developer-wapuu/
 # Design intent (specs + plans) is versioned; the rest of superpowers/ is scratch.
 # Note the trailing /* — excluding the directory itself would make the negations

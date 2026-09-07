@@ -214,7 +214,9 @@ test( 'derives the v3 rail, showcase, portrait, and action rails from the select
 	assert.equal( expectations.projects[ 0 ].title, 'Flavor Agent' );
 	assert.equal( expectations.projects.at( -1 ).title, 'Tableau' );
 	assert.equal( expectations.portraitAlt, 'Henry Perkins' );
-	assert.deepEqual( expectations.heroActionLabels, [ 'Download résumé (PDF)', 'Get in touch' ] );
+	// The candidate's hero argues once; the accepted body above still carries the
+	// retired second action, and the probe derives each from the body it reads.
+	assert.deepEqual( expectations.heroActionLabels, [ 'Download résumé (PDF)' ] );
 	assert.deepEqual( expectations.closingActionLabels, [ 'Start a conversation', 'Download résumé (PDF)' ] );
 } );
 

@@ -34,6 +34,14 @@ const modernArtworkBudgets = {
 	// and shipped that way until this budget existed; the recruiter route is
 	// the one most likely to be opened on a phone on conference wifi.
 	'assets/img/imagery/wcus-2026-phoenix.webp': 180000,
+	// The About showcase's two evidence screenshots. They are card thumbnails —
+	// the figure is never wider than ~372px — so the sources are downscaled
+	// WebP, not the 2082w and 1440w PNGs the case studies keep.
+	'assets/screenshots/flavor-agent-activity-log.webp': 90000,
+	'assets/screenshots/ai-provider-codex-runtime-settings.webp': 40000,
+	// The About showcase's theme card shows the mascot, not a screenshot. Alpha
+	// WebP is dearer than opaque, so it carries its own budget.
+	'assets/wapuu/wapuu-hero.webp': 90000,
 	'assets/img/wapuu-color.webp': 60000,
 	'assets/img/wapuu-emblem-green.webp': 12000,
 };
@@ -311,6 +319,9 @@ const responsiveVariants = {
 	'assets/img/imagery/rivendell-third-age-768.webp': 90000,
 	'assets/img/imagery/rivendell-fourth-age-768.webp': 90000,
 	'assets/img/imagery/wcus-2026-phoenix-768.webp': 90000,
+	'assets/screenshots/flavor-agent-activity-log-640.webp': 45000,
+	'assets/screenshots/ai-provider-codex-runtime-settings-640.webp': 20000,
+	'assets/wapuu/wapuu-hero-448.webp': 45000,
 };
 for ( const [ relativePath, maxBytes ] of Object.entries( responsiveVariants ) ) {
 	assertFileSmallerThan( relativePath, maxBytes );
@@ -348,12 +359,25 @@ assert(
 for ( const file of [
 	'assets/img/imagery/wcus-2026-phoenix.webp',
 	'assets/img/imagery/wcus-2026-phoenix-768.webp',
+	'assets/screenshots/flavor-agent-activity-log.webp',
+	'assets/screenshots/flavor-agent-activity-log-640.webp',
+	'assets/screenshots/ai-provider-codex-runtime-settings.webp',
+	'assets/screenshots/ai-provider-codex-runtime-settings-640.webp',
+	'assets/wapuu/wapuu-hero.webp',
+	'assets/wapuu/wapuu-hero-448.webp',
 ] ) {
 	assert(
 		contentImages.includes( file ),
 		`inc/content-images.php must name ${ file } as a responsive candidate.`
 	);
 }
+// The showcase cards are two to a row at every width, so the figure is half the
+// content column less the grid gap and the card's inline padding. Both
+// screenshots sit in that same box and share one sizes string.
+assert(
+	contentImages.includes( "'(max-width: 1023px) calc(50vw - 3rem), 22rem'" ),
+	'Showcase screenshot sizes must match the two-up card figure (half the column below 1024px, 22rem above).'
+);
 assert(
 	contentImages.includes( "'small_width' => 768" ) && contentImages.includes( "'width'       => 1448" ),
 	'The Digest photograph needs a 768w candidate against the 1448w full frame.'

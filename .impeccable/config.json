@@ -1,5 +1,5 @@
 {
-	"buildPath": "comp",
+  "buildPath": "comp",
   "hook": {
     "enabled": true,
     "limits": {
@@ -15,6 +15,26 @@
       {
         "ext": ".php",
         "engine": "html"
+      }
+    ],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "scripts/verify-about-page-rendered.js"
+        ],
+        "createdAt": "2026-09-07T01:24:33.870Z",
+        "reason": "Codex review: the three img matches are JavaScript regular expressions extracting portrait alt text, not rendered image elements."
+      },
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "scripts/lib/about-page-contract.js"
+        ],
+        "createdAt": "2026-09-07T01:25:14.164Z",
+        "reason": "Codex review: both img matches are JavaScript regular expressions validating real portrait sources and alt text, not rendered elements."
       }
     ]
   }

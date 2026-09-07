@@ -18,6 +18,10 @@
  * plain wp:image block an editor can still edit, and the delivery detail is
  * added here at render time.
  *
+ * The About showcase's two evidence screenshots arrive the same way and for the
+ * same reason: they are theme assets, the body is under the About page-content
+ * contract, and a card thumbnail has no business shipping its full frame.
+ *
  * @package HPerkins_Tokens
  */
 
@@ -41,14 +45,50 @@ defined( 'ABSPATH' ) || exit;
  * @return array<string, array<string, string|int>> Candidate descriptors.
  */
 function hperkins_tokens_content_image_candidates() {
+	// Both showcase screenshots sit in the same box, so they share one sizes
+	// string. The cards are two to a row at every width, so a card is half the
+	// content column less the grid gap, and the figure is the card less its
+	// inline padding: ~149px on a 390px phone, ~372px on a tablet, and ~354px
+	// beside the desktop filter rail. 22rem covers the top of that range, and
+	// the 640w candidate covers a phone at 3x.
+	$showcase_card_sizes = '(max-width: 1023px) calc(50vw - 3rem), 22rem';
+
 	return array(
-		'wcus-2026-phoenix.webp' => array(
+		'wcus-2026-phoenix.webp'                  => array(
 			'full'        => 'assets/img/imagery/wcus-2026-phoenix.webp',
 			'small'       => 'assets/img/imagery/wcus-2026-phoenix-768.webp',
 			'small_width' => 768,
 			'width'       => 1448,
 			'height'      => 1086,
 			'sizes'       => '(max-width: 1216px) calc(100vw - 4rem), 72rem',
+		),
+		'flavor-agent-activity-log.webp'          => array(
+			'full'        => 'assets/screenshots/flavor-agent-activity-log.webp',
+			'small'       => 'assets/screenshots/flavor-agent-activity-log-640.webp',
+			'small_width' => 640,
+			'width'       => 1024,
+			'height'      => 953,
+			'sizes'       => $showcase_card_sizes,
+		),
+		'ai-provider-codex-runtime-settings.webp' => array(
+			'full'        => 'assets/screenshots/ai-provider-codex-runtime-settings.webp',
+			'small'       => 'assets/screenshots/ai-provider-codex-runtime-settings-640.webp',
+			'small_width' => 640,
+			'width'       => 1024,
+			'height'      => 540,
+			'sizes'       => $showcase_card_sizes,
+		),
+		// The theme's own card shows the mascot rather than a screenshot. It is
+		// contained inside the same plate, so it shares the sizes string; its
+		// full frame is the master's native width, since nothing above the card
+		// ever asks for more.
+		'wapuu-hero.webp'                        => array(
+			'full'        => 'assets/wapuu/wapuu-hero.webp',
+			'small'       => 'assets/wapuu/wapuu-hero-448.webp',
+			'small_width' => 448,
+			'width'       => 832,
+			'height'      => 966,
+			'sizes'       => $showcase_card_sizes,
 		),
 	);
 }

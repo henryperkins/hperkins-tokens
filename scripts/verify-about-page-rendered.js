@@ -13,7 +13,8 @@
  * selected navigation and its unnamed section targets, real-keyboard fragment
  * activation with router-scroll focus and sticky-header clearance, 24px
  * navigation/action targets, phase-specific responsive grid boundaries,
- * project cards without whole-card affordances, canonical action-rail and
+ * project cards without whole-card affordances, the numbered section spine and
+ * the visual every showcase card opens on, canonical action-rail and
  * closing-panel composition, source/rendered word-count parity, and screenshots
  * at the five primary widths.
  */
@@ -32,6 +33,7 @@ const {
 } = require( './lib/site-url' );
 const {
 	ABOUT_WORD_RANGE,
+	ABOUT_V3_FIDELITY_WORD_RANGE,
 	ABOUT_V3_WORD_RANGE,
 	countVisibleWords,
 	countRenderedText,
@@ -264,6 +266,11 @@ function deriveV2RenderedExpectations( html, label ) {
 
 function deriveV3RenderedExpectations( html, label ) {
 	const report = verifyAboutV3Body( html, { label } );
+	// The same discriminator the source contract reads: the numbered spine, the
+	// showcase visuals, the always-on pill ordinals and the single hero action
+	// promote together, so one substring names the whole design-fidelity pass.
+	// The accepted mirror is still the body before it, and both must verify.
+	const usesFidelityPass = html.includes( 'hp-about-section__number' );
 	const headings = deriveHeadingExpectations( html, label );
 	const navs = findBalancedElementsByClass( html, 'hp-about-nav', label );
 	assert( navs.length === 1, `${ label } must contain one .hp-about-nav, got ${ navs.length }.` );
@@ -289,6 +296,20 @@ function deriveV3RenderedExpectations( html, label ) {
 		return countVisibleWords( fold.outer, { label: `${ label } timeline fold ${ index + 1 }` } );
 	} );
 	const collapsedFoldWordCount = timelineFoldWords.slice( 1 ).reduce( ( sum, count ) => sum + count, 0 );
+
+	// Below 601px a showcase card is a glance: its summary is held back for the
+	// case study, so those words leave the render at the two phone viewports but
+	// not at 768. In the source the summary is the one <p> in the card carrying no
+	// class of its own — core adds `wp-block-paragraph` at render time, not here.
+	const summaryWordCount = usesFidelityPass
+		? findBalancedElementsByClass( html, 'hp-about-showcase-card', label ).reduce(
+			( sum, card ) => sum + ( card.inner.match( /<p>[\s\S]*?<\/p>/g ) || [] ).reduce(
+				( inner, paragraph ) => inner + countVisibleWords( paragraph, { label: `${ label } showcase summary` } ),
+				0
+			),
+			0
+		)
+		: 0;
 
 	const projects = findBalancedElementsByClass( html, 'hp-about-showcase-card', label ).map( ( card ) => {
 		const actions = findBalancedElementsByClass( card.inner, 'hp-about-showcase-card__link', label )[ 0 ];
@@ -321,6 +342,7 @@ function deriveV3RenderedExpectations( html, label ) {
 		heroRevision: report.heroRevision,
 		narrowRenderedWordCount: report.wordCount - narrowOnlyWordCount - collapsedFoldWordCount,
 		narrowSourceWordCount: report.wordCount - narrowOnlyWordCount,
+		phoneRenderedWordCount: report.wordCount - narrowOnlyWordCount - collapsedFoldWordCount - summaryWordCount,
 		navigationRevision: report.navigationRevision,
 		navLabel: report.navigationLabel,
 		navLinks,
@@ -330,6 +352,7 @@ function deriveV3RenderedExpectations( html, label ) {
 		sourceWordCount: report.wordCount,
 		timelineFoldWords,
 		timelineLabels: report.timelineLabels,
+		usesFidelityPass,
 		wcusActionLabels: [],
 	};
 }
@@ -665,17 +688,41 @@ function buildInspectionExpression( opts ) {
 		});
 
 		// --- project cards --------------------------------------------------
-		out.cards = Array.from(content.querySelectorAll(isResume ? '.hp-about-showcase-card' : '.hp-work-card')).map((card) => ({
-			rect: rect(card),
-			title: (card.querySelector(isResume ? 'h3' : '.hp-work-card__title') || {}).textContent?.trim?.() || null,
-			titleHasAnchor: !!card.querySelector(isResume ? 'h3 a' : '.hp-work-card__title a'),
-			status: (card.querySelector(isResume ? '.hp-about-showcase-card__type' : '.hp-work-card__status') || {}).textContent?.trim?.() || null,
-			insideAnchor: !!card.closest('a'),
-			actions: Array.from(card.querySelectorAll(isResume ? '.hp-about-showcase-card__link a' : '.hp-work-card__actions a')).map((link) => ({
-				text: link.textContent.trim(),
-				href: link.getAttribute('href'),
-				rect: rect(link),
-			})),
+		// The fidelity pass opens every showcase card on its own visual: an image
+		// figure for the three projects with a screenshot, a dashed plate naming
+		// the one still owed for the other two. Either way it is the first child.
+		out.cards = Array.from(content.querySelectorAll(isResume ? '.hp-about-showcase-card' : '.hp-work-card')).map((card) => {
+			const shot = card.querySelector(':scope > .hp-about-showcase-card__shot');
+			const need = shot && shot.querySelector('.hp-about-showcase-card__shot-need');
+			const mark = shot && shot.classList.contains('is-mark') ? shot.querySelector('img') : null;
+			return {
+				rect: rect(card),
+				shot: shot ? {
+					first: card.firstElementChild === shot,
+					rect: rect(shot),
+					// A two-up phone card is narrow enough that the design's 3:1
+					// plate leaves the owed-visual sentence less height than it
+					// needs and squeezes a portrait mark to a sliver, so both are
+					// measured rather than assumed.
+					needClipped: need ? (need.scrollHeight > need.clientHeight + 1 || need.scrollWidth > need.clientWidth + 1) : null,
+					markHeight: mark ? Math.round(mark.getBoundingClientRect().height) : null,
+				} : null,
+				title: (card.querySelector(isResume ? 'h3' : '.hp-work-card__title') || {}).textContent?.trim?.() || null,
+				titleHasAnchor: !!card.querySelector(isResume ? 'h3 a' : '.hp-work-card__title a'),
+				status: (card.querySelector(isResume ? '.hp-about-showcase-card__type' : '.hp-work-card__status') || {}).textContent?.trim?.() || null,
+				insideAnchor: !!card.closest('a'),
+				actions: Array.from(card.querySelectorAll(isResume ? '.hp-about-showcase-card__link a' : '.hp-work-card__actions a')).map((link) => ({
+					text: link.textContent.trim(),
+					href: link.getAttribute('href'),
+					rect: rect(link),
+				})),
+			};
+		});
+		out.sectionNumbers = Array.from(content.querySelectorAll('.hp-about-section__number')).map((number) => ({
+			ariaHidden: number.querySelector(':scope > span')?.getAttribute('aria-hidden') || null,
+			paragraphAriaHidden: number.getAttribute('aria-hidden'),
+			first: number.parentElement ? number.parentElement.firstElementChild === number : false,
+			text: number.textContent.trim(),
 		}));
 
 		// --- capabilities / hero / signals / foundations geometry ----------
@@ -823,7 +870,19 @@ function buildInspectionExpression( opts ) {
 				if (skillsHeading) { skillsHeading.textContent = 'Skills index'; }
 				if (skillsEyebrow) { skillsEyebrow.textContent = 'Capabilities'; }
 				if (skillsIntro) { skillsIntro.textContent = 'Every term is a filter into the record above. Pick one and its evidence travels to the top of each ledger; the rest keep their place below a stated line. Faded terms have nothing on this page behind them yet.'; }
-				if (skillsNavLink) { skillsNavLink.textContent = 'Skills'; }
+				// "Skills" and "Education" are one word each, so this restore only keeps
+				// the counted text canonical — but after the fidelity pass the pill's
+				// ordinal is a child of this anchor, and assigning textContent would
+				// delete it and put the render a word under the source. Swap the label
+				// in place instead; the accepted body has no numeral here to keep.
+				if (skillsNavLink) { skillsNavLink.innerHTML = skillsNavLink.innerHTML.replace('Education', 'Skills'); }
+				// The readout is one element in two voices: the section's full
+				// sentence and the rail's count. In the rail it is eight words
+				// shorter, which is a placement difference, not content the body
+				// lost — restore the authored idle string so the count compares
+				// like with like. The rail's own wording is asserted separately.
+				const skillsReadout = clone.querySelector('.hp-about-skills__readout');
+				if (skillsReadout) { skillsReadout.textContent = 'Pick a term to pull its evidence to the top. Nothing is hidden.'; }
 				if (educationHeading) { educationHeading.hidden = false; }
 				if (earlierRoles) { earlierRoles.hidden = false; }
 				clone.querySelectorAll('.hp-about-earlier__toggle, .hp-about-skills__clear').forEach((node) => node.remove());
@@ -991,7 +1050,13 @@ function verifyTimelineGeometry( result, width, label, expectations ) {
 	}
 }
 
-function usesWideResumeShowcaseLayout( version, width ) {
+// The design-fidelity pass moved `grid-template-columns: repeat(2, …)` onto the
+// showcase grid's base rule, so two cards to a row is no longer a 64rem upgrade
+// — it is every width. The accepted mirror still stacks until its own handoff.
+function usesWideResumeShowcaseLayout( version, width, usesFidelityPass = false ) {
+	if ( usesFidelityPass ) {
+		return true;
+	}
 	return width >= ( version === 'v3' ? 1024 : 640 );
 }
 
@@ -1033,13 +1098,38 @@ function verifyGeometry( result, viewport, expectations ) {
 	const cardRects = result.cards.map( ( card ) => card.rect );
 	const capabilityRects = result.capabilityColumns;
 	if ( isResume ) {
-		if ( usesWideResumeShowcaseLayout( expectations.version, width ) ) {
+		if ( usesWideResumeShowcaseLayout( expectations.version, width, expectations.usesFidelityPass ) ) {
 			assertColumnsSideBySide( cardRects.slice( 0, 2 ), 2, `${ label } showcase row 1` );
 			assertColumnsSideBySide( cardRects.slice( 2, 4 ), 2, `${ label } showcase row 2` );
 			assert( cardRects[ 4 ].top >= cardRects[ 2 ].bottom - 1, `${ label }: wide final showcase card does not occupy the last row.` );
 			assert( cardRects[ 4 ].width >= cardRects[ 0 ].width * 1.9, `${ label }: wide final showcase card does not span both columns.` );
 		} else {
 			assertStacked( cardRects, `${ label } showcase grid` );
+		}
+		if ( expectations.usesFidelityPass ) {
+			// A card that opens on nothing is the regression this catches: the two
+			// projects with no screenshot ship a dashed plate, not an empty slot.
+			result.cards.forEach( ( card, index ) => {
+				assert(
+					card.shot && card.shot.first,
+					`${ label }: showcase card ${ index + 1 } does not open on its .hp-about-showcase-card__shot.`
+				);
+				assert(
+					card.shot.rect.width > 0 && card.shot.rect.height > 0,
+					`${ label }: showcase card ${ index + 1 } renders a ${ card.shot.rect.width }×${ card.shot.rect.height } visual.`
+				);
+				assert(
+					card.shot.needClipped !== true,
+					`${ label }: showcase card ${ index + 1 } clips the owed-visual label inside its plate.`
+				);
+				// A contained portrait mark in a shallow plate resolves to an
+				// illegible sliver; 40px is the floor at which it still reads as
+				// the mark rather than a smudge.
+				assert(
+					card.shot.markHeight === null || card.shot.markHeight >= 40,
+					`${ label }: showcase card ${ index + 1 } renders its mark only ${ card.shot.markHeight }px tall.`
+				);
+			} );
 		}
 	} else if ( width >= 896 ) {
 		assertColumnsSideBySide( cardRects, 2, `${ label } Selected Work grid` );
@@ -1159,7 +1249,14 @@ function verifyGeometry( result, viewport, expectations ) {
 		} else {
 			assert( result.nav.parentClass.includes('hp-about-v3-layout'), `${ label }: navigation did not return to the mobile layout.` );
 			assert( result.nav.position === 'sticky', `${ label }: mobile navigation is ${ result.nav.position } instead of sticky.` );
-			assert( result.nav.numberDisplays.every( ( display ) => display === 'none' ), `${ label }: desktop navigation numbers leaked into the mobile bar.` );
+			// Inverted by the fidelity pass: the ordinal moved inside each pill's
+			// own anchor, where it is part of the link's name at every width. The
+			// accepted mirror keeps it a desktop-only span the mobile bar hides.
+			if ( expectations.usesFidelityPass ) {
+				assert( result.nav.numberDisplays.every( ( display ) => display !== 'none' ), `${ label }: the mobile bar dropped its pill ordinals.` );
+			} else {
+				assert( result.nav.numberDisplays.every( ( display ) => display === 'none' ), `${ label }: desktop navigation numbers leaked into the mobile bar.` );
+			}
 			assert( result.filterRail.display === 'none', `${ label }: desktop filter rail is visible below 64rem.` );
 		}
 	}
@@ -1194,8 +1291,11 @@ function verifyContent( result, viewport, expectations ) {
 		`${ label }: heading inventory mismatch.\nexpected:\n${ expected.join( '\n' ) }\nactual:\n${ actual.join( '\n' ) }`
 	);
 	if ( isV3 ) {
+		// In rail mode the section is Education and the index has left it, so the
+		// intro is the sentence that says where it went — it is no longer emptied.
+		// The word-count clone restores the inline copy, so parity is unaffected.
 		const expectedSkillsIntro = viewport.width >= 1024
-			? ''
+			? 'The capability index is the filter rail on the left — pick a term there and its evidence travels to the top of the record.'
 			: 'Every term is a filter into the record above. Pick one and its evidence travels to the top of each ledger; the rest keep their place below a stated line. Faded terms have nothing on this page behind them yet.';
 		assert(
 			result.skillsIntroText === expectedSkillsIntro,
@@ -1215,8 +1315,13 @@ function verifyContent( result, viewport, expectations ) {
 	);
 	expectations.navLinks.forEach( ( expectedLink, index ) => {
 		const link = result.nav.links[ index ];
+		// Rail mode renames the third pill to Education. After the fidelity pass
+		// the ordinal lives inside that same anchor, so the rename replaces the
+		// label and the numeral stays: "03 Skills" becomes "03 Education". The
+		// accepted mirror carries the ordinal outside the link and reads plain
+		// "Education", which the same substitution produces.
 		const expectedText = isV3 && viewport.width >= 1024 && expectedLink.href === '#skills'
-			? 'Education'
+			? expectedLink.text.replace( /Skills$/, 'Education' )
 			: expectedLink.text;
 		assert(
 			link.text === expectedText && link.hash === expectedLink.href,
@@ -1227,6 +1332,15 @@ function verifyContent( result, viewport, expectations ) {
 			`${ label }: nav link "${ link.text }" renders ${ link.rect.width }×${ link.rect.height }; the floor is 24×24.`
 		);
 	} );
+	if ( isV3 && expectations.usesFidelityPass ) {
+		// Five sections, five ordinals, each its section's first child and each
+		// spoken by nothing — the contents pills carry the same five as real text.
+		assertJsonEqual(
+			result.sectionNumbers,
+			[ '01', '02', '03', '04', '05' ].map( ( ordinal ) => ( { ariaHidden: 'true', paragraphAriaHidden: null, first: true, text: ordinal } ) ),
+			`${ label }: the section spine numerals drifted.`
+		);
+	}
 	result.targets.forEach( ( target, index ) => {
 		assert( target, `${ label }: fragment target ${ expectations.fragments[ index ] } is missing.` );
 		assert( target.tag === 'section', `${ label }: #${ target.id } must be a section, got ${ target.tag }.` );
@@ -1355,6 +1469,9 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 	assert( result.violations.length === 0, `${ viewport.width }px: ${ result.violations.join( '; ' ) }` );
 
 	verifyGeometry( result, viewport, expectations );
+	if ( expectations.version === 'v3' ) {
+		await verifyV3NavigationCompatibility( cdp, sessionId, viewport.width );
+	}
 	if ( ! viewport.name.startsWith( 'boundary-' ) ) {
 		verifyContent( result, viewport, expectations );
 
@@ -1363,9 +1480,12 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 			`${ viewport.width }px: the page returned no rendered text to count.`
 		);
 		const wordCount = countRenderedText( result.renderedText );
+		const narrowExpectedWordCount = expectations.narrowRenderedWordCount ?? expectations.narrowSourceWordCount ?? expectations.sourceWordCount;
 		const expectedWordCount = viewport.width >= 1024
 				? expectations.renderedWordCount ?? expectations.sourceWordCount
-				: expectations.narrowRenderedWordCount ?? expectations.narrowSourceWordCount ?? expectations.sourceWordCount;
+				: viewport.width >= 601
+					? narrowExpectedWordCount
+					: expectations.phoneRenderedWordCount ?? narrowExpectedWordCount;
 		assert(
 			wordCount === expectedWordCount,
 			`${ viewport.width }px: rendered word count ${ wordCount } does not equal the responsive source count ${ expectedWordCount }.`
@@ -1376,12 +1496,22 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 				`${ viewport.width }px: rendered word count ${ wordCount } outside ${ ABOUT_WORD_RANGE.min }–${ ABOUT_WORD_RANGE.max }.`
 			);
 		} else if ( expectations.version === 'v3' ) {
-				// The collapsed folds are content the visitor can open; they count
-				// toward the body budget even though they leave the render.
-				const collapsed = expectations.sourceWordCount - ( expectations.renderedWordCount ?? expectations.sourceWordCount );
+				// The budget is the body's, not the viewport's: everything this
+				// width suppresses is still content the reader can reach. Two
+				// kinds of suppression, added back separately so the message says
+				// which — the collapsed timeline folds, at every width, and what
+				// this particular viewport holds back (the desktop filter rail
+				// below 64rem, the showcase summaries below 601px). The fidelity
+				// pass spends more of the budget — the spine numerals, the owed
+				// labels, the earlier-role bullets — so it carries its own range.
+				const wide = expectations.renderedWordCount ?? expectations.sourceWordCount;
+				const collapsed = expectations.sourceWordCount - wide;
+				const suppressed = Math.max( 0, wide - expectedWordCount );
+				const budget = wordCount + collapsed + suppressed;
+				const range = expectations.usesFidelityPass ? ABOUT_V3_FIDELITY_WORD_RANGE : ABOUT_V3_WORD_RANGE;
 				assert(
-					wordCount + collapsed >= ABOUT_V3_WORD_RANGE.min && wordCount + collapsed <= ABOUT_V3_WORD_RANGE.max,
-					`${ viewport.width }px: rendered word count ${ wordCount } plus ${ collapsed } collapsed fold words is outside ${ ABOUT_V3_WORD_RANGE.min }–${ ABOUT_V3_WORD_RANGE.max }.`
+					budget >= range.min && budget <= range.max,
+					`${ viewport.width }px: rendered word count ${ wordCount } plus ${ collapsed } collapsed fold and ${ suppressed } width-suppressed words is outside ${ range.min }–${ range.max }.`
 				);
 			}
 	}
@@ -1475,22 +1605,53 @@ async function verifyV3Interactions( cdp, sessionId ) {
 			const provider = Array.from(root.querySelectorAll('.hp-about-skill-term__button')).find((button) => button.textContent.trim() === 'Provider integrations');
 			if (!provider) { return { error: 'missing Provider integrations filter' }; }
 
+			// One readout element, two voices. The rail speaks the short count; the
+			// long sentence belongs to the section's inline index. Which one is
+			// standing depends on where the index is sitting, so record that too
+			// rather than assuming the canonical width put it in the rail.
+			const railHost = root.querySelector('.hp-about-rail__index-host');
+			const readoutElement = root.querySelector('.hp-about-skills__readout');
+			const readoutText = () => (readoutElement ? readoutElement.textContent.replace(/\\s+/gu, ' ').trim() : null);
+			const railReadout = {
+				inRail: Boolean(railHost && readoutElement && railHost.contains(readoutElement)),
+				idle: readoutText(),
+			};
+
 			provider.click();
 			await wait(520);
 			const rows = Array.from(root.querySelectorAll('.hp-about-index-row'));
+			const demoted = rows.filter((row) => ! row.classList.contains('is-cited'));
 			const filtered = {
 				pressed: provider.getAttribute('aria-pressed'),
 				cited: root.querySelectorAll('.hp-about-index-row.is-cited').length,
-				dimmed: root.querySelectorAll('.hp-about-index-row.is-dimmed').length,
+				demoted: demoted.length,
 				hiddenRows: rows.filter((row) => getComputedStyle(row).display === 'none' || getComputedStyle(row).visibility === 'hidden').length,
-				dimmedOpacity: Array.from(new Set(rows.filter((row) => row.classList.contains('is-dimmed')).map((row) => getComputedStyle(row).opacity))),
+				// Nothing dims and nothing hides: the rows that do not cite the term
+				// keep full opacity under a line that names it.
+				demotedOpacity: Array.from(new Set(demoted.map((row) => getComputedStyle(row).opacity))),
+				readout: readoutText(),
 				dividerLabels: Array.from(root.querySelectorAll('.hp-about-ledger__divider:not([hidden]) .hp-about-ledger__divider-label')).map((label) => label.textContent.trim()),
+				// Citing rows lead, the divider follows, the rest follow it — and each
+				// run keeps its canonical order. Post-divider rows carry no class of
+				// their own now, so the partition is read from where the divider falls
+				// and the canonical order attribute proves nothing else was reshuffled.
 				partitioned: ledgers.every((ledger) => {
 					let crossedDivider = false;
+					let previousOrder = -1;
 					return Array.from(ledger.children).every((child) => {
-						if (child.classList.contains('hp-about-ledger__divider')) { crossedDivider = true; return ! child.hidden; }
+						if (child.classList.contains('hp-about-ledger__divider')) {
+							crossedDivider = true;
+							previousOrder = -1;
+							return ! child.hidden;
+						}
 						if (! child.classList.contains('hp-about-index-row')) { return true; }
-						return crossedDivider ? child.classList.contains('is-dimmed') : child.classList.contains('is-cited');
+						const stamped = child.getAttribute('data-hp-about-order');
+						// Number(null) is 0, an integer — an unstamped row would read as
+						// canonical position zero and pass. Reject the missing attribute.
+						const order = stamped === null ? NaN : Number(stamped);
+						const ascends = Number.isInteger(order) && order > previousOrder;
+						previousOrder = order;
+						return ascends && child.classList.contains('is-cited') === ! crossedDivider;
 					});
 				}),
 			};
@@ -1506,10 +1667,10 @@ async function verifyV3Interactions( cdp, sessionId ) {
 			clear.click();
 			await wait(30);
 			const cleared = {
-				dimmed: root.querySelectorAll('.hp-about-index-row.is-dimmed').length,
 				cited: root.querySelectorAll('.hp-about-index-row.is-cited').length,
-				visibleDividers: root.querySelectorAll('.hp-about-ledger__divider:not([hidden])').length,
+				readout: readoutText(),
 				restored: JSON.stringify(canonical) === JSON.stringify(ledgers.map((ledger) => Array.from(ledger.querySelectorAll('.hp-about-index-row')).map(rowTitle))),
+				visibleDividers: root.querySelectorAll('.hp-about-ledger__divider:not([hidden])').length,
 			};
 
 			const earlierToggle = root.querySelector('.hp-about-earlier__toggle');
@@ -1538,6 +1699,7 @@ async function verifyV3Interactions( cdp, sessionId ) {
 					disclosureOpen,
 					filtered,
 					print: null,
+					railReadout,
 					timeline: null,
 				};
 			}
@@ -1638,6 +1800,7 @@ async function verifyV3Interactions( cdp, sessionId ) {
 				disclosureOpen,
 				filtered,
 				print: { prepared: printPrepared, restored: printRestored },
+				railReadout,
 				timeline: { opened, clicked, arrowed, wrapped, ended, homed, returned, superseded, stepFocus },
 			};
 		})()`,
@@ -1649,12 +1812,20 @@ async function verifyV3Interactions( cdp, sessionId ) {
 	assert( ! result.error, result.error );
 	assertJsonEqual( result.anatomy, { dividers: 2, chips: 11 }, 'v3 enhancement anatomy was not generated exactly once.' );
 	assert( result.filtered.pressed === 'true', 'v3 filter did not expose aria-pressed=true.' );
-	assert( result.filtered.cited === 4 && result.filtered.dimmed === 7, `v3 Provider integrations filter produced ${ result.filtered.cited } cited and ${ result.filtered.dimmed } dimmed rows.` );
+	assert( result.filtered.cited === 4 && result.filtered.demoted === 7, `v3 Provider integrations filter produced ${ result.filtered.cited } citing and ${ result.filtered.demoted } demoted rows.` );
 	assert( result.filtered.hiddenRows === 0, 'v3 filter hid one or more evidence rows.' );
-	assertJsonEqual( result.filtered.dimmedOpacity, [ '0.34' ], 'v3 non-citing rows do not share the 0.34 opacity contract.' );
+	// The filter demotes and never dims. That is the design's rule, so it is
+	// asserted rather than dropped with the class it replaced: every row that
+	// does not cite the term computes full opacity.
+	assertJsonEqual( result.filtered.demotedOpacity, [ '1' ], 'v3 demoted rows must keep full opacity under the divider.' );
 	assertJsonEqual( result.filtered.dividerLabels, [ 'Not cited by Provider integrations', 'Not cited by Provider integrations' ], 'v3 divider labels drifted.' );
 	assert( result.filtered.partitioned, 'v3 cited/non-cited ledger partition is not structurally legible.' );
-	assertJsonEqual( result.cleared, { dimmed: 0, cited: 0, visibleDividers: 0, restored: true }, 'v3 Clear filter did not restore canonical state.' );
+	// The rail states only the count; the section's long sentence would wrap to
+	// four lines in 13–15rem of mono, which is why the two voices exist.
+	assert( result.railReadout.inRail, 'v3 capability index is not in the desktop filter rail; the readout assertions below describe rail mode.' );
+	assert( result.railReadout.idle === 'Pick a term to filter.', `v3 idle rail readout reads "${ result.railReadout.idle }".` );
+	assert( result.filtered.readout === '4 rows cite it.', `v3 filtered rail readout reads "${ result.filtered.readout }".` );
+	assertJsonEqual( result.cleared, { cited: 0, readout: 'Pick a term to filter.', restored: true, visibleDividers: 0 }, 'v3 Clear filter did not restore canonical state.' );
 	assert( result.clearFocus.matches && result.clearFocus.width >= 3 && result.clearFocus.offset >= 2, 'v3 Clear filter has no effective 3px/2px focus ring.' );
 	assert( result.disclosureOpen && result.disclosureClosed, 'v3 earlier-role disclosure did not round-trip its ARIA and hidden state.' );
 	if ( ! result.timeline ) {
@@ -1676,6 +1847,58 @@ async function verifyV3Interactions( cdp, sessionId ) {
 	);
 	assertJsonEqual( result.print, { prepared: true, restored: true }, 'v3 native print preparation or restoration failed.' );
 	void openedIntro;
+}
+
+// Exercise both stored navigation structures against the actual loaded sheet.
+// A theme deployment does not promote the candidate database body.
+async function verifyV3NavigationCompatibility( cdp, sessionId, width ) {
+	const fixtures = [ 'page-snapshots', 'page-drafts' ].map( ( directory ) => {
+		const body = fs.readFileSync( path.join( THEME_ROOT, 'content', directory, 'about.html' ), 'utf8' );
+		const nav = findBalancedElementsByClass( body, 'hp-about-nav', directory )[ 0 ];
+		assert( nav, `${ directory }: missing About navigation fixture.` );
+		return { name: directory, html: nav.outer };
+	} );
+	const evaluated = await cdp.send( 'Runtime.evaluate', {
+		expression: `(() => {
+			const fixture = document.createElement('div');
+			fixture.className = 'hp-about-resume-v3';
+			fixture.style.cssText = 'position:fixed;left:16px;top:0;width:min(360px, calc(100vw - 32px))!important;visibility:hidden;pointer-events:none';
+			document.body.appendChild(fixture);
+			try {
+				return ${ JSON.stringify( fixtures ) }.map(({name, html}) => {
+					fixture.innerHTML = '<div class="hp-about-v3-hero__contents-host">' + html + '</div>';
+					return { name, rows: Array.from(fixture.querySelectorAll('.hp-about-nav__list li')).map((row) => {
+						const number = row.querySelector('.hp-about-nav__number');
+						const link = row.querySelector('a');
+						const rowBox = row.getBoundingClientRect();
+						const linkBox = link.getBoundingClientRect();
+						const numberBox = number.getBoundingClientRect();
+						return {
+							height: rowBox.height,
+							linkHeight: linkBox.height,
+							numberInsideLink: link.contains(number),
+							numberDisplay: getComputedStyle(number).display,
+							centerDifference: Math.abs(numberBox.top + numberBox.height / 2 - linkBox.top - linkBox.height / 2),
+						};
+					}) };
+				});
+			} finally { fixture.remove(); }
+		})()`,
+		returnByValue: true,
+	}, sessionId );
+	assert( ! evaluated.exceptionDetails, `Navigation compatibility probe threw: ${ JSON.stringify( evaluated.exceptionDetails ) }` );
+	for ( const fixture of evaluated.result.value ) {
+		assert( fixture.rows.length === 5, `${ fixture.name }: expected five navigation rows.` );
+		for ( const [ index, row ] of fixture.rows.entries() ) {
+			const label = `${ width }px ${ fixture.name } navigation row ${ index + 1 }`;
+			assert( row.linkHeight >= 44 && row.height <= 46, `${ label }: row is ${ row.height }px high with a ${ row.linkHeight }px target.` );
+			if ( width >= 1024 ) {
+				assert( row.numberDisplay !== 'none' && row.centerDifference <= 2, `${ label }: number and label must share one line.` );
+			} else {
+				assert( ( row.numberDisplay !== 'none' ) === row.numberInsideLink, `${ label }: only numbers inside mobile pills should remain visible.` );
+			}
+		}
+	}
 }
 
 // Without JavaScript the reading pane never exists, so the timeline must stay
@@ -2093,5 +2316,6 @@ module.exports = {
 	usesWideResumeShowcaseLayout,
 	verifyCardHoverInertia,
 	verifyV3Interactions,
+	verifyV3NavigationCompatibility,
 	verifyV3RouterRoundTrip,
 };

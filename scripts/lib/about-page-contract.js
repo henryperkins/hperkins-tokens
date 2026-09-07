@@ -1529,7 +1529,13 @@ function verifyAboutV2Body(body, options = {}) {
 
 module.exports.verifyAboutV2Body = verifyAboutV2Body;
 
+// The accepted body's range. The design-fidelity pass that follows the
+// letterhead adds the three earlier-role bullets the design carries (the live
+// page never had them), the five spine numerals, and the two owed-visual
+// labels, so the candidate sits about fifty-five words higher. Both ranges stay
+// tight: this guard exists to catch a résumé quietly growing into a CV.
 const ABOUT_V3_WORD_RANGE = { min: 980, max: 1010 };
+const ABOUT_V3_FIDELITY_WORD_RANGE = { min: 1030, max: 1065 };
 
 const ABOUT_V3_EVIDENCE = {
 	'Authored the Content Resizing and Title Generation experiment docs': [ 'Documentation', 'Developer enablement' ],
@@ -1781,9 +1787,29 @@ function verifyAboutV3Body(body, options = {}) {
 		aboutV2Assert(opening && !/aria-label(?:ledby)?=/.test(opening), label + ': #' + id + ' must remain an unnamed section target.');
 	});
 
+	// Two phase flags, both read from the body itself so the candidate and the
+	// not-yet-promoted snapshot can hold different revisions without a mode
+	// argument. The letterhead arrived 2026-09-06; the design-fidelity pass that
+	// followed it added the numbered spine, the showcase visuals, the single hero
+	// action and the "In this résumé" landmark, and the two promote together.
+	const usesLetterhead = source.includes('hp-about-v3-hero__letterhead');
+	const usesFidelityPass = source.includes('hp-about-section__number');
+	aboutV2Assert(!usesFidelityPass || usesLetterhead, label + ': the numbered spine cannot ship without the letterhead hero.');
+	if (usesFidelityPass) {
+		// Outer paragraph attributes must be owned by core/paragraph. Rich text
+		// preserves the inner span's aria-hidden through editor serialization.
+		const numbers = findBalancedByClass(source, 'hp-about-section__number', label);
+		aboutV2Assert(numbers.length === sectionIds.length, label + ': expected five section numerals.');
+		sectionIds.forEach(function (id, index) {
+			const number = '<p class="hp-about-section__number"><span aria-hidden="true">0' + (index + 1) + '</span></p>';
+			const section = source.slice(sectionOrderOffsets[index], sectionOrderOffsets[index + 1] || source.length);
+			aboutV2Assert(section.includes(number), label + ': #' + id + ' section numeral must use editor-safe paragraph markup and the correct hidden ordinal.');
+		});
+	}
+	const expectedNavAriaLabel = usesFidelityPass ? 'In this résumé' : 'On this page';
 	aboutV2Assert(
-		(source.match(/<!-- wp:group \{"tagName":"nav","ariaLabel":"On this page","className":"hp-about-nav"\} -->/g) || []).length === 1,
-		label + ': expected one native hp-about-nav Group labelled On this page.'
+		(source.match(new RegExp('<!-- wp:group \\{"tagName":"nav","ariaLabel":"' + expectedNavAriaLabel + '","className":"hp-about-nav"\\} -->', 'g')) || []).length === 1,
+		label + ': expected one native hp-about-nav Group labelled ' + expectedNavAriaLabel + '.'
 	);
 	const navs = findBalancedByClass(source, 'hp-about-nav', label);
 	aboutV2Assert(navs.length === 1, label + ': expected exactly one hp-about-nav element.');
@@ -1830,7 +1856,11 @@ function verifyAboutV3Body(body, options = {}) {
 		{ href: '#skills', text: 'Skills' },
 		{ href: '#showcase', text: 'Showcase' },
 		{ href: '#contact', text: 'Contact' }
-	];
+	].map(function (link, index) {
+		return usesFidelityPass
+			? { href: link.href, text: '0' + (index + 1) + ' ' + link.text }
+			: link;
+	});
 	aboutV2Assert(JSON.stringify(navLinks) === JSON.stringify(expectedNav), label + ': navigation labels, fragments, or order drifted.');
 	// The letterhead (2026-09-06) retired the contents card's print row — the
 	// résumé PDF is the primary action beside the card. The plate-era contents
@@ -1838,7 +1868,6 @@ function verifyAboutV3Body(body, options = {}) {
 	// fallback; both still verify while the accepted mirror waits on promotion,
 	// so the candidate and the snapshot can hold different heroes without a
 	// mode flag.
-	const usesLetterhead = source.includes('hp-about-v3-hero__letterhead');
 	const printControls = findByClass(navs[0].inner, 'hp-about-print-control', label);
 	if (usesLetterhead) {
 		aboutV2Assert(printControls.length === 0, label + ': the contents card must not carry a print control.');
@@ -1921,25 +1950,31 @@ function verifyAboutV3Body(body, options = {}) {
 	});
 
 	aboutV2Assert(actionRails.length === 2, label + ': expected one hero and one closing action rail.');
+	const expectedRailButtons = [ usesFidelityPass ? 1 : 2, 2 ];
 	actionRails.forEach(function (rail, index) {
 		aboutV2Assert(
-			findBalancedByClass(rail.inner, 'wp-block-button', label).length === 2,
-			label + ': action rail ' + (index + 1) + ' must contain exactly two core Button wrappers.'
+			findBalancedByClass(rail.inner, 'wp-block-button', label).length === expectedRailButtons[index],
+			label + ': action rail ' + (index + 1) + ' must contain exactly ' + expectedRailButtons[index] + ' core Button wrapper(s).'
 		);
 	});
 	const heroActions = findLinks(actionRails[0].inner, label);
 	const closingActions = findLinks(actionRails[1].inner, label);
-	const expectedHeroActions = [
-		{ href: '/one-page-resume/', text: 'Download résumé (PDF)' },
-		{ href: '/contact/', text: 'Get in touch' }
-	];
+	const expectedHeroActions = usesFidelityPass
+		? [ { href: '/one-page-resume/', text: 'Download résumé (PDF)' } ]
+		: [
+			{ href: '/one-page-resume/', text: 'Download résumé (PDF)' },
+			{ href: '/contact/', text: 'Get in touch' }
+		];
 	const expectedClosingActions = [
 		{ href: '/contact/', text: 'Start a conversation' },
 		{ href: '/one-page-resume/', text: 'Download résumé (PDF)' }
 	];
 	aboutV2Assert(JSON.stringify(heroActions) === JSON.stringify(expectedHeroActions), label + ': hero action labels, destinations, or order drifted.');
 	aboutV2Assert(JSON.stringify(closingActions) === JSON.stringify(expectedClosingActions), label + ': closing action labels, destinations, or order drifted.');
-	aboutV2Assert((source.match(/<!-- wp:button \{"className":"is-style-secondary"\} -->/g) || []).length === 2, label + ': both secondary actions must use the registered secondary style.');
+	aboutV2Assert(
+		(source.match(/<!-- wp:button \{"className":"is-style-secondary"\} -->/g) || []).length === (usesFidelityPass ? 1 : 2),
+		label + ': every secondary action must use the registered secondary style.'
+	);
 	aboutV2Assert(!source.includes('is-style-outline'), label + ': legacy outline actions must not replace the secondary style.');
 	aboutV2Assert(contactSections.length === 1, label + ': expected one closing contact section.');
 	aboutV2Assert(/<section id="contact" class="wp-block-group hp-about-section hp-about-contact hp-action-panel is-closing">/.test(source), label + ': closing contact must compose hp-action-panel is-closing.');
@@ -1970,9 +2005,10 @@ function verifyAboutV3Body(body, options = {}) {
 
 	const visibleSource = aboutV3WithoutHiddenUtilities(source);
 	const wordCount = countVisibleWords(visibleSource, { label });
+	const wordRange = usesFidelityPass ? ABOUT_V3_FIDELITY_WORD_RANGE : ABOUT_V3_WORD_RANGE;
 	aboutV2Assert(
-		wordCount >= ABOUT_V3_WORD_RANGE.min && wordCount <= ABOUT_V3_WORD_RANGE.max,
-		label + ': visible word count ' + wordCount + ' outside ' + ABOUT_V3_WORD_RANGE.min + '–' + ABOUT_V3_WORD_RANGE.max + '.'
+		wordCount >= wordRange.min && wordCount <= wordRange.max,
+		label + ': visible word count ' + wordCount + ' outside ' + wordRange.min + '–' + wordRange.max + '.'
 	);
 	const visibleText = extractVisibleText(visibleSource, { label });
 	const visibleIssueLabels = visibleText.match(/(?:PR|issue)\s+#\d+/g) || [];
@@ -2016,4 +2052,5 @@ const IDLE_READOUT_V3 = 'Pick a term to pull its evidence to the top. Nothing is
 
 module.exports.ABOUT_V3_TIMELINE = ABOUT_V3_TIMELINE;
 module.exports.ABOUT_V3_WORD_RANGE = ABOUT_V3_WORD_RANGE;
+module.exports.ABOUT_V3_FIDELITY_WORD_RANGE = ABOUT_V3_FIDELITY_WORD_RANGE;
 module.exports.verifyAboutV3Body = verifyAboutV3Body;

@@ -9,6 +9,30 @@ const themeRoot = path.join( __dirname, '..', '..' );
 const controllerPath = path.join( themeRoot, 'assets', 'js', 'about-resume.js' );
 const draftPath = path.join( themeRoot, 'content', 'page-drafts', 'about.html' );
 
+test( 'v3 section numerals keep accessibility markup inside paragraph rich text', () => {
+	const source = fs.readFileSync( draftPath, 'utf8' );
+	const numbers = Array.from( source.matchAll( /<p class="hp-about-section__number"[^>]*>[\s\S]*?<\/p>/g ), ( match ) => match[ 0 ] );
+	assert.deepEqual( numbers, [ '01', '02', '03', '04', '05' ].map( ( number ) =>
+		`<p class="hp-about-section__number"><span aria-hidden="true">${ number }</span></p>`
+	) );
+} );
+
+test( 'v3 source contract rejects section numbers that break paragraph serialization', () => {
+	const { verifyAboutV3Body } = require( './about-page-contract' );
+	const source = fs.readFileSync( draftPath, 'utf8' );
+	assert.doesNotThrow( () => verifyAboutV3Body( source ) );
+	for ( const replacement of [
+		'<p class="hp-about-section__number" aria-hidden="true">01</p>',
+		'<p class="hp-about-section__number">01</p>',
+		'<p class="hp-about-section__number"><span aria-hidden="true">02</span></p>',
+		'',
+	] ) {
+		const changed = source.replace( '<p class="hp-about-section__number"><span aria-hidden="true">01</span></p>', replacement );
+		assert.notEqual( changed, source, 'The section numeral mutation must apply.' );
+		assert.throws( () => verifyAboutV3Body( changed ), /section numeral/ );
+	}
+} );
+
 const rows = [
 	{ key: 'docs', terms: [ 'Documentation', 'Developer enablement' ] },
 	{ key: 'defect', terms: [ 'Escalation triage' ] },
@@ -61,31 +85,10 @@ test( 'v3 filter promotes exact matches while preserving both stable partitions'
 	);
 } );
 
-test( 'v3 filter dims and restores mounted rows without hiding them', () => {
-	const { applyDimmedRows } = require( controllerPath );
-	const states = new Map();
-	const mountedRows = rows.slice( 0, 3 ).map( ( row ) => ( {
-		terms: row.terms,
-		getAttribute( name ) {
-			return name === 'data-evidence-terms' ? row.terms.join( '|' ) : null;
-		},
-		classList: {
-			toggle( name, enabled ) {
-				states.set( row.key + ':' + name, enabled );
-			},
-		},
-	} ) );
-
-	applyDimmedRows( mountedRows, 'Documentation' );
-	assert.equal( states.get( 'docs:is-dimmed' ), false );
-	assert.equal( states.get( 'defect:is-dimmed' ), true );
-	assert.equal( states.get( 'codex:is-dimmed' ), true );
-
-	applyDimmedRows( mountedRows, null );
-	assert.equal( states.get( 'docs:is-dimmed' ), false );
-	assert.equal( states.get( 'defect:is-dimmed' ), false );
-	assert.equal( states.get( 'codex:is-dimmed' ), false );
-} );
+// The filter demotes and never dims: rows citing the term lead each ledger and
+// the rest follow at full opacity under a line that names it. `is-cited` and the
+// divider are the only state the runtime writes, so there is no dimming helper
+// left to pin — partitionEvidenceRows above covers the ordering it replaced.
 
 test( 'v3 Skills readout uses the approved idle, singular, and plural language', () => {
 	const { formatReadout } = require( controllerPath );
@@ -95,6 +98,13 @@ test( 'v3 Skills readout uses the approved idle, singular, and plural language',
 	);
 	assert.equal( formatReadout( 'Gutenberg', 1 ), 'Gutenberg — 1 row cites it, pulled to the top of each ledger.' );
 	assert.equal( formatReadout( 'Documentation', 5 ), 'Documentation — 5 rows cite it, pulled to the top of each ledger.' );
+} );
+
+test( 'v3 desktop filter rail states only the count', () => {
+	const { formatRailReadout } = require( controllerPath );
+	assert.equal( formatRailReadout( null, 0 ), 'Pick a term to filter.' );
+	assert.equal( formatRailReadout( 'Gutenberg', 1 ), '1 row cites it.' );
+	assert.equal( formatRailReadout( 'Documentation', 5 ), '5 rows cite it.' );
 } );
 
 test( 'desktop Education promotes record headings without losing their content or attributes', () => {
@@ -257,9 +267,10 @@ test( 'About v3 contract validates the real candidate and its evidence index', (
 		'https://github.com/henryperkins',
 		'https://www.linkedin.com/in/henryperkins',
 	] );
+	// The fidelity pass leaves the hero one action: the channel pills beside the
+	// name and the closing panel both already reach Contact.
 	assert.deepEqual( report.heroActions, [
 		{ href: '/one-page-resume/', text: 'Download résumé (PDF)' },
-		{ href: '/contact/', text: 'Get in touch' },
 	] );
 	assert.deepEqual( report.closingActions, [
 		{ href: '/contact/', text: 'Start a conversation' },
@@ -354,7 +365,7 @@ test( 'About v3 contract rejects stale filtering language and altered hero actio
 	for ( const [ from, to, message ] of [
 		[ 'Nothing is hidden.', 'The rest are dimmed.', /Nothing is hidden|readout/i ],
 		[ '/one-page-resume/', '/resume/', /hero action|one-page-resume/i ],
-		[ 'Get in touch', 'Contact me', /hero action|Get in touch/i ],
+		[ 'Start a conversation', 'Contact me', /closing action/i ],
 	] ) {
 		const changed = source.replace( from, to );
 		assert.notEqual( changed, source, `v3 mutation ${ from } must apply` );

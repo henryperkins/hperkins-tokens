@@ -4554,7 +4554,10 @@ p.hp-contact-form__hint {
 	transition: opacity var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
 }
 
-.hp-about-index-row.is-dimmed {
+/* Dimming is the v2 filter's mark and v2's alone: v3 demotes a row under a
+   line that names the term and leaves it fully legible. The v3 root carries
+   both classes, so the guard is what keeps the fade off it. */
+.hp-about-resume:not(.hp-about-resume-v3) .hp-about-index-row.is-dimmed {
 	opacity: 0.34;
 }
 
@@ -4999,7 +5002,7 @@ p.hp-contact-form__hint {
 
 /* One dim level for every filtered row: a contribution and a role that both
    fail the active term must recede by the same amount. */
-.hp-about-resume .hp-about-contribution.is-dimmed {
+.hp-about-resume:not(.hp-about-resume-v3) .hp-about-contribution.is-dimmed {
 	opacity: 0.34;
 }
 
@@ -5418,7 +5421,9 @@ p.hp-contact-form__hint {
 
 .hp-about-resume-v3 {
 	--hp-about-gutter: clamp(var(--wp--preset--spacing--3), 4vw, var(--wp--preset--spacing--6));
-	--hp-rule-evidence: 5px;
+	/* The ledger row is an entry, not an evidence card: the design names
+	   --rule-entry for it, and the anatomy is fixed per component. */
+	--hp-rule-entry: 3px;
 	width: 100% !important;
 	max-width: var(--wp--custom--container--wide) !important;
 	margin-inline: auto !important;
@@ -5517,10 +5522,16 @@ p.hp-contact-form__hint {
 		color var(--wp--custom--dur--fast) ease;
 }
 
-.hp-about-resume-v3 .hp-about-v3-hero__contact a:hover {
-	border-color: var(--wp--custom--border--brand);
-	color: var(--wp--custom--text--link);
-	background: var(--wp--custom--brand--subtle);
+/* Every hover affordance in this layer is gated, as the handoff gates all of
+   its own: on a touchscreen an ungated rule leaves the tapped control painted
+   until the next tap lands elsewhere, and on a filter term that reads as a
+   second selection. */
+@media (hover: hover) {
+	.hp-about-resume-v3 .hp-about-v3-hero__contact a:hover {
+		border-color: var(--wp--custom--border--brand);
+		color: var(--wp--custom--text--link);
+		background: var(--wp--custom--brand--subtle);
+	}
 }
 
 .hp-about-resume-v3 .hp-about-v3-hero__contact svg {
@@ -5576,13 +5587,17 @@ p.hp-contact-form__hint {
 	min-width: 0;
 }
 
+/* The section eyebrow takes the label face at the label tracking, so the page
+   has one eyebrow voice with the letterhead kicker below. gold-800, not the
+   handoff's gold-700: at 13px the AA floor verify-typography.js enforces still
+   applies, and the lighter gold is under it. */
 .hp-about-resume-v3 .hp-about-section__eyebrow {
 	margin: 0;
-	font-family: var(--wp--preset--font-family--mono);
-	font-size: var(--wp--preset--font-size--2-xs);
-	font-weight: 700;
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--xs);
+	font-weight: 400;
 	line-height: 1.4;
-	letter-spacing: 0.12em;
+	letter-spacing: 0.14em;
 	text-transform: uppercase;
 	color: var(--wp--preset--color--gold-800);
 }
@@ -5670,6 +5685,10 @@ p.hp-contact-form__hint {
 	background: var(--wp--custom--border--hair);
 }
 
+/* :last-child as well as .is-last: the class is written by the controller, so
+   without the structural half the spine dangles past the fifth marker whenever
+   scripts have not run — the state verify-about-page-rendered.js loads. */
+.hp-about-resume-v3 .hp-about-timeline__step:last-child .hp-about-timeline__seg,
 .hp-about-resume-v3 .hp-about-timeline__step.is-last .hp-about-timeline__seg {
 	display: none;
 }
@@ -5736,12 +5755,14 @@ p.hp-contact-form__hint {
 	box-shadow: 0 0 0 3px var(--wp--custom--surface--page), 0 0 0 4px var(--wp--preset--color--gold-400);
 }
 
-.hp-about-resume-v3 button.hp-about-timeline__label:hover .hp-about-timeline__dot {
-	transform: scale(1.2);
-}
+@media (hover: hover) {
+	.hp-about-resume-v3 button.hp-about-timeline__label:hover .hp-about-timeline__dot {
+		transform: scale(1.2);
+	}
 
-.hp-about-resume-v3 .hp-about-timeline__step.is-current button.hp-about-timeline__label:hover .hp-about-timeline__dot {
-	transform: scale(1.35);
+	.hp-about-resume-v3 .hp-about-timeline__step.is-current button.hp-about-timeline__label:hover .hp-about-timeline__dot {
+		transform: scale(1.35);
+	}
 }
 
 .hp-about-resume-v3 .hp-about-timeline__text {
@@ -5760,9 +5781,14 @@ p.hp-contact-form__hint {
 	color: var(--wp--custom--text--body);
 }
 
-.hp-about-resume-v3 .hp-about-timeline__step.is-current .hp-about-timeline__text,
-.hp-about-resume-v3 button.hp-about-timeline__label:hover .hp-about-timeline__text {
+.hp-about-resume-v3 .hp-about-timeline__step.is-current .hp-about-timeline__text {
 	color: var(--wp--custom--text--strong);
+}
+
+@media (hover: hover) {
+	.hp-about-resume-v3 button.hp-about-timeline__label:hover .hp-about-timeline__text {
+		color: var(--wp--custom--text--strong);
+	}
 }
 
 /* Folds open by default. Once enhanced, every fold but the current one
@@ -6014,7 +6040,7 @@ p.hp-contact-form__hint {
 	grid-template-columns: minmax(0, 1fr);
 	gap: var(--wp--preset--spacing--6) var(--wp--preset--spacing--8);
 	align-items: start;
-	padding-block-start: var(--wp--preset--spacing--6);
+	padding-block-start: var(--wp--preset--spacing--7);
 	padding-inline: var(--hp-about-gutter);
 }
 
@@ -6031,7 +6057,10 @@ p.hp-contact-form__hint {
 	margin-inline: calc(-1 * var(--hp-about-gutter));
 	padding: var(--wp--preset--spacing--2) var(--hp-about-gutter);
 	overflow-x: auto;
-	scrollbar-color: var(--wp--preset--color--gold-600) transparent;
+	/* The strip carries no scrollbar at all: the thin gold treatment belongs to
+	   the filter rail's term list, and painting one here opts the pills out of
+	   overlay scrollbars and grows the bar the sections' scroll-margin clears. */
+	scrollbar-width: none;
 	border: 0;
 	border-radius: 0;
 	background: color-mix(in srgb, var(--wp--custom--surface--page) 92%, transparent);
@@ -6041,12 +6070,7 @@ p.hp-contact-form__hint {
 }
 
 .hp-about-resume-v3 .hp-about-nav::-webkit-scrollbar {
-	height: 6px;
-}
-
-.hp-about-resume-v3 .hp-about-nav::-webkit-scrollbar-thumb {
-	background: var(--wp--preset--color--gold-600);
-	border-radius: var(--wp--custom--radius--pill);
+	display: none;
 }
 
 .hp-about-resume-v3 .hp-about-nav__label {
@@ -6071,13 +6095,23 @@ p.hp-contact-form__hint {
 	margin: 0;
 }
 
+/* The ordinal sits inside the pill at every width — it is part of the link's
+   name, and the sections, the card and the proof timeline all number to it. */
 .hp-about-resume-v3 .hp-about-nav__number {
+	font-variant-numeric: tabular-nums;
+	color: var(--wp--custom--text--accent);
+}
+
+/* The accepted body places ordinals beside the anchors. Keep those numbers
+   desktop-only until the database body adopts the numbered pills. */
+.hp-about-resume-v3 .hp-about-nav__list li > .hp-about-nav__number {
 	display: none;
 }
 
 .hp-about-resume-v3 .hp-about-nav__list a {
 	display: inline-flex;
 	align-items: center;
+	gap: 7px;
 	min-height: 44px;
 	padding-inline: var(--wp--preset--spacing--4);
 	border: 1px solid var(--wp--custom--border--hair);
@@ -6092,7 +6126,6 @@ p.hp-contact-form__hint {
 	background: transparent;
 }
 
-.hp-about-resume-v3 .hp-about-nav__list a:hover,
 .hp-about-resume-v3 .hp-about-nav__list a.is-active,
 .hp-about-resume-v3 .hp-about-nav__list a[aria-current="location"] {
 	border-color: var(--wp--preset--color--gold-600);
@@ -6100,8 +6133,12 @@ p.hp-contact-form__hint {
 	background: var(--wp--custom--surface--card);
 }
 
-.hp-about-resume-v3 :is(.hp-about-contribution, .hp-about-role).is-dimmed {
-	opacity: 0.34;
+@media (hover: hover) {
+	.hp-about-resume-v3 .hp-about-nav__list a:hover {
+		border-color: var(--wp--preset--color--gold-600);
+		color: var(--wp--custom--text--strong);
+		background: var(--wp--custom--surface--card);
+	}
 }
 
 .hp-about-resume-v3 .hp-about-filter-rail,
@@ -6244,13 +6281,35 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	border-top: 0;
 }
 
+/* The numbered spine, shared with the placement pages: on the phone the
+   numeral rules off the section, and from 782px it outdents into its own
+   column beside the heading block (see the section grid in that block). */
+.hp-about-resume-v3 .hp-about-section__number {
+	display: flex;
+	align-items: center;
+	gap: var(--wp--preset--spacing--4);
+	margin: 0 0 var(--wp--preset--spacing--4);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--md);
+	font-variant-numeric: tabular-nums;
+	line-height: 1.35;
+	color: var(--wp--custom--text--accent);
+}
+
+.hp-about-resume-v3 .hp-about-section__number::after {
+	flex: 1 1 auto;
+	height: 1px;
+	content: "";
+	background: var(--wp--custom--border--hair);
+}
+
 .hp-about-resume-v3 .hp-about-section h2 {
 	margin: var(--wp--preset--spacing--2) 0;
 	font-family: var(--wp--preset--font-family--display);
-	font-size: var(--wp--preset--font-size--3-xl);
+	font-size: var(--wp--preset--font-size--2-xl);
 	font-weight: 500;
-	line-height: 1.2;
-	letter-spacing: -0.01em;
+	line-height: 1.22;
+	letter-spacing: var(--wp--custom--tracking--tight);
 	color: var(--wp--custom--text--strong);
 	text-wrap: balance;
 }
@@ -6259,8 +6318,8 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	max-width: var(--wp--custom--measure--prose);
 	margin: 0 0 var(--wp--preset--spacing--4);
 	font-size: var(--wp--preset--font-size--md);
-	line-height: 1.65;
-	color: var(--wp--custom--text--muted);
+	line-height: 1.7;
+	color: var(--wp--custom--text--body);
 	text-wrap: pretty;
 }
 
@@ -6270,16 +6329,8 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	gap: 1px;
 	overflow: hidden;
 	border: 1px solid var(--wp--custom--border--hair);
-	border-radius: var(--wp--custom--radius--md);
+	border-radius: var(--wp--custom--radius--sm);
 	background: var(--wp--custom--border--hair);
-}
-
-.hp-about-resume-v3 .hp-about-ledger--experience {
-	gap: 0;
-	overflow: visible;
-	border: 0;
-	border-radius: 0;
-	background: transparent;
 }
 
 .hp-about-resume-v3 .hp-about-ledger__divider {
@@ -6316,7 +6367,7 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	min-width: 0;
 	margin: 0;
 	padding: var(--wp--preset--spacing--4) clamp(var(--wp--preset--spacing--4), 3vw, var(--wp--preset--spacing--5));
-	border-inline-start: var(--hp-rule-evidence) solid var(--wp--custom--status--pending);
+	border-inline-start: var(--hp-rule-entry) solid var(--wp--custom--status--pending);
 	background: var(--wp--custom--surface--card);
 }
 
@@ -6328,13 +6379,17 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	border-inline-start-color: var(--wp--custom--status--review);
 }
 
+/* gold-500, not gold-100: the pale primitive is already within a couple of
+   units of the card, so a 7% mix of it is no wash at all. */
 .hp-about-resume-v3 .hp-about-index-row.is-cited {
-	background: color-mix(in srgb, var(--wp--preset--color--gold-100) 7%, var(--wp--custom--surface--card));
+	background: color-mix(in srgb, var(--wp--preset--color--gold-500) 7%, var(--wp--custom--surface--card));
 }
 
+/* The underline runs the whole bottom edge, and the delay sits on the base
+   rule so it applies leaving as well as arriving. */
 .hp-about-resume-v3 .hp-about-index-row::after {
 	position: absolute;
-	inset-inline: var(--wp--preset--spacing--4);
+	inset-inline: 0;
 	inset-block-end: 0;
 	height: 2px;
 	content: "";
@@ -6342,11 +6397,11 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	transform: scaleX(0);
 	transform-origin: left;
 	transition: transform 300ms var(--wp--custom--ease--calm);
+	transition-delay: 140ms;
 }
 
 .hp-about-resume-v3 .hp-about-index-row.is-cited::after {
 	transform: scaleX(1);
-	transition-delay: 140ms;
 }
 
 .hp-about-resume-v3 .hp-about-citation-chip {
@@ -6365,6 +6420,13 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	opacity: 0;
 	transition: opacity 180ms var(--wp--custom--ease--calm);
 	transition-delay: 240ms;
+}
+
+/* The author display above outranks the UA sheet, so without this guard the
+   chip keeps a box and an accessible name on every row — the same guard the
+   print view, the ledger divider and the earlier-roles block already carry. */
+.hp-about-resume-v3 .hp-about-citation-chip[hidden] {
+	display: none !important;
 }
 
 .hp-about-resume-v3 .is-cited .hp-about-citation-chip:not([hidden]) {
@@ -6409,9 +6471,15 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 .hp-about-resume-v3 .hp-about-role__meta {
 	margin: var(--wp--preset--spacing--2) 0 0;
 	font-family: var(--wp--preset--font-family--mono);
-	font-size: var(--wp--preset--font-size--xs);
+	font-size: var(--wp--preset--font-size--2-xs);
 	line-height: 1.5;
 	color: var(--wp--custom--text--faint);
+}
+
+/* The repo line names the record a row lives in, so it takes the accent
+   rather than the register grey it would otherwise share with the date. */
+.hp-about-resume-v3 .hp-about-contribution__repo {
+	color: var(--wp--custom--text--accent);
 }
 
 .hp-about-resume-v3 .hp-about-role__org {
@@ -6428,15 +6496,12 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	display: block;
 }
 
+/* One anatomy across both registers: the role keeps the shared row's padding,
+   frame and rule width, and its state changes only the rule's colour. The
+   block body marks a standing role `is-current`, and every role in this
+   register is a done record. */
 .hp-about-resume-v3 .hp-about-ledger--experience .hp-about-role.is-current {
-	padding: 0 0 var(--wp--preset--spacing--4) var(--wp--preset--spacing--4);
-	border-inline-start: 3px solid var(--wp--custom--border--brand);
-	border-block-end: 1px solid var(--wp--custom--border--hair);
-	background: transparent;
-}
-
-.hp-about-resume-v3 .hp-about-ledger--experience .hp-about-role.is-current + .hp-about-role.is-current {
-	padding-block-start: var(--wp--preset--spacing--4);
+	border-inline-start-color: var(--wp--custom--status--done);
 }
 
 .hp-about-resume-v3 .hp-about-contribution h3,
@@ -6508,12 +6573,30 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	color: var(--wp--custom--text--strong);
 }
 
+/* The earlier records open a second register of the same rows. The block body
+   has no second ledger element to wrap them in, so the frame is drawn on the
+   run itself: every record carries the hairline, and the first and last round
+   the register's corners. */
 .hp-about-resume-v3 .hp-about-role.is-earlier {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	gap: 2px var(--wp--preset--spacing--5);
-	padding-block: var(--wp--preset--spacing--3);
-	border-block-end: 1px solid var(--wp--custom--border--hair);
+	padding: var(--wp--preset--spacing--4) clamp(var(--wp--preset--spacing--4), 3vw, var(--wp--preset--spacing--5));
+	border: 1px solid var(--wp--custom--border--hair);
+	border-block-start: 0;
+	border-inline-start: var(--hp-rule-entry) solid var(--wp--custom--status--done);
+	background: var(--wp--custom--surface--card);
+}
+
+.hp-about-resume-v3 .hp-about-role.is-earlier:first-of-type {
+	border-block-start: 1px solid var(--wp--custom--border--hair);
+	border-start-start-radius: var(--wp--custom--radius--sm);
+	border-start-end-radius: var(--wp--custom--radius--sm);
+}
+
+.hp-about-resume-v3 .hp-about-role.is-earlier:last-of-type {
+	border-end-start-radius: var(--wp--custom--radius--sm);
+	border-end-end-radius: var(--wp--custom--radius--sm);
 }
 
 .hp-about-resume-v3 .hp-about-role.is-earlier h4 {
@@ -6548,10 +6631,19 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	cursor: pointer;
 }
 
-.hp-about-resume-v3 .hp-about-earlier__toggle:hover,
-.hp-about-resume-v3 .hp-about-skills__clear:hover {
-	border-color: var(--wp--preset--color--gold-600);
-	color: var(--wp--custom--text--strong);
+/* The controller hides the clear control with the `hidden` attribute, and the
+   author display above outranks the UA sheet. Without this the rail opens on a
+   live Clear filter button before any term is picked. */
+.hp-about-resume-v3 .hp-about-skills__clear[hidden] {
+	display: none;
+}
+
+@media (hover: hover) {
+	.hp-about-resume-v3 .hp-about-earlier__toggle:hover,
+	.hp-about-resume-v3 .hp-about-skills__clear:hover {
+		border-color: var(--wp--preset--color--gold-600);
+		color: var(--wp--custom--text--strong);
+	}
 }
 
 .hp-about-resume-v3 .hp-about-skills__controls {
@@ -6615,17 +6707,19 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	margin: 0;
 }
 
+/* Inline, a term is a 44px reading-face pill. The rail restates the face and
+   the radius for its own rendering, so keep the two edits together. */
 .hp-about-resume-v3 .hp-about-skill-term {
 	display: inline-flex;
 	align-items: center;
 	min-height: 44px;
 	padding: 10px var(--wp--preset--spacing--3);
 	border: 1px solid var(--wp--custom--border--hair);
-	border-radius: var(--wp--custom--radius--md);
-	font-family: var(--wp--preset--font-family--mono);
-	font-size: var(--wp--preset--font-size--xs);
+	border-radius: var(--wp--custom--radius--pill);
+	font-family: var(--wp--preset--font-family--body);
+	font-size: var(--wp--preset--font-size--sm);
 	line-height: 1.35;
-	color: var(--wp--custom--text--body);
+	color: var(--wp--custom--text--strong);
 	background: var(--wp--custom--surface--card);
 }
 
@@ -6633,10 +6727,12 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	cursor: pointer;
 }
 
-.hp-about-resume-v3 button.hp-about-skill-term:hover {
-	border-color: var(--wp--preset--color--green-200);
-	color: var(--wp--custom--text--link);
-	background: var(--wp--custom--brand--subtle);
+/* Gold says "you could pick this", green says "this is picked": hover warms
+   the border alone so the two marks never read as two selections. */
+@media (hover: hover) {
+	.hp-about-resume-v3 button.hp-about-skill-term:hover {
+		border-color: var(--wp--preset--color--gold-600);
+	}
 }
 
 .hp-about-resume-v3 button.hp-about-skill-term[aria-pressed="true"] {
@@ -6688,20 +6784,33 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	color: var(--wp--custom--text--muted);
 }
 
+/* No rule of its own: the numeral's trailing hairline is the divider below
+   782px, and the outdented spine is above it. */
 .hp-about-resume-v3 .hp-about-showcase {
 	margin-block-start: var(--wp--preset--spacing--8);
 	margin-inline: var(--hp-about-gutter);
-	padding-block-start: var(--wp--preset--spacing--6);
-	border-block-start: 1px solid var(--wp--custom--border--hair);
 }
 
+/* Two cards to a row at every width, and on the phone a glance card: tight
+   padding, the smaller title, links stacked and the summary held back for the
+   case study. The 601px block below loosens all four. */
 .hp-about-resume-v3 .hp-about-showcase__grid {
 	display: grid;
-	grid-template-columns: minmax(0, 1fr);
-	gap: var(--wp--preset--spacing--4);
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--wp--preset--spacing--3);
 	margin-block-start: var(--wp--preset--spacing--4);
 	border: 0;
 	background: transparent;
+}
+
+.hp-about-resume-v3 .hp-about-showcase-card.is-wide {
+	grid-column: 1 / -1;
+}
+
+/* A card spanning both columns gets a shallower plate, until 64rem moves it
+   beside the copy at 16:10. */
+.hp-about-resume-v3 .hp-about-showcase-card.is-wide .hp-about-showcase-card__shot {
+	aspect-ratio: 3 / 1;
 }
 
 .hp-about-resume-v3 .hp-about-showcase-card {
@@ -6710,7 +6819,7 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	gap: var(--wp--preset--spacing--2);
 	min-width: 0;
 	min-height: 0;
-	padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+	padding: var(--wp--preset--spacing--3);
 	border: 1px solid var(--wp--custom--border--hair);
 	border-radius: var(--wp--custom--radius--md);
 	background: var(--wp--custom--surface--card);
@@ -6720,11 +6829,12 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 .hp-about-resume-v3 .hp-about-showcase-card h3 {
 	margin: 0;
 	font-family: var(--wp--preset--font-family--display);
-	font-size: var(--wp--preset--font-size--lg);
+	font-size: var(--wp--preset--font-size--base);
 	font-weight: 600;
 	line-height: 1.2;
 	color: var(--wp--custom--text--strong);
 	text-wrap: pretty;
+	overflow-wrap: anywhere;
 }
 
 .hp-about-resume-v3 .hp-about-showcase-card__type {
@@ -6736,7 +6846,12 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	color: var(--wp--custom--text--faint);
 }
 
-.hp-about-resume-v3 .hp-about-showcase-card > p:not([class]) {
+/* The summary is the one paragraph in the card that carries no class of its
+   own — but it cannot be matched as `p:not([class])`, because WordPress renders
+   every core Paragraph with `wp-block-paragraph`. Name the siblings instead.
+   Held back on the phone, where the card is a glance. */
+.hp-about-resume-v3 .hp-about-showcase-card > p:not(.hp-about-showcase-card__type):not(.hp-about-showcase-card__link):not(.hp-about-showcase-card__shot-need) {
+	display: none;
 	margin: 0;
 	font-size: var(--wp--preset--font-size--base);
 	line-height: 1.6;
@@ -6745,15 +6860,87 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 }
 
 .hp-about-resume-v3 .hp-about-showcase-card__link {
+	flex-direction: column;
+	gap: 0;
 	margin-block-start: auto;
 }
 
+/* Each card opens on the project's own visual: a shallow hairline plate — a
+   glance, not the case study. A mark sits contained on the plate rather than
+   cropped, and a project whose screenshot is still owed says so in a dashed
+   frame instead of shipping an empty one. */
+.hp-about-resume-v3 .hp-about-showcase-card__shot {
+	position: relative;
+	margin: 0 0 var(--wp--preset--spacing--2);
+	aspect-ratio: 3 / 2;
+	overflow: hidden;
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--wp--custom--radius--sm);
+	background: var(--wp--custom--surface--sunken);
+}
+
+/* A mark is portrait art contained on the plate, not a landscape screenshot
+   cropped to it, so on the phone it needs a square plate to read at all: in a
+   3:1 one it resolves to a ~20px sliver. */
+.hp-about-resume-v3 .hp-about-showcase-card__shot.is-mark {
+	aspect-ratio: 1 / 1;
+}
+
+/* An owed visual is a sentence, and on a phone plate it is three or four lines
+   of it. Let the frame take its own height here rather than clip the words; the
+   601px block puts it back inside the plate, where it fits. */
+.hp-about-resume-v3 .hp-about-showcase-card__shot.is-need {
+	aspect-ratio: auto;
+	padding: var(--wp--preset--spacing--2);
+}
+
+.hp-about-resume-v3 .hp-about-showcase-card__shot img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: top left;
+}
+
+.hp-about-resume-v3 .hp-about-showcase-card__shot.is-mark img {
+	position: absolute;
+	inset: var(--wp--preset--spacing--3);
+	width: calc(100% - 2 * var(--wp--preset--spacing--3));
+	height: calc(100% - 2 * var(--wp--preset--spacing--3));
+	object-fit: contain;
+	object-position: center;
+}
+
+.hp-about-resume-v3 .hp-about-showcase-card__shot-need {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 0;
+	padding: var(--wp--preset--spacing--2);
+	border: 1px dashed var(--wp--custom--border--strong);
+	border-radius: var(--wp--custom--radius--sm);
+	font-family: var(--wp--preset--font-family--mono);
+	font-size: var(--wp--preset--font-size--2-xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	text-align: center;
+	color: var(--wp--custom--text--faint);
+	overflow-wrap: anywhere;
+}
+
 .hp-about-resume-v3 .hp-about-contact {
-	margin: var(--wp--preset--spacing--8) var(--hp-about-gutter) var(--wp--preset--spacing--7);
+	margin: var(--wp--preset--spacing--8) var(--hp-about-gutter) var(--wp--preset--spacing--9);
+}
+
+/* The closing plate is the plainer one: no eyebrow, and no gold emblem in the
+   corner. Scoped to the résumé so every other closing panel keeps its mark. */
+.hp-about-resume-v3 .hp-about-contact.hp-action-panel.is-closing::after {
+	content: none;
 }
 
 .hp-about-resume-v3 .hp-about-contact h2 {
 	margin-block-start: 0;
+	letter-spacing: normal;
 }
 
 /* The legacy About layer gives .hp-about-experience its own wide breakout.
@@ -6770,23 +6957,119 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		padding-block-start: var(--wp--preset--spacing--9);
 	}
 
+	/* The record's beat opens up with the shell: sections 64px apart and the
+	   closing plate 80px above the footer. */
+	.hp-about-resume-v3 .hp-about-v3-layout {
+		padding-block-start: var(--wp--preset--spacing--9);
+	}
+
+	.hp-about-resume-v3 .hp-about-v3-main {
+		gap: var(--wp--preset--spacing--9);
+	}
+
+	.hp-about-resume-v3 .hp-about-contact {
+		margin-block-end: var(--wp--preset--spacing--10);
+	}
+
+	/* Full-width targets on the phone, content-width pills above: the rail's
+	   own `width: fit-content` stands, and nowrap plus min-width keeps the two
+	   labels on one line through the 601-637px band. */
 	.hp-about-resume-v3 .hp-about-contact > .hp-action-rail {
-		width: 100%;
 		flex-wrap: nowrap;
 	}
 
 	.hp-about-resume-v3 .hp-about-contact > .hp-action-rail .wp-block-button {
-		flex: 1 1 0;
 		min-width: 0;
 	}
 
 	.hp-about-resume-v3 .hp-about-contact > .hp-action-rail .wp-block-button__link {
-		width: 100%;
 		min-width: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase__grid {
+		gap: var(--wp--preset--spacing--4);
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card {
+		padding: var(--wp--preset--spacing--4) var(--wp--preset--spacing--5);
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card h3 {
+		font-size: var(--wp--preset--font-size--lg);
+	}
+
+	/* The card is wide enough for the design's shallow plate now, and the owed
+	   frame fits back inside it. */
+	.hp-about-resume-v3 .hp-about-showcase-card__shot,
+	.hp-about-resume-v3 .hp-about-showcase-card__shot.is-mark,
+	.hp-about-resume-v3 .hp-about-showcase-card__shot.is-need {
+		aspect-ratio: 3 / 1;
+		padding: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card.is-wide .hp-about-showcase-card__shot {
+		aspect-ratio: 6 / 1;
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card__shot-need {
+		position: absolute;
+		inset: var(--wp--preset--spacing--2);
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card > p:not(.hp-about-showcase-card__type):not(.hp-about-showcase-card__link):not(.hp-about-showcase-card__shot-need) {
+		display: block;
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card__link {
+		flex-direction: row;
+		gap: 0 var(--wp--preset--spacing--4);
 	}
 }
 
 @media (min-width: 782px) {
+	/* The numeral outdents into its own column and every other child of the
+	   section runs in the second. The grid sits on the section, not on the
+	   layout wrapper — that one is already spent on the filter rail. */
+	.hp-about-resume-v3 .hp-about-section:not(.hp-about-contact) {
+		display: grid;
+		grid-template-columns: 3rem minmax(0, 1fr);
+		column-gap: var(--wp--preset--spacing--4);
+	}
+
+	/* Everything but the numeral runs in the second column. The numeral is
+	   excluded here rather than overridden below: `:not()` carries its argument's
+	   specificity, so a `… > *` rule with the exclusion already outranks the
+	   numeral's own rule and would pull it back into column 2. */
+	.hp-about-resume-v3 .hp-about-section:not(.hp-about-contact) > :not(.hp-about-section__number) {
+		grid-column: 2;
+	}
+
+	/* The closing panel is the one section that is also a plate. In the design
+	   the numeral sits beside it, not inside its border, so it stays out of the
+	   grid and outdents into the same 3rem column by hand. */
+	.hp-about-resume-v3 .hp-about-contact {
+		position: relative;
+		margin-inline-start: calc( var(--hp-about-gutter) + 3rem + var(--wp--preset--spacing--4) );
+	}
+
+	.hp-about-resume-v3 .hp-about-contact .hp-about-section__number {
+		position: absolute;
+		inset-block-start: 0;
+		inset-inline-start: calc( -3rem - var(--wp--preset--spacing--4) );
+		margin-block-end: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-section__number {
+		display: block;
+		grid-column: 1;
+		grid-row: 1;
+		margin-block-end: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-section__number::after {
+		display: none;
+	}
+
 	.hp-about-resume-v3 .hp-about-v3-hero__letterhead {
 		grid-template-columns: minmax(0, 1fr) auto;
 		gap: var(--wp--preset--spacing--6) var(--wp--preset--spacing--8);
@@ -6884,12 +7167,22 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		grid-row: 1;
 	}
 
-	.hp-about-resume-v3 .hp-about-showcase__grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
+	/* The wide card gives its visual a third of the width beside the copy: the
+	   figure spans the four text rows in the first column, and the title,
+	   status, summary and links fill the second. */
+	.hp-about-resume-v3 .hp-about-showcase-card.is-wide {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+		grid-auto-rows: min-content;
+		column-gap: var(--wp--preset--spacing--5);
+		align-content: start;
 	}
 
-	.hp-about-resume-v3 .hp-about-showcase-card.is-wide {
-		grid-column: 1 / -1;
+	.hp-about-resume-v3 .hp-about-showcase-card.is-wide .hp-about-showcase-card__shot {
+		grid-row: 1 / span 4;
+		align-self: start;
+		margin: 0;
+		aspect-ratio: 16 / 10;
 	}
 
 	.hp-about-resume-v3 .hp-about-role.is-earlier,
@@ -6898,6 +7191,7 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	}
 
 	.hp-about-resume-v3 .hp-about-role.is-earlier .hp-about-role__meta,
+	.hp-about-resume-v3 .hp-about-role.is-earlier .hp-about-role__points,
 	.hp-about-resume-v3 .hp-about-education__school {
 		grid-column: 2;
 	}
@@ -6989,7 +7283,7 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		white-space: normal;
-		color: var(--wp--preset--color--gold-800);
+		color: var(--wp--custom--text--accent);
 	}
 
 	.hp-about-resume-v3 .hp-about-nav__list {
@@ -6998,10 +7292,17 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	}
 
 	.hp-about-resume-v3 .hp-about-nav__list li {
+		border-block-start: 1px solid var(--wp--custom--border--hair);
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__list li:has(> .hp-about-nav__number) {
 		display: grid;
 		grid-template-columns: 2rem minmax(0, 1fr);
 		align-items: center;
-		border-block-start: 1px solid var(--wp--custom--border--hair);
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__list li > .hp-about-nav__number {
+		display: block;
 	}
 
 	.hp-about-resume-v3 .hp-about-nav__list li:first-child {
@@ -7009,14 +7310,15 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	}
 
 	.hp-about-resume-v3 .hp-about-nav__number {
-		display: block;
 		font-family: var(--wp--preset--font-family--mono);
 		font-size: var(--wp--preset--font-size--2-xs);
-		font-variant-numeric: tabular-nums;
-		color: var(--wp--custom--text--accent);
 	}
 
+	/* Plain anchors retain the accepted body's single label column. */
 	.hp-about-resume-v3 .hp-about-nav__list a {
+		display: flex;
+		align-items: center;
+		gap: 0;
 		width: 100%;
 		min-height: 44px;
 		padding-inline: 0;
@@ -7030,12 +7332,26 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		white-space: normal;
 	}
 
-	.hp-about-resume-v3 .hp-about-nav__list a:hover,
+	/* The candidate moves the ordinal inside the anchor, which then owns
+	   both columns. Select that structure without requiring a body promotion. */
+	.hp-about-resume-v3 .hp-about-nav__list a:has(> .hp-about-nav__number) {
+		display: grid;
+		grid-template-columns: 2rem minmax(0, 1fr);
+	}
+
 	.hp-about-resume-v3 .hp-about-nav__list a.is-active,
 	.hp-about-resume-v3 .hp-about-nav__list a[aria-current="location"] {
 		border-color: var(--wp--custom--rule--gold);
 		color: var(--wp--custom--text--strong);
 		background: transparent;
+	}
+
+	@media (hover: hover) {
+		.hp-about-resume-v3 .hp-about-nav__list a:hover {
+			border-color: var(--wp--custom--rule--gold);
+			color: var(--wp--custom--text--strong);
+			background: transparent;
+		}
 	}
 
 	.hp-about-resume-v3 .hp-about-filter-rail {
@@ -7114,23 +7430,40 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		gap: 1px;
 	}
 
+	/* The rail row is a mono line, not a reading-face pill: it restates the
+	   face, the size and the radius the inline term sets, so an edit to that
+	   rule cannot silently repaint the rail. */
 	.hp-about-resume-v3 .hp-about-rail__index-host .hp-about-skill-term {
 		width: 100%;
 		min-height: 44px;
 		padding: 6px var(--wp--preset--spacing--3);
 		border-color: transparent;
 		border-inline-start: 2px solid transparent;
+		border-radius: var(--wp--custom--radius--sm);
+		font-family: var(--wp--preset--font-family--mono);
+		font-size: var(--wp--preset--font-size--xs);
 		text-align: start;
 		background: transparent;
 	}
 
-	.hp-about-resume-v3 .hp-about-rail__index-host button.hp-about-skill-term:hover,
+	/* Hover and pressed are different marks: hover is the sunken ground alone,
+	   and only the filtering term takes the gold rule, the card and the weight.
+	   The inline term's gold hover border has no place on a rail row. */
+	@media (hover: hover) {
+		.hp-about-resume-v3 .hp-about-rail__index-host button.hp-about-skill-term:hover {
+			border-color: transparent;
+			color: var(--wp--custom--text--strong);
+			background: var(--wp--custom--surface--sunken);
+		}
+	}
+
 	.hp-about-resume-v3 .hp-about-rail__index-host button.hp-about-skill-term[aria-pressed="true"] {
 		border-inline-start-color: var(--wp--custom--rule--gold);
 		border-block-color: transparent;
 		border-inline-end-color: transparent;
+		font-weight: 700;
 		color: var(--wp--custom--text--strong);
-		background: var(--wp--custom--surface--sunken);
+		background: var(--wp--custom--surface--card);
 	}
 
 	.hp-about-resume-v3 .hp-about-skill-group {

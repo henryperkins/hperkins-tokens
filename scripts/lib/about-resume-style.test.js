@@ -57,8 +57,15 @@ test( 'About v3 hero is the letterhead: identity, channel pills, argument, actio
 	assert.equal( ( draft.match( /class="wp-block-group hp-about-v3-hero__aside"/g ) || [] ).length, 1 );
 	assert.match( draft, /<p class="hp-about-v3-hero__contact"><a href="mailto:htperkins@gmail\.com" aria-label="Email htperkins@gmail\.com" title="htperkins@gmail\.com"><svg/ );
 	assert.equal( ( draft.match( /<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">/g ) || [] ).length, 3 );
-	assert.match( draft, />Download résumé \(PDF\)<\/a>[\s\S]*?>Get in touch<\/a>/ );
-	assert.equal( ( draft.match( /<!-- wp:button \{"className":"is-style-secondary"\} -->/g ) || [] ).length, 2 );
+	// One action in the hero. The design retired "Get in touch" because the three
+	// channel pills beside the name and the closing panel both already reach
+	// Contact, so the résumé download is the single next step.
+	assert.match(
+		draft,
+		/<div class="wp-block-buttons hp-action-rail hp-about-v3-hero__cta">\s*<!-- wp:button -->\s*<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="\/one-page-resume\/">Download résumé \(PDF\)<\/a><\/div>\s*<!-- \/wp:button -->\s*<\/div>/
+	);
+	assert.doesNotMatch( draft, />Get in touch</ );
+	assert.equal( ( draft.match( /<!-- wp:button \{"className":"is-style-secondary"\} -->/g ) || [] ).length, 1 );
 	assert.doesNotMatch( draft, /<!-- wp:button \{"className":"is-style-outline"\} -->/ );
 	for ( const retired of [ 'hp-about-v3-hero__masthead', 'hp-about-v3-hero__links', 'hp-about-contact__email', 'hp-about-credential', 'hp-about-wcus', 'hp-about-impact-strip', 'hp-about-v3-impact', 'hp-about-print-control' ] ) {
 		assert.doesNotMatch( draft, new RegExp( retired ), `${ retired } left with the letterhead` );
@@ -105,13 +112,13 @@ test( 'About v3 proof timeline ships five open folds and a CSS-anchored reading 
 } );
 
 test( 'About v3 uses one native navigation and five unnamed section targets', () => {
-	assert.equal( ( draft.match( /<!-- wp:group \{"tagName":"nav","ariaLabel":"On this page","className":"hp-about-nav"\} -->/g ) || [] ).length, 1 );
+	assert.equal( ( draft.match( /<!-- wp:group \{"tagName":"nav","ariaLabel":"In this résumé","className":"hp-about-nav"\} -->/g ) || [] ).length, 1 );
 	assert.equal( ( draft.match( /<!-- wp:list-item -->/g ) || [] ).length, 5 );
-	assert.match( draft, /href="#contributions">Contributions<\/a>/ );
-	assert.match( draft, /href="#experience">Experience<\/a>/ );
-	assert.match( draft, /href="#skills">Skills<\/a>/ );
-	assert.match( draft, /href="#showcase">Showcase<\/a>/ );
-	assert.match( draft, /href="#contact">Contact<\/a>/ );
+	assert.match( draft, /href="#contributions"><span class="hp-about-nav__number">01<\/span> Contributions<\/a>/ );
+	assert.match( draft, /href="#experience"><span class="hp-about-nav__number">02<\/span> Experience<\/a>/ );
+	assert.match( draft, /href="#skills"><span class="hp-about-nav__number">03<\/span> Skills<\/a>/ );
+	assert.match( draft, /href="#showcase"><span class="hp-about-nav__number">04<\/span> Showcase<\/a>/ );
+	assert.match( draft, /href="#contact"><span class="hp-about-nav__number">05<\/span> Contact<\/a>/ );
 	for ( const id of [ 'contributions', 'experience', 'skills', 'showcase', 'contact' ] ) {
 		assert.match( draft, new RegExp( `<!-- wp:group \\{"tagName":"section","anchor":"${ id }"` ) );
 	}
@@ -129,8 +136,12 @@ test( 'About v3 keeps static ledger status while generating filter-only anatomy 
 	assert.match( controller, /function createCitationChip\(\)/ );
 	assert.match( controller, /ledger\.insertBefore\(createLedgerDivider\(\), ledger\.firstChild\)/ );
 	assert.match( controller, /chipHost\.appendChild\(createCitationChip\(\)\)/ );
-	assert.match( aboutV3Css, /border-inline-start:\s*var\(--hp-rule-evidence\) solid/ );
-	assert.match( aboutV3Css, /--hp-rule-evidence:\s*5px/ );
+	// A ledger row is an entry: the design names --rule-entry (3px) for it, and
+	// the register frame takes --radius-register (radius-sm), not the card radius.
+	assert.match( aboutV3Css, /border-inline-start:\s*var\(--hp-rule-entry\) solid/ );
+	assert.match( aboutV3Css, /--hp-rule-entry:\s*3px/ );
+	assert.doesNotMatch( aboutV3Css, /--hp-rule-evidence/ );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-ledger\s*\{[^}]*border-radius:\s*var\(--wp--custom--radius--sm\);/s );
 } );
 
 test( 'About v3 ships a static six-group, 34-term index before enhancement', () => {
@@ -151,6 +162,14 @@ test( 'About v3 keeps the enhanced Education outline sequential at every breakpo
 test( 'About v3 uses contrast-safe text accents on ivory surfaces', () => {
 	const eyebrowRule = aboutV3Css.match( /\.hp-about-resume-v3 \.hp-about-section__eyebrow\s*\{[^}]*\}/ );
 	assert.ok( eyebrowRule );
+	// The section eyebrow takes the hero kicker's Marcellus face at 13px/0.14em,
+	// so the page has one eyebrow — but keeps gold-800: at 13px the design's
+	// gold-700 is 3.7:1 on parchment, under the AA floor verify-typography.js
+	// enforces.
+	assert.match( eyebrowRule[ 0 ], /font-family:\s*var\(--wp--preset--font-family--label\);/ );
+	assert.match( eyebrowRule[ 0 ], /font-size:\s*var\(--wp--preset--font-size--xs\);/ );
+	assert.match( eyebrowRule[ 0 ], /letter-spacing:\s*0\.14em;/ );
+	assert.doesNotMatch( eyebrowRule[ 0 ], /font-family:\s*var\(--wp--preset--font-family--mono\);/ );
 	assert.match( eyebrowRule[ 0 ], /color:\s*var\(--wp--preset--color--gold-800\);/ );
 	assert.doesNotMatch( eyebrowRule[ 0 ], /color:\s*var\(--wp--preset--color--gold-700\);/ );
 	// The letterhead kicker takes the label face but keeps the AA gold: 12px
@@ -162,9 +181,11 @@ test( 'About v3 uses contrast-safe text accents on ivory surfaces', () => {
 	assert.match( kickerRule[ 0 ], /letter-spacing:\s*var\(--wp--custom--tracking--caps\);/ );
 	assert.match( kickerRule[ 0 ], /color:\s*var\(--wp--preset--color--gold-800\);/ );
 	assert.doesNotMatch( kickerRule[ 0 ], /gold-700/ );
+	// The contents card's label and the 01-05 numerals under it read as one
+	// accent, as the design has them; text-accent is 5.8:1 on the card.
 	assert.match(
 		aboutV3Css,
-		/\.hp-about-resume-v3 \.hp-about-nav__label\s*\{[^}]*color:\s*var\(--wp--preset--color--gold-800\);/s
+		/\.hp-about-resume-v3 \.hp-about-nav__label\s*\{[^}]*color:\s*var\(--wp--custom--text--accent\);/s
 	);
 	assert.match(
 		aboutV3Css,
@@ -204,7 +225,10 @@ test( 'About v3 responsive shell follows the mobile bar, masthead plate, and ded
 	assert.match( tabletCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__argument\s*\{[^}]*grid-column:\s*1 \/ -1;[^}]*grid-row:\s*2;/s );
 	assert.doesNotMatch( tabletCss, /\.hp-about-resume-v3 \.hp-about-showcase__grid/ );
 	assert.doesNotMatch( tabletCss, /\.hp-about-resume-v3 \.hp-about-education__record/ );
-	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-showcase__grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s );
+	// Two cards to a row at every width, so the grid is a base rule now, not a
+	// 64rem upgrade.
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-showcase__grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s );
+	assert.doesNotMatch( desktopCss, /\.hp-about-resume-v3 \.hp-about-showcase__grid\s*\{[^}]*grid-template-columns:/s );
 	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-education__record\s*\{[^}]*grid-template-columns:\s*11rem minmax\(0, 1fr\);/s );
 	assert.doesNotMatch( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-layout\s*\{[^}]*padding-inline:/s );
 	assert.doesNotMatch( aboutV3Css, /--hp-about-wide/ );
@@ -214,8 +238,10 @@ test( 'About v3 responsive shell follows the mobile bar, masthead plate, and ded
 	assert.match( aboutV3Css, /\.hp-about-resume-v3 a:focus-visible,[\s\S]*?\.hp-about-resume-v3 button:focus-visible\s*\{[^}]*outline:\s*3px solid var\(--wp--preset--color--gold-700\);[^}]*outline-offset:\s*2px;/s );
 	assert.match( aboutV3Css, /scroll-margin-top:\s*calc\(var\(--hp-about-header-height, 0px\) \+ 96px\)/ );
 	assert.match( aboutV3Css, /@media \(min-width:\s*64rem\)\s*\{[\s\S]*?\.hp-about-resume-v3 \.hp-about-v3-layout\s*\{[^}]*grid-template-columns:\s*minmax\(13rem, 15rem\) minmax\(0, 1fr\);/s );
-	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-nav__number\s*\{[^}]*display:\s*none;/s );
-	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-nav__number\s*\{[^}]*display:\s*block;/s );
+	// The ordinal now sits inside the pill's own anchor and is present at every
+	// width, as the design's <i>01</i> is.
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-nav__number\s*\{[^}]*font-variant-numeric:\s*tabular-nums;[^}]*color:\s*var\(--wp--custom--text--accent\);/s );
+	assert.doesNotMatch( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-nav__number\s*\{[^}]*display:\s*none;/s );
 	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__letterhead\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1\.6fr\) minmax\(17rem, 0\.85fr\);/s );
 	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__aside\s*\{[^}]*grid-row:\s*1 \/ span 2;[^}]*align-self:\s*stretch;[^}]*justify-content:\s*space-between;/s );
 	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__argument\s*\{[^}]*align-self:\s*stretch;[^}]*display:\s*flex;[^}]*flex-direction:\s*column;/s );
@@ -232,11 +258,15 @@ test( 'About v3 citation filter animates order and repaints the cited row', () =
 	assert.match( controller, /cubic-bezier\(\.22, \.61, \.36, 1\)/ );
 	assert.match( controller, /prefers-reduced-motion:\s*reduce/ );
 	assert.match( controller, /Not cited by/ );
-	assert.match( aboutV3Css, /\.is-cited[^}]*color-mix\(in srgb, var\(--wp--preset--color--gold-100\) 7%/s );
+	assert.match( aboutV3Css, /\.is-cited[^}]*color-mix\(in srgb, var\(--wp--preset--color--gold-500\) 7%/s );
 	assert.match( aboutV3Css, /\.hp-about-citation-chip[^}]*transition-delay:\s*240ms/s );
-	assert.match( aboutV3Css, /\.hp-about-index-row::after\s*\{[^}]*transform:\s*scaleX\(0\);/s );
-	assert.match( aboutV3Css, /\.hp-about-index-row\.is-cited::after\s*\{[^}]*transform:\s*scaleX\(1\);[^}]*transition-delay:\s*140ms;/s );
-	assert.match( aboutV3Css, /\.hp-about-resume-v3 :is\(\.hp-about-contribution, \.hp-about-role\)\.is-dimmed\s*\{[^}]*opacity:\s*0\.34;/s );
+	// The underline spans the row and carries its delay on the base rule, so it
+	// retracts in step with the way it drew.
+	assert.match( aboutV3Css, /\.hp-about-index-row::after\s*\{[^}]*inset-inline:\s*0;[^}]*transform:\s*scaleX\(0\);[^}]*transition-delay:\s*140ms;/s );
+	assert.match( aboutV3Css, /\.hp-about-index-row\.is-cited::after\s*\{[^}]*transform:\s*scaleX\(1\);/s );
+	// Nothing is dimmed. The filter demotes: citing rows lead each ledger and the
+	// rest follow at full opacity under a line that names the term.
+	assert.doesNotMatch( aboutV3Css, /is-dimmed/ );
 } );
 
 test( 'About v3 controller disposes route-scoped global state and observers', () => {
@@ -287,8 +317,10 @@ test( 'About v3 sections reset the legacy v2 divider and padding', () => {
 
 test( 'About v3 experience restores the handoff role order and typography', () => {
 	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-role\.is-current\s*\{[^}]*display:\s*block;/s );
-	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-ledger--experience\s*\{[^}]*border:\s*0;[^}]*background:\s*transparent;/s );
-	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-ledger--experience \.hp-about-role\.is-current\s*\{[^}]*border-inline-start:\s*3px solid var\(--wp--custom--border--brand\);[^}]*background:\s*transparent;/s );
+	// Section 02 keeps the register frame and the shared row anatomy; its state
+	// changes the rule's colour and nothing else.
+	assert.doesNotMatch( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-ledger--experience\s*\{/ );
+	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-ledger--experience \.hp-about-role\.is-current\s*\{\s*border-inline-start-color:\s*var\(--wp--custom--status--done\);\s*\}/s );
 	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-role__org\s*\{[^}]*font-family:\s*var\(--wp--preset--font-family--label\);[^}]*color:\s*var\(--wp--custom--text--accent\);/s );
 	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-role__meta\s*\{[^}]*font-family:\s*var\(--wp--preset--font-family--mono\);[^}]*color:\s*var\(--wp--custom--text--faint\);/s );
 } );
@@ -312,8 +344,14 @@ test( 'About v3 closing invitation composes the shared action-panel primitive', 
 	const contactRule = aboutV3Css.match( /\.hp-about-resume-v3 \.hp-about-contact\s*\{[^}]*\}/s );
 	assert.ok( contactRule );
 	assert.doesNotMatch( contactRule[ 0 ], /(?:padding|border|background):/ );
-	assert.match(
-		aboutV3Css,
-		/@media \(min-width: 601px\)\s*\{[\s\S]*?\.hp-about-resume-v3 \.hp-about-contact > \.hp-action-rail\s*\{[^}]*width:\s*100%;[^}]*flex-wrap:\s*nowrap;[\s\S]*?\.hp-about-resume-v3 \.hp-about-contact > \.hp-action-rail \.wp-block-button\s*\{[^}]*flex:\s*1 1 0;[^}]*min-width:\s*0;[\s\S]*?\.hp-about-resume-v3 \.hp-about-contact > \.hp-action-rail \.wp-block-button__link\s*\{[^}]*width:\s*100%;[^}]*min-width:\s*0;/s
+	// Full-width targets on the phone, content-width pills above: the rail's own
+	// `width: fit-content` governs, and nowrap plus min-width only keeps the two
+	// labels on one line through the 601-637px band.
+	const closingRail = aboutV3Css.match(
+		/@media \(min-width: 601px\)\s*\{[\s\S]*?\.hp-about-resume-v3 \.hp-about-contact > \.hp-action-rail\s*\{[^}]*\}/s
 	);
+	assert.ok( closingRail );
+	assert.match( closingRail[ 0 ], /flex-wrap:\s*nowrap;/ );
+	assert.doesNotMatch( closingRail[ 0 ], /width:\s*100%;/ );
+	assert.doesNotMatch( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-contact > \.hp-action-rail \.wp-block-button\s*\{[^}]*flex:\s*1 1 0;/s );
 } );
