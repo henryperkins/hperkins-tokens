@@ -353,6 +353,7 @@ function deriveV3RenderedExpectations( html, label ) {
 		timelineFoldWords,
 		timelineLabels: report.timelineLabels,
 		usesFidelityPass,
+		usesBackdropShowcase: html.includes( 'has-backdrop-visuals' ),
 		wcusActionLabels: [],
 	};
 }
@@ -706,6 +707,8 @@ function buildInspectionExpression( opts ) {
 					// measured rather than assumed.
 					needClipped: need ? (need.scrollHeight > need.clientHeight + 1 || need.scrollWidth > need.clientWidth + 1) : null,
 					markHeight: mark ? Math.round(mark.getBoundingClientRect().height) : null,
+					position: getComputedStyle(shot).position,
+					wash: getComputedStyle(shot, '::after').backgroundImage,
 				} : null,
 				title: (card.querySelector(isResume ? 'h3' : '.hp-work-card__title') || {}).textContent?.trim?.() || null,
 				titleHasAnchor: !!card.querySelector(isResume ? 'h3 a' : '.hp-work-card__title a'),
@@ -1129,6 +1132,10 @@ function verifyGeometry( result, viewport, expectations ) {
 					card.shot.markHeight === null || card.shot.markHeight >= 40,
 					`${ label }: showcase card ${ index + 1 } renders its mark only ${ card.shot.markHeight }px tall.`
 				);
+				if ( expectations.usesBackdropShowcase ) {
+					assert( card.shot.position === 'absolute' && card.shot.wash.includes( 'linear-gradient' ), `${ label }: showcase card ${ index + 1 } needs its image behind a parchment wash.` );
+					assert( Math.abs( card.shot.rect.width - card.rect.width ) <= 3 && Math.abs( card.shot.rect.height - card.rect.height ) <= 3, `${ label }: showcase card ${ index + 1 } visual must cover the card.` );
+				}
 			} );
 		}
 	} else if ( width >= 896 ) {

@@ -276,7 +276,7 @@ test( 'About v3 contract validates the real candidate and its evidence index', (
 		{ href: '/contact/', text: 'Start a conversation' },
 		{ href: '/one-page-resume/', text: 'Download résumé (PDF)' },
 	] );
-	assert.match( fs.readFileSync( draftPath, 'utf8' ), /<h3 class="wp-block-heading">HPerkins Tokens<\/h3>[\s\S]*?Live · v0\.3\.60/ );
+	assert.match( fs.readFileSync( draftPath, 'utf8' ), /<h3 class="wp-block-heading">HPerkins Tokens<\/h3>[\s\S]*?Live · v0\.3\.62/ );
 } );
 
 test( 'About v3 contract rejects loss of the desktop contents host or filter landmark', () => {

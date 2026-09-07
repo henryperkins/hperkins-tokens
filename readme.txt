@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.61
+Stable tag: 0.3.62
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -392,6 +392,14 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.62 =
+* Completed the About / Résumé template migration: letterhead, proof timeline,
+  numbered evidence ledgers, responsive filter rail, and showcase imagery
+  beneath the template's parchment wash. Added the supplied Tableau mark.
+* Corrected responsive showcase image sizing for full-card backdrops. About
+  page content and its saved 44rem template override require coordinated
+  publication with the theme's canonical 72rem shell.
 
 = 0.3.61 =
 * Aligned the full Home composition with the Imladris prototype: hero, Rings,

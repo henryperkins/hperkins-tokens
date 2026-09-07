@@ -81,6 +81,15 @@
         ],
         "createdAt": "2026-09-07T01:31:56.937Z",
         "reason": "Codex triage: retain the existing commerce heading clamp introduced in 0bf1e2c6, consistent with the user deprioritizing ecommerce work. This follow-up changes only the panel border; it does not redesign commerce typography."
+      },
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "inc/content-images.php"
+        ],
+        "createdAt": "2026-09-07T02:29:38.225Z",
+        "reason": "Codex review: the only match is the literal img tag in the PHPDoc description of wp_content_img_tag at line 98; it is not rendered HTML."
       }
     ]
   }

@@ -42,6 +42,8 @@ const modernArtworkBudgets = {
 	// The About showcase's theme card shows the mascot, not a screenshot. Alpha
 	// WebP is dearer than opaque, so it carries its own budget.
 	'assets/wapuu/wapuu-hero.webp': 90000,
+	// Supplied Tableau mark, retained byte-for-byte from the design ZIP.
+	'assets/img/marks/tableu.png': 400000,
 	'assets/img/wapuu-color.webp': 60000,
 	'assets/img/wapuu-emblem-green.webp': 12000,
 };
@@ -374,8 +376,8 @@ for ( const file of [
 // content column less the grid gap and the card's inline padding. Both
 // screenshots sit in that same box and share one sizes string.
 assert(
-	contentImages.includes( "'(max-width: 1023px) calc(50vw - 3rem), 22rem'" ),
-	'Showcase screenshot sizes must match the two-up card figure (half the column below 1024px, 22rem above).'
+	contentImages.includes( "'(max-width: 1023px) 50vw, 32rem'" ),
+	'Showcase screenshot sizes must cover the full two-up card backdrop, capped at 32rem.'
 );
 assert(
 	contentImages.includes( "'small_width' => 768" ) && contentImages.includes( "'width'       => 1448" ),

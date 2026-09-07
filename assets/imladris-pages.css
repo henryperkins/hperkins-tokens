@@ -5410,13 +5410,16 @@ p.hp-contact-form__hint {
 
 /* About v3: evidence-first resume ledger. Candidate-only until separately promoted. */
 .hp-about-template__content:has(.hp-about-resume-v3) {
+	padding-block: 0;
 	padding-inline: 0;
 }
 
 .hp-about-template__content:has(.hp-about-resume-v3) > .wp-block-post-content {
+	box-sizing: border-box;
 	width: 100% !important;
 	max-width: none !important;
 	margin-inline: 0 !important;
+	padding: 0;
 }
 
 .hp-about-resume-v3 {
@@ -5428,6 +5431,7 @@ p.hp-contact-form__hint {
 	max-width: var(--wp--custom--container--wide) !important;
 	margin-inline: auto !important;
 	padding-inline: 0 !important;
+	padding-block: 0 !important;
 	color: var(--wp--custom--text--body);
 	box-sizing: border-box;
 }
@@ -7468,6 +7472,96 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 
 	.hp-about-resume-v3 .hp-about-skill-group {
 		grid-template-columns: 11rem minmax(0, 1fr);
+	}
+}
+
+/* About template's selected showcase variant: imagery forms the card's
+   ground, with a parchment wash beneath the text. The framed variant remains
+   available for older accepted bodies during publication. */
+.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card {
+	position: relative;
+	overflow: hidden;
+	justify-content: flex-end;
+	min-height: 12rem;
+}
+
+.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card > * {
+	position: relative;
+	z-index: 1;
+}
+
+.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card .hp-about-showcase-card__shot {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	margin: 0;
+	padding: 0;
+	aspect-ratio: auto;
+	border: 0;
+	border-radius: 0;
+	background: var(--wp--custom--surface--card);
+}
+
+.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card__shot::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(200deg,
+		color-mix(in srgb, var(--wp--custom--surface--card) 45%, transparent) 0%,
+		color-mix(in srgb, var(--wp--custom--surface--card) 78%, transparent) 42%,
+		color-mix(in srgb, var(--wp--custom--surface--card) 94%, transparent) 68%);
+	transition: opacity var(--wp--custom--dur--base) var(--wp--custom--ease--calm);
+}
+
+.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card__shot img {
+	object-position: top center;
+}
+
+.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card__shot.is-mark img {
+	inset: var(--wp--preset--spacing--3) var(--wp--preset--spacing--3) var(--wp--preset--spacing--3) auto;
+	width: calc(50% - var(--wp--preset--spacing--3));
+	height: calc(100% - 2 * var(--wp--preset--spacing--3));
+	object-position: right center;
+}
+
+.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card__shot-need {
+	position: absolute;
+	inset: var(--wp--preset--spacing--3) var(--wp--preset--spacing--3) auto auto;
+	max-width: calc(100% - 2 * var(--wp--preset--spacing--3));
+	padding: var(--wp--preset--spacing--1) var(--wp--preset--spacing--2);
+}
+
+.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card__link {
+	margin: 0;
+}
+
+@media (hover: hover) {
+	.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card:hover .hp-about-showcase-card__shot::after {
+		opacity: 0.82;
+	}
+}
+
+@media (min-width: 601px) {
+	.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card {
+		min-height: 14rem;
+	}
+}
+
+@media (min-width: 64rem) {
+	.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card.is-wide {
+		display: flex;
+		flex-direction: column;
+		min-height: 16rem;
+	}
+
+	.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card.is-wide > :not(figure) {
+		max-width: 60ch;
+	}
+
+	.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card.is-wide .hp-about-showcase-card__shot {
+		aspect-ratio: auto;
+		align-self: stretch;
+		grid-row: auto;
 	}
 }
 

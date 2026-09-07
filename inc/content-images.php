@@ -47,11 +47,10 @@ defined( 'ABSPATH' ) || exit;
 function hperkins_tokens_content_image_candidates() {
 	// Both showcase screenshots sit in the same box, so they share one sizes
 	// string. The cards are two to a row at every width, so a card is half the
-	// content column less the grid gap, and the figure is the card less its
-	// inline padding: ~149px on a 390px phone, ~372px on a tablet, and ~354px
-	// beside the desktop filter rail. 22rem covers the top of that range, and
-	// the 640w candidate covers a phone at 3x.
-	$showcase_card_sizes = '(max-width: 1023px) calc(50vw - 3rem), 22rem';
+	// content column less the grid gap. Backdrop figures cover the whole card,
+	// outside the filter rail: up to 504px on desktop. Half the viewport below
+	// 1024px safely covers the fluid gutters; 32rem caps the wide layout.
+	$showcase_card_sizes = '(max-width: 1023px) 50vw, 32rem';
 
 	return array(
 		'wcus-2026-phoenix.webp'                  => array(

@@ -891,3 +891,41 @@ hero clamp, documented 8/9px Council labels, the comment-only `rgb(16,16,16)`
 false positive, and the retained commerce heading clamp. Retired Home font
 exceptions were removed. The earlier approved commerce border change remains
 a 1px hairline; no further ecommerce work was added.
+
+## 2026-09-07 — About / Résumé production migration (0.3.62)
+
+The production page still carried the August accepted body and a saved
+`page-about` template using a 44rem content size. Publishing the theme files
+had not promoted the newer letterhead, proof timeline or numbered evidence
+layout. The local page already held the newer candidate but also retained
+that obsolete template override.
+
+The complete cached `templates/about/About.dc.html` from the 2026-09-06 design
+handoff was rendered using the supplied ZIP's preview runtime and compared
+with local WordPress and the exact production URL at 1440px and 390px.
+The reference's shell is 72rem with 32px desktop and 16px phone gutters.
+The theme retains the real portrait, accessible gold text, measured header
+offsets, progressive no-JS fallbacks, optimized Wapuu artwork and stable PDF
+destination recorded in the earlier handoff decisions.
+
+The selected `showcaseVisual: backdrop` variant was still missing locally.
+`has-backdrop-visuals` now scopes the template's full-card imagery, parchment
+wash, bottom-aligned text, contained marks and responsive card heights. The
+supplied `tableu.png` replaces Tableau's owed-image placeholder. DJ Lee keeps
+the reference's explicit missing-screenshot cue. The preview runtime omits
+the bound image sources when rendering this cached export, so imagery was
+checked against the authored template and supplied assets as well as the
+WordPress render. No preview runtime is shipped in the theme.
+
+The rendered verifier now measures the backdrop's coverage and wash; it
+failed on the original framed layout before implementation. Responsive
+image sizes cover the full card up to 32rem. The local About template override
+was backed up and trashed, restoring the canonical theme shell. Publication
+must update only About page 6, remove its saved template override, freshly
+read the saved body, and export the accepted snapshot with `--expect-draft`.
+Backups, visual comparisons and checks live under `.design-pull/about-publication/`.
+
+Restoring that shell also exposed inherited global padding on `post-content`:
+its content-box 100% width added another 64px, shifting the page and overflowing
+the viewport. The v3 shell now owns its spacing and uses border-box sizing;
+obsolete outer padding no longer compounds the hero and closing spacing.

@@ -1987,7 +1987,7 @@ function verifyAboutV3Body(body, options = {}) {
 		[ 'Flavor Agent', 'Shipped · v0.1.0' ],
 		[ 'AI Provider for Codex', 'Released · stable v2.1' ],
 		[ 'DJ Lee &amp; Voices of Judah', 'Delivered · live site' ],
-		[ 'HPerkins Tokens', 'Live · v0.3.60' ],
+		[ 'HPerkins Tokens', source.includes('has-backdrop-visuals') ? 'Live · v0.3.62' : 'Live · v0.3.60' ],
 		[ 'Tableau', 'Deployed · live application' ]
 	];
 	expectedWork.forEach(function (project) {
