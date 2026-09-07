@@ -85,7 +85,7 @@ component CSS to refresh either — the theme's `style.css` is a superset.
 
 | Design (project) | Theme artifact(s) | Wiring |
 |---|---|---|
-| `templates/front-page` | `content/page-snapshots/front-page.html`, `templates/front-page.html`, `patterns/wapuu-home-hero.php` | Published **Home** page (slug `home`, ID 36) in hybrid mode: theme-owned Wapuu hero + Three Rings shell, DB-owned middle body |
+| `templates/front-page` | `content/page-snapshots/front-page.html`, `templates/front-page.html`, `patterns/wapuu-home-hero.php` | Published **Home** page (slug `home`, ID 36) in hybrid mode: theme-owned Wapuu hero + Three Rings shell, DB-owned Work ledger and closing panel |
 | `templates/about` | `content/page-drafts/about.html` (the only human-authored About candidate), `content/page-snapshots/about.html` (accepted snapshot, export-only mirror), `patterns/about-resume.php` (portrait-only thin accepted-snapshot adapter — no page markup of its own), `templates/page-about.html`, About page layer in `assets/imladris-pages.css` | Published **About + Resume** page (slug `about`, ID 6) in DB-owned page-body mode. The proof-first candidate in `content/page-drafts/about.html` is applied locally only via the explicit `--page=about` draft command and is not the deployed body until it passes review and controlled promotion |
 | `templates/contact` | `patterns/contact.php`, `templates/page-contact.html`, the Contact section of `assets/imladris-pages.css`, `.hp-form-confirm*` in `style.css` | Published **Contact** page (slug `contact`, ID 233) in repository-owned mode — the body comes from the pattern, not the database, so this route is outside the page-snapshot contract. Aligned to the design template on 2026-08-18 (section below) |
 | `templates/ai-enablement` | `content/page-snapshots/ai-enablement.html`, `templates/page-ai-enablement.html`, `patterns/ai-enablement.php` (thin accepted-snapshot adapter — re-derives only the six Three Rings image URLs, no essay markup of its own) | Published **AI Enablement** page (slug `ai-enablement`, ID 175) in DB-owned page-body mode; the pattern re-emits the accepted snapshot, so re-inserting it cannot revert the route to an older draft (`scripts/verify-ai-enablement-source.js`) |
@@ -771,3 +771,109 @@ leaves sections 01–05 untouched.
   with exact labels, claims, and destinations, and the absence of state classes, buttons, and the
   pane in the authored body; `verify-about-page-rendered.js` checks the stepper's geometry,
   ARIA, keyboard, and word-count parity (collapsed folds leave the render) at every width.
+
+## 2026-09-07 — Full Home prototype alignment (0.3.61)
+
+Reference: `imladrisdesignsystem.zip`, exported 2026-09-06, with SHA-256
+`0146ca392054d8c34380627ba84ffcda03a89219a6d5f7d8a353fa0ced9298f4`.
+The full archive was inventoried and its Home prototype rendered beside the
+public site and local WordPress at 1440px and 390px before implementation.
+
+### Archive review
+
+The 31-file archive supplies **one complete page**, `pages/home/Home.dc.html`.
+It also includes the handoff README; a compiled bundle exposing 28 shared
+components; two preview runtime files; a stylesheet entrypoint; seven token
+sheets and their consumer report; six font files; and eleven image/mark files.
+The bundle's provenance mentions About and placement exports, but those page
+screens are not included. Bundled components unused by Home do not constitute
+additional complete page designs. There are no ecommerce page designs here.
+
+The README explicitly requests narrow Work-container geometry and says the
+other sections were already shipped. The rendered public site contradicts that
+parity assumption. The user's clarified request is to align the complete Home
+composition; the table below records that broader comparison and implementation.
+The prototype runtime and bundle stay disposable under `.design-pull/`, rather
+than becoming WordPress dependencies.
+
+| Area | Observed production difference | Implemented resolution |
+| --- | --- | --- |
+| Composition | Hero → Work → closing panel → Rings | Theme template now renders Hero → Rings → Work → closing panel. `#framework` and `#work` are native section anchors. |
+| Shared column | Work border was wide but its heading/footer and nested rows remained on the narrow column; mobile Rings had different gutters | Hero, Rings and post-content use the existing 72rem outer container and 32px inset. Work heading/register/footer move together in one native wide Group. |
+| Hero | Narrow lead, compact centred mobile medallion, different stacking breakpoint, framed actions | 55:45 grid, prose-width copy, full-column art capped at 440px, 900px stacking, left-aligned mobile copy, vertical proof records and open paired actions. Updated `sizes` follows the real artwork width. |
+| Rings | Oversized inherited description type; full-width instrument rule and widely tracked actions crowded the review row | Home-scoped component type and inline instrument links reproduce the reference; existing accessible tint colors and mobile touch targets remain. |
+| Work ledger | Inline 36px padding, extra block margins, 19px descriptions and nested constrained layouts made rows much taller | Native flow Groups let component CSS own 16px/24px row padding, compact spacing, body-font titles and the card surface. Existing status words, prose and destinations are preserved. |
+| Closing panel | Oversized centred, 16ch headline and one action | Left-aligned token-sized headline, 24px panel inset, independent section spacing, Contact plus `/one-page-resume/`, and open wrapping buttons. |
+| Footer | Saved override had icon-only links and obsolete search; the scrim was faded along with the image | Current canonical labelled footer is restored locally. Separate image and scrim pseudo-elements reproduce the twilight surface. Current colophon facts remain. |
+| Assets/tokens | Potential duplicate assets or stale token authority | All six fonts and nine corresponding image/mark files match the theme byte for byte. The two extra source PNG marks are unused by Home. No asset import or token duplication is needed. `theme.json` remains authoritative. |
+
+### Deliberate current-theme differences
+
+- The newer Condensed Council navigation remains authoritative; the older
+  prototype menu is not reinstated.
+- Existing factual status labels, proof-link text, project descriptions and
+  colophon stay current. The prototype's expanded Work labels are not substituted
+  for the accepted page copy. Proof links retain descriptive accessible names.
+- Work descriptions retain the site's 17px reading floor rather than the
+  prototype's 15px. Gold labels and ring links retain the theme's reviewed
+  contrast colors. Mobile hero weight remains 500, desktop 600.
+- Mobile keeps the existing disabled decorative hero bitmap below 782px;
+  the parchment wash, responsive Wapuu sources and image priority remain.
+- The closing lead retains its existing 46ch cap. Buttons retain 44px minimum
+  hit targets. At narrow widths they wrap naturally instead of shrinking.
+- The dead nested-Rings escape selector was removed: both the public render
+  and canonical template place Rings outside post content. No manual viewport
+  width escape is needed for the native wide Groups.
+
+### Ownership and publication
+
+Page 36 was freshly backed up, transformed as a local candidate, applied via
+`wp_update_post` with site-identity and content-hash guards, re-read, and exported
+using `export-page-snapshots.js --page=front-page`. The snapshot remains the
+verified mirror of the local database body. The existing local Front Page and
+footer overrides (619 and 587) were backed up and moved to Trash, allowing the
+canonical theme template and footer to resolve; they remain reversible.
+Backups, candidate markup, before/after screenshots and geometry measurements
+are retained under `.design-pull/home-containers/full-review/`.
+
+Production has not been written. Deployment must coordinate the theme files,
+the current production Home body, and saved Front Page/footer overrides. Capture
+fresh production backups, preserve any intervening content, and verify the
+resolved templates and rendered page after publication. A theme-only deploy
+cannot replace database-owned page content or saved template parts.
+
+The authorized release preparation captured production Home, Front Page and
+footer backups under `.design-pull/home-containers/release/`. Upload is blocked:
+Studio reports an expired authentication token, and GitHub Actions cannot start
+the publish job because the account is locked for billing. No production body
+or template changes were made while theme upload remained unavailable.
+
+### Verification
+
+Passed: PHP lint (32 files), all 329 script-library tests, all source checks
+from the CI verification job (including its explicit About draft mode), performance
+assets, Impeccable artifact parity, ownership documentation, typography source,
+and token resolution across all five sheets. The Home composition passed at
+1440, 1024, 921, 920, 901, 900, 782, 781, 600, 390 and 320px, plus a 390px
+no-JavaScript pass. Prominent actions passed all three widths on Home, About,
+Digest and the Flavor Agent demo, including keyboard focus and 44px targets.
+Both Home and AI Enablement passed the 320px ring-card collision checks.
+Fresh database reads confirm Home body/snapshot parity and theme resolution
+for both Front Page and footer.
+
+The site-wide ownership gate remains blocked by an unrelated existing About
+template override: `Expected "page-about" to resolve from the theme, got custom.`
+That override was left intact. Initial browser gates hit the existing 10-second
+load-event timeout; bounded 30-second navigation waits passed on rerun.
+
+The Home verifier now checks section order, shared edges, four full-width rows, reading
+floor, both closing destinations, labelled footer, the 900px art transition,
+and complete content without JavaScript. The action verifier distinguishes
+Home's open button rows from the framed rails on other pages. The responsive
+asset contract follows the new Home art geometry.
+
+Impeccable exceptions remain value- and file-specific: the exact prototype
+hero clamp, documented 8/9px Council labels, the comment-only `rgb(16,16,16)`
+false positive, and the retained commerce heading clamp. Retired Home font
+exceptions were removed. The earlier approved commerce border change remains
+a 1px hairline; no further ecommerce work was added.

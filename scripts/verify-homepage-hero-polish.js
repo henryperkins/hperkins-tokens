@@ -129,6 +129,9 @@ async function inspectHomepage( cdp, viewport ) {
 
 	await cdp.send( 'Page.enable', {}, sessionId );
 	await cdp.send( 'Runtime.enable', {}, sessionId );
+	if ( viewport.noScript ) {
+		await cdp.send( 'Emulation.setScriptExecutionDisabled', { value: true }, sessionId );
+	}
 	await cdp.send( 'Emulation.setDeviceMetricsOverride', {
 		width: viewport.width,
 		height: viewport.height,
@@ -136,9 +139,10 @@ async function inspectHomepage( cdp, viewport ) {
 		mobile: false,
 	}, sessionId );
 
-	const loaded = cdp.once( 'Page.loadEventFired', sessionId );
-	await cdp.send( 'Page.navigate', { url: new URL( '/', ORIGIN ).href }, sessionId );
-	await loaded;
+	await Promise.all( [
+		cdp.once( 'Page.loadEventFired', sessionId, 30000 ),
+		cdp.send( 'Page.navigate', { url: new URL( '/', ORIGIN ).href }, sessionId, 30000 ),
+	] );
 	await cdp.send( 'Runtime.evaluate', { expression: 'document.fonts && document.fonts.ready', awaitPromise: true }, sessionId );
 	await wait( 250 );
 
@@ -146,7 +150,21 @@ async function inspectHomepage( cdp, viewport ) {
 		const title = document.querySelector('.hp-wapuu-hero__title');
 		const art = document.querySelector('.hp-wapuu-hero__figure img');
 		const style = title ? getComputedStyle(title) : null;
+		const geometry = selector => {
+			const node = document.querySelector(selector);
+			if (!node) return null;
+			const r = node.getBoundingClientRect();
+			return { x: r.x, y: r.y, right: r.right, bottom: r.bottom, width: r.width };
+		};
 		return {
+			sections: ['.hp-wapuu-hero-wrap', '#framework', '#work', '.hp-front-template__commission'].map(geometry),
+			edges: ['.hp-wapuu-hero__copy', '.hp-template-hero__copy', '.hp-work', '.hp-front-template__cta'].map(geometry),
+			rowWidths: [...document.querySelectorAll('.hp-work__entry')].map(e => e.getBoundingClientRect().width),
+			rowFonts: [...document.querySelectorAll('.hp-work__desc')].map(e => parseFloat(getComputedStyle(e).fontSize)),
+			closingLinks: [...document.querySelectorAll('.hp-front-template__cta-actions a')].map(e => new URL(e.href).pathname),
+			footerLinks: [...document.querySelectorAll('.hp-footer__social a')].map(e => e.textContent.trim()),
+			footerSearch: !!document.querySelector('.hp-footer input[type="search"]'),
+			artBeforeCopy: geometry('.hp-wapuu-hero__figure').bottom <= geometry('.hp-wapuu-hero__copy').y + 1,
 			titleFound: !! title,
 			artFound: !! art,
 			clientWidth: document.documentElement.clientWidth,
@@ -209,6 +227,23 @@ async function withChrome( callback ) {
 	}
 }
 
+function verifyComposition( page, width ) {
+	assert( page.scrollWidth <= page.clientWidth + 1, `Home overflows at ${ width }px.` );
+	assert( page.sections.every( Boolean ), `Home is missing a body section at ${ width }px.` );
+	page.sections.forEach( ( section, index ) => {
+		if ( index ) {
+			assert( section.y >= page.sections[ index - 1 ].bottom - 1, `Home sections are out of order or overlap at ${ width }px.` );
+		}
+	} );
+	assert( page.edges.every( edge => edge && Math.abs( edge.x - page.edges[ 0 ].x ) < 1 ), `Home sections do not share a left edge at ${ width }px.` );
+	assert( Math.abs( page.edges[ 1 ].right - page.edges[ 2 ].right ) < 1 && Math.abs( page.edges[ 2 ].right - page.edges[ 3 ].right ) < 1, `Rings, Work and closing panel do not share a right edge at ${ width }px.` );
+	assert( page.rowWidths.length === 4 && page.rowWidths.every( row => Math.abs( row - page.edges[ 2 ].width + 2 ) < 1 ), `Home ledger rows do not fill their register at ${ width }px.` );
+	assert( page.rowFonts.every( size => size >= 17 ), 'Home ledger descriptions must retain the reading floor.' );
+	assert( page.closingLinks.join( ',' ) === '/contact/,/one-page-resume/', 'Home closing actions must reach Contact and the stable resume route.' );
+	assert( page.footerLinks.length === 4 && page.footerLinks.every( Boolean ) && !page.footerSearch, 'Home must render the labelled footer without the retired search field.' );
+	assert( page.artBeforeCopy === ( width <= 900 ), `Home art must move above the copy at the 900px breakpoint (${ width }px).` );
+}
+
 async function main() {
 	await withChrome( async ( cdp ) => {
 		const desktop = await inspectHomepage( cdp, { width: 1440, height: 1000 } );
@@ -237,6 +272,14 @@ async function main() {
 			mobile.scrollWidth <= mobile.clientWidth + 1,
 			`Homepage overflows horizontally at mobile: clientWidth=${ mobile.clientWidth }, scrollWidth=${ mobile.scrollWidth }.`
 		);
+
+		for ( const width of [ 1440, 1024, 921, 920, 901, 900, 782, 781, 600, 390, 320 ] ) {
+			const page = width === 1440 ? desktop : width === 390 ? mobile : await inspectHomepage( cdp, { width, height: 1000 } );
+			verifyComposition( page, width );
+		}
+		const noScript = await inspectHomepage( cdp, { width: 390, height: 1000, noScript: true } );
+		verifyComposition( noScript, 390 );
+		console.log( 'checked Home composition at 11 widths and without JavaScript: section order, shared edges, complete ledger, paired actions, labelled footer' );
 
 		console.log(
 			`checked homepage hero: desktop weight=${ desktop.title.fontWeight }, mobile weight=${ mobile.title.fontWeight }`

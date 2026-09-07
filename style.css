@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.60
+Version: 0.3.61
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -779,8 +779,8 @@ header.wp-block-template-part {
 	position: relative;
 	isolation: isolate;
 	overflow: hidden;
-	margin-block: 0 var(--wp--preset--spacing--9);
-	padding-block: var(--wp--preset--spacing--9);
+	margin-block: 0;
+	padding: var(--wp--preset--spacing--9) 0;
 	border-bottom: 1px solid var(--hp-neutral-100);
 	background: var(--wp--custom--surface--page);
 }
@@ -824,6 +824,11 @@ header.wp-block-template-part {
 }
 
 .hp-wapuu-hero.wp-block-columns {
+	display: grid;
+	grid-template-columns: 55fr 45fr;
+	box-sizing: border-box;
+	width: 100%;
+	padding-inline: var(--wp--preset--spacing--6);
 	gap: var(--wp--preset--spacing--10);
 	align-items: center;
 	margin-block: 0;
@@ -866,7 +871,7 @@ header.wp-block-template-part {
 	max-width: 16ch;
 	margin: 0;
 	/* Council hero headline: restrained display scale, medium weight. */
-	font-size: clamp(2.6rem, 4.2vw, 3.9rem);
+	font-size: clamp(2.6rem, 4.6vw, 4rem);
 	font-weight: var(--wp--custom--weight--medium);
 	line-height: 1.04;
 	/* letter-spacing comes from the Cormorant rule below (tracking-tight). */
@@ -874,9 +879,8 @@ header.wp-block-template-part {
 }
 
 .hp-wapuu-hero__text {
-	/* Lead sits one ink-step below the headline (body, not strong) at the relaxed
-	   measure, preserving the h1 -> lead hierarchy (per the alignment review). */
-	max-width: var(--wp--custom--measure--narrow);
+	/* The Home prototype uses the full copy column, capped at prose measure. */
+	max-width: var(--wp--custom--measure--prose);
 	margin: var(--wp--preset--spacing--5) 0 0;
 	font-size: var(--wp--preset--font-size--lg);
 	line-height: 1.7;
@@ -884,10 +888,10 @@ header.wp-block-template-part {
 }
 
 /* The governance status note under the lead is supporting copy, not a second
-	 lead: one step down in scale and one ink-step quieter, same narrow measure
+	 lead: one step down in scale and one ink-step quieter, same prose measure
 	 (2026-07 typography review). */
 .hp-wapuu-hero__note {
-	margin-top: var(--wp--preset--spacing--3);
+	margin-top: var(--wp--preset--spacing--4);
 	font-size: var(--wp--preset--font-size--base);
 	color: var(--wp--custom--text--muted);
 }
@@ -950,102 +954,21 @@ header.wp-block-template-part {
 	padding-inline: 1.45rem;
 }
 
-@media (max-width: 781px) {
-	.hp-wapuu-hero-wrap {
-		padding-block: var(--wp--preset--spacing--5);
-	}
-
-	.hp-wapuu-hero-wrap::before {
-		/* Drop the decorative bitmap layer entirely on mobile so it can never
-		   enter the LCP path. The ::after parchment/linear-gradient wash carries
-		   the hero atmosphere on its own at this width. */
-		display: none;
-	}
-
-	/* Council mobile hero: re-composed, not a shrunk desktop. Wapuu rides ON TOP
-	   in a small medallion over a contained halo, then centered copy, compact
-	   wrapping chips, and full-width stacked CTAs. */
+@media (max-width: 900px) {
 	.hp-wapuu-hero.wp-block-columns {
-		display: flex !important;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--wp--preset--spacing--5);
-		text-align: center;
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--wp--preset--spacing--7);
 	}
 
-	.hp-wapuu-hero .wp-block-column {
-		flex-basis: auto !important;
-		width: 100%;
-	}
-
-	.hp-wapuu-hero__copy {
-		max-width: 100%;
-	}
-
-	.hp-wapuu-hero__title {
-		margin-inline: auto;
-		font-size: clamp(2.1rem, 9vw, 2.7rem);
-	}
-
-	.hp-wapuu-hero__text {
-		max-width: 38ch;
-		margin-inline: auto;
-		overflow-wrap: anywhere;
-	}
-
-	.hp-wapuu-hero__signals {
-		display: flex !important;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: var(--hp-gap-sm);
-		width: 100%;
-	}
-
-	.hp-wapuu-hero__signals .hp-chip {
-		width: auto;
-	}
-
-	.hp-wapuu-hero__cta {
-		flex-direction: column;
-		align-items: stretch;
-		width: 100%;
-		max-width: 19rem;
-		margin-inline: auto;
-	}
-
-	.hp-wapuu-hero__cta .wp-block-button,
-	.hp-wapuu-hero__cta .wp-block-button__link {
-		width: 100%;
-	}
-
-	.hp-wapuu-hero__cta .wp-block-button__link {
-		text-align: center;
-	}
-
-	/* Wapuu rides ABOVE the copy on mobile. */
 	.hp-wapuu-hero__art {
 		order: -1;
-		justify-content: center;
 	}
+}
 
-	/* Contained halo behind the small medallion (sized to the figure, not the
-	   full-width column, so it never overflows into the copy). */
-	.hp-wapuu-hero__star {
-		display: block;
-		width: 15rem;
-		height: 15rem;
-	}
-
-	.hp-wapuu-hero__figure {
-		width: 13rem;
-		max-width: 62vw;
-		margin-inline: auto;
-	}
-
-	.hp-wapuu-hero__figure img {
-		width: 100%;
-		max-width: 100%;
-		height: auto;
+@media (max-width: 781px) {
+	.hp-wapuu-hero-wrap::before {
+		/* Keep the existing mobile LCP safeguard; the parchment wash remains. */
+		display: none;
 	}
 }
 
@@ -1073,6 +996,11 @@ header.wp-block-template-part {
 	max-width: none;
 	margin: 0;
 	pointer-events: none;
+}
+.hp-footer__backdrop::before {
+	content: "";
+	position: absolute;
+	inset: 0;
 	background: var(--hp-footer-backdrop-url) center / cover no-repeat;
 	opacity: 0.22;
 }
@@ -1953,7 +1881,40 @@ samp {
 }
 
 .hp-front-template > .wp-block-post-content {
-	margin-top: 0;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: var(--wp--custom--container--wide);
+	margin: 0 auto;
+	padding: 0 var(--wp--preset--spacing--6);
+}
+
+/* Home's paired actions use the prototype's open button row. Other pages
+   retain the framed rail. The native Buttons block still owns wrapping. */
+.hp-front-template .hp-action-rail {
+	width: auto;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--3);
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: none;
+	box-shadow: none;
+}
+
+.hp-front-template .hp-action-rail .wp-block-button,
+.hp-front-template .hp-action-rail .wp-block-button__link {
+	width: auto;
+}
+
+.hp-front-template .hp-action-rail .wp-block-button__link {
+	min-height: var(--hp-touch-min);
+}
+
+.hp-front-template .hp-wapuu-hero__signals {
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--wp--preset--spacing--3);
 }
 
 .hp-template-hero {
@@ -1994,38 +1955,116 @@ samp {
 .hp-front-template__rings {
 	box-sizing: border-box;
 	width: 100%;
-	max-width: var(--wp--style--global--wide-size, 72rem);
-	margin-inline: auto;
-	padding-inline: var(--wp--preset--spacing--5);
-	border-top: 1px solid var(--wp--custom--border--hair);
+	max-width: var(--wp--custom--container--wide);
+	margin: 0 auto;
+	padding: var(--wp--preset--spacing--9) var(--wp--preset--spacing--6) 0;
+}
+
+.hp-front-template__rings .hp-template-hero__kicker {
+	font-size: var(--wp--preset--font-size--2-xs);
+	color: var(--wp--custom--text--muted);
+}
+
+.hp-front-template__rings .hp-template-hero__title {
+	margin: var(--wp--preset--spacing--2) 0 var(--wp--preset--spacing--3);
+}
+
+.hp-front-template__rings .hp-template-hero__lead {
+	max-width: var(--wp--custom--measure--prose);
+	margin: 0 0 var(--wp--preset--spacing--2);
+	font-size: var(--wp--preset--font-size--md);
 }
 
 .hp-front-template__rings .hp-ring-framework {
-	margin-top: var(--wp--preset--spacing--6);
+	margin: var(--wp--preset--spacing--6) 0 0;
 }
 
-.hp-front-template__cta {
+.hp-front-template__rings .hp-ring-grid {
+	margin: 0;
+}
+
+.hp-front-template__rings .hp-template-hero__lead a {
+	color: var(--hp-artifact);
+}
+
+.hp-front-template__rings .hp-ring-card__description {
+	font-size: var(--wp--preset--font-size--base);
+}
+
+.hp-front-template__rings .hp-ring-card__cta {
+	padding-top: 0;
+	border-top: 0;
+	letter-spacing: 0.08em;
+}
+
+.hp-front-template__rings .hp-ring-card__cta a {
+	display: inline-flex;
+	gap: 0.4em;
+	border-bottom: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+}
+
+@media (max-width: 600px) {
+	.hp-front-template__rings .hp-ring-card__description {
+		font-size: var(--wp--preset--font-size--sm);
+	}
+}
+
+@media (min-width: 901px) {
+	.hp-front-template__rings .hp-ring-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+
+.hp-front-template__work {
 	box-sizing: border-box;
+	padding-top: var(--wp--preset--spacing--10);
 }
 
-.hp-front-template__cta > * {
-	margin-block-start: 0;
+.hp-front-template__work-title {
+	margin: 0 0 var(--wp--preset--spacing--5);
+	font-size: var(--wp--preset--font-size--3-xl);
+	font-weight: var(--wp--custom--weight--medium);
+	line-height: var(--wp--custom--leading--snug);
+}
+
+.hp-front-template__work .hp-work {
+	margin: 0;
+	padding: 0;
+	background: var(--wp--custom--surface--card);
+}
+
+.hp-front-template__work .hp-work__title {
+	font-family: var(--hp-font-body);
+}
+
+.hp-front-template__work .hp-work__footer {
+	margin: var(--wp--preset--spacing--4) 0 0;
+}
+
+.hp-front-template__commission {
+	margin-block: 0;
+	padding-block: var(--wp--preset--spacing--9) var(--wp--preset--spacing--10);
+}
+
+.hp-front-template__cta.hp-action-panel {
+	box-sizing: border-box;
+	padding: var(--wp--preset--spacing--5);
 }
 
 .hp-front-template__cta-kicker {
 	margin: 0;
+	padding-right: var(--wp--preset--spacing--8);
 	font-family: var(--hp-font-label);
-	font-size: var(--wp--preset--font-size--xs);
+	font-size: var(--wp--preset--font-size--2-xs);
 	letter-spacing: var(--wp--custom--tracking--caps);
 	text-transform: uppercase;
 	color: var(--wp--custom--text--accent);
 }
 
 .hp-front-template__cta-title {
-	max-width: 16ch;
-	margin: var(--wp--preset--spacing--3) 0 0;
+	margin: var(--wp--preset--spacing--3) 0 var(--wp--preset--spacing--4);
 	font-family: var(--hp-font-display);
-	font-size: clamp(1.9rem, 1.25rem + 2vw, 3rem);
+	font-size: var(--wp--preset--font-size--2-xl);
 	font-weight: var(--wp--custom--weight--medium);
 	letter-spacing: var(--wp--custom--tracking--tight);
 	line-height: var(--wp--custom--leading--snug);
@@ -2035,38 +2074,19 @@ samp {
 
 .hp-front-template__cta-lead {
 	max-width: var(--wp--custom--measure--narrow);
-	margin: var(--wp--preset--spacing--4) 0 0;
-	font-size: var(--wp--preset--font-size--lg);
+	margin: 0 0 var(--wp--preset--spacing--5);
+	font-size: var(--wp--preset--font-size--md);
 	line-height: var(--wp--custom--leading--relaxed);
-	color: var(--wp--custom--text--muted);
+	color: var(--wp--custom--text--body);
 }
 
 .hp-front-template__cta-actions {
-	margin-top: var(--wp--preset--spacing--4);
+	margin-top: var(--wp--preset--spacing--5);
 	align-items: center;
 }
 
 .hp-front-template__cta-actions .wp-block-button {
 	margin: 0;
-}
-
-@media (min-width: 56rem) {
-	.hp-front-template > .wp-block-post-content > .hp-front-template__rings {
-		--hp-front-wide: min(
-			var(--wp--style--global--wide-size, 72rem),
-			100vw - 2 * var(--wp--style--root--padding-left, 1rem)
-		);
-		width: var(--hp-front-wide);
-		max-width: none;
-		margin-inline: calc(50% - var(--hp-front-wide) / 2) !important;
-		box-sizing: border-box;
-	}
-}
-
-@media (max-width: 600px) {
-	.hp-front-template__cta-actions {
-		justify-content: flex-start;
-	}
 }
 
 
@@ -3269,7 +3289,7 @@ body.search .wp-block-post-date {
 	padding: clamp(1rem, 3vw, 2rem);
 	background: var(--wp--custom--surface--card);
 	border: 1px solid var(--wp--custom--border--hair);
-	border-top: 4px solid var(--wp--preset--color--gold-500);
+	border-top-color: var(--wp--preset--color--gold-500);
 	border-radius: var(--hp-radius-frame);
 	box-shadow: var(--hp-shadow-panel);
 }

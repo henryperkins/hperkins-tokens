@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.60
+Stable tag: 0.3.61
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -162,8 +162,8 @@ as a selectable "Case study" template in theme.json; the others map by the
 WordPress template hierarchy):
 
 * front-page.html — the portfolio landing shell; renders the theme-owned Wapuu
-  hero, then the stored Home page body via `wp:post-content`, then the
-  theme-owned Three Rings framework. The current live middle section is
+  hero and Three Rings framework, then the stored Work ledger and closing
+  panel via `wp:post-content`. The database-owned Home body is
   versioned at `content/page-snapshots/front-page.html`.
 * home.html — the journal index at /essays/: masthead, category filter, three
   featured essays (query ID 10) composed as a lead beside two stacked
@@ -217,8 +217,8 @@ Method and Evidence routes are DB-owned page bodies. The WordPress database
 body is canonical for visitor-facing content; each committed HTML snapshot is
 an automatically verified mirror, not another authoring source. The public
 front page is hybrid: `front-page.html` keeps
-the Wapuu hero and Three Rings framework theme-owned, while the middle Home
-section remains DB-owned and tracked at
+the Wapuu hero and Three Rings framework theme-owned, while the Work ledger and closing
+panel remain DB-owned and tracked at
 `content/page-snapshots/front-page.html`. The published Flavor Agent demo route
 (`/work/flavor-agent/demo/`) likewise keeps its iframe embed and explanatory
 copy in the database; because it inherits the generic page shell, its tracked
@@ -392,6 +392,19 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.61 =
+* Aligned the full Home composition with the Imladris prototype: hero, Rings,
+  compact Work ledger, and a left-aligned closing panel with Contact and
+  résumé actions. All sections share the existing wide column and gutters;
+  the hero stacks at 900px with correctly sized responsive artwork.
+* Removed Home's saved row-spacing overrides, restored open button rows,
+  and corrected the footer scrim so it is independent of image opacity.
+  Current factual copy, Council navigation, accessible colors, and mobile
+  asset safeguards remain. Home body and saved template/footer overrides
+  require separate publication from theme files.
+* Reduced the cart/checkout panel's gold top border to the existing 1px
+  hairline while preserving its rounded corners and other styling.
 
 = 0.3.60 =
 * Aligned /contact/ with the Imladris Contact template. The hero and the

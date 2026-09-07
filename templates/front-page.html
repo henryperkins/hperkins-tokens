@@ -3,10 +3,8 @@
 <!-- wp:group {"tagName":"main","align":"full","className":"hp-front-template","style":{"spacing":{"margin":{"top":"0"}}},"layout":{"type":"default"}} -->
 <main class="wp-block-group alignfull hp-front-template" style="margin-top:0"><!-- wp:pattern {"slug":"hperkins-tokens/wapuu-home-hero"} /-->
 
-<!-- wp:post-content {"layout":{"type":"constrained"}} /-->
-
-<!-- wp:group {"align":"full","className":"hp-template-hero hp-front-template__rings","layout":{"type":"constrained"}} -->
-<div class="wp-block-group alignfull hp-template-hero hp-front-template__rings"><!-- wp:group {"align":"wide","className":"hp-template-hero__copy","layout":{"type":"default"}} -->
+<!-- wp:group {"tagName":"section","anchor":"framework","align":"wide","className":"hp-template-hero hp-front-template__rings","layout":{"type":"default"}} -->
+<section id="framework" class="wp-block-group alignwide hp-template-hero hp-front-template__rings"><!-- wp:group {"align":"wide","className":"hp-template-hero__copy","layout":{"type":"default"}} -->
 <div class="wp-block-group alignwide hp-template-hero__copy"><!-- wp:paragraph {"className":"hp-template-hero__kicker"} -->
 <p class="hp-template-hero__kicker">Three Rings framework</p>
 <!-- /wp:paragraph -->
@@ -24,8 +22,10 @@
 <!-- /wp:paragraph --></div>
 <!-- /wp:group -->
 
-<!-- wp:pattern {"slug":"hperkins-tokens/imladris-ring-card"} /--></div>
-<!-- /wp:group --></main>
+<!-- wp:pattern {"slug":"hperkins-tokens/imladris-ring-card"} /--></section>
+<!-- /wp:group -->
+
+<!-- wp:post-content {"layout":{"type":"constrained"}} /--></main>
 <!-- /wp:group -->
 
 <!-- wp:template-part {"slug":"footer"} /-->

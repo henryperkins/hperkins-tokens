@@ -300,11 +300,10 @@ assert(
 
 // --- Responsive candidates -------------------------------------------------
 // Candidate widths come from the layout rules, not from a measured display
-// size. The hero figure is 13rem (208px) under 781px and min(100%, 27.5rem)
-// (440px) above it, so 448w serves desktop at 1x and mobile at 2x — both of
-// which fetch the 640w file today. The ring grid is three ~365px columns above
-// 920px and one ~92vw column below, so 768w serves desktop at 2x and mobile up
-// to roughly 2x. A 600w candidate would have won none of those cases.
+// size. Home uses the full mobile copy column and caps the art at 440px;
+// both 448w and 640w sources remain available for the browser's density choice.
+// The shared ring grid uses three columns above 920px (Home: 900px), and
+// one column below; its 768w source avoids the full 1100w image on phones.
 // The Digest event photograph spans the alignwide plate — its figure margins
 // cancel the plate padding — so it is calc(100vw - 4rem) up to a 1216px
 // viewport and 72rem above it. A phone lays it out near 326px and takes 768w at
@@ -333,8 +332,8 @@ assert(
 	'Wapuu hero WebP source needs a 448w/640w srcset.'
 );
 assert(
-	heroPattern.includes( 'sizes="(max-width: 781px) 13rem, 27.5rem"' ),
-	'Wapuu hero sizes must match .hp-wapuu-hero__figure (13rem mobile, 27.5rem desktop).'
+	heroPattern.includes( 'sizes="(max-width: 504px) calc(100vw - 4rem), (max-width: 900px) 27.5rem, (max-width: 1152px) calc((100vw - 9rem) * 0.45), 27.5rem"' ),
+	'Wapuu hero sizes must follow the mobile gutter, 900px grid transition, and 440px cap.'
 );
 assert(
 	( ringPattern.match( /srcset="[^"]*768w[^"]*1100w/g ) || [] ).length >= 3,

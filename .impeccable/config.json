@@ -17,6 +17,7 @@
         "engine": "html"
       }
     ],
+    "ignoreRules": [],
     "ignoreValues": [
       {
         "rule": "broken-image",
@@ -35,6 +36,51 @@
         ],
         "createdAt": "2026-09-07T01:25:14.164Z",
         "reason": "Codex review: both img matches are JavaScript regular expressions validating real portrait sources and alt text, not rendered elements."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "2.6rem",
+        "files": [
+          "style.css"
+        ],
+        "createdAt": "2026-09-07T01:27:24.343Z",
+        "reason": "The full Imladris Home prototype explicitly specifies clamp(2.6rem, 4.6vw, 4rem) for the hero. Preserve that scoped display value while body and component typography use theme tokens."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(16,16,16)",
+        "files": [
+          "style.css"
+        ],
+        "createdAt": "2026-09-07T01:27:24.502Z",
+        "reason": "Codex source review: this value occurs only in a CSS comment documenting the old browser focus outline, not in a declaration."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "8px",
+        "files": [
+          "style.css"
+        ],
+        "createdAt": "2026-09-07T01:27:24.558Z",
+        "reason": "CLAUDE.md Council header typography-floor exemption explicitly pins the Digest cue at 8px; verify-header.js enforces it."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "9px",
+        "files": [
+          "style.css"
+        ],
+        "createdAt": "2026-09-07T01:27:24.611Z",
+        "reason": "CLAUDE.md Council header typography-floor exemption explicitly pins the status and eyebrow at 9px; verify-header.js enforces them."
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "2.75rem",
+        "files": [
+          "style.css"
+        ],
+        "createdAt": "2026-09-07T01:31:56.937Z",
+        "reason": "Codex triage: retain the existing commerce heading clamp introduced in 0bf1e2c6, consistent with the user deprioritizing ecommerce work. This follow-up changes only the panel border; it does not redesign commerce typography."
       }
     ]
   }

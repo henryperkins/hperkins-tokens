@@ -77,7 +77,7 @@ const DIGEST_ACTION_COUNTS = {
 };
 
 const LIVE_PAGES = [
-	{ route: '/', railCount: 2, panelCount: 1 },
+	{ route: '/', railCount: 2, panelCount: 1, openRows: true },
 	{
 		route: '/about/',
 		railCount: ABOUT_ACTION_CONTRACT.railCount,
@@ -344,10 +344,11 @@ async function inspectPage( cdp, page, viewport ) {
 			mobile: viewport.mobile,
 		}, sessionId );
 
-		const loaded = cdp.once( 'Page.loadEventFired', sessionId );
 		const url = new URL( page.route, ORIGIN ).href;
-		await cdp.send( 'Page.navigate', { url }, sessionId );
-		await loaded;
+		await Promise.all( [
+			cdp.once( 'Page.loadEventFired', sessionId, 30000 ),
+			cdp.send( 'Page.navigate', { url }, sessionId ),
+		] );
 		await cdp.send( 'Runtime.evaluate', {
 			expression: 'document.fonts && document.fonts.ready',
 			awaitPromise: true,
@@ -542,12 +543,17 @@ async function verifyLiveContracts() {
 				assert( result.compactLeakCount === 0, `${ result.url } applied the prominent system to header Subscribe.` );
 
 				for ( const rail of result.rails ) {
-					assert( rail.borderTopWidth >= 1, `${ result.url } action rail has no hairline border.` );
-					assert(
-						rail.backgroundImage !== 'none' || rail.backgroundColor !== 'rgba(0, 0, 0, 0)',
-						`${ result.url } action rail has no owned surface.`
-					);
-					assert( rail.boxShadow !== 'none', `${ result.url } action rail has no shadow.` );
+					if ( page.openRows ) {
+						assert( rail.borderTopWidth === 0 && rail.boxShadow === 'none', 'Home actions must use the prototype open row.' );
+						assert( rail.links.length === 2, 'Both Home action rows must have two destinations.' );
+					} else {
+						assert( rail.borderTopWidth >= 1, `${ result.url } action rail has no hairline border.` );
+						assert(
+							rail.backgroundImage !== 'none' || rail.backgroundColor !== 'rgba(0, 0, 0, 0)',
+							`${ result.url } action rail has no owned surface.`
+						);
+						assert( rail.boxShadow !== 'none', `${ result.url } action rail has no shadow.` );
+					}
 					assert( rail.links.length >= 1, `${ result.url } action rail contains no links.` );
 					for ( const link of rail.links ) {
 						assert(
@@ -556,7 +562,7 @@ async function verifyLiveContracts() {
 						);
 					}
 
-					if ( viewport.width <= 600 && rail.links.length > 1 ) {
+					if ( ! page.openRows && viewport.width <= 600 && rail.links.length > 1 ) {
 						for ( let index = 0; index < rail.links.length; index++ ) {
 							const link = rail.links[ index ];
 							assert(
