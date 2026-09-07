@@ -90,6 +90,24 @@
         ],
         "createdAt": "2026-09-07T02:29:38.225Z",
         "reason": "Codex review: the only match is the literal img tag in the PHPDoc description of wp_content_img_tag at line 98; it is not rendered HTML."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(255, 255, 255)",
+        "files": [
+          "scripts/lib/about-page-rendered-probe.test.js"
+        ],
+        "createdAt": "2026-09-07T02:41:46.825Z",
+        "reason": "Synthetic CDP hover-test fixture; this color is never rendered by the theme."
+      },
+      {
+        "rule": "design-system-color",
+        "value": "rgb(0, 0, 0)",
+        "files": [
+          "scripts/lib/about-page-rendered-probe.test.js"
+        ],
+        "createdAt": "2026-09-07T02:41:46.845Z",
+        "reason": "Synthetic CDP hover-test fixture; this color is never rendered by the theme."
       }
     ]
   }

@@ -86,7 +86,7 @@ component CSS to refresh either — the theme's `style.css` is a superset.
 | Design (project) | Theme artifact(s) | Wiring |
 |---|---|---|
 | `templates/front-page` | `content/page-snapshots/front-page.html`, `templates/front-page.html`, `patterns/wapuu-home-hero.php` | Published **Home** page (slug `home`, ID 36) in hybrid mode: theme-owned Wapuu hero + Three Rings shell, DB-owned Work ledger and closing panel |
-| `templates/about` | `content/page-drafts/about.html` (the only human-authored About candidate), `content/page-snapshots/about.html` (accepted snapshot, export-only mirror), `patterns/about-resume.php` (portrait-only thin accepted-snapshot adapter — no page markup of its own), `templates/page-about.html`, About page layer in `assets/imladris-pages.css` | Published **About + Resume** page (slug `about`, ID 6) in DB-owned page-body mode. The proof-first candidate in `content/page-drafts/about.html` is applied locally only via the explicit `--page=about` draft command and is not the deployed body until it passes review and controlled promotion |
+| `templates/about` | `content/page-drafts/about.html` (the only human-authored About candidate), `content/page-snapshots/about.html` (accepted snapshot, export-only mirror), `patterns/about-resume.php` (portrait-only thin accepted-snapshot adapter — no page markup of its own), `templates/page-about.html`, About page layer in `assets/imladris-pages.css` | Published **About + Resume** page (slug `about`, ID 6) in DB-owned page-body mode. The letterhead, timeline, numbered evidence layout and backdrop showcase were promoted on 2026-09-07 in 0.3.62. The reviewed draft, accepted snapshot and production body match; the obsolete saved 44rem template override was removed. Future draft application still requires explicit `--page=about`; a new candidate is not the deployed body until it passes review and controlled promotion |
 | `templates/contact` | `patterns/contact.php`, `templates/page-contact.html`, the Contact section of `assets/imladris-pages.css`, `.hp-form-confirm*` in `style.css` | Published **Contact** page (slug `contact`, ID 233) in repository-owned mode — the body comes from the pattern, not the database, so this route is outside the page-snapshot contract. Aligned to the design template on 2026-08-18 (section below) |
 | `templates/ai-enablement` | `content/page-snapshots/ai-enablement.html`, `templates/page-ai-enablement.html`, `patterns/ai-enablement.php` (thin accepted-snapshot adapter — re-derives only the six Three Rings image URLs, no essay markup of its own) | Published **AI Enablement** page (slug `ai-enablement`, ID 175) in DB-owned page-body mode; the pattern re-emits the accepted snapshot, so re-inserting it cannot revert the route to an older draft (`scripts/verify-ai-enablement-source.js`) |
 | `templates/work-index` | `content/page-snapshots/work.html`, `templates/page-work.html` | Published **Work** page (slug `work`, ID 13) in DB-owned page-body mode; `patterns/work-index.php` remains a reusable seed/reference copy |
@@ -920,12 +920,34 @@ WordPress render. No preview runtime is shipped in the theme.
 The rendered verifier now measures the backdrop's coverage and wash; it
 failed on the original framed layout before implementation. Responsive
 image sizes cover the full card up to 32rem. The local About template override
-was backed up and trashed, restoring the canonical theme shell. Publication
-must update only About page 6, remove its saved template override, freshly
-read the saved body, and export the accepted snapshot with `--expect-draft`.
+was backed up and trashed, restoring the canonical theme shell. Production
+page 6 was then updated and its saved template override removed. A fresh
+connector read matched the reviewed draft exactly; the guarded `--expect-draft`
+export refreshed only the About snapshot. The public content-ownership gate
+confirmed normalized SHA-256
+`465cf02cd67ff172bf9211c5ab6cac8865f279235953b469ed53a8ca8a8b5f90`.
 Backups, visual comparisons and checks live under `.design-pull/about-publication/`.
 
 Restoring that shell also exposed inherited global padding on `post-content`:
 its content-box 100% width added another 64px, shifting the page and overflowing
 the viewport. The v3 shell now owns its spacing and uses border-box sizing;
 obsolete outer padding no longer compounds the hero and closing spacing.
+
+Theme runtime commit `a7f995b9b6329574a4310c2c671a6e166e32939d` reached
+production: public CSS, the About template and Tableau asset matched the
+committed bytes. GitHub Actions did not run because of the account billing
+lock; deployment is established by those public reads and production runtime
+checks, not by the failed workflow status.
+
+Production verification passed: About rendering at five primary widths and
+six breakpoint boundaries, timeline keyboard and rapid-selection behavior,
+filters, navigation away/back, no-JS fallback, action layouts and résumé
+GET/HEAD. The exact reported `?v=0b3b97fa6688` URL showed the letterhead and
+backdrops with no overflow at 1440, 390 and 320px, and all five content images
+loaded. The library suite passes 329/329 after updating the accepted-fixture
+expectations to the promoted single résumé CTA. The missing-image cue retains
+a reserved top row so it cannot overlap the DJ Lee heading.
+
+Hook triage persisted narrow false-positive ignores for the PHPDoc img tag
+and synthetic black/white CDP test-fixture colors; no product palette was
+changed by these ignores.

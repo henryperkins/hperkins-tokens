@@ -141,7 +141,7 @@ test( 'derives rendered copy from the accepted About body', () => {
 
 	assert.equal( expectations.version, 'v3' );
 	assert.equal( expectations.headings[ 0 ].text, 'Henry Perkins' );
-	assert.deepEqual( expectations.heroActionLabels, [ 'Download résumé (PDF)', 'Get in touch' ] );
+	assert.deepEqual( expectations.heroActionLabels, [ 'Download résumé (PDF)' ] );
 } );
 
 test( 'v3 heading expectations follow the reversible 64rem Education handoff', () => {
@@ -188,11 +188,11 @@ test( 'derives the proof timeline and its collapsed-fold word budget from the se
 	assert.equal( expectations.narrowRenderedWordCount, expectations.narrowSourceWordCount - collapsed );
 } );
 
-test( 'requires the v3 hero contact action to use one core Button wrapper', () => {
+test( 'requires the v3 hero resume action to use one core Button wrapper', () => {
 	const source = fs.readFileSync( acceptedSnapshotPath, 'utf8' );
 	const plainAnchor = source.replace(
-		'<div class="wp-block-button is-style-secondary"><a class="wp-block-button__link wp-element-button" href="/contact/">Get in touch</a></div>',
-		'<div class="not-a-button is-style-secondary"><a href="/contact/">Get in touch</a></div>'
+		'<div class="wp-block-button"><a class="wp-block-button__link wp-element-button" href="/one-page-resume/">Download résumé (PDF)</a></div>',
+		'<div class="not-a-button"><a href="/one-page-resume/">Download résumé (PDF)</a></div>'
 	);
 	assert.notEqual( plainAnchor, source, 'plain-anchor mutation must apply' );
 	assert.throws(
@@ -214,8 +214,7 @@ test( 'derives the v3 rail, showcase, portrait, and action rails from the select
 	assert.equal( expectations.projects[ 0 ].title, 'Flavor Agent' );
 	assert.equal( expectations.projects.at( -1 ).title, 'Tableau' );
 	assert.equal( expectations.portraitAlt, 'Henry Perkins' );
-	// The candidate's hero argues once; the accepted body above still carries the
-	// retired second action, and the probe derives each from the body it reads.
+	// The promoted letterhead carries one hero action in both maintained bodies.
 	assert.deepEqual( expectations.heroActionLabels, [ 'Download résumé (PDF)' ] );
 	assert.deepEqual( expectations.closingActionLabels, [ 'Start a conversation', 'Download résumé (PDF)' ] );
 } );

@@ -7490,6 +7490,10 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	z-index: 1;
 }
 
+.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card:has(.is-need) {
+	padding-block-start: var(--wp--preset--spacing--12);
+}
+
 .hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card .hp-about-showcase-card__shot {
 	position: absolute;
 	inset: 0;
@@ -7544,6 +7548,10 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 @media (min-width: 601px) {
 	.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card {
 		min-height: 14rem;
+	}
+
+	.hp-about-resume-v3 .has-backdrop-visuals .hp-about-showcase-card:has(.is-need) {
+		padding-block-start: var(--wp--preset--spacing--9);
 	}
 }
 
