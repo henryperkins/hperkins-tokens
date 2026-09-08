@@ -5,16 +5,28 @@
 
 ## Provenance
 
+The canonical project since 2026-07-14. The table below named the **ancestor**
+until 2026-08-24, which had become a false citation: that project is now titled
+"Old." in the account, while the 2026-07-14 entry in this file already declared
+the merged project canonical and told future pulls to target it. A provenance
+header naming a retired project is the class of unverifiable claim this system
+exists to prevent, so it now names the project actually in use.
+
 | | |
 |---|---|
 | Project | Imladris Design System |
-| UUID | `89e0d236-6451-44a0-8280-e4b7917360ab` |
-| URL | https://claude.ai/design/p/89e0d236-6451-44a0-8280-e4b7917360ab |
+| UUID | `b844cbab-6656-458c-91f4-81f1762117a5` |
+| URL | https://claude.ai/design/p/b844cbab-6656-458c-91f4-81f1762117a5 |
 | Type | `PROJECT_TYPE_DESIGN_SYSTEM` |
 | Owner | Henry Perkins |
 | Classification | pushed-hybrid — real `.jsx` source + compiled `_ds_bundle.js` |
-| Bundle global | `window.ImladrisDesignSystem_89e0d2` |
-| Pulled | 2026-06-20 (read-only) |
+| Bundle global | `window.ImladrisDesignSystem_b844cb` |
+| Direction | the project mirrors this theme read-only at `_source/theme/`; the theme is the arbiter |
+
+**The ancestor**, documented by the dated sections from 2026-06-20 to
+2026-07-14 below, was UUID `89e0d236-6451-44a0-8280-e4b7917360ab`, bundle global
+`window.ImladrisDesignSystem_89e0d2`, pulled read-only on 2026-06-20. Those
+entries are kept as authored; read them against that project, not this one.
 
 ## Impeccable artifact authority
 
@@ -951,3 +963,81 @@ a reserved top row so it cannot overlap the DJ Lee heading.
 Hook triage persisted narrow false-positive ignores for the PHPDoc img tag
 and synthetic black/white CDP test-fixture colors; no product palette was
 changed by these ignores.
+---
+
+## 2026-08-24 — touch-target pass migrated from the DS (`components/**` → 0.3.63)
+
+The design system's 2026-08-24 entry found five component families that were
+desktop-only on tap size — `Button`, `SiteHeader`'s wordmark link,
+`SiteFooter`'s colophon links, and the inline links in `ArtifactRow` and
+`ProofBar` — and fixed them **by viewport rather than by adding another
+scope**. This pass migrates that decision. Nothing changes above 781px, in the
+theme or in the project.
+
+- **The mechanism is the point.** This theme already applied a 44px floor, by
+  composition: `.wp-block-post-content`, `.hp-action-rail`,
+  `.hp-form-confirm__again`, the subscribe and search submits, and the
+  disclosure summary. That is the right rule at desktop and it is why
+  `.wp-block-button__link` carries no `min-block-size` of its own — the rail's
+  own comment says it exists to opt actions in "without changing the core
+  Button primitive," and the DS reached the same ruling on 2026-08-22. What
+  the scoped approach cannot reach is a button rendered *outside* those
+  contexts: a hero CTA, 404, plugin UI. Below 782px every button is a thumb
+  target wherever it renders, so the floor becomes a viewport rule and the
+  primitive stays 40px at desktop. `is-style-link` is excluded — it is a text
+  link, and padding it to 44px moves the line it sits in.
+- **Three of the five needed a different mechanism than the DS shipped**, and
+  the reason is the same in each case: all three carry a visible bottom rule,
+  and both of the DS's mechanisms move it. Vertical padding on an inline
+  element does not raise the line box — which is what the DS wanted — but it
+  does carry the border down with it; a 44px `inline-flex` box draws the rule
+  on the box's bottom edge, ~14px under the text. Measured on the local
+  install before choosing:
+
+  | Target | DS mechanism | Migrated as | Measured |
+  |---|---|---|---|
+  | `.hp-artifact__link a` | `padding-block: 14px` | abs-positioned `::before` hit area | 20.7px line box, **47.7px** target, no click theft |
+  | `.hp-chip a` | `padding-block: 14px` | floor on the **chip**, link fills it | chip 35.5 → **45.3px**, target 45.3px |
+  | `.hp-footer__colophon a` | 44px `inline-flex` | `line-height` on the paragraph | 20.15 → **27.95px** per line |
+
+- **`::before`, not `::after`, on artifact links** — `.is-download a::after`
+  already owns the download arrow.
+- **The chip could not take a grown hit area at all.** At phone width a chip is
+  a full-width block standing 35.5px with **6.5px between rows**, so a hit area
+  grown on the link by either mechanism spills onto the neighbouring chip's
+  link. Two overlapping targets mis-fire worse than one small one. The floor
+  went on the chip instead and the whole chip became the target, which is what
+  a chip means: it *is* a proof reference, and its link is the artifact it
+  points at. `padding-block` is derived as
+  `calc((var(--hp-touch-min) - 1.4em) / 2)` so the floor and the chip's own 1.4
+  leading cannot drift apart, and it pads rather than sets a min-height so a
+  single-line chip centres by construction. Display stays `block`: going
+  `flex` makes the dot and the label separate flex items and rewraps the label
+  onto a second line (measured — chips grew to 61.3px). Anatomy is untouched —
+  the 7px rule, 2px radius and inline padding all hold.
+- **The colophon links are the one case where the floor is the wrong target.**
+  They are inline links inside a sentence, which both target-size rules exempt,
+  and "How this site was built →" wraps — so an absolutely positioned hit area
+  resolves against the union of both line fragments and becomes a 295px-wide
+  overlay covering the dead space between them, the sibling Privacy link, and
+  the plain colophon text. Line-height grows every line's target equally, moves
+  no rule and traps no click. It reaches the 24px minimum, not 44px; the inline
+  exception is why that is the right stopping point.
+- **The Council wordmark took the DS mechanism unchanged** — it is already a
+  bare `<a class="hp-council-brand">` with no bottom rule, its content stands
+  22px, and the compact bar is 62px with centred items, so the floor fits
+  inside the bar. Verified: wordmark 44px, bar still 62px.
+
+**Verified.** `verify-header.js` full rendered pass across all eight widths
+(1440/1280/1024/960/782/781/390/320), plus `verify-performance-assets`,
+`verify-typography --source-only`, `verify-style-token-usage`,
+`verify-journal-templates`, `verify-impeccable-artifacts` and
+`verify-content-ownership-docs`. Desktop re-measured at 1440px and unchanged:
+chip overlay `none`, wordmark `min-block-size: auto`, colophon line-height
+20.15px, chip padding 8px. No horizontal overflow at 390px.
+
+**Reported back to the project, not fixed here.** The DS ships the padding and
+`inline-flex` mechanisms on components that carry a bottom rule, so
+`ArtifactRow`, `ProofBar` and `SiteFooter` have the detached-rule defect in the
+project's own `.jsx`; `SiteFooter`'s is additionally a click trap on the
+wrapping colophon link. The measurements above are the evidence.

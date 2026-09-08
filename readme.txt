@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.62
+Stable tag: 0.3.63
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -392,6 +392,31 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.63 =
+* Adopted the Imladris design system's 2026-08-24 touch-target pass. The
+  system found five component families that were desktop-only on tap size and
+  fixed them by viewport rather than by adding another scope; this release
+  migrates that decision into the theme. Nothing changes above 781px.
+* Buttons take the 44px floor at phone widths wherever they render. The floor
+  was previously applied by composition — .wp-block-post-content, the action
+  rail, the confirm button, the subscribe and search submits — which is the
+  right rule at desktop and the reason the core Button primitive stays 40px.
+  It also left every button rendered outside those contexts (hero CTAs, 404,
+  plugin UI) at 40px on a phone. Below 782px the floor is a viewport rule.
+  is-style-link is excluded: it is a text link, and padding it to 44px would
+  move the line it sits in.
+* The Council wordmark takes the floor on a phone. It is a link, and on a
+  phone it is the only route home; its content stands 22px tall. The compact
+  bar is 62px with centred items, so the floor fits inside it and the bar
+  geometry is unchanged.
+* Chip links, artifact links, and the footer colophon links grow their hit
+  area on a phone without moving their line. Each of the three carries a
+  visible bottom rule — the evidence underline is the point of an artifact
+  link — so the area is drawn as a pseudo-element rather than as vertical
+  padding or a 44px inline-flex box, either of which would strand that rule
+  below the text. On artifact links the pseudo-element is ::before, because
+  .is-download owns ::after for its download arrow.
 
 = 0.3.62 =
 * Completed the About / Résumé template migration: letterhead, proof timeline,

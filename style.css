@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.62
+Version: 0.3.63
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -116,6 +116,40 @@ button,
 	color: var(--hp-neutral-900);
 	text-decoration: none;
 	border-bottom: 1px solid var(--hp-neutral-300);
+}
+
+/* Phone: the chip carries the touch floor, not the link inside it. At this
+	 width a chip is a full-width block standing 35.5px tall with 6.5px between
+	 rows, so a hit area grown on the link — by padding or by an overlay —
+	 spills past the chip and lands on the neighbouring chip's link. Two
+	 overlapping targets mis-fire worse than one small one. Raising the chip
+	 instead keeps the rows discrete, and the whole chip becomes the target:
+	 a chip IS a proof reference, and the artifact is what it points at.
+	 Anatomy is unchanged — the 7px rule, 2px radius and inline padding all
+	 hold; only the block padding opens up, and only below 782px. */
+@media (max-width: 781px) {
+	.hp-chip {
+		position: relative;
+		/* Pad to the floor rather than set a min-height: the block padding
+			 centres a single-line chip by construction, where a min-height would
+			 leave the label sitting high in the box. Derived from the floor and
+			 the chip's own 1.4 leading so the two cannot drift apart. Display
+			 stays block — going flex makes the dot and the label separate flex
+			 items and rewraps the label onto a second line. */
+		padding-block: calc((var(--hp-touch-min) - 1.4em) / 2);
+	}
+
+	/* The whole chip is the target: a chip IS a proof reference and its link is
+		 the artifact it points at. inset-block is -1px, not 0 — an absolutely
+		 positioned box resolves inset against the padding box, so a flush 0
+		 stops inside the chip's 1px border and lands at 43.3px, just under the
+		 floor. Inline stays at 0 so the area can never reach past the chip. */
+	.hp-chip a::after {
+		content: "";
+		position: absolute;
+		inset-block: -1px;
+		inset-inline: 0;
+	}
 }
 
 .hp-chip::before {
@@ -1144,6 +1178,24 @@ header.wp-block-template-part {
 	border-bottom-color: var(--hp-gold);
 }
 
+/* Phone: the colophon's links sit on a 13px line and are the footer's only tap
+	 targets, so the line is opened up to carry a usable one. They are inline
+	 links inside a sentence, which is the case both target-size rules exempt —
+	 and the two ways to force a 44px box both break something real here. A
+	 44px inline-flex box draws the gold underline on the box's bottom edge,
+	 stranding the rule ~14px under the text. An absolutely positioned hit area
+	 fails worse: "How this site was built →" wraps, so the containing block is
+	 the union of both line fragments — a 295px-wide overlay covering the dead
+	 space between them, the sibling Privacy link, and the plain colophon text.
+	 Line-height grows every line's target equally, moves no rule, and traps no
+	 click. It reaches the 24px minimum rather than 44px; the exception is why
+	 that is the right stopping point. */
+@media (max-width: 781px) {
+	.hp-footer__colophon {
+		line-height: 2.15;
+	}
+}
+
 /* === design-tokens reference page === */
 .hp-token-swatches {
 	gap: var(--wp--preset--spacing--3);
@@ -1414,6 +1466,23 @@ samp {
 	align-items: center;
 	justify-content: center;
 	min-block-size: var(--hp-touch-min);
+}
+
+/* Phone: the label sets the height everywhere else, but a thumb needs 44px.
+	 The scoped floors — post content, the rail, the confirm button, subscribe,
+	 search — opt page actions in by composition, which is right at desktop and
+	 leaves every button rendered outside those contexts (hero CTAs, 404, plugin
+	 UI) at 40px on a phone. Below 782px a button is a tap target wherever it
+	 renders, so the floor becomes a viewport rule rather than another scope.
+	 The primitive is untouched above 781px, and is-style-link is excluded: it
+	 is a text link, and padding it to 44px would move the line it sits in. */
+@media (max-width: 781px) {
+	.wp-block-button:not(.is-style-link) > .wp-block-button__link {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-block-size: var(--hp-touch-min);
+	}
 }
 
 /* === Prominent actions ===
@@ -2834,6 +2903,10 @@ samp {
 
 	.hp-council-brand {
 		gap: 9px;
+		/* The wordmark is a link, and on a phone it is the only route home.
+			 Its content stands 22px tall; the compact bar is 62px with centred
+			 items, so the floor fits inside the bar without moving it. */
+		min-block-size: var(--hp-touch-min);
 		max-width: calc(100% - var(--hp-touch-min));
 	}
 

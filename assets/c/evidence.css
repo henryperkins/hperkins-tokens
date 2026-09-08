@@ -75,6 +75,23 @@
 	border-bottom-color: var(--hp-action);
 }
 
+/* Phone: an artifact link is the whole point of the register, and it sits on
+	 a 13px mono line. Grow the hit area with a pseudo-element so the evidence
+	 underline stays on the text — vertical padding would carry the border out
+	 of the cell. ::before, because .is-download owns ::after for its arrow. */
+@media (max-width: 781px) {
+	.hp-artifact__link a {
+		position: relative;
+	}
+
+	.hp-artifact__link a::before {
+		content: "";
+		position: absolute;
+		inset-block: -14px;
+		inset-inline: -6px;
+	}
+}
+
 .hp-artifact__link:empty::after {
 	content: "\2014";
 	color: var(--hp-neutral-600);
