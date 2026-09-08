@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.63
+Stable tag: 0.3.64
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -392,6 +392,14 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.64 =
+* Reordered the Home hero source so its stacked reading path is finalist label,
+  thesis, Wapuu, then supporting evidence and actions. The full stacked range
+  through 900px now keeps that thesis-first composition without CSS order.
+* Preserved the desktop 55:45 composition with explicit grid areas, and added
+  responsive verification at the 600/601px boundary, mobile widths, 900/901px,
+  desktop widths, and no-JavaScript renders.
 
 = 0.3.63 =
 * Adopted the Imladris design system's 2026-08-24 touch-target pass. The

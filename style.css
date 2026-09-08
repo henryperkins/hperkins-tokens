@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.63
+Version: 0.3.64
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -857,26 +857,35 @@ header.wp-block-template-part {
 	z-index: 1;
 }
 
-.hp-wapuu-hero.wp-block-columns {
+.hp-wapuu-hero {
 	display: grid;
-	grid-template-columns: 55fr 45fr;
+	grid-template-columns: minmax(0, 55fr) minmax(0, 45fr);
+	grid-template-areas:
+		"eyebrow art"
+		"title art"
+		"copy art";
+	grid-template-rows: auto auto 1fr;
 	box-sizing: border-box;
 	width: 100%;
 	padding-inline: var(--wp--preset--spacing--6);
-	gap: var(--wp--preset--spacing--10);
-	align-items: center;
+	column-gap: var(--wp--preset--spacing--10);
+	row-gap: 0;
+	align-items: start;
 	margin-block: 0;
 }
 
-.hp-wapuu-hero .wp-block-column {
-	min-width: 0;
+.hp-wapuu-hero > * {
+	margin-block-start: 0;
 }
 
 .hp-wapuu-hero__copy {
+	grid-area: copy;
+	min-width: 0;
 	max-width: var(--wp--custom--measure--prose);
 }
 
 .hp-wapuu-hero__eyebrow {
+	grid-area: eyebrow;
 	margin: 0 0 var(--wp--preset--spacing--4);
 	font-family: var(--wp--preset--font-family--label);
 	font-size: var(--wp--preset--font-size--2-xs);
@@ -902,6 +911,7 @@ header.wp-block-template-part {
 }
 
 .hp-wapuu-hero__title {
+	grid-area: title;
 	max-width: 16ch;
 	margin: 0;
 	/* Council hero headline: restrained display scale, medium weight. */
@@ -936,7 +946,10 @@ header.wp-block-template-part {
 
 .hp-wapuu-hero__art {
 	display: flex;
+	grid-area: art;
 	justify-content: center;
+	align-self: center;
+	min-width: 0;
 	position: relative;
 }
 
@@ -989,13 +1002,20 @@ header.wp-block-template-part {
 }
 
 @media (max-width: 900px) {
-	.hp-wapuu-hero.wp-block-columns {
+	.hp-wapuu-hero {
 		grid-template-columns: minmax(0, 1fr);
-		gap: var(--wp--preset--spacing--7);
+		grid-template-areas:
+			"eyebrow"
+			"title"
+			"art"
+			"copy";
+		grid-template-rows: auto;
+		column-gap: 0;
+		row-gap: 0;
 	}
 
 	.hp-wapuu-hero__art {
-		order: -1;
+		margin-top: var(--wp--preset--spacing--5);
 	}
 }
 

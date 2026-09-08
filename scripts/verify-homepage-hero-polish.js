@@ -149,6 +149,7 @@ async function inspectHomepage( cdp, viewport ) {
 	const expression = `(() => {
 		const title = document.querySelector('.hp-wapuu-hero__title');
 		const art = document.querySelector('.hp-wapuu-hero__figure img');
+		const hero = document.querySelector('.hp-wapuu-hero');
 		const style = title ? getComputedStyle(title) : null;
 		const geometry = selector => {
 			const node = document.querySelector(selector);
@@ -156,6 +157,20 @@ async function inspectHomepage( cdp, viewport ) {
 			const r = node.getBoundingClientRect();
 			return { x: r.x, y: r.y, right: r.right, bottom: r.bottom, width: r.width };
 		};
+		const orderedHeroSelectors = [
+			'.hp-wapuu-hero__eyebrow',
+			'.hp-wapuu-hero__title',
+			'.hp-wapuu-hero__art',
+			'.hp-wapuu-hero__text:not(.hp-wapuu-hero__note)',
+			'.hp-wapuu-hero__note',
+			'.hp-wapuu-hero__signals',
+			'.hp-wapuu-hero__cta',
+		];
+		const orderedHeroNodes = orderedHeroSelectors.map(selector => document.querySelector(selector));
+		const sourceOrder = orderedHeroNodes
+			.map((node, index) => ({ node, index }))
+			.sort((a, b) => a.node.compareDocumentPosition(b.node) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1)
+			.map(item => item.index);
 		return {
 			sections: ['.hp-wapuu-hero-wrap', '#framework', '#work', '.hp-front-template__commission'].map(geometry),
 			edges: ['.hp-wapuu-hero__copy', '.hp-template-hero__copy', '.hp-work', '.hp-front-template__cta'].map(geometry),
@@ -164,7 +179,18 @@ async function inspectHomepage( cdp, viewport ) {
 			closingLinks: [...document.querySelectorAll('.hp-front-template__cta-actions a')].map(e => new URL(e.href).pathname),
 			footerLinks: [...document.querySelectorAll('.hp-footer__social a')].map(e => e.textContent.trim()),
 			footerSearch: !!document.querySelector('.hp-footer input[type="search"]'),
-			artBeforeCopy: geometry('.hp-wapuu-hero__figure').bottom <= geometry('.hp-wapuu-hero__copy').y + 1,
+			heroSourceOrder: sourceOrder,
+			heroVisualOrder: orderedHeroSelectors.map(geometry),
+			heroCssOrder: orderedHeroNodes.map(node => Number.parseInt(getComputedStyle(node).order, 10)),
+			heroGridColumns: hero ? getComputedStyle(hero).gridTemplateColumns.split(' ').length : 0,
+			heroButtonTargets: [...document.querySelectorAll('.hp-wapuu-hero__cta a')].map(node => {
+				const r = node.getBoundingClientRect();
+				return { width: r.width, height: r.height };
+			}),
+			heroChipTargets: [...document.querySelectorAll('.hp-wapuu-hero__signals .hp-chip')].map(node => {
+				const r = node.getBoundingClientRect();
+				return { width: r.width, height: r.height };
+			}),
 			titleFound: !! title,
 			artFound: !! art,
 			clientWidth: document.documentElement.clientWidth,
@@ -229,6 +255,9 @@ async function withChrome( callback ) {
 
 function verifyComposition( page, width ) {
 	assert( page.scrollWidth <= page.clientWidth + 1, `Home overflows at ${ width }px.` );
+	assert( page.heroSourceOrder.join( ',' ) === '0,1,2,3,4,5,6', `Home hero source order must be eyebrow, H1, Wapuu, then supporting content at ${ width }px.` );
+	assert( page.heroCssOrder.every( order => order === 0 ), `Home hero must not use CSS order to rewrite its reading sequence at ${ width }px.` );
+	assert( page.heroGridColumns === ( width <= 900 ? 1 : 2 ), `Home hero must use a one-column grid through 900px and two columns above it (${ width }px).` );
 	assert( page.sections.every( Boolean ), `Home is missing a body section at ${ width }px.` );
 	page.sections.forEach( ( section, index ) => {
 		if ( index ) {
@@ -241,7 +270,25 @@ function verifyComposition( page, width ) {
 	assert( page.rowFonts.every( size => size >= 17 ), 'Home ledger descriptions must retain the reading floor.' );
 	assert( page.closingLinks.join( ',' ) === '/contact/,/one-page-resume/', 'Home closing actions must reach Contact and the stable resume route.' );
 	assert( page.footerLinks.length === 4 && page.footerLinks.every( Boolean ) && !page.footerSearch, 'Home must render the labelled footer without the retired search field.' );
-	assert( page.artBeforeCopy === ( width <= 900 ), `Home art must move above the copy at the 900px breakpoint (${ width }px).` );
+	assert(
+		page.heroButtonTargets.every( target => target.width >= 44 && target.height >= 44 ),
+		`Home hero actions must retain 44px targets at ${ width }px.`
+	);
+	if ( width <= 900 ) {
+		page.heroVisualOrder.forEach( ( item, index ) => {
+			if ( index ) {
+				assert( item.y >= page.heroVisualOrder[ index - 1 ].bottom - 1, `Home hero must render eyebrow, H1, Wapuu, then supporting content at ${ width }px.` );
+			}
+		} );
+		if ( width <= 781 ) {
+			assert(
+				page.heroChipTargets.every( target => target.width >= 44 && target.height >= 44 ),
+				`Home hero proof chips must retain 44px touch targets at ${ width }px.`
+			);
+		}
+	} else {
+		assert( page.heroVisualOrder[ 2 ].x >= page.heroVisualOrder[ 1 ].right - 1, `Home Wapuu must occupy the desktop grid's second column at ${ width }px.` );
+	}
 }
 
 async function main() {
@@ -273,13 +320,16 @@ async function main() {
 			`Homepage overflows horizontally at mobile: clientWidth=${ mobile.clientWidth }, scrollWidth=${ mobile.scrollWidth }.`
 		);
 
-		for ( const width of [ 1440, 1024, 921, 920, 901, 900, 782, 781, 600, 390, 320 ] ) {
+		const widths = [ 320, 390, 600, 601, 781, 900, 901, 1024, 1440 ];
+		for ( const width of widths ) {
 			const page = width === 1440 ? desktop : width === 390 ? mobile : await inspectHomepage( cdp, { width, height: 1000 } );
 			verifyComposition( page, width );
 		}
-		const noScript = await inspectHomepage( cdp, { width: 390, height: 1000, noScript: true } );
-		verifyComposition( noScript, 390 );
-		console.log( 'checked Home composition at 11 widths and without JavaScript: section order, shared edges, complete ledger, paired actions, labelled footer' );
+		for ( const width of [ 320, 390, 600, 601, 781, 900, 1440 ] ) {
+			const noScript = await inspectHomepage( cdp, { width, height: 1000, noScript: true } );
+			verifyComposition( noScript, width );
+		}
+		console.log( 'checked Home composition at 9 widths and 7 no-JavaScript widths: accessible hero order, responsive grid, touch targets, overflow, section order, shared edges, complete ledger, paired actions, labelled footer' );
 
 		console.log(
 			`checked homepage hero: desktop weight=${ desktop.title.fontWeight }, mobile weight=${ mobile.title.fontWeight }`

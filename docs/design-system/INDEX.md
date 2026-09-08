@@ -1041,3 +1041,24 @@ chip overlay `none`, wordmark `min-block-size: auto`, colophon line-height
 `ArtifactRow`, `ProofBar` and `SiteFooter` have the detached-rule defect in the
 project's own `.jsx`; `SiteFooter`'s is additionally a click trap on the
 wrapping colophon link. The measurements above are the evidence.
+
+## 2026-09-08 — Home hero source-order correction (0.3.64)
+
+The 0.3.61 Home alignment placed the copy and artwork in two source-order
+columns, then moved the complete artwork column before the copy below 901px.
+That made the stacked visual sequence start with Wapuu even though the thesis
+was the intended opening, and a later uncommitted 600px-only experiment would
+have reversed the sequence again at 601px without changing accessibility order.
+
+The theme-owned `wapuu-home-hero` pattern now follows the intended reading path
+in its markup: finalist label, H1 thesis, Wapuu, then supporting copy, proof
+records, and actions. Desktop preserves the approved 55:45 composition through
+named grid areas; the complete stacked range through 900px follows source order
+without `order` or `display: contents`.
+
+`verify-homepage-hero-polish.js` now checks that semantic and rendered order,
+the one-column/two-column grid boundary, mobile proof-chip and action target
+sizes, containment, and complete no-JavaScript rendering at 320, 390, 600, 601,
+781, 900, and desktop widths. The responsive image sources, artwork cap,
+parchment wash, mobile bitmap safeguard, status copy, and destinations remain
+unchanged.
