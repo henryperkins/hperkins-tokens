@@ -306,7 +306,8 @@ About, or database-owned footer body.
 
 = Condensed Council header =
 
-The header template part renders `[hperkins_council_header]`; the theme-owned
+The header template part uses the native `hperkins-tokens/council-header` block;
+`[hperkins_council_header]` remains supported for saved legacy templates. The theme-owned
 renderer in `inc/council-header.php` treats WordPress Navigation post 237 as DB
 data rather than rendering its core Navigation markup directly. The portable
 source copy is `content/nav-snapshots/nav-237.html`. Refresh it with
@@ -323,6 +324,24 @@ geometry, interactions, focus, reduced motion, containment, and screenshots.
 The mobile drawer intentionally exposes the real Work, Essays, AI Enablement,
 About, Job Placement Digest, Search, and Subscribe destinations; it does not
 invent a dead `/writing/` route. Contact remains reachable in the footer.
+
+`blocks/council-header/` provides a build-free Block API 3 editor adapter, with
+`inc/council-header-block.php` registering the existing PHP renderer. The editor
+shows an inert preview and a Header preview selector for the bar, Work, Writing,
+Search, and mobile drawer. Preview choices are local state and never saved.
+The public controller is not loaded into the editor. Navigation remains owned
+by post 237; the block does not enable arbitrary menu structure changes.
+
+Existing dedicated Shortcode blocks can be converted with the block transform
+menu. Other shortcodes and mixed content are left alone. A saved header override
+still takes priority over `parts/header.html`: inspect and convert that exact
+override instead of clearing unrelated customizations. Keep the shortcode
+adapter until all old templates have migrated.
+
+Focused verification: `node --test scripts/lib/council-header-block.test.js`,
+then `wp eval-file scripts/verify-council-header-block.php` against the local
+installation. Also verify save/reload, the conversion UI, iframe styles and
+desktop/mobile preview controls in the Site Editor, plus `verify-header.js`.
 
 = Portfolio art direction =
 

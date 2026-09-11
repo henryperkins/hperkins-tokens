@@ -194,7 +194,7 @@ block pattern (or template part / card markup) in the theme:
 | `evidence/EvidenceBoard` | `patterns/evidence-first.php` (`.hp-evidence-board`) |
 | `evidence/ProductHero` | `patterns/proof-product.php` (`.hp-product-hero`) |
 | `evidence/OperationalStory` | `patterns/operational-story.php` |
-| `site/SiteHeader` | `parts/header.html` (`.hp-site-header` + `[hperkins_council_header]`), `inc/council-header.php`, `assets/js/header-controller.js` |
+| `site/SiteHeader` | `parts/header.html` (`.hp-site-header` + `hperkins-tokens/council-header`), `blocks/council-header/`, `inc/council-header-block.php`, `inc/council-header.php`, `assets/js/header-controller.js`; legacy `[hperkins_council_header]` remains supported |
 | `site/SiteFooter` | `parts/footer.html` (`.hp-footer`) |
 
 ## Gap report — vendored vs. available-in-project

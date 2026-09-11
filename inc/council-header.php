@@ -326,9 +326,11 @@ function hperkins_tokens_council_writing_item( $model, $key ) {
 /**
  * Render the Council header.
  *
+ * @param array $options Optional block wrapper and editor context.
  * @return string
  */
-function hperkins_tokens_render_council_header() {
+function hperkins_tokens_render_council_header( $options = array() ) {
+	$options    = is_array( $options ) ? $options : array();
 	$model      = hperkins_tokens_get_council_navigation_model();
 	$work_items = hperkins_tokens_get_council_work_items();
 	$ai         = hperkins_tokens_council_writing_item( $model, 'ai' );
@@ -336,7 +338,7 @@ function hperkins_tokens_render_council_header() {
 	$digest     = hperkins_tokens_council_writing_item( $model, 'digest' );
 	$site_name  = get_bloginfo( 'name' );
 
-	$here            = hperkins_tokens_council_current_path();
+	$here            = isset( $options['current_path'] ) ? $options['current_path'] : hperkins_tokens_council_current_path();
 	$in_work         = hperkins_tokens_council_in_section( $model['work']['url'], $here );
 	$in_writing      =
 		hperkins_tokens_council_in_section( $ai['url'], $here ) ||
@@ -347,7 +349,7 @@ function hperkins_tokens_render_council_header() {
 
 	ob_start();
 	?>
-	<div class="hp-council-header alignwide" data-hp-header-root data-hp-header-source="<?php echo esc_attr( $model['source'] ); ?>">
+	<div <?php echo isset( $options['wrapper_attributes'] ) ? $options['wrapper_attributes'] : 'class="hp-council-header alignwide"'; ?> data-hp-header-root data-hp-header-source="<?php echo esc_attr( $model['source'] ); ?>">
 		<div class="hp-council-header__bar">
 			<a class="hp-council-brand" href="<?php echo esc_url( home_url( '/' ) ); ?>">
 				<span class="hp-council-brand__star" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none" focusable="false"><g stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M50 6 L59 41 L94 50 L59 59 L50 94 L41 59 L6 50 L41 41 Z"></path><circle cx="50" cy="50" r="6" fill="currentColor" stroke="none"></circle></g></svg></span>
@@ -463,7 +465,10 @@ function hperkins_tokens_render_council_header() {
 	return null === $compact_html ? $html : $compact_html;
 }
 
-add_shortcode( 'hperkins_council_header', 'hperkins_tokens_render_council_header' );
+// Internal rendering options must never be populated from shortcode attributes.
+add_shortcode( 'hperkins_council_header', static function () {
+	return hperkins_tokens_render_council_header();
+} );
 
 /**
  * Render the dedicated Council shortcode block before core applies wpautop().

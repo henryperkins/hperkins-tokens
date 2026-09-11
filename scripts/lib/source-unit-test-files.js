@@ -6,6 +6,7 @@ const SOURCE_UNIT_TEST_FILES = [
 	'scripts/lib/about-resume.test.js',
 	'scripts/lib/content-integrity.test.js',
 	'scripts/lib/content-ownership-docs.test.js',
+	'scripts/lib/council-header-block.test.js',
 	'scripts/lib/event-copy-retirement-runbook.test.js',
 	'scripts/lib/impeccable-artifacts.test.js',
 	'scripts/lib/job-placement-digest-source-contract.test.js',

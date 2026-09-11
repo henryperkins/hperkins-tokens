@@ -104,7 +104,7 @@ function assertNotIncludes( file, needles ) {
 }
 
 function verifySource() {
-	assertIncludes( 'parts/header.html', [ '[hperkins_council_header]' ] );
+	assertIncludes( 'parts/header.html', [ '<!-- wp:hperkins-tokens/council-header /-->' ] );
 	assertIncludes( 'inc/council-header.php', [
 		'hperkins_tokens_get_council_navigation_model',
 		'hperkins_tokens_get_council_work_items',

@@ -265,7 +265,7 @@ for ( const className of classesInMarkup( frontMarkup ) ) {
 // Template parts render on every route and are deliberately excluded from the
 // resolver's haystack, so a bundle-owned class anywhere in their markup is
 // unstyled everywhere. Checking the part files alone is not enough: header.html
-// is a bare [hperkins_council_header] shortcode whose markup lives in
+// uses the hperkins-tokens/council-header block whose markup lives in
 // inc/council-header.php, and footer.html delegates to the footer-colophon
 // pattern. Follow both delegations or the guard passes over the very files that
 // carry the markup.

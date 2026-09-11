@@ -1,0 +1,9 @@
+/* Content-canvas styles only; the public header keeps its existing stylesheet. */
+.hp-council-editor {
+	position: relative;
+	width: 100%;
+}
+
+.hp-council-editor [data-hp-header-panel] {
+	animation: none;
+}

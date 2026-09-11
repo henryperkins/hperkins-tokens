@@ -28,6 +28,7 @@ if ( ! defined( 'HPERKINS_TOKENS_SUBSCRIBE_REQUESTS_OPTION' ) ) {
 }
 
 require_once get_stylesheet_directory() . '/inc/council-header.php';
+require_once get_stylesheet_directory() . '/inc/council-header-block.php';
 require_once get_stylesheet_directory() . '/inc/content-integrity.php';
 require_once get_stylesheet_directory() . '/inc/about-gravatar-heading.php';
 require_once get_stylesheet_directory() . '/inc/component-styles.php';

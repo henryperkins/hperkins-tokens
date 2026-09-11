@@ -1,0 +1,24 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "hperkins-tokens/council-header",
+	"version": "1.0.0",
+	"title": "Council Header",
+	"category": "theme",
+	"icon": "menu",
+	"description": "The Council header, using the site's Primary Navigation and theme-owned Work evidence.",
+	"textdomain": "hperkins-tokens",
+	"attributes": {
+		"align": { "type": "string", "default": "wide" },
+		"previewPanel": { "type": "string", "enum": [ "closed", "work", "writing", "search", "drawer" ] },
+		"previewId": { "type": "string" }
+	},
+	"supports": {
+		"html": false,
+		"multiple": false,
+		"customClassName": false,
+		"align": [ "wide" ]
+	},
+	"editorScript": "file:./editor.js",
+	"editorStyle": [ "hperkins-council-editor-theme", "hperkins-council-editor" ]
+}
