@@ -477,7 +477,7 @@ function verifyMain( markup, _themeVersion, _deployedCommit, options = {} ) {
 	assert( ! /<!--\s+wp:html\s*-->/.test( markup ), 'Main digest draft must use editable native blocks.' );
 
 	for ( const required of [
-		'<h1 class="wp-block-heading">I report WordPress failures so others can fix them.</h1>',
+		'<h1 class="wp-block-heading">I ship WordPress fixes and the systems around them.</h1>',
 		'Former WordPress.com Happiness Engineer · WordPress AI contributor · Chicago',
 		'I’m pursuing Support Engineer, WordPress VIP because I want the work itself',
 		'Published 13 Jul 2026 · Last verified 26 Aug 2026',

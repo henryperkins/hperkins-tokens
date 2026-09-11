@@ -261,6 +261,17 @@ const PLACEMENT_CHASSIS_CONTRACTS = [
 		},
 	},
 	{
+		// The keyword ledger restacks as labelled records below 782px like every
+		// other ledger, so its in-cell evidence links need the same touch floor.
+		selector: '.hp-keyword-table a',
+		atContext: DIGEST_NARROW_CONTEXT,
+		declarations: {
+			display: 'inline-flex',
+			'align-items': 'center',
+			'min-block-size': '44px',
+		},
+	},
+	{
 		selector: '.hp-numbered-rule h3',
 		declarations: {
 			'grid-template-columns': 'minmax(0, 1fr)',

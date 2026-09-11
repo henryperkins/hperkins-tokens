@@ -72,12 +72,12 @@
 			tokens: STATE_TOKENS,
 			noun: 'records',
 			allSuffix: ' · states verified 26 Aug 2026',
-			label: 'Filter the evidence register by release state',
+			label: 'Filter the evidence register by evidence state',
 			filters: [
 				{ key: 'all', label: 'All evidence' },
-				{ key: 'released', label: 'Released' },
-				{ key: 'open', label: 'Open upstream' },
-				{ key: 'unreleased', label: 'Merged, unreleased' }
+				{ key: 'released', label: 'Merged or released' },
+				{ key: 'open', label: 'Open or advisory' },
+				{ key: 'unreleased', label: 'Owned, unreleased' }
 			]
 		},
 		{

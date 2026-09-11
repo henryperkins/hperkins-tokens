@@ -1038,7 +1038,7 @@ p.hp-contact-form__hint {
 }
 
 /* Register filter. Injected by assets/js/digest-register-filter.js — with no
-   JavaScript the row never appears and all twelve records stay visible, which
+   JavaScript the row never appears and all eleven records stay visible, which
    is the honest default: the filter narrows a complete register, it never
    hides evidence that was not already on screen. */
 .hp-evidence-filter {
@@ -1761,7 +1761,8 @@ p.hp-contact-form__hint {
     margin-inline-end: var(--hp-gap-xs);
   }
 
-  .hp-evidence-table a {
+  .hp-evidence-table a,
+  .hp-keyword-table a {
     display: inline-flex;
     align-items: center;
     min-block-size: 44px;
