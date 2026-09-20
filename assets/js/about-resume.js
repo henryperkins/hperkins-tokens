@@ -20,11 +20,10 @@
 	var TIMELINE_GROUP_LABEL = 'Proof at a glance, in order';
 	// The proof stepper's clock. First paint is unlit; the state resolves to the
 	// real step after the boot tick, and the intro stagger runs for the window
-	// after that or until the first selection. The swap delay is the reading
-	// pane's fade-out before the step and its content change together.
+	// after that or until the first selection. Each swap reads the reading
+	// pane's CSS fade-out before the step and its content change together.
 	var TIMELINE_BOOT_DELAY = 60;
 	var TIMELINE_INTRO_WINDOW = 1800;
-	var TIMELINE_SWAP_DELAY = 160;
 	var mountedRoots = typeof WeakMap === 'function' ? new WeakMap() : null;
 	var activeState = null;
 	var headerResizeObserver = null;
@@ -980,12 +979,22 @@
 				return;
 			}
 			timelinePanel.classList.add('is-out');
-			timelineSwapTimer = window.setTimeout(function () {
+			// Opacity is the pane's first transition; computed durations are in
+			// seconds. Reduced motion updates in this turn, without a blank pause.
+			var swapDelay = reduceMotion.matches ? 0 :
+				(parseFloat(window.getComputedStyle(timelinePanel).transitionDuration) || 0) * 1000;
+			function finishSwap() {
+				timelineSwapTimer = null;
 				timelineCurrent = index;
 				paintTimeline(index, true);
 				fillTimelinePanel(index);
 				timelinePanel.classList.remove('is-out');
-			}, TIMELINE_SWAP_DELAY);
+			}
+			if (swapDelay > 0) {
+				timelineSwapTimer = window.setTimeout(finishSwap, swapDelay);
+			} else {
+				finishSwap();
+			}
 		}
 
 		function handleTimelineKey(event) {

@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.66
+Stable tag: 0.3.67
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -411,6 +411,12 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.67 =
+* Reuse the existing fast/base duration and calm easing tokens for hover states,
+  drawer link closing, and About timeline fades and folds.
+* Read drawer and timeline completion delays from computed CSS; reduced-motion
+  timeline selections update immediately. Add rendered timing regression checks.
 
 = 0.3.66 =
 

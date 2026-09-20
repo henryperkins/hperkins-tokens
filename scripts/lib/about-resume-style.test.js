@@ -89,7 +89,6 @@ test( 'About v3 proof timeline ships five open folds and a CSS-anchored reading 
 	assert.match( controller, /'aria-label', TIMELINE_GROUP_LABEL/ );
 	assert.match( controller, /TIMELINE_BOOT_DELAY = 60;/ );
 	assert.match( controller, /TIMELINE_INTRO_WINDOW = 1800;/ );
-	assert.match( controller, /TIMELINE_SWAP_DELAY = 160;/ );
 	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-timeline__fold\s*\{[^}]*grid-template-rows:\s*1fr;/s );
 	assert.match( aboutV3Css, /\.hp-about-resume-v3\.is-enhanced:not\(\.is-print-mode\) \.hp-about-timeline__step:not\(\.is-current\) \.hp-about-timeline__fold\s*\{[^}]*grid-template-rows:\s*0fr;/s );
 	assert.match( aboutV3Css, /\.hp-about-resume-v3\.is-enhanced:not\(\.is-print-mode\) \.hp-about-timeline__step:not\(\.is-current\) \.hp-about-timeline__fold-body\s*\{[^}]*visibility:\s*hidden;/s );

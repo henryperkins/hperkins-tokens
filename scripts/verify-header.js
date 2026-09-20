@@ -1274,10 +1274,25 @@ async function verifyMobileInteractions( cdp, sessionId, viewport ) {
 		link.href = '#hp-controller-link-test';
 		link.textContent = 'Controller test link';
 		panel.appendChild(link);
+		// Exercise a CSS override so a copied 140ms timer cannot pass.
+		panel.style.animationDuration = '0.36s';
 		const event = new MouseEvent('click', { bubbles: true, cancelable: true });
-		const allowed = link.dispatchEvent(event);
+		const timers = [];
+		const originalTimeout = window.setTimeout;
+		let allowed;
+		window.setTimeout = (callback, delay, ...args) => {
+			timers.push(delay);
+			return originalTimeout(callback, delay, ...args);
+		};
+		try {
+			allowed = link.dispatchEvent(event);
+		} finally {
+			window.setTimeout = originalTimeout;
+		}
 		return {
 			allowed,
+			timers,
+			duration: parseFloat(getComputedStyle(panel).animationDuration) * 1000,
 			defaultPrevented: event.defaultPrevented,
 			closing: root.classList.contains('is-hp-closing'),
 			chosen: link.classList.contains('is-hp-chosen'),
@@ -1285,12 +1300,14 @@ async function verifyMobileInteractions( cdp, sessionId, viewport ) {
 	})()` );
 	assert( clickResult.allowed && ! clickResult.defaultPrevented, 'Normal drawer link navigation was prevented.' );
 	assert( clickResult.closing && clickResult.chosen, 'Normal drawer link did not begin the close treatment.' );
-	await wait( 180 );
+	assert( clickResult.timers.includes( clickResult.duration ), `Drawer close timer does not match its CSS animation: ${ JSON.stringify( clickResult ) }.` );
+	await wait( clickResult.duration + 40 );
 	await assertState( cdp, sessionId, 'closed', 'drawer internal-link close' );
 	const cleaned = await evaluate( cdp, sessionId, `(() => {
 		const root = document.querySelector('[data-hp-header-root]');
 		const link = root.querySelector('[href="#hp-controller-link-test"]');
 		const clean = !root.classList.contains('is-hp-closing') && link && !link.classList.contains('is-hp-chosen');
+		root.querySelector('[data-hp-header-panel="drawer"]').style.removeProperty('animation-duration');
 		if (link) link.remove();
 		return clean;
 	})()` );
@@ -1648,7 +1665,11 @@ async function main() {
 	await verifyRendered();
 }
 
-main().catch( ( error ) => {
-	console.error( error.message );
-	process.exit( 1 );
-} );
+if ( require.main === module ) {
+	main().catch( ( error ) => {
+		console.error( error.message );
+		process.exit( 1 );
+	} );
+}
+
+module.exports = { verifyMobileInteractions };

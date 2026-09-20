@@ -172,6 +172,11 @@
 				node.classList.add( 'is-hp-closing' );
 				drawerLink.classList.add( 'is-hp-chosen' );
 			}
+			// Computed CSS durations are seconds. Read the closing animation after
+			// its class is applied so the hide timer follows the theme token.
+			var drawer = panelFor( 'drawer' );
+			var closeDelay = reducedMotion() || ! drawer ? 0 :
+				( parseFloat( window.getComputedStyle( drawer ).animationDuration ) || 0 ) * 1000;
 			window.setTimeout( function () {
 				// router-scroll.js focuses a hash target across the same commit
 				// window; only rescue focus when it is still on the link we are
@@ -185,7 +190,7 @@
 				if ( drawerTrigger ) {
 					drawerTrigger.focus();
 				}
-			}, reducedMotion() ? 0 : 140 );
+			}, closeDelay );
 			return;
 		}
 

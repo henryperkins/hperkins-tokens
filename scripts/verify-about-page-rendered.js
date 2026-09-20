@@ -1613,6 +1613,68 @@ async function verifyCardHoverInertia( cdp, sessionId ) {
 	await cdp.send( 'Input.dispatchMouseEvent', { type: 'mouseMoved', x: 0, y: 0 }, sessionId );
 }
 
+async function verifyV3MotionTiming( cdp, sessionId ) {
+	const preference = await cdp.send( 'Runtime.evaluate', {
+		expression: `matchMedia('(prefers-reduced-motion: reduce)').matches`,
+		returnByValue: true,
+	}, sessionId );
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		features: [ { name: 'prefers-reduced-motion', value: 'no-preference' } ],
+	}, sessionId );
+	const timings = await cdp.send( 'Runtime.evaluate', {
+		expression: `(async () => {
+			const panel = document.querySelector('.hp-about-timeline__panel');
+			const buttons = Array.from(document.querySelectorAll('button.hp-about-timeline__label'));
+			if (!panel || buttons.length !== 5) throw new Error('Missing enhanced timeline');
+			const target = buttons.findIndex((button) => button.getAttribute('aria-pressed') !== 'true');
+			const originalStyle = panel.style.transitionDuration;
+			const originalTimeout = window.setTimeout;
+			const timers = [];
+			// A different CSS duration proves the controller reads the rendered
+			// timing instead of carrying another copy of the current token.
+			panel.style.transitionDuration = '0.36s';
+			window.setTimeout = (callback, delay, ...args) => {
+				timers.push(delay);
+				return originalTimeout(callback, delay, ...args);
+			};
+			try {
+				buttons[target].click();
+			} finally {
+				window.setTimeout = originalTimeout;
+			}
+			const duration = parseFloat(getComputedStyle(panel).transitionDuration) * 1000;
+			const pending = buttons[target].getAttribute('aria-pressed') !== 'true';
+			await new Promise((resolve) => originalTimeout(resolve, duration + 80));
+			panel.style.transitionDuration = originalStyle;
+			return { timers, duration, pending, updated: buttons[target].getAttribute('aria-pressed') === 'true', out: panel.classList.contains('is-out') };
+		})()`,
+		awaitPromise: true, returnByValue: true,
+	}, sessionId );
+	assert( ! timings.exceptionDetails, `Timeline timing probe threw: ${ JSON.stringify( timings.exceptionDetails ) }` );
+	const result = timings.result.value;
+	assert( result.duration === 360 && result.timers.includes( result.duration ) && result.pending && result.updated && ! result.out, `Timeline swap does not follow CSS duration: ${ JSON.stringify( result ) }` );
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		features: [ { name: 'prefers-reduced-motion', value: 'reduce' } ],
+	}, sessionId );
+	try {
+		const immediate = await cdp.send( 'Runtime.evaluate', {
+			expression: `(() => {
+				const panel = document.querySelector('.hp-about-timeline__panel');
+				const button = document.querySelector('button.hp-about-timeline__label[aria-pressed="false"]');
+				button.click();
+				return button.getAttribute('aria-pressed') === 'true' && !panel.classList.contains('is-out') &&
+					panel.textContent === button.closest('.hp-about-timeline__step').querySelector('.hp-about-timeline__fold-body').textContent;
+			})()`,
+			returnByValue: true,
+		}, sessionId );
+		assert( ! immediate.exceptionDetails && immediate.result.value, 'Reduced-motion timeline selection must update its content immediately.' );
+	} finally {
+		await cdp.send( 'Emulation.setEmulatedMedia', {
+			features: [ { name: 'prefers-reduced-motion', value: preference.result.value ? 'reduce' : 'no-preference' } ],
+		}, sessionId );
+	}
+}
+
 async function verifyV3Interactions( cdp, sessionId ) {
 	const evaluated = await cdp.send( 'Runtime.evaluate', {
 		expression: `(async () => {
@@ -1701,7 +1763,7 @@ async function verifyV3Interactions( cdp, sessionId ) {
 			const disclosureClosed = earlierToggle.getAttribute('aria-expanded') === 'false' && earlier.hidden;
 
 			// Proof timeline: click, arrow keys, Home, End, and the pane that
-			// follows the lit step. Every wait outlasts the 160ms swap. A
+			// follows the lit step. Every wait outlasts the 140ms CSS swap. A
 			// plate-era body (the accepted mirror before promotion) has no
 			// stepper; it reports null and the Node side skips these checks.
 			const timelineSteps = root.querySelector('.hp-about-timeline__steps');
@@ -2295,6 +2357,9 @@ async function main() {
 						await wait( 300 );
 						await dispatchKey( cdp, sessionId, 'Tab', 'Tab', 9 );
 						await verifyV3Interactions( cdp, sessionId );
+						if ( expectations.heroRevision === 'letterhead' ) {
+							await verifyV3MotionTiming( cdp, sessionId );
+						}
 						const roundTrip = await verifyV3RouterRoundTrip( cdp, sessionId );
 						console.log( `checked v3 ${ roundTrip.transport } away/back round-trip` );
 						if ( expectations.heroRevision === 'letterhead' ) {
@@ -2336,6 +2401,7 @@ module.exports = {
 	usesWideResumeShowcaseLayout,
 	verifyCardHoverInertia,
 	verifyV3Interactions,
+	verifyV3MotionTiming,
 	verifyV3NavigationCompatibility,
 	verifyV3RouterRoundTrip,
 };

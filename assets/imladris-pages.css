@@ -5522,9 +5522,9 @@ p.hp-contact-form__hint {
 	color: var(--wp--custom--artifact-link);
 	background: var(--wp--custom--surface--card);
 	text-decoration: none;
-	transition: background var(--wp--custom--dur--fast) ease,
-		border-color var(--wp--custom--dur--fast) ease,
-		color var(--wp--custom--dur--fast) ease;
+	transition: background var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+		border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+		color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
 }
 
 /* Every hover affordance in this layer is gated, as the handoff gates all of
@@ -5779,7 +5779,7 @@ p.hp-contact-form__hint {
 	text-transform: uppercase;
 	text-wrap: balance;
 	color: var(--wp--custom--text--muted);
-	transition: color var(--wp--custom--dur--fast) ease;
+	transition: color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
 }
 
 .hp-about-resume-v3 .hp-about-timeline__step.is-done .hp-about-timeline__text {
@@ -5798,20 +5798,20 @@ p.hp-contact-form__hint {
 
 /* Folds open by default. Once enhanced, every fold but the current one
    collapses — grid rows, so the height animates — and its body leaves the tab
-   order once the collapse has run: visibility flips hidden after the slow
+   order once the collapse has run: visibility flips hidden after the base
    duration, visible at once when the step is current. */
 .hp-about-resume-v3 .hp-about-timeline__fold {
 	display: grid;
 	grid-template-rows: 1fr;
 	padding-inline-start: calc(11px + var(--wp--preset--spacing--3));
-	transition: grid-template-rows var(--wp--custom--dur--slow) var(--wp--custom--ease--calm);
+	transition: grid-template-rows var(--wp--custom--dur--base) var(--wp--custom--ease--calm);
 }
 
 .hp-about-resume-v3 .hp-about-timeline__fold-body {
 	min-height: 0;
 	overflow: hidden;
 	visibility: visible;
-	transition: visibility 0s var(--wp--custom--dur--slow);
+	transition: visibility 0s var(--wp--custom--dur--base);
 }
 
 /* :not(.is-print-mode): the print layout opens every fold, and a scoped
@@ -5891,7 +5891,7 @@ p.hp-contact-form__hint {
 	display: none;
 	position: relative;
 	margin-block-start: var(--wp--preset--spacing--5);
-	transition: opacity 220ms var(--wp--custom--ease--calm), transform 220ms var(--wp--custom--ease--calm);
+	transition: opacity var(--wp--custom--dur--fast) var(--wp--custom--ease--calm), transform var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
 }
 
 .hp-about-resume-v3 .hp-about-timeline__panel.is-out {
