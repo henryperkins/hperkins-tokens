@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.65
+Version: 0.3.66
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -3509,29 +3509,35 @@ body.search .wp-block-post-date {
 .jetpack-instant-search__overlay .hp-search-filter-close {
 	display: none;
 }
-.jetpack-instant-search__overlay .hp-search-recovery {
+.jetpack-instant-search__overlay .hp-search-recovery,
+.jetpack-search-block-overlay .hp-search-recovery {
 	margin: var(--wp--preset--spacing--6) var(--wp--preset--spacing--7);
 	max-width: var(--wp--custom--measure--prose);
 	color: var(--wp--custom--text--body);
 	font: var(--wp--custom--type--ui);
 }
-.jetpack-instant-search__overlay .hp-search-recovery[hidden] {
+.jetpack-instant-search__overlay .hp-search-recovery[hidden],
+.jetpack-search-block-overlay .hp-search-recovery[hidden] {
 	display: none;
 }
-.jetpack-instant-search__overlay .hp-search-recovery h2 {
+.jetpack-instant-search__overlay .hp-search-recovery h2,
+.jetpack-search-block-overlay .hp-search-recovery h2 {
 	margin: 0 0 var(--wp--preset--spacing--2);
 	color: var(--wp--custom--text--strong);
 	font: var(--wp--custom--type--h-3);
 }
-.jetpack-instant-search__overlay .hp-search-recovery p {
+.jetpack-instant-search__overlay .hp-search-recovery p,
+.jetpack-search-block-overlay .hp-search-recovery p {
 	margin: 0 0 var(--wp--preset--spacing--4);
 }
-.jetpack-instant-search__overlay .hp-search-recovery nav {
+.jetpack-instant-search__overlay .hp-search-recovery nav,
+.jetpack-search-block-overlay .hp-search-recovery nav {
 	display: flex;
 	flex-wrap: wrap;
 	gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--5);
 }
-.jetpack-instant-search__overlay .hp-search-recovery a {
+.jetpack-instant-search__overlay .hp-search-recovery a,
+.jetpack-search-block-overlay .hp-search-recovery a {
 	display: inline-flex;
 	align-items: center;
 	min-height: var(--hp-touch-min);
@@ -3600,6 +3606,169 @@ body.search .wp-block-post-date {
 	}
 	.jetpack-instant-search__overlay .jetpack-instant-search__search-result-expanded__image-container {
 		max-width: 100%;
+	}
+}
+
+/* Search Blocks beta has a separate DOM and stylesheet. Keep these overrides
+	 inside its dialog so embedded search blocks retain their authored layout. */
+.jetpack-search-block-overlay {
+	--jetpack-search-highlight-background: var(--wp--custom--accent--subtle);
+	font: var(--wp--custom--type--ui);
+	scrollbar-color: var(--wp--custom--border--strong) var(--wp--custom--surface--raised);
+}
+.jetpack-search-block-overlay .jetpack-search-block-overlay__card {
+	--jp-search-page-surface: var(--wp--custom--surface--raised);
+	--jp-search-page-ink: var(--wp--custom--text--body);
+	--jp-search-overlay-surface: var(--wp--custom--surface--raised);
+	--jp-search-overlay-ink: var(--wp--custom--text--body);
+	border-color: var(--wp--custom--border--hair);
+}
+/* Five class/attribute components beat Assembler's four-:not() input rule. */
+.jetpack-search-block-overlay .jetpack-search-block-overlay__card .wp-block-jetpack-search-search-input input[type="search"].jetpack-search-input__field {
+	flex: 1 1 0%;
+	width: 0;
+	min-width: 0;
+	min-height: var(--hp-touch-min);
+	margin: 0;
+	padding: 0 var(--wp--preset--spacing--3);
+	border: 0;
+	border-radius: 0;
+	color: var(--wp--custom--text--strong);
+	background: transparent;
+	font: var(--wp--custom--type--ui);
+	caret-color: var(--wp--custom--brand--default);
+}
+.jetpack-search-block-overlay .wp-block-jetpack-search-search-input .jetpack-search-input__field::placeholder {
+	color: var(--wp--custom--text--muted);
+	opacity: 1;
+}
+.jetpack-search-block-overlay .jetpack-search-block-overlay__card .wp-block-jetpack-search-search-input .jetpack-search-input__clear {
+	min-height: var(--hp-touch-min);
+	color: var(--wp--custom--brand--default);
+	font: var(--wp--custom--type--ui);
+	opacity: 1;
+}
+.jetpack-search-block-overlay .jetpack-search-layout__results-header,
+.jetpack-search-block-overlay .jetpack-search-layout__results-header-controls {
+	min-width: 0;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--4);
+}
+.jetpack-search-block-overlay .wp-block-jetpack-search-results-count {
+	flex: 0 1 auto;
+	color: var(--wp--custom--text--muted);
+	font: var(--wp--custom--type--ui);
+	opacity: 1;
+}
+.jetpack-search-block-overlay .wp-block-jetpack-search-results-sort {
+	flex: 0 1 auto;
+	min-width: 0;
+	gap: var(--wp--preset--spacing--2);
+	margin-inline-start: 0;
+}
+.jetpack-search-block-overlay .wp-block-jetpack-search-results-sort label {
+	flex-shrink: 0;
+	margin: 0;
+	color: var(--wp--custom--text--body);
+	font: var(--wp--custom--type--ui);
+	white-space: nowrap;
+	opacity: 1;
+}
+.jetpack-search-block-overlay .wp-block-jetpack-search-results-sort select,
+.jetpack-search-block-overlay .wp-block-jetpack-search-results-sort .jetpack-search-results-sort__menu-item,
+.jetpack-search-block-overlay .wp-block-jetpack-search-active-filters .jetpack-search-active-filters__pill,
+.jetpack-search-block-overlay .jetpack-search-block-overlay__card .jetpack-search-load-more__button {
+	min-height: var(--hp-touch-min);
+	padding: var(--wp--preset--spacing--2) var(--wp--preset--spacing--3);
+	border-color: var(--wp--custom--border--brand);
+	border-radius: var(--hp-radius-panel);
+	color: var(--wp--custom--brand--default);
+	background: var(--wp--custom--surface--raised);
+	font: var(--wp--custom--type--ui);
+}
+.jetpack-search-block-overlay .jetpack-search-filters-popover__trigger,
+.jetpack-search-block-overlay .jetpack-search-results-sort__trigger {
+	min-width: var(--hp-touch-min);
+	min-height: var(--hp-touch-min);
+	border-color: var(--wp--custom--border--brand);
+	border-radius: var(--hp-radius-panel);
+	color: var(--wp--custom--brand--default);
+	font: var(--wp--custom--type--ui);
+}
+.jetpack-search-block-overlay .wp-block-jetpack-search-filter-checkbox .jetpack-search-filter__item label,
+.jetpack-search-block-overlay .wp-block-jetpack-search-results-sort .jetpack-search-results-sort__radio-item label {
+	display: flex;
+	align-items: center;
+	min-height: var(--hp-touch-min);
+	margin-block: 0;
+	color: var(--wp--custom--text--body);
+	font: var(--wp--custom--type--ui);
+}
+.jetpack-search-block-overlay .jetpack-search-filter__item input {
+	accent-color: var(--wp--custom--brand--default);
+}
+.jetpack-search-block-overlay .jetpack-search-filters-popover .jetpack-search-filters-popover__panel {
+	min-width: min(260px, calc(100vw - 2 * var(--wp--preset--spacing--4)));
+	max-width: calc(100vw - 2 * var(--wp--preset--spacing--4));
+	max-height: 60dvh;
+	border-color: var(--wp--custom--border--hair);
+	border-radius: var(--hp-radius-panel);
+	background: var(--wp--custom--surface--raised);
+	color: var(--wp--custom--text--body);
+	font: var(--wp--custom--type--ui);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+.jetpack-search-block-overlay .wp-block-jetpack-search-results-list .jetpack-search-results__highlight {
+	color: var(--wp--custom--text--strong);
+	font-weight: inherit;
+}
+.jetpack-search-block-overlay .wp-block-jetpack-search-results-list .jetpack-search-results__content {
+	font: var(--wp--custom--type--ui);
+}
+.jetpack-search-block-overlay .wp-block-jetpack-search-results-list :is(.jetpack-search-results__path, .jetpack-search-results__meta) {
+	color: var(--wp--custom--text--muted);
+	font-size: var(--wp--preset--font-size--sm);
+	opacity: 1;
+}
+.jetpack-search-block-overlay [data-hp-search-image-failed],
+.jetpack-search-block-overlay .jetpack-search-results__image-link:has([data-hp-search-image-failed]) {
+	display: none;
+}
+.jetpack-search-block-overlay .hp-search-recovery {
+	margin-inline: 0;
+}
+/* Hide only confirmed empty content. Active filters remain available to undo,
+	 while loading and retrieval errors keep the plugin's own feedback. */
+.jetpack-search-block-overlay[data-hp-search-state="empty"] :is(.wp-block-jetpack-search-results-list, .wp-block-jetpack-search-results-count, .wp-block-jetpack-search-results-sort, .wp-block-jetpack-search-results-load-more),
+.jetpack-search-block-overlay[data-hp-search-state="empty"]:not(:has(.jetpack-search-filter__item input:checked)) :is(.jetpack-search-layout__filters-column, .jetpack-search-layout__results-header),
+.jetpack-search-block-overlay[data-hp-search-state="no-results"] .jetpack-search-no-results__variant:not([data-wp-bind--hidden="!state.showError"]),
+.jetpack-search-block-overlay[data-hp-search-state="no-results"] .jetpack-search-results__no-results {
+	display: none;
+}
+.jetpack-search-block-overlay[data-hp-search-state="empty"]:not(:has(.jetpack-search-filter__item input:checked)) .jetpack-search-layout__results-column {
+	flex-basis: 100% !important;
+}
+.jetpack-search-block-overlay :is(input, select, button, a):focus-visible {
+	outline: 3px solid var(--wp--preset--color--gold-700);
+	outline-offset: 2px;
+}
+.jetpack-search-block-overlay .wp-block-jetpack-search-search-input .jetpack-search-input__field:focus-visible {
+	outline-offset: -3px;
+}
+@media (max-width: 575.98px) {
+	.jetpack-search-block-overlay .jetpack-search-block-overlay__card .wp-block-jetpack-search-search-input .jetpack-search-input__icon {
+		flex-basis: var(--hp-touch-min);
+		width: var(--hp-touch-min);
+		padding: var(--wp--preset--spacing--3);
+	}
+	.jetpack-search-block-overlay .jetpack-search-layout__results-header {
+		align-items: flex-start;
+		flex-direction: column;
+	}
+	.jetpack-search-block-overlay .jetpack-search-layout__results-header-controls {
+		width: 100%;
+		justify-content: space-between;
 	}
 }
 

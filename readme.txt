@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.65
+Stable tag: 0.3.66
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -411,6 +411,17 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.66 =
+
+* Support Jetpack Overlay Search (blocks) beta with themed, responsive controls,
+  gold highlights, and useful empty/no-result recovery links.
+* Normalize beta thumbnails and omit invalid author labels before rendering,
+  without changing search settings or indexed content.
+* Restore focus after Clear, filter removal, and Close; dismiss mobile filters
+  with Escape while preserving the query. Keep legacy search support intact.
+* Start the beta overlay after WordPress's initial DOM scan to prevent duplicate
+  hydration from intermittently leaving results and filters blank.
 
 = 0.3.65 =
 

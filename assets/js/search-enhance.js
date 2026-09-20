@@ -10,15 +10,17 @@
 	var config = window.hpSearchConfig || {};
 	var strings = config.strings || {};
 	var home = new URL( config.homeUrl || '/', window.location.href );
-	var OVERLAY = '.jetpack-instant-search__overlay';
-	var INPUT = '.jetpack-instant-search__box-input';
+	var OVERLAY = '.jetpack-instant-search__overlay, .jetpack-search-block-overlay';
+	var INPUT = '.jetpack-instant-search__box-input, .jetpack-search-input__field';
+	var CLEAR = '.jetpack-instant-search__box input[type="button"], .jetpack-search-input__clear';
 	var FILTER = '.jetpack-instant-search__search-results-filter-button';
 	var PANEL = '.jetpack-instant-search__search-results-secondary';
 	var MODAL = 'jetpack-instant-search__search-results-secondary--show-as-modal';
-	var IMAGE = '.jetpack-instant-search__search-result-expanded__image, .jetpack-instant-search__search-result-product-img';
+	var IMAGE = '.jetpack-instant-search__search-result-expanded__image, .jetpack-instant-search__search-result-product-img, .jetpack-search-results__image';
 	var origin = null;
 	var restoreOnClose = false;
 	var focusAfterClear = false;
+	var focusAfterRemoval = null;
 	var modalWasOpen = false;
 	var scheduled = false;
 	var imageAlts = new Map();
@@ -63,6 +65,7 @@
 		forgetReturnFocus();
 		if ( intent && [ 'search', 'drawer' ].indexOf( intent.trigger ) !== -1 &&
 			intent.path === window.location.pathname && ! new URLSearchParams( window.location.search ).has( 's' ) &&
+			! new URLSearchParams( window.location.search ).has( 'q' ) &&
 			Date.now() - intent.time >= 0 && Date.now() - intent.time < 10000 ) {
 			origin = document.querySelector( '[data-hp-header-trigger="' + intent.trigger + '"]' );
 			restoreOnClose = true;
@@ -77,9 +80,14 @@
 	}
 
 	function activeOverlay() {
-		var overlay = document.querySelector( OVERLAY );
-		return overlay && overlay.getAttribute( 'aria-hidden' ) !== 'true' &&
-			! overlay.classList.contains( 'is-hidden' ) ? overlay : null;
+		return Array.prototype.find.call( document.querySelectorAll( OVERLAY ), function ( overlay ) {
+			return visible( overlay ) && overlay.getAttribute( 'aria-hidden' ) !== 'true' &&
+				! overlay.classList.contains( 'is-hidden' );
+		} ) || null;
+	}
+
+	function isBlocks( overlay ) {
+		return overlay.classList.contains( 'jetpack-search-block-overlay' );
 	}
 
 	function setAttribute( element, name, value ) {
@@ -160,12 +168,17 @@
 	}
 
 	function filterPanel( overlay ) {
+		if ( isBlocks( overlay ) ) {
+			var trigger = overlay.querySelector( '.jetpack-search-filters-popover__trigger[aria-expanded="true"]' );
+			var popover = overlay.querySelector( '.jetpack-search-filters-popover__panel' );
+			return trigger && visible( trigger ) && visible( popover ) ? popover : null;
+		}
 		var panel = overlay.querySelector( PANEL );
 		return panel && panel.classList.contains( MODAL ) && visible( panel ) ? panel : null;
 	}
 
 	function closeFilters( overlay ) {
-		var trigger = overlay.querySelector( FILTER );
+		var trigger = overlay.querySelector( isBlocks( overlay ) ? '.jetpack-search-filters-popover__trigger' : FILTER );
 		if ( trigger ) {
 			trigger.click();
 			trigger.focus();
@@ -173,7 +186,7 @@
 	}
 
 	function recovery( overlay, state ) {
-		var primary = overlay.querySelector( '.jetpack-instant-search__search-results-primary' );
+		var primary = overlay.querySelector( isBlocks( overlay ) ? '.jetpack-search-layout__results-column' : '.jetpack-instant-search__search-results-primary' );
 		if ( ! primary ) {
 			return;
 		}
@@ -222,6 +235,7 @@
 			}
 			restoreOnClose = false;
 			focusAfterClear = false;
+			focusAfterRemoval = null;
 			modalWasOpen = false;
 			return;
 		}
@@ -232,7 +246,7 @@
 		}
 		setAttribute( input, 'aria-label', text( 'searchLabel', 'Search the site' ) );
 		setAttribute( input, 'placeholder', text( 'searchLabel', 'Search the site' ) );
-		var clear = overlay.querySelector( '.jetpack-instant-search__box input[type="button"]' );
+		var clear = overlay.querySelector( CLEAR );
 		if ( clear ) {
 			setAttribute( clear, 'aria-label', text( 'clearLabel', 'Clear search' ) );
 		}
@@ -256,9 +270,15 @@
 		var filtered = overlay.querySelector( '.jetpack-instant-search__search-filters input:checked' );
 		var state = warning ? 'error' : ! input.value.trim() && ! filtered ? 'empty' :
 			busy ? 'loading' : title && title.textContent.trim() === noResults ? 'no-results' : 'results';
+		if ( isBlocks( overlay ) ) {
+			// This binding comes from the public Interactivity store. It preserves
+			// error/loading distinctions without guessing from translated copy.
+			var list = overlay.querySelector( '.wp-block-jetpack-search-results-list' );
+			state = list && list.getAttribute( 'data-hp-search-state' ) || 'loading';
+		}
 		setAttribute( overlay, 'data-hp-search-state', state );
 		recovery( overlay, state );
-		var modal = filterPanel( overlay );
+		var modal = ! isBlocks( overlay ) && filterPanel( overlay );
 		if ( modal && ! modalWasOpen ) {
 			modal.querySelector( '.hp-search-filter-close' ).focus();
 		}
@@ -266,6 +286,13 @@
 		if ( focusAfterClear ) {
 			input.focus();
 			focusAfterClear = false;
+		}
+		if ( focusAfterRemoval !== null ) {
+			var pills = Array.prototype.filter.call( overlay.querySelectorAll( '.jetpack-search-active-filters__pill' ), visible );
+			var next = pills[ Math.min( focusAfterRemoval, pills.length - 1 ) ];
+			var filter = overlay.querySelector( '.jetpack-search-filters-popover__trigger' );
+			( next || ( visible( filter ) && ! filter.disabled ? filter : input ) ).focus();
+			focusAfterRemoval = null;
 		}
 	}
 
@@ -292,9 +319,11 @@
 		}
 		if ( event.target.closest( '.hp-search-filter-close' ) ) {
 			closeFilters( overlay );
-		} else if ( event.target.closest( '.jetpack-instant-search__box input[type="button"]' ) ) {
+		} else if ( event.target.closest( CLEAR ) ) {
 			focusAfterClear = true;
-		} else if ( event.target.closest( '.jetpack-instant-search__overlay-close, #jetpack-instant-search__overlay-focus-anchor' ) ) {
+		} else if ( event.target.closest( '.jetpack-search-active-filters__pill' ) ) {
+			focusAfterRemoval = Array.prototype.filter.call( overlay.querySelectorAll( '.jetpack-search-active-filters__pill' ), visible ).indexOf( event.target.closest( '.jetpack-search-active-filters__pill' ) );
+		} else if ( event.target === overlay || event.target.closest( '.jetpack-instant-search__overlay-close, #jetpack-instant-search__overlay-focus-anchor, .jetpack-search-block-overlay__close' ) ) {
 			requestReturnFocus();
 		}
 		schedule();
@@ -314,7 +343,7 @@
 				requestReturnFocus();
 			}
 			schedule();
-		} else if ( event.key === 'Tab' && panel ) {
+		} else if ( event.key === 'Tab' && panel && ! isBlocks( overlay ) ) {
 			var stops = Array.prototype.filter.call( panel.querySelectorAll( 'button, input, select, a[href], [tabindex="0"]' ), function ( element ) {
 				return ! element.disabled && visible( element );
 			} );
@@ -334,7 +363,7 @@
 	}, true );
 	new MutationObserver( schedule ).observe( document.documentElement, {
 		childList: true, subtree: true, characterData: true, attributes: true,
-		attributeFilter: [ 'class', 'aria-hidden', 'aria-busy', 'src', 'alt' ]
+		attributeFilter: [ 'class', 'aria-hidden', 'aria-busy', 'aria-expanded', 'hidden', 'data-hp-search-state', 'src', 'alt' ]
 	} );
 	schedule();
 } )();

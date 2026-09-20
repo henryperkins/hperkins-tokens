@@ -11,6 +11,114 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
+ * Detect the active beta renderer, including Jetpack's asset/module gates.
+ *
+ * The overlay style is queued before Jetpack renders its block template.
+ * Checking it avoids changing embedded blocks when the beta is unavailable.
+ *
+ * @return bool Whether the blocks overlay is actually enqueued.
+ */
+function hperkins_tokens_search_blocks_enabled() {
+	return function_exists( 'wp_enqueue_script_module' ) &&
+		is_callable( array( '\\Automattic\\Jetpack\\Search\\Search_Blocks', 'is_block_template_overlay_enabled' ) ) &&
+		\Automattic\Jetpack\Search\Search_Blocks::is_block_template_overlay_enabled() &&
+		wp_style_is( 'jetpack-search-block-overlay', 'enqueued' );
+}
+
+/**
+ * Enqueue the adapter for the selected Jetpack experience.
+ *
+ * Called after the header controller is registered at enqueue priority 20.
+ */
+function hperkins_tokens_search_enqueue_assets() {
+	$legacy = wp_script_is( 'jetpack-instant-search', 'registered' );
+	$blocks = hperkins_tokens_search_blocks_enabled();
+	$file   = get_stylesheet_directory() . '/assets/js/search-enhance.js';
+	if ( ( ! $legacy && ! $blocks ) || ! file_exists( $file ) ) {
+		return;
+	}
+	$deps = array( 'hperkins-header-controller' );
+	if ( $legacy ) {
+		$deps[] = 'wp-hooks';
+	}
+	wp_enqueue_script(
+		'hperkins-search-enhance',
+		get_stylesheet_directory_uri() . '/assets/js/search-enhance.js',
+		$deps,
+		filemtime( $file ),
+		array( 'in_footer' => true, 'strategy' => 'defer' )
+	);
+	wp_add_inline_script(
+		'hperkins-search-enhance',
+		'window.hpSearchConfig = ' . wp_json_encode( hperkins_tokens_search_client_config(), JSON_HEX_TAG | JSON_HEX_AMP ) . ';',
+		'before'
+	);
+	if ( $legacy ) {
+		// Keep the supported image hook ahead of the legacy app's first render.
+		$scripts = wp_scripts();
+		if ( ! in_array( 'hperkins-search-enhance', $scripts->registered['jetpack-instant-search']->deps, true ) ) {
+			$scripts->registered['jetpack-instant-search']->deps[] = 'hperkins-search-enhance';
+		}
+	}
+	if ( $blocks ) {
+		$module = get_stylesheet_directory() . '/assets/js/search-blocks.js';
+		if ( file_exists( $module ) ) {
+			wp_enqueue_script_module(
+				'hperkins-tokens/search-blocks',
+				get_stylesheet_directory_uri() . '/assets/js/search-blocks.js',
+				array(
+					'@wordpress/interactivity',
+					'jetpack-search/store',
+					array( 'id' => 'jetpack-search/overlay-bootstrap', 'import' => 'dynamic' ),
+				),
+				filemtime( $module )
+			);
+			// Keep Jetpack's registered module available through the import map,
+			// but let our module start it after WordPress's initial DOM scan.
+			wp_dequeue_script_module( 'jetpack-search/overlay-bootstrap' );
+		}
+	}
+}
+
+/**
+ * Bind beta result templates to an additive presentation getter.
+ *
+ * Jetpack still owns the query, result records, actions and template. Only its
+ * result iteration reads our non-mutating view of image URLs/author labels.
+ *
+ * @param string $html Rendered Jetpack results-list block.
+ * @return string Markup with the theme presentation binding when supported.
+ */
+function hperkins_tokens_search_blocks_results( $html ) {
+	if ( ! hperkins_tokens_search_blocks_enabled() ||
+		! file_exists( get_stylesheet_directory() . '/assets/js/search-blocks.js' ) ||
+		! function_exists( 'wp_interactivity_state' ) || ! class_exists( 'WP_HTML_Tag_Processor' ) ) {
+		return $html;
+	}
+	$tags = new WP_HTML_Tag_Processor( $html );
+	if ( ! $tags->next_tag() ) {
+		return $html;
+	}
+	$tags->set_attribute( 'data-wp-bind--data-hp-search-state', 'state.hperkinsSearchState' );
+	$tags->set_attribute( 'data-hp-search-state', 'loading' );
+	$changed = false;
+	while ( $tags->next_tag() ) {
+		if ( 'TEMPLATE' === $tags->get_tag() && 'state.results' === $tags->get_attribute( 'data-wp-each--result' ) ) {
+			$tags->set_attribute( 'data-wp-each--result', 'state.hperkinsSearchResults' );
+			$changed = true;
+		}
+	}
+	if ( ! $changed ) {
+		return $html;
+	}
+	// Script Modules can finish loading in either order. An early hydration
+	// must wait for our getter, rather than briefly requesting malformed media.
+	wp_interactivity_state( 'jetpack-search', array( 'hperkinsSearchResults' => array(), 'hperkinsSearchState' => 'loading' ) );
+	return $tags->get_updated_html();
+}
+add_filter( 'render_block_jetpack-search/results-list', 'hperkins_tokens_search_blocks_results' );
+
+/**
  * Resolve utility pages that are destinations in a workflow, not search results.
  *
  * WooCommerce settings win over default slugs so renamed checkout/account pages
