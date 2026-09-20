@@ -44,6 +44,10 @@ const modernArtworkBudgets = {
 	'assets/wapuu/wapuu-hero.webp': 90000,
 	// Supplied Tableau mark, retained byte-for-byte from the design ZIP.
 	'assets/img/marks/tableu.png': 400000,
+	'assets/img/marks/tableu-634.webp': 110000,
+	'assets/img/marks/tableu-320.webp': 50000,
+	'assets/img/henry-perkins-240.webp': 10000,
+	'assets/img/henry-perkins-120.webp': 5000,
 	'assets/img/wapuu-color.webp': 60000,
 	'assets/img/wapuu-emblem-green.webp': 12000,
 };
@@ -376,8 +380,8 @@ for ( const file of [
 // content column less the grid gap and the card's inline padding. Both
 // screenshots sit in that same box and share one sizes string.
 assert(
-	contentImages.includes( "'(max-width: 1023px) 50vw, 32rem'" ),
-	'Showcase screenshot sizes must cover the full two-up card backdrop, capped at 32rem.'
+	contentImages.includes( "'(max-width: 600px) calc(100vw - 2rem), (max-width: 1023px) 50vw, 32rem'" ),
+	'Showcase sizes must cover one-column phones and two-column larger backdrops.'
 );
 assert(
 	contentImages.includes( "'small_width' => 768" ) && contentImages.includes( "'width'       => 1448" ),
@@ -387,13 +391,8 @@ assert(
 	contentImages.includes( "'sizes'       => '(max-width: 1216px) calc(100vw - 4rem), 72rem'" ),
 	'Digest photograph sizes must match the alignwide plate (calc(100vw - 4rem) below 1216px, 72rem above).'
 );
-// Core decides loading and fetchpriority for this one. It is the first content
-// image on the route, which wp_get_loading_optimization_attributes() already
-// keeps eager; hardcoding either here would override that on a likely LCP image.
-assert(
-	! /\bloading=|\bfetchpriority=/.test( contentImages ),
-	'inc/content-images.php must leave loading and fetchpriority to core.'
-);
+// Runtime loading policy, attribute preservation and route isolation are
+// exercised against WP_HTML_Tag_Processor by scripts/verify-content-images.php.
 
 // Release-sync contract: style.css Version, readme.txt Stable tag, and the
 // matching changelog entry must agree. filemtime() busts the cache, but the

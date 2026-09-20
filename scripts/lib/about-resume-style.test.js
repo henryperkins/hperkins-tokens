@@ -213,7 +213,7 @@ test( 'About v3 responsive shell follows the mobile bar, masthead plate, and ded
 	assert.match( aboutV3Css, /top:\s*var\(--hp-about-header-height, 0px\)/ );
 	const desktopCss = aboutV3Css.slice(
 		aboutV3Css.indexOf( '@media (min-width: 64rem)' ),
-		aboutV3Css.indexOf( '@media (prefers-reduced-motion' )
+		aboutV3Css.indexOf( '/* Approved mobile adaptation:' )
 	);
 	const tabletCss = aboutV3Css.slice(
 		aboutV3Css.indexOf( '@media (min-width: 782px)' ),
@@ -225,8 +225,8 @@ test( 'About v3 responsive shell follows the mobile bar, masthead plate, and ded
 	assert.match( tabletCss, /\.hp-about-resume-v3 \.hp-about-v3-hero__argument\s*\{[^}]*grid-column:\s*1 \/ -1;[^}]*grid-row:\s*2;/s );
 	assert.doesNotMatch( tabletCss, /\.hp-about-resume-v3 \.hp-about-showcase__grid/ );
 	assert.doesNotMatch( tabletCss, /\.hp-about-resume-v3 \.hp-about-education__record/ );
-	// Two cards to a row at every width, so the grid is a base rule now, not a
-	// 64rem upgrade.
+	// The desktop grid remains two-up; the approved phone adaptation follows
+	// this desktop block and is verified in the rendered mobile checks.
 	assert.match( aboutV3Css, /\.hp-about-resume-v3 \.hp-about-showcase__grid\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\);/s );
 	assert.doesNotMatch( desktopCss, /\.hp-about-resume-v3 \.hp-about-showcase__grid\s*\{[^}]*grid-template-columns:/s );
 	assert.match( desktopCss, /\.hp-about-resume-v3 \.hp-about-education__record\s*\{[^}]*grid-template-columns:\s*11rem minmax\(0, 1fr\);/s );

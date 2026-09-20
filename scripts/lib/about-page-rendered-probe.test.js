@@ -144,6 +144,17 @@ test( 'derives rendered copy from the accepted About body', () => {
 	assert.deepEqual( expectations.heroActionLabels, [ 'Download résumé (PDF)' ] );
 } );
 
+test( 'phone word counts omit the legacy screenshot placeholder while its body awaits publication', () => {
+	const source = fs.readFileSync( draftPath, 'utf8' );
+	const title = '<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">DJ Lee';
+	const placeholder = '<!-- wp:group {"tagName":"figure","className":"hp-about-showcase-card__shot is-need"} --><figure class="wp-block-group hp-about-showcase-card__shot is-need"><!-- wp:paragraph {"className":"hp-about-showcase-card__shot-need"} --><p class="hp-about-showcase-card__shot-need">Screenshot · thevoicesofjudah.com</p><!-- /wp:paragraph --></figure><!-- /wp:group -->';
+	assert.ok( source.includes( title ) );
+	const legacy = deriveRenderedExpectations( source.replace( title, placeholder + title ), { label: 'legacy placeholder fixture' } );
+	const candidate = deriveRenderedExpectations( source, { label: 'About mobile candidate' } );
+	assert.equal( legacy.phoneRenderedWordCount, candidate.phoneRenderedWordCount );
+	assert.equal( legacy.renderedWordCount, candidate.renderedWordCount + 2 );
+} );
+
 test( 'v3 heading expectations follow the reversible 64rem Education handoff', () => {
 	const source = fs.readFileSync( acceptedSnapshotPath, 'utf8' );
 	const expectations = deriveRenderedExpectations( source, { label: 'accepted About fixture' } );
@@ -268,6 +279,11 @@ test( 'v3 showcase stays stacked until the 64rem layout handoff', () => {
 	assert.equal( usesWideResumeShowcaseLayout( 'v3', 1024 ), true );
 	assert.equal( usesWideResumeShowcaseLayout( 'v2', 639 ), false );
 	assert.equal( usesWideResumeShowcaseLayout( 'v2', 640 ), true );
+} );
+
+test( 'current showcase uses one text column on phones and its wider layout above 600px', () => {
+	assert.equal( usesWideResumeShowcaseLayout( 'v3', 600, true ), false );
+	assert.equal( usesWideResumeShowcaseLayout( 'v3', 601, true ), true );
 } );
 
 test( 'exports the real-browser v3 interaction regression', () => {

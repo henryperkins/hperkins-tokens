@@ -45,14 +45,27 @@ defined( 'ABSPATH' ) || exit;
  * @return array<string, array<string, string|int>> Candidate descriptors.
  */
 function hperkins_tokens_content_image_candidates() {
-	// Both showcase screenshots sit in the same box, so they share one sizes
-	// string. The cards are two to a row at every width, so a card is half the
-	// content column less the grid gap. Backdrop figures cover the whole card,
-	// outside the filter rail: up to 504px on desktop. Half the viewport below
-	// 1024px safely covers the fluid gutters; 32rem caps the wide layout.
-	$showcase_card_sizes = '(max-width: 1023px) 50vw, 32rem';
+	// Narrow work records use one column. Their optional images remain deferred
+	// while hidden by the text-led phone layout; larger cards keep their backdrop.
+	$showcase_card_sizes = '(max-width: 600px) calc(100vw - 2rem), (max-width: 1023px) 50vw, 32rem';
 
 	return array(
+		'henry-perkins.png'                     => array(
+			'full'        => 'assets/img/henry-perkins-240.webp',
+			'small'       => 'assets/img/henry-perkins-120.webp',
+			'small_width' => 120,
+			'width'       => 240,
+			'height'      => 240,
+			'sizes'       => '80px',
+		),
+		'tableu.png'                            => array(
+			'full'        => 'assets/img/marks/tableu-634.webp',
+			'small'       => 'assets/img/marks/tableu-320.webp',
+			'small_width' => 320,
+			'width'       => 634,
+			'height'      => 845,
+			'sizes'       => $showcase_card_sizes,
+		),
 		'wcus-2026-phoenix.webp'                  => array(
 			'full'        => 'assets/img/imagery/wcus-2026-phoenix.webp',
 			'small'       => 'assets/img/imagery/wcus-2026-phoenix-768.webp',
@@ -95,52 +108,48 @@ function hperkins_tokens_content_image_candidates() {
 /**
  * Adds responsive candidates and intrinsic dimensions to theme-hosted images.
  *
- * Runs on wp_content_img_tag, which fires once per <img> inside
- * wp_filter_content_tags(). Core has already made its loading decision by then,
- * so this deliberately does not touch loading or fetchpriority: the photograph
- * is the first content image on the route, which is exactly the case
- * wp_get_loading_optimization_attributes() already keeps eager.
+ * Runs after core's loading pass. Only the About portrait and its four known
+ * deep-page showcase assets get explicit priority; the Digest photograph and
+ * every other route retain core's policy. The tag processor preserves upstream
+ * attributes and avoids duplicate dimensions or regex-sensitive URL rewrites.
  *
  * @param string $filtered_image The full img tag.
  * @return string The img tag, with candidates added when one is registered.
  */
 function hperkins_tokens_add_content_image_candidates( $filtered_image ) {
-	foreach ( hperkins_tokens_content_image_candidates() as $file_name => $candidate ) {
-		if ( false === strpos( $filtered_image, $file_name ) ) {
-			continue;
-		}
-
-		// Never fight an srcset that is already present: the same photograph
-		// added through the media library would arrive carrying core's own.
-		if ( false !== strpos( $filtered_image, 'srcset=' ) ) {
-			return $filtered_image;
-		}
-
-		$full  = esc_url( hperkins_tokens_asset_url( $candidate['full'] ) );
-		$small = esc_url( hperkins_tokens_asset_url( $candidate['small'] ) );
-
-		// Point the fallback src at the same cache-busted URL the srcset names,
-		// so one file never occupies two cache entries. Matched first and
-		// swapped with str_replace(), because a preg_replace() replacement
-		// string would reinterpret any $ or \ that survives esc_url().
-		if ( preg_match( '#\ssrc="[^"]*' . preg_quote( $file_name, '#' ) . '"#', $filtered_image, $matches ) ) {
-			$filtered_image = str_replace( $matches[0], ' src="' . $full . '"', $filtered_image );
-		}
-
-		$attributes = sprintf(
-			'srcset="%1$s %2$dw, %3$s %4$dw" sizes="%5$s" width="%4$d" height="%6$d" ',
-			$small,
-			(int) $candidate['small_width'],
-			$full,
-			(int) $candidate['width'],
-			esc_attr( $candidate['sizes'] ),
-			(int) $candidate['height']
-		);
-
-		return str_replace( '<img ', '<img ' . $attributes, $filtered_image );
+	$tag = new WP_HTML_Tag_Processor( $filtered_image );
+	if ( ! $tag->next_tag( 'IMG' ) ) {
+		return $filtered_image;
 	}
-
-	return $filtered_image;
+	$src        = (string) $tag->get_attribute( 'src' );
+	$image_path = (string) wp_parse_url( $src, PHP_URL_PATH );
+	$file_name  = basename( $image_path );
+	$candidates = hperkins_tokens_content_image_candidates();
+	if ( ! isset( $candidates[ $file_name ] ) ) {
+		return $filtered_image;
+	}
+	$is_portrait = 'henry-perkins.png' === $file_name;
+	if ( $is_portrait && ! str_ends_with( $image_path, '/uploads/2026/06/henry-perkins.png' ) ) {
+		return $filtered_image;
+	}
+	$candidate = $candidates[ $file_name ];
+	if ( ! $tag->get_attribute( 'srcset' ) ) {
+		$full  = hperkins_tokens_asset_url( $candidate['full'] );
+		$small = hperkins_tokens_asset_url( $candidate['small'] );
+		$tag->set_attribute( 'src', $full );
+		$tag->set_attribute( 'srcset', sprintf( '%s %dw, %s %dw', $small, $candidate['small_width'], $full, $candidate['width'] ) );
+		$tag->set_attribute( 'sizes', $candidate['sizes'] );
+		$tag->set_attribute( 'width', $candidate['width'] );
+		$tag->set_attribute( 'height', $candidate['height'] );
+	}
+	if ( is_page( 'about' ) && 'wcus-2026-phoenix.webp' !== $file_name ) {
+		$tag->set_attribute( 'loading', $is_portrait ? 'eager' : 'lazy' );
+		$tag->set_attribute( 'decoding', 'async' );
+		if ( ! $is_portrait ) {
+			$tag->remove_attribute( 'fetchpriority' );
+		}
+	}
+	return $tag->get_updated_html();
 }
 
 add_filter( 'wp_content_img_tag', 'hperkins_tokens_add_content_image_candidates' );

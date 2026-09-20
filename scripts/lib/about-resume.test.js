@@ -9,6 +9,28 @@ const themeRoot = path.join( __dirname, '..', '..' );
 const controllerPath = path.join( themeRoot, 'assets', 'js', 'about-resume.js' );
 const draftPath = path.join( themeRoot, 'content', 'page-drafts', 'about.html' );
 
+test( 'filter destinations count each ledger and omit ledgers with no matching evidence', () => {
+	const { evidenceDestinations } = require( controllerPath );
+	const ledgers = [
+		{ id: 'contributions', rows: [ { terms: [ 'AI Client', 'Documentation' ] }, { terms: [ 'AI Client' ] } ] },
+		{ id: 'experience', rows: [ { terms: [ 'Documentation' ] }, { terms: [ 'Technical support' ] } ] },
+	];
+	assert.deepEqual( evidenceDestinations( ledgers, 'AI Client' ), [
+		{ id: 'contributions', count: 2, label: 'View 2 matching contributions' },
+	] );
+	assert.deepEqual( evidenceDestinations( ledgers, 'Documentation' ), [
+		{ id: 'contributions', count: 1, label: 'View 1 matching contribution' },
+		{ id: 'experience', count: 1, label: 'View 1 matching role' },
+	] );
+} );
+
+test( 'cleared and unbacked filters offer no stale result destinations', () => {
+	const { evidenceDestinations } = require( controllerPath );
+	const ledgers = [ { id: 'contributions', rows: [ { terms: [ 'AI Client' ] } ] } ];
+	assert.deepEqual( evidenceDestinations( ledgers, null ), [] );
+	assert.deepEqual( evidenceDestinations( ledgers, 'Uncited' ), [] );
+} );
+
 test( 'v3 section numerals keep accessibility markup inside paragraph rich text', () => {
 	const source = fs.readFileSync( draftPath, 'utf8' );
 	const numbers = Array.from( source.matchAll( /<p class="hp-about-section__number"[^>]*>[\s\S]*?<\/p>/g ), ( match ) => match[ 0 ] );

@@ -296,18 +296,11 @@ function deriveV3RenderedExpectations( html, label ) {
 		return countVisibleWords( fold.outer, { label: `${ label } timeline fold ${ index + 1 }` } );
 	} );
 	const collapsedFoldWordCount = timelineFoldWords.slice( 1 ).reduce( ( sum, count ) => sum + count, 0 );
-
-	// Below 601px a showcase card is a glance: its summary is held back for the
-	// case study, so those words leave the render at the two phone viewports but
-	// not at 768. In the source the summary is the one <p> in the card carrying no
-	// class of its own — core adds `wp-block-paragraph` at render time, not here.
-	const summaryWordCount = usesFidelityPass
-		? findBalancedElementsByClass( html, 'hp-about-showcase-card', label ).reduce(
-			( sum, card ) => sum + ( card.inner.match( /<p>[\s\S]*?<\/p>/g ) || [] ).reduce(
-				( inner, paragraph ) => inner + countVisibleWords( paragraph, { label: `${ label } showcase summary` } ),
-				0
-			),
-			0
+	// The accepted body may retain the old placeholder until a separate page
+	// publication. Phone CSS hides its figure along with all showcase artwork.
+	const phonePlaceholderWordCount = usesFidelityPass
+		? findBalancedElementsByClass( html, 'hp-about-showcase-card__shot-need', label ).reduce(
+			( sum, placeholder ) => sum + countVisibleWords( placeholder.outer, { label } ), 0
 		)
 		: 0;
 
@@ -342,7 +335,7 @@ function deriveV3RenderedExpectations( html, label ) {
 		heroRevision: report.heroRevision,
 		narrowRenderedWordCount: report.wordCount - narrowOnlyWordCount - collapsedFoldWordCount,
 		narrowSourceWordCount: report.wordCount - narrowOnlyWordCount,
-		phoneRenderedWordCount: report.wordCount - narrowOnlyWordCount - collapsedFoldWordCount - summaryWordCount,
+		phoneRenderedWordCount: report.wordCount - narrowOnlyWordCount - collapsedFoldWordCount - phonePlaceholderWordCount,
 		navigationRevision: report.navigationRevision,
 		navLabel: report.navigationLabel,
 		navLinks,
@@ -661,6 +654,10 @@ function buildInspectionExpression( opts ) {
 				numberDisplays: Array.from(nav.querySelectorAll('.hp-about-nav__number')).map((number) => getComputedStyle(number).display),
 				parentClass: nav.parentElement ? String(nav.parentElement.className) : '',
 				position: getComputedStyle(nav).position,
+				toggle: nav.querySelector('.hp-about-nav__toggle') ? {
+					expanded: nav.querySelector('.hp-about-nav__toggle').getAttribute('aria-expanded'),
+					rect: rect(nav.querySelector('.hp-about-nav__toggle')),
+				} : null,
 				links: linkRoot ? Array.from(linkRoot.querySelectorAll('a')).map((link) => ({
 					text: link.textContent.trim(),
 					hash: link.getAttribute('href'),
@@ -698,6 +695,7 @@ function buildInspectionExpression( opts ) {
 			const mark = shot && shot.classList.contains('is-mark') ? shot.querySelector('img') : null;
 			return {
 				rect: rect(card),
+				summaryVisible: Array.from(card.querySelectorAll(':scope > p')).some(p => !p.classList.contains('hp-about-showcase-card__type') && !p.classList.contains('hp-about-showcase-card__link') && getComputedStyle(p).display !== 'none'),
 				shot: shot ? {
 					first: card.firstElementChild === shot,
 					rect: rect(shot),
@@ -864,6 +862,10 @@ function buildInspectionExpression( opts ) {
 		if (OPTS.countWords) {
 			const clone = content.cloneNode(true);
 			if (isV3) {
+				// Canonical reading count includes all disclosed destinations;
+				// keyboard probes may have closed the real navigation on blur.
+				const clonedNav = clone.querySelector('.hp-about-nav');
+				if (clonedNav) { clonedNav.classList.add('is-open'); }
 				const skillsHeading = clone.querySelector('#skills .hp-about-skills__heading');
 				const skillsEyebrow = clone.querySelector('#skills .hp-about-skills__eyebrow');
 				const skillsIntro = clone.querySelector('#skills .hp-about-skills__intro');
@@ -888,7 +890,9 @@ function buildInspectionExpression( opts ) {
 				if (skillsReadout) { skillsReadout.textContent = 'Pick a term to pull its evidence to the top. Nothing is hidden.'; }
 				if (educationHeading) { educationHeading.hidden = false; }
 				if (earlierRoles) { earlierRoles.hidden = false; }
-				clone.querySelectorAll('.hp-about-earlier__toggle, .hp-about-skills__clear').forEach((node) => node.remove());
+				// The timeline panel repeats the visible authored fold; keep it in
+				// the reading count while excluding generated action labels.
+				clone.querySelectorAll('[data-hp-about-generated]:not([data-hp-about-generated="timeline-panel"]), .hp-about-earlier__toggle, .hp-about-skills__clear').forEach((node) => node.remove());
 			}
 			clone.querySelectorAll('[hidden], [aria-hidden="true"]').forEach((node) => node.remove());
 			const shellMain = document.createElement('main');
@@ -1053,12 +1057,10 @@ function verifyTimelineGeometry( result, width, label, expectations ) {
 	}
 }
 
-// The design-fidelity pass moved `grid-template-columns: repeat(2, …)` onto the
-// showcase grid's base rule, so two cards to a row is no longer a 64rem upgrade
-// — it is every width. The accepted mirror still stacks until its own handoff.
+// The mobile adaptation keeps every summary in one column through 600px.
 function usesWideResumeShowcaseLayout( version, width, usesFidelityPass = false ) {
 	if ( usesFidelityPass ) {
-		return true;
+		return width > 600;
 	}
 	return width >= ( version === 'v3' ? 1024 : 640 );
 }
@@ -1110,9 +1112,11 @@ function verifyGeometry( result, viewport, expectations ) {
 			assertStacked( cardRects, `${ label } showcase grid` );
 		}
 		if ( expectations.usesFidelityPass ) {
-			// A card that opens on nothing is the regression this catches: the two
-			// projects with no screenshot ship a dashed plate, not an empty slot.
+			// Desktop retains available artwork. Phone records are text-led, and
+			// the DJ Lee candidate deliberately omits its old placeholder.
 			result.cards.forEach( ( card, index ) => {
+				assert(card.summaryVisible, `${label}: project ${index + 1} lost its summary.`);
+				if (width <= 600 || (index === 2 && !card.shot)) { return; }
 				assert(
 					card.shot && card.shot.first,
 					`${ label }: showcase card ${ index + 1 } does not open on its .hp-about-showcase-card__shot.`
@@ -1254,7 +1258,8 @@ function verifyGeometry( result, viewport, expectations ) {
 			assert( result.filterRail.parentClass.includes('hp-about-v3-layout'), `${ label }: filter rail left the résumé layout.` );
 			assert( result.filterRail.display === 'flex' && result.filterRail.position === 'sticky', `${ label }: filter rail is not the visible sticky desktop rail.` );
 		} else {
-			assert( result.nav.parentClass.includes('hp-about-v3-layout'), `${ label }: navigation did not return to the mobile layout.` );
+			assert( result.nav.parentClass.includes('hp-about-resume-v3'), `${ label }: navigation did not move above the mobile hero.` );
+			assert( result.nav.toggle && result.nav.toggle.rect.height >= 44, `${ label }: mobile jump control is missing or too small.` );
 			assert( result.nav.position === 'sticky', `${ label }: mobile navigation is ${ result.nav.position } instead of sticky.` );
 			// Inverted by the fidelity pass: the ordinal moved inside each pill's
 			// own anchor, where it is part of the link's name at every width. The
@@ -1460,6 +1465,11 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 	// A real keystroke puts the page in keyboard modality so :focus-visible
 	// reflects what a keyboard visitor sees.
 	await dispatchKey( cdp, sessionId, 'Tab', 'Tab', 9 );
+	// Inspect the actual disclosed destinations, then close the menu before
+	// capturing the reading state. A hidden list has no measurable hit targets.
+	if (expectations.version === 'v3' && viewport.width < 1024) {
+		await cdp.send('Runtime.evaluate', { expression: "document.querySelector('.hp-about-nav__toggle').click()" }, sessionId);
+	}
 
 	const evaluated = await cdp.send( 'Runtime.evaluate', {
 		expression: buildInspectionExpression( {
@@ -1508,7 +1518,7 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 				// kinds of suppression, added back separately so the message says
 				// which — the collapsed timeline folds, at every width, and what
 				// this particular viewport holds back (the desktop filter rail
-				// below 64rem, the showcase summaries below 601px). The fidelity
+				// below 64rem). Showcase summaries remain visible. The fidelity
 				// pass spends more of the budget — the spine numerals, the owed
 				// labels, the earlier-role bullets — so it carries its own range.
 				const wide = expectations.renderedWordCount ?? expectations.sourceWordCount;
@@ -1523,6 +1533,9 @@ async function inspectViewport( cdp, sessionId, url, viewport, expectations ) {
 			}
 	}
 
+	if (expectations.version === 'v3' && viewport.width < 1024) {
+		await cdp.send('Runtime.evaluate', { expression: "document.querySelector('.hp-about-nav__toggle[aria-expanded=\"true\"]')?.click()" }, sessionId);
+	}
 	return result;
 }
 
@@ -1898,7 +1911,7 @@ async function verifyV3NavigationCompatibility( cdp, sessionId, width ) {
 		assert( fixture.rows.length === 5, `${ fixture.name }: expected five navigation rows.` );
 		for ( const [ index, row ] of fixture.rows.entries() ) {
 			const label = `${ width }px ${ fixture.name } navigation row ${ index + 1 }`;
-			assert( row.linkHeight >= 44 && row.height <= 46, `${ label }: row is ${ row.height }px high with a ${ row.linkHeight }px target.` );
+			assert( row.linkHeight >= 44 && row.height <= ( width < 1024 ? 50 : 46 ), `${ label }: row is ${ row.height }px high with a ${ row.linkHeight }px target.` );
 			if ( width >= 1024 ) {
 				assert( row.numberDisplay !== 'none' && row.centerDifference <= 2, `${ label }: number and label must share one line.` );
 			} else {

@@ -157,6 +157,19 @@
 		return activeTerm + ' — ' + count + ' ' + (count === 1 ? 'row cites it' : 'rows cite it') + ', pulled to the top of each ledger.';
 	}
 
+	// Counts belong to each destination, not to the whole page: one skill may
+	// cite contributions and roles, or only one of those two ledgers.
+	function evidenceDestinations(ledgers, term) {
+		if (!term) {
+			return [];
+		}
+		return ledgers.map(function (record) {
+			var count = record.rows.filter(function (row) { return rowCites(row, term); }).length;
+			var noun = record.id === 'contributions' ? 'contribution' : 'role';
+			return { id: record.id, count: count, label: 'View ' + count + ' matching ' + noun + (count === 1 ? '' : 's') };
+		}).filter(function (destination) { return destination.count > 0; });
+	}
+
 	function formatRailReadout(activeTerm, count) {
 		if (!activeTerm) {
 			return RAIL_IDLE_READOUT;
@@ -308,6 +321,7 @@
 	function resetStaleEnhancement(rootElement) {
 		var layout = rootElement.querySelector('.hp-about-v3-layout');
 		var nav = rootElement.querySelector('.hp-about-nav');
+		if (nav) { nav.classList.remove('is-open'); }
 		var filterRail = rootElement.querySelector('.hp-about-filter-rail');
 		if (layout && nav && nav.parentNode !== layout) {
 			layout.insertBefore(nav, filterRail || layout.firstChild);
@@ -408,6 +422,66 @@
 		document.documentElement.style.removeProperty('--hp-about-header-height');
 	}
 
+	// Keep Jetpack's chat state, transport and dialog under Jetpack ownership.
+	// Only replace the collapsed launcher when the real control is present.
+	function mountContactChat(rootElement) {
+		var contact = rootElement.querySelector('#contact');
+		if (!contact || !window.MutationObserver) { return function () {}; }
+		var host = document.createElement('div');
+		host.className = 'hp-about-contact__chat';
+		host.setAttribute('data-hp-about-generated', 'contact-chat');
+		host.hidden = true;
+		var prompt = document.createElement('p');
+		prompt.textContent = 'Have a quick question?';
+		var button = createButton('Open chat', 'hp-about-contact__chat-button');
+		host.appendChild(prompt);
+		host.appendChild(button);
+		contact.appendChild(host);
+		var launchedHere = false;
+		var wasOpen = false;
+		var disposed = false;
+		function launcher() {
+			return document.querySelector('.agents-manager-chat [data-slot="collapsed-view"] button');
+		}
+		function sync() {
+			if (disposed) { return; }
+			var collapsed = launcher();
+			var open = Boolean(document.querySelector('.agents-manager-chat [data-slot="chat-input"]'));
+			var available = Boolean(collapsed || open);
+			host.hidden = !available;
+			document.documentElement.classList.toggle('has-about-inline-chat', available);
+			button.setAttribute('aria-expanded', String(open));
+			if (!wasOpen && open && launchedHere) {
+				var input = document.querySelector('.agents-manager-chat textarea');
+				if (input) { input.focus({ preventScroll: true }); }
+			}
+			if (wasOpen && !open && collapsed && launchedHere) {
+				(button.getClientRects().length ? button : collapsed).focus({ preventScroll: true });
+				launchedHere = false;
+			}
+			wasOpen = open;
+		}
+		button.addEventListener('click', function () {
+			var collapsed = launcher();
+			if (collapsed) {
+				launchedHere = true;
+				collapsed.click();
+			} else {
+				var input = document.querySelector('.agents-manager-chat textarea');
+				if (input) { input.focus(); }
+			}
+		});
+		var observer = new MutationObserver(sync);
+		observer.observe(document.body, { childList: true, subtree: true });
+		sync();
+		return function () {
+			disposed = true;
+			observer.disconnect();
+			host.remove();
+			document.documentElement.classList.remove('has-about-inline-chat');
+		};
+	}
+
 	function mount(rootElement) {
 		if (!rootElement || !rootElement.classList.contains('hp-about-resume-v3')) {
 			return null;
@@ -437,6 +511,7 @@
 		});
 		var canonicalByLedger = ledgers.map(function (ledger) {
 			return {
+				id: ledger.closest('section').id,
 				ledger: ledger,
 				divider: ledger.querySelector('.hp-about-ledger__divider'),
 				rows: Array.prototype.slice.call(ledger.querySelectorAll('.hp-about-index-row'))
@@ -460,6 +535,14 @@
 		var readout = rootElement.querySelector('.hp-about-skills__readout');
 		var controls = rootElement.querySelector('.hp-about-skills__controls');
 		var clearButton = createButton('Clear filter', 'hp-about-skills__clear');
+		var resultActions = document.createElement('div');
+		resultActions.className = 'hp-about-skills__results';
+		resultActions.setAttribute('data-hp-about-generated', 'results');
+		var returnControls = [];
+		var navList = nav ? nav.querySelector('.hp-about-nav__list') : null;
+		var navToggle = null;
+		var navListOriginalId = navList ? navList.getAttribute('id') : null;
+		var chatCleanup = null;
 		var earlier = rootElement.querySelector('.hp-about-earlier');
 		var earlierOriginalId = earlier ? earlier.getAttribute('id') : null;
 		var earlierToggle = null;
@@ -502,10 +585,67 @@
 			readout.setAttribute('aria-live', 'polite');
 		}
 		if (controls) {
+			controls.appendChild(resultActions);
+			generatedControls.push(resultActions);
 			clearButton.hidden = true;
 			clearButton.setAttribute('data-hp-about-generated', 'clear-filter');
 			controls.appendChild(clearButton);
 			generatedControls.push(clearButton);
+		}
+		canonicalByLedger.forEach(function (record) {
+			var button = createButton('Back to selected skill', 'hp-about-skills__return');
+			button.hidden = true;
+			button.setAttribute('data-hp-about-generated', 'return-filter');
+			record.ledger.parentNode.insertBefore(button, record.ledger);
+			button.addEventListener('click', function () {
+				var selected = termButtons.find(function (entry) { return entry.label === activeTerm; });
+				if (selected) {
+					selected.button.focus({ preventScroll: true });
+					selected.button.scrollIntoView({ block: 'center', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+				}
+			});
+			returnControls.push({ id: record.id, button: button });
+			generatedControls.push(button);
+		});
+
+		function closeSectionMenu(restoreFocus) {
+			if (!navToggle) { return; }
+			nav.classList.remove('is-open');
+			navToggle.setAttribute('aria-expanded', 'false');
+			if (restoreFocus) { navToggle.focus({ preventScroll: true }); }
+		}
+		function onSectionKey(event) {
+			if (event.key === 'Escape' && nav.classList.contains('is-open')) {
+				event.preventDefault();
+				closeSectionMenu(true);
+			}
+		}
+		function onSectionClick(event) {
+			if (event.target.closest('.hp-about-nav__list a')) { closeSectionMenu(false); }
+		}
+		function onOutsideSection(event) {
+			if (nav && !nav.contains(event.target)) { closeSectionMenu(false); }
+		}
+		function onSectionFocusOut(event) {
+			if (event.relatedTarget && !nav.contains(event.relatedTarget)) { closeSectionMenu(false); }
+		}
+		if (navList) {
+			navList.id = navList.id || 'hp-about-section-links';
+			navToggle = createButton('Jump to section', 'hp-about-nav__toggle');
+			navToggle.setAttribute('aria-controls', navList.id);
+			navToggle.setAttribute('aria-expanded', 'false');
+			navToggle.setAttribute('data-hp-about-generated', 'section-toggle');
+			nav.insertBefore(navToggle, nav.firstChild);
+			navToggle.addEventListener('click', function () {
+				var open = navToggle.getAttribute('aria-expanded') !== 'true';
+				navToggle.setAttribute('aria-expanded', String(open));
+				nav.classList.toggle('is-open', open);
+			});
+			nav.addEventListener('keydown', onSectionKey);
+			nav.addEventListener('click', onSectionClick);
+			nav.addEventListener('focusout', onSectionFocusOut);
+			document.addEventListener('pointerdown', onOutsideSection);
+			generatedControls.push(navToggle);
 		}
 		if (main) {
 			printToolbar = createPrintViewToolbar(document, {
@@ -637,6 +777,29 @@
 			});
 			writeReadout();
 			clearButton.hidden = !activeTerm;
+			var destinations = evidenceDestinations(canonicalByLedger, activeTerm);
+			resultActions.replaceChildren();
+			destinations.forEach(function (destination) {
+				var link = document.createElement('a');
+				link.href = '#' + destination.id;
+				link.className = 'hp-about-skills__result';
+				link.textContent = destination.label;
+				// Explicit activation owns navigation, including repeat activation
+				// when the URL already names this section.
+				link.addEventListener('click', function (event) {
+					if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || window.location.hash !== '#' + destination.id) { return; }
+					event.preventDefault();
+					var target = rootElement.querySelector('#' + destination.id);
+					target.setAttribute('tabindex', '-1');
+					target.focus({ preventScroll: true });
+					target.scrollIntoView({ block: 'start', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+				});
+				resultActions.appendChild(link);
+			});
+			returnControls.forEach(function (entry) {
+				entry.button.hidden = !destinations.some(function (destination) { return destination.id === entry.id; });
+				entry.button.textContent = activeTerm ? 'Back to ' + activeTerm + ' filter' : 'Back to selected skill';
+			});
 			playFlip(positions);
 		}
 
@@ -674,10 +837,20 @@
 			var focusedNavigation = nav && document.activeElement && nav.contains(document.activeElement) ? document.activeElement : null;
 			if (layoutWide && nav && heroContentsHost) {
 				heroContentsHost.appendChild(nav);
+			} else if (nav && !printViewActive) {
+				rootElement.insertBefore(nav, rootElement.firstChild);
 			} else if (nav && navHome && navHome.parentNode) {
 				navHome.parentNode.insertBefore(nav, navHome.nextSibling);
 			}
-			if (focusedNavigation && document.activeElement !== focusedNavigation) {
+			closeSectionMenu(false);
+			if (focusedNavigation) {
+				// A breakpoint can hide the disclosure button or its links.
+				// Move focus to the visible equivalent after relocating the nav.
+				if (layoutWide && focusedNavigation === navToggle) {
+					focusedNavigation = nav.querySelector('a[aria-current="location"]') || nav.querySelector('a');
+				} else if (!layoutWide && !printViewActive) {
+					focusedNavigation = navToggle;
+				}
 				try {
 					focusedNavigation.focus({ preventScroll: true });
 				} catch (error) {
@@ -722,6 +895,7 @@
 		}
 
 		moveSkillIndex(wideQuery);
+		chatCleanup = mountContactChat(rootElement);
 		if (wideQuery.addEventListener) {
 			wideQuery.addEventListener('change', moveSkillIndex);
 			mediaListenerBound = true;
@@ -992,6 +1166,14 @@
 				return;
 			}
 			state.disposed = true;
+			if (chatCleanup) { chatCleanup(); }
+			if (nav) {
+				nav.removeEventListener('keydown', onSectionKey);
+				nav.removeEventListener('click', onSectionClick);
+				nav.removeEventListener('focusout', onSectionFocusOut);
+				nav.classList.remove('is-open');
+			}
+			document.removeEventListener('pointerdown', onOutsideSection);
 			window.clearTimeout(flipTimer);
 			if (mediaListenerBound) {
 				if (wideQuery.removeEventListener) {
@@ -1016,6 +1198,13 @@
 			rows.forEach(function (row) { row.removeAttribute('data-hp-about-order'); });
 			repaintCitations(null);
 			moveSkillIndex({ matches: false });
+			if (nav && navHome && navHome.parentNode) {
+				navHome.parentNode.insertBefore(nav, navHome.nextSibling);
+			}
+			if (navList) {
+				if (navListOriginalId === null) { navList.removeAttribute('id'); }
+				else { navList.id = navListOriginalId; }
+			}
 			termButtons.forEach(function (entry) {
 				if (entry.button.parentNode) {
 					entry.button.replaceWith(entry.source);
@@ -1190,6 +1379,7 @@
 		IDLE_READOUT: IDLE_READOUT,
 		UNBACKED_COUNT: UNBACKED_COUNT,
 		buildIndex: buildIndex,
+		evidenceDestinations: evidenceDestinations,
 		createPrintViewToolbar: createPrintViewToolbar,
 		formatRailReadout: formatRailReadout,
 		formatReadout: formatReadout,

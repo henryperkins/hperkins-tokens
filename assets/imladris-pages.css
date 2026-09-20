@@ -5851,11 +5851,13 @@ p.hp-contact-form__hint {
 	text-transform: uppercase;
 }
 
-/* In the narrow fold the cue wraps as text, glyph attached; block padding
-   keeps the 44px target without a flex box. */
+/* Keep the linked cue and its glyph together inside a 44px touch target. */
 .hp-about-resume-v3 .hp-about-timeline__where a {
-	display: inline;
-	padding-block: 12px;
+	display: inline-flex;
+	align-items: center;
+	gap: var(--wp--preset--spacing--2);
+	min-height: 44px;
+	padding-block: var(--wp--preset--spacing--2);
 	color: var(--wp--custom--artifact-link);
 }
 
@@ -6796,9 +6798,8 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 	margin-inline: var(--hp-about-gutter);
 }
 
-/* Two cards to a row at every width, and on the phone a glance card: tight
-   padding, the smaller title, links stacked and the summary held back for the
-   case study. The 601px block below loosens all four. */
+/* Two columns above the phone breakpoint; narrow records are restated below
+   as a single text-led column with the complete project summary. */
 .hp-about-resume-v3 .hp-about-showcase__grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -6854,9 +6855,9 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 /* The summary is the one paragraph in the card that carries no class of its
    own — but it cannot be matched as `p:not([class])`, because WordPress renders
    every core Paragraph with `wp-block-paragraph`. Name the siblings instead.
-   Held back on the phone, where the card is a glance. */
+   Keep the complete description available at every width. */
 .hp-about-resume-v3 .hp-about-showcase-card > p:not(.hp-about-showcase-card__type):not(.hp-about-showcase-card__link):not(.hp-about-showcase-card__shot-need) {
-	display: none;
+	display: block;
 	margin: 0;
 	font-size: var(--wp--preset--font-size--base);
 	line-height: 1.6;
@@ -7571,6 +7572,224 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		aspect-ratio: auto;
 		align-self: stretch;
 		grid-row: auto;
+	}
+}
+
+/* Approved mobile adaptation: visible destinations, nearby result actions,
+   and an unobstructed reading surface. Desktop keeps the contents plate. */
+.hp-about-resume-v3 .hp-about-nav__toggle,
+.hp-about-resume-v3 .hp-about-contact__chat {
+	display: none;
+}
+
+.hp-about-resume-v3 .hp-about-skills__results {
+	display: grid;
+	flex: 1 0 100%;
+	gap: var(--wp--preset--spacing--2);
+	width: 100%;
+}
+
+.hp-about-resume-v3 .hp-about-skills__results:empty {
+	display: none;
+}
+
+.hp-about-resume-v3 .hp-about-skills__result,
+.hp-about-resume-v3 .hp-about-contact__chat-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 48px;
+	padding: var(--wp--preset--spacing--2) var(--wp--preset--spacing--3);
+	border: 1px solid var(--wp--custom--brand--default);
+	border-radius: var(--wp--custom--radius--sm);
+	font-family: var(--wp--preset--font-family--label);
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: 1.4;
+	text-align: center;
+	text-decoration: none;
+	color: var(--wp--custom--text--inverse);
+	background: var(--wp--custom--brand--default);
+	cursor: pointer;
+}
+
+.hp-about-resume-v3 .hp-about-skills__return {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: var(--wp--preset--spacing--2) 0;
+	border: 0;
+	font: var(--wp--custom--type--ui);
+	color: var(--wp--custom--artifact-link);
+	background: transparent;
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+	cursor: pointer;
+}
+
+.hp-about-resume-v3 .hp-about-skills__return[hidden],
+.hp-about-resume-v3 .hp-about-contact__chat[hidden] {
+	display: none;
+}
+
+@media (max-width: 1023px) {
+	.hp-about-resume-v3 .hp-about-nav {
+		display: block;
+		margin-inline: 0;
+		overflow: visible;
+		background: var(--wp--custom--surface--page);
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__list {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 0;
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__list a {
+		width: 100%;
+		min-height: 48px;
+		border: 0;
+		border-radius: 0;
+		white-space: normal;
+	}
+
+	.hp-about-resume-v3.is-enhanced .hp-about-nav__toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--wp--preset--spacing--3);
+		width: 100%;
+		min-height: 48px;
+		padding: var(--wp--preset--spacing--2) var(--wp--preset--spacing--3);
+		border: 1px solid var(--wp--custom--border--strong);
+		border-radius: var(--wp--custom--radius--sm);
+		font: var(--wp--custom--type--ui);
+		text-align: start;
+		color: var(--wp--custom--text--strong);
+		background: var(--wp--custom--surface--card);
+		cursor: pointer;
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__toggle::after {
+		content: "";
+		flex: 0 0 var(--wp--preset--spacing--2);
+		width: var(--wp--preset--spacing--2);
+		height: var(--wp--preset--spacing--2);
+		border-inline-end: 1px solid currentcolor;
+		border-block-end: 1px solid currentcolor;
+		transform: rotate(45deg);
+	}
+
+	.hp-about-resume-v3 .hp-about-nav__toggle[aria-expanded="true"]::after {
+		transform: rotate(225deg);
+	}
+
+	.hp-about-resume-v3.is-enhanced .hp-about-nav__list {
+		display: none;
+		position: absolute;
+		inset: 100% var(--hp-about-gutter) auto;
+		max-height: min(60dvh, 24rem);
+		overflow-y: auto;
+		border: 1px solid var(--wp--custom--border--strong);
+		background: var(--wp--custom--surface--card);
+	}
+
+	.hp-about-resume-v3.is-enhanced .hp-about-nav.is-open .hp-about-nav__list {
+		display: grid;
+	}
+
+	.hp-about-resume-v3 .hp-about-skills__clear {
+		width: 100%;
+		min-height: 48px;
+	}
+
+	.hp-about-resume-v3 .hp-about-contact__chat {
+		display: grid;
+		gap: var(--wp--preset--spacing--2);
+		margin-block-start: var(--wp--preset--spacing--5);
+	}
+
+	.hp-about-resume-v3 .hp-about-contact__chat p {
+		margin: 0;
+		font: var(--wp--custom--type--ui);
+	}
+
+	.hp-about-resume-v3 .hp-about-contact__chat-button {
+		color: var(--wp--custom--text--strong);
+		background: var(--wp--custom--surface--card);
+		border-color: var(--wp--custom--border--strong);
+	}
+
+	/* The class is set only after the real Jetpack launcher is available.
+	   Its open dialog remains untouched, including Jetpack's close action. */
+	html.has-about-inline-chat .agents-manager-chat [data-slot="chat-floating"]:has([data-slot="collapsed-view"]) {
+		display: none !important;
+	}
+}
+
+@media (max-width: 600px) {
+	.hp-about-resume-v3 .hp-about-showcase__grid {
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--wp--preset--spacing--6);
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase__grid .hp-about-showcase-card {
+		min-height: 0;
+		padding: 0 0 var(--wp--preset--spacing--5) var(--wp--preset--spacing--4);
+		border: 0;
+		border-inline-start: var(--hp-rule-entry) solid var(--wp--custom--rule--gold);
+		border-block-end: 1px solid var(--wp--custom--border--hair);
+		border-radius: 0;
+		background: transparent;
+		box-shadow: none;
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card h3 {
+		font-size: var(--wp--preset--font-size--xl);
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card__type {
+		color: var(--wp--custom--text--muted);
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card__type::before {
+		content: "";
+		display: inline-block;
+		width: var(--wp--preset--spacing--2);
+		height: var(--wp--preset--spacing--2);
+		margin-inline-end: var(--wp--preset--spacing--2);
+		border-radius: var(--wp--custom--radius--pill);
+		background: var(--wp--custom--rule--gold);
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card .hp-about-showcase-card__shot {
+		display: none;
+	}
+
+	.hp-about-resume-v3 .hp-about-showcase-card__link {
+		flex-direction: row;
+		flex-wrap: wrap;
+		gap: 0 var(--wp--preset--spacing--4);
+	}
+
+	.hp-about-resume-v3 .hp-about-contact.hp-action-panel {
+		padding: 0;
+		border: 0;
+		border-radius: 0;
+		background: transparent;
+		box-shadow: none;
+	}
+
+	body:has(.hp-about-resume-v3) .hp-footer__colophon a {
+		display: flex;
+		align-items: center;
+		min-height: 48px;
+		margin-block-start: var(--wp--preset--spacing--2);
+		font: var(--wp--custom--type--ui);
+	}
+
+	body:has(.hp-about-resume-v3) .hp-footer__colophon > span[aria-hidden="true"] {
+		display: none;
 	}
 }
 
