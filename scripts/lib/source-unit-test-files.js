@@ -22,6 +22,7 @@ const SOURCE_UNIT_TEST_FILES = [
 	'scripts/lib/production-gates-workflow.test.js',
 	'scripts/lib/release-record.test.js',
 	'scripts/lib/resume-route-contract.test.js',
+	'scripts/lib/search-policy.test.js',
 	'scripts/lib/site-url.test.js',
 	'scripts/lib/style-coverage.test.js',
 	'scripts/lib/support-resume-cleanup.test.js',

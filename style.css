@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.64
+Version: 0.3.65
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -3304,22 +3304,303 @@ body.search .wp-block-post-date {
 
 
 
-/* Jetpack instant-search overlay: keep the results legible if/where the
-	 overlay renders (low-specificity on purpose — harmless when absent). */
-:where(.jetpack-instant-search) .jetpack-instant-search__search-result-title {
+/* Jetpack owns the dialog and retrieval; this adapter keeps its controls and
+	 results in Imladris. The compound root on inputs deliberately outranks
+	 Assembler's four-:not() field selector, including Jetpack's bare Clear input. */
+.jetpack-instant-search.jetpack-instant-search__overlay {
+	color: var(--wp--custom--text--body);
+	font: var(--wp--custom--type--ui);
+	scrollbar-color: var(--wp--custom--border--strong) var(--wp--custom--surface--page);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-results,
+.jetpack-instant-search__overlay .jetpack-instant-search__jetpack-colophon {
+	background: var(--wp--custom--surface--raised);
+	color: var(--wp--custom--text--body);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__box,
+.jetpack-instant-search__overlay .jetpack-instant-search__search-results-secondary,
+.jetpack-instant-search__overlay .jetpack-instant-search__jetpack-colophon,
+.jetpack-instant-search__overlay button.jetpack-instant-search__overlay-close {
+	border-color: var(--wp--custom--border--hair);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-results-search-form,
+.jetpack-instant-search__overlay .jetpack-instant-search__box-label {
+	min-width: 0;
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__box-label {
+	gap: var(--wp--preset--spacing--1);
+	padding: var(--wp--preset--spacing--1);
+	font: var(--wp--custom--type--ui);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__box-gridicon {
+	width: var(--hp-touch-min);
+	height: var(--hp-touch-min);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__box-gridicon svg,
+.jetpack-instant-search__overlay button.jetpack-instant-search__overlay-close svg.gridicon {
+	fill: var(--wp--custom--text--muted);
+}
+.jetpack-instant-search.jetpack-instant-search__overlay .jetpack-instant-search__box input[type="search"].jetpack-instant-search__box-input {
+	flex: 1 1 0%;
+	width: 0;
+	min-width: 0;
+	max-width: none;
+	height: auto;
+	min-height: var(--hp-touch-min);
+	margin: 0;
+	padding: var(--wp--preset--spacing--2) var(--wp--preset--spacing--3);
+	border: 1px solid var(--wp--custom--border--strong);
+	border-radius: var(--hp-radius-panel);
+	background: var(--wp--custom--surface--page);
+	color: var(--wp--custom--text--strong);
+	font: var(--wp--custom--type--ui);
+	letter-spacing: var(--wp--custom--tracking--normal);
+	text-indent: 0;
+	caret-color: var(--wp--custom--brand--default);
+}
+.jetpack-instant-search.jetpack-instant-search__overlay .jetpack-instant-search__box input[type="search"].jetpack-instant-search__box-input::placeholder {
+	color: var(--wp--custom--text--muted);
+	opacity: 1;
+}
+.jetpack-instant-search.jetpack-instant-search__overlay .jetpack-instant-search__box .jetpack-instant-search__box-label input[type="button"] {
+	flex: 0 0 auto;
+	width: auto;
+	min-width: var(--hp-touch-min);
+	height: auto;
+	min-height: var(--hp-touch-min);
+	margin: 0;
+	padding: var(--wp--preset--spacing--2) var(--wp--preset--spacing--3);
+	border: 1px solid var(--wp--custom--border--brand);
+	border-radius: var(--hp-radius-panel);
+	background: var(--wp--custom--surface--raised);
+	color: var(--wp--custom--brand--default);
+	font: var(--wp--custom--type--ui);
+}
+.jetpack-instant-search__overlay button.jetpack-instant-search__overlay-close {
+	flex: 0 0 var(--hp-touch-min);
+	width: var(--hp-touch-min);
+	min-height: var(--hp-touch-min);
+	height: auto;
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-results-header {
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--5);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-results-title,
+.jetpack-instant-search__overlay .jetpack-instant-search__search-filters-title,
+.jetpack-instant-search__overlay .jetpack-instant-search__search-filter-sub-heading {
+	color: var(--wp--custom--text--strong);
+	font: var(--wp--custom--type--ui);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-results-title,
+.jetpack-instant-search__overlay .jetpack-instant-search__search-filters-title {
+	font-weight: var(--hp-weight-title);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-form-controls {
+	min-width: 0;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--2);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-sort {
+	min-width: 0;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--1);
+	font: var(--wp--custom--type--ui);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-sort-separator {
+	display: none;
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-form-controls .jetpack-instant-search__search-sort button.jetpack-instant-search__search-sort-option,
+.jetpack-instant-search__overlay .jetpack-instant-search__search-results-filter-button,
+.jetpack-instant-search__overlay .jetpack-instant-search__search-sort-select,
+.jetpack-instant-search__overlay .hp-search-filter-close {
+	min-height: var(--hp-touch-min);
+	min-width: var(--hp-touch-min);
+	padding: var(--wp--preset--spacing--2) var(--wp--preset--spacing--3);
+	border: 1px solid var(--wp--custom--border--hair);
+	border-radius: var(--hp-radius-panel);
+	background: var(--wp--custom--surface--raised);
+	color: var(--wp--custom--brand--default);
+	font: var(--wp--custom--type--ui);
+	text-transform: none;
+	letter-spacing: var(--wp--custom--tracking--normal);
+	cursor: pointer;
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-form-controls .jetpack-instant-search__search-sort button.jetpack-instant-search__search-sort-option.is-selected {
+	border-color: var(--wp--custom--border--brand);
+	background: var(--wp--custom--brand--subtle);
+	color: var(--wp--custom--brand--default);
+	font-weight: var(--hp-weight-title);
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+.jetpack-instant-search.jetpack-instant-search__overlay .jetpack-instant-search__box .jetpack-instant-search__box-label input[type="button"]:hover,
+.jetpack-instant-search__overlay .jetpack-instant-search__search-form-controls .jetpack-instant-search__search-sort button.jetpack-instant-search__search-sort-option:hover,
+.jetpack-instant-search__overlay .jetpack-instant-search__search-results-filter-button:hover,
+.jetpack-instant-search__overlay .hp-search-filter-close:hover {
+	background: var(--wp--custom--brand--subtle);
+	color: var(--wp--custom--brand--hover);
+}
+/* Jetpack supplies !important UA focus outlines; retain a visible, consistent
+	 theme ring without changing its hidden focus-anchor behavior. */
+.jetpack-instant-search.jetpack-instant-search__overlay :is(input, select, button, a):focus-visible {
+	outline: 3px solid var(--wp--preset--color--gold-700) !important;
+	outline-offset: 2px;
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-result-title {
 	font-family: var(--hp-font-display);
 	font-size: var(--wp--preset--font-size--xl);
-	line-height: 1.2;
+	line-height: var(--wp--custom--leading--snug);
+	color: var(--wp--custom--text--strong);
+	overflow-wrap: anywhere;
 }
-:where(.jetpack-instant-search) .jetpack-instant-search__search-result-expanded__content {
-	font-size: var(--wp--preset--font-size--base);
+.jetpack-instant-search__overlay .jetpack-instant-search__search-result-title a {
+	color: var(--wp--custom--brand--default);
 }
-:where(.jetpack-instant-search) .jetpack-instant-search__search-filter-header,
-:where(.jetpack-instant-search) .jetpack-instant-search__search-results-count {
-	font-family: var(--hp-font-label);
-	font-size: var(--wp--preset--font-size--xs);
-	letter-spacing: var(--wp--custom--tracking--wide);
-	text-transform: uppercase;
+.jetpack-instant-search__overlay .jetpack-instant-search__search-result-expanded__content,
+.jetpack-instant-search__overlay .jetpack-instant-search__search-result-minimal-content {
+	max-width: var(--wp--custom--measure--prose);
+	color: var(--wp--custom--text--body);
+	font: var(--wp--custom--type--ui);
+	overflow-wrap: anywhere;
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-results-list {
+	color: var(--wp--custom--text--body);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-results mark {
+	background: var(--wp--custom--accent--subtle);
+	color: var(--wp--custom--text--strong);
+}
+.jetpack-instant-search__overlay :is(.jetpack-instant-search__path-breadcrumb, .jetpack-instant-search__path-breadcrumb-link, .jetpack-instant-search__search-result-expanded__footer-date, .jetpack-instant-search__search-result-expanded__footer-author) {
+	color: var(--wp--custom--text--muted);
+	font-size: var(--wp--preset--font-size--sm);
+}
+.jetpack-instant-search__overlay [data-hp-search-image-failed],
+.jetpack-instant-search__overlay .jetpack-instant-search__search-result-expanded__image-link:has([data-hp-search-image-failed]) {
+	display: none;
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-result-expanded:has([data-hp-search-image-failed]) .jetpack-instant-search__search-result-expanded__copy-container {
+	width: 100%;
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-filter-list > div {
+	align-items: center;
+	margin-top: var(--wp--preset--spacing--1);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-filter-list .jetpack-instant-search__search-filter-list-label {
+	display: flex;
+	align-items: center;
+	flex: 1 1 auto;
+	min-height: var(--hp-touch-min);
+	font: var(--wp--custom--type--ui);
+	overflow-wrap: anywhere;
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__search-filter-list-input {
+	accent-color: var(--wp--custom--brand--default);
+}
+.jetpack-instant-search__overlay .jetpack-instant-search__sidebar .jetpack-instant-search__search-filters button.jetpack-instant-search__clear-filters-link {
+	position: static;
+	min-height: var(--hp-touch-min);
+	padding: var(--wp--preset--spacing--2) 0;
+	color: var(--wp--custom--brand--default);
+	font: var(--wp--custom--type--ui);
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+.jetpack-instant-search__overlay .hp-search-filter-close {
+	display: none;
+}
+.jetpack-instant-search__overlay .hp-search-recovery {
+	margin: var(--wp--preset--spacing--6) var(--wp--preset--spacing--7);
+	max-width: var(--wp--custom--measure--prose);
+	color: var(--wp--custom--text--body);
+	font: var(--wp--custom--type--ui);
+}
+.jetpack-instant-search__overlay .hp-search-recovery[hidden] {
+	display: none;
+}
+.jetpack-instant-search__overlay .hp-search-recovery h2 {
+	margin: 0 0 var(--wp--preset--spacing--2);
+	color: var(--wp--custom--text--strong);
+	font: var(--wp--custom--type--h-3);
+}
+.jetpack-instant-search__overlay .hp-search-recovery p {
+	margin: 0 0 var(--wp--preset--spacing--4);
+}
+.jetpack-instant-search__overlay .hp-search-recovery nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--5);
+}
+.jetpack-instant-search__overlay .hp-search-recovery a {
+	display: inline-flex;
+	align-items: center;
+	min-height: var(--hp-touch-min);
+	color: var(--wp--custom--brand--default);
+	text-decoration: underline;
+	text-underline-offset: 0.2em;
+}
+/* The controller marks only confirmed states. Retrieval errors retain Jetpack's
+	 own feedback; active filters stay reachable when they explain zero results. */
+.jetpack-instant-search__overlay[data-hp-search-state="empty"] :is(.jetpack-instant-search__search-results-list, .jetpack-instant-search__search-results-header, .jetpack-instant-search__search-results-secondary, .jetpack-instant-search__search-results-pagination),
+.jetpack-instant-search__overlay[data-hp-search-state="no-results"] .jetpack-instant-search__search-sort,
+.jetpack-instant-search__overlay[data-hp-search-state="no-results"] .jetpack-instant-search__search-filter-list > div:has(input:disabled):not(:has(input:checked)),
+.jetpack-instant-search__overlay[data-hp-search-state="no-results"]:not(:has(.jetpack-instant-search__search-filters input:checked)) :is(.jetpack-instant-search__search-results-secondary, .jetpack-instant-search__search-results-filter-button, .jetpack-instant-search__search-results-header) {
+	display: none;
+}
+.jetpack-instant-search__overlay[data-hp-search-state="empty"] .jetpack-instant-search__search-results-primary,
+.jetpack-instant-search__overlay[data-hp-search-state="no-results"]:not(:has(.jetpack-instant-search__search-filters input:checked)) .jetpack-instant-search__search-results-primary {
+	max-width: 100%;
+}
+@media (max-width: 991.98px) {
+	.jetpack-instant-search__overlay .jetpack-instant-search__search-results-secondary.jetpack-instant-search__search-results-secondary--show-as-modal {
+		inset-inline: var(--wp--preset--spacing--3);
+		min-width: 0;
+		width: auto;
+		max-width: calc(100% - 2 * var(--wp--preset--spacing--3));
+		max-height: min(80dvh, calc(100dvh - 2 * var(--hp-touch-min)));
+		padding: var(--wp--preset--spacing--4);
+		border: 1px solid var(--wp--custom--border--hair);
+		border-radius: var(--hp-radius-panel);
+		background: var(--wp--custom--surface--raised);
+		box-shadow: var(--wp--custom--shadow--md);
+		color: var(--wp--custom--text--body);
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+	.jetpack-instant-search__overlay .jetpack-instant-search__search-results-secondary--show-as-modal .hp-search-filter-close {
+		display: block;
+		position: sticky;
+		top: 0;
+		z-index: 1;
+		width: 100%;
+		margin-bottom: var(--wp--preset--spacing--3);
+		border-color: var(--wp--custom--border--brand);
+	}
+}
+@media (max-width: 575.98px) {
+	.jetpack-instant-search__overlay .jetpack-instant-search__box-gridicon {
+		width: var(--wp--preset--spacing--5);
+	}
+	.jetpack-instant-search__overlay .jetpack-instant-search__search-results-header {
+		align-items: flex-start;
+		flex-direction: column;
+		margin-inline: var(--wp--preset--spacing--4);
+	}
+	.jetpack-instant-search__overlay .jetpack-instant-search__search-form-controls {
+		width: 100%;
+		justify-content: space-between;
+		flex-direction: row;
+	}
+	.jetpack-instant-search__overlay .jetpack-instant-search__search-sort-with-select {
+		margin: 0;
+	}
+	.jetpack-instant-search__overlay .jetpack-instant-search__search-results-list,
+	.jetpack-instant-search__overlay .hp-search-recovery {
+		margin-inline: var(--wp--preset--spacing--4);
+	}
+	.jetpack-instant-search__overlay .jetpack-instant-search__search-result-expanded__image-container {
+		max-width: 100%;
+	}
 }
 
 /* ===========================================================================

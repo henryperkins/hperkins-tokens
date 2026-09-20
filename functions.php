@@ -34,6 +34,7 @@ require_once get_stylesheet_directory() . '/inc/about-gravatar-heading.php';
 require_once get_stylesheet_directory() . '/inc/component-styles.php';
 require_once get_stylesheet_directory() . '/inc/content-images.php';
 require_once get_stylesheet_directory() . '/inc/resume-route.php';
+require_once get_stylesheet_directory() . '/inc/search.php';
 
 if ( ! function_exists( 'hperkins_tokens_asset_url' ) ) {
 	/**
@@ -151,6 +152,27 @@ add_action( 'wp_enqueue_scripts', function () {
 				'strategy'  => 'defer',
 			)
 		);
+	}
+
+	// Register the image hook before Jetpack boots. A dependency also preserves
+	// execution order when WordPress resolves deferred and blocking scripts.
+	$search_enhance_rel  = '/assets/js/search-enhance.js';
+	$search_enhance_file = get_stylesheet_directory() . $search_enhance_rel;
+	if ( wp_script_is( 'jetpack-instant-search', 'registered' ) && file_exists( $search_enhance_file ) ) {
+		wp_enqueue_script(
+			'hperkins-search-enhance',
+			get_stylesheet_directory_uri() . $search_enhance_rel,
+			array( 'wp-hooks', 'hperkins-header-controller' ),
+			filemtime( $search_enhance_file ),
+			array( 'in_footer' => true, 'strategy' => 'defer' )
+		);
+		wp_add_inline_script(
+			'hperkins-search-enhance',
+			'window.hpSearchConfig = ' . wp_json_encode( hperkins_tokens_search_client_config(), JSON_HEX_TAG | JSON_HEX_AMP ) . ';',
+			'before'
+		);
+		$scripts = wp_scripts();
+		$scripts->registered['jetpack-instant-search']->deps[] = 'hperkins-search-enhance';
 	}
 
 	// Progressive enhancement for the contact + subscribe forms: inline email

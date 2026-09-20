@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.64
+Stable tag: 0.3.65
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -411,6 +411,15 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.65 =
+
+* Harden visitor search: repair relative indexed thumbnails before Photon,
+  use one image description, and collapse unavailable thumbnails.
+* Fit filters on narrow screens with an explicit return control; improve
+  touch targets, field sizing, accessible names, and focus after Clear/Close.
+* Provide empty/no-result recovery links, use site-wide search copy, exclude
+  utility checkout/account pages, and disable optional AI answers via filters.
 
 = 0.3.64 =
 * Reordered the Home hero source so its stacked reading path is finalist label,

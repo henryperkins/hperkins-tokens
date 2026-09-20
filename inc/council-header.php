@@ -31,7 +31,7 @@ function hperkins_tokens_get_council_navigation_fallback() {
 			),
 		),
 		'about'     => array( 'label' => 'About', 'url' => '/about/' ),
-		'search'    => array( 'label' => 'Search', 'placeholder' => 'Search the journal' ),
+		'search'    => array( 'label' => 'Search', 'placeholder' => 'Search the site' ),
 		'subscribe' => array( 'label' => 'Subscribe', 'url' => '/contact/#subscribe' ),
 	);
 }
@@ -204,7 +204,8 @@ function hperkins_tokens_get_council_navigation_model() {
 		),
 		'search'    => array(
 			'label'       => isset( $search['attrs']['label'] ) ? (string) $search['attrs']['label'] : 'Search',
-			'placeholder' => isset( $search['attrs']['placeholder'] ) ? (string) $search['attrs']['placeholder'] : 'Search the journal',
+			'placeholder' => isset( $search['attrs']['placeholder'] ) && 'Search the journal' !== $search['attrs']['placeholder']
+				? (string) $search['attrs']['placeholder'] : 'Search the site',
 		),
 		'subscribe' => array(
 			'label' => $subscribe_item['label'],
