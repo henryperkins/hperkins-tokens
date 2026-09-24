@@ -35,6 +35,7 @@ require_once get_stylesheet_directory() . '/inc/component-styles.php';
 require_once get_stylesheet_directory() . '/inc/content-images.php';
 require_once get_stylesheet_directory() . '/inc/resume-route.php';
 require_once get_stylesheet_directory() . '/inc/search.php';
+require_once get_stylesheet_directory() . '/inc/react-19-opt-out.php';
 
 if ( ! function_exists( 'hperkins_tokens_asset_url' ) ) {
 	/**

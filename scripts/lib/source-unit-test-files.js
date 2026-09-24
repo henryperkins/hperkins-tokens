@@ -20,6 +20,7 @@ const SOURCE_UNIT_TEST_FILES = [
 	'scripts/lib/placement-artifact-contract.test.js',
 	'scripts/lib/placement-artifact-links.test.js',
 	'scripts/lib/production-gates-workflow.test.js',
+	'scripts/lib/react-19-opt-out.test.js',
 	'scripts/lib/release-record.test.js',
 	'scripts/lib/resume-route-contract.test.js',
 	'scripts/lib/search-policy.test.js',
