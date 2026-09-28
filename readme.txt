@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.69
+Stable tag: 0.3.70
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -412,6 +412,46 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.70 =
+* Keep nested essay section links beside their headings, and let the mobile
+  drawer toggle reverse a closing animation without a stale timer hiding it.
+  Browser regressions cover nested Group/Column links across the gutter
+  breakpoint and reopening after every drawer close path, plus reduced motion.
+* Essay reader hand-off (2026-09-28 design handoff). "Skip to content" now
+  lands on the essay's title: the reader hero sat above <main>, the skip
+  link's target, and now opens it. "Continue reading" sets three cards, the
+  two newest from 900px down and one column from 620px, so a third card is
+  never orphaned on a row of its own.
+* The hero's meta row gains a read time measured from the post body by a
+  block-bindings source, round(words / 230), shown for no post behind a
+  password; an empty item, such as an author with no display name, no longer
+  leaves a gap. A hero with no featured image carries the postcard's compass
+  star in its right gutter, masked off the text column, turning a quarter as
+  the hero scrolls away and holding still under reduced motion.
+* The essay opens on a three-line drop cap, moved past a wholly italic opening
+  dek, and closes on a small gold star that looks past the Jetpack sharing
+  blocks inside the prose. Each level-2 heading in the body gets a stable id
+  and a § link in the left gutter, with more air above a section than below
+  it. The link also copies the section's canonical address, and a polite toast
+  says so only once the clipboard confirms. A gold hairline above the masthead
+  tracks progress through the essay itself. New assets/js/reader.js is
+  enqueued on every route, so a router swap into a post finds it loaded.
+* "Continue reading" spans the wide column, as the /essays/ grids do. Its
+  constrained group narrowed the heading and cards to the 44rem text column,
+  so three columns set three 213px cards at 1280px; they now set at 363px.
+  Three details of the essay design that the handoff did not list land too:
+  "All essays" is a 44px tap target, a numbered list counts in text-accent
+  mono figures at 0.8em, and the standfirst wraps pretty like the prose.
+* Print drops the hairline, the § links and the star. The handoff's two other
+  items were already in place: "Continue reading" excludes the current post,
+  and the subscribe plate is hidden in print.
+* Verification: scripts/verify-reader.php renders single.html around an
+  unsaved post to pin the read time, section ids, dek and plate;
+  scripts/verify-reader.js walks the handoff's checklist in Chrome, plus the
+  related grid's width, the back link's height and a list's markers; and
+  verify-journal-templates.js pins the hero inside <main>, the binding and
+  the related group's wide layout.
 
 = 0.3.69 =
 * Council header hand-off (2026-09-26 design handoff). A click on a menu that

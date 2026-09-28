@@ -266,7 +266,8 @@
 
 .hp-reader-hero::after,
 .hp-reader-hero .wp-block-cover__background,
-.hp-reader-hero .wp-block-cover__image-background {
+.hp-reader-hero .wp-block-cover__image-background,
+.hp-reader-hero__plate {
 		display: none !important;
 	}
 

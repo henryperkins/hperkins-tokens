@@ -2382,6 +2382,42 @@ p.hp-contact-form__hint {
   margin: 0 auto;
   text-align: center;
 }
+/* Compass plate (2026-09-28 essay-post hand-off). inc/reader.php adds it only
+   to a hero with no featured image: it paints between the dim overlay and the
+   type, the layer the contrast model above ignores, and over the flat twilight
+   ground it composites darker than that model — over a light photograph it
+   would not. The postcard's fallback star at hero scale, with a finer stroke
+   (0.8 for the card's 1.4, which reads heavy this large). The mask keeps it off
+   the text column entirely and brings it to full strength 8rem into the right
+   gutter, so the star never sits behind type; below ~704px it hides it
+   completely. It stacks above the dim overlay (same layer, later in the DOM)
+   and under both the scrim (::after) and the text. reader.js turns it a quarter
+   as the hero scrolls away — four-fold symmetric, it lands on itself, like the
+   card hover and the header's brand star — and holds it still under reduced
+   motion. */
+.hp-reader-hero__plate {
+  --hp-reader-turn: 0deg;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.45;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent calc(50% + var(--wp--custom--container--text) / 2), #000 calc(50% + var(--wp--custom--container--text) / 2 + 8rem));
+  mask-image: linear-gradient(90deg, transparent calc(50% + var(--wp--custom--container--text) / 2), #000 calc(50% + var(--wp--custom--container--text) / 2 + 8rem));
+}
+.hp-reader-hero__plate > span {
+  position: absolute;
+  top: 50%;
+  /* The right gutter's midpoint, halfway from the column's edge to the hero's. */
+  left: calc(75% + var(--wp--custom--container--text) / 4);
+  /* 1.6 × the gutter, held between 320 and 704px. */
+  width: clamp(20rem, calc((50% - var(--wp--custom--container--text) / 2) * 1.6), 44rem);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  rotate: var(--hp-reader-turn);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cg stroke='%23C29A44' stroke-width='0.8' stroke-linejoin='round' stroke-linecap='round' opacity='0.9'%3E%3Cpath d='M50 3 L63.8 16.7 L83.2 16.8 L83.3 36.2 L97 50 L83.3 63.8 L83.2 83.2 L63.8 83.3 L50 97 L36.2 83.3 L16.8 83.2 L16.7 63.8 L3 50 L16.7 36.2 L16.8 16.8 L36.2 16.7 Z'/%3E%3Cpath d='M50 21 L57.5 42.5 L79 50 L57.5 57.5 L50 79 L42.5 57.5 L21 50 L42.5 42.5 Z' opacity='0.5'/%3E%3Ccircle cx='50' cy='50' r='4.5' fill='%23C29A44' stroke='none'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+  will-change: rotate;
+}
 .hp-reader-hero__topic,
 .hp-reader-hero__topic a {
   font-family: var(--wp--preset--font-family--label);
@@ -2405,6 +2441,9 @@ p.hp-contact-form__hint {
   max-width: var(--wp--custom--measure--narrow);
   font-size: var(--wp--preset--font-size--lg);
   line-height: var(--wp--custom--leading--relaxed);
+  /* The excerpt sits outside the post content, so style.css's "prose wraps
+     pretty" rule does not reach it. */
+  text-wrap: pretty;
 }
 .hp-reader-hero__meta,
 .hp-reader-hero__meta a {
@@ -2415,6 +2454,17 @@ p.hp-contact-form__hint {
   font-size: var(--wp--preset--font-size--xs);
   /* parchment-100 for the same reason as the standfirst above. */
   color: var(--wp--preset--color--parchment-100);
+}
+/* Read time, the row's third item: measured from the post body by
+   inc/reader.php's block-bindings source rather than typed. It takes the row's
+   own treatment and its gap-only separation. An item that renders empty — a
+   post whose author has no display name, or a figure that could not be
+   measured — must not leave a gap behind it. */
+.hp-reader-hero__readtime {
+  margin: 0;
+}
+.hp-reader-hero__meta > :empty {
+  display: none;
 }
 
 /* Reader tags. The pills themselves are the shared .hp-tag component (joined to
@@ -2444,8 +2494,14 @@ p.hp-contact-form__hint {
   display: none;
 }
 
-/* Reader body — back link + related. */
+/* Reader body — back link + related. The back link is a 44px tap target with
+   the arrow a gap-width from its label, as the essay design sets it; as a bare
+   inline link it was 17px tall. */
 .hp-reader__back a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--wp--preset--spacing--2);
+  min-height: var(--hp-touch-min);
   font-family: var(--wp--preset--font-family--label);
   font-size: var(--wp--preset--font-size--xs);
   letter-spacing: var(--wp--custom--tracking--caps);
@@ -2454,11 +2510,157 @@ p.hp-contact-form__hint {
   text-decoration: none;
 }
 .hp-reader__back a:hover { color: var(--wp--custom--text--accent); }
+
+/* Drop cap: three lines on the essay's first paragraph. A body that opens on
+   anything but a paragraph gets none, by design. A wholly italic opening
+   paragraph is a set-off dek rather than the essay's first paragraph, and a
+   three-line initial on a one-line subtitle leaves a hole under it, so
+   inc/reader.php marks it .hp-prose__dek and the cap moves to the paragraph
+   after it. initial-letter where it is supported; a float everywhere else. */
+.hp-reader .hp-prose > p:first-child:not(.hp-prose__dek)::first-letter,
+.hp-reader .hp-prose > p.hp-prose__dek:first-child + p::first-letter {
+  float: left;
+  margin: 0.06em 0.1em 0 0;
+  font-family: var(--wp--preset--font-family--display);
+  font-weight: var(--wp--custom--weight--medium);
+  font-size: 5.3em;
+  line-height: 0.75;
+  color: var(--wp--custom--text--strong);
+}
+@supports (initial-letter: 3) {
+  .hp-reader .hp-prose > p:first-child:not(.hp-prose__dek)::first-letter,
+  .hp-reader .hp-prose > p.hp-prose__dek:first-child + p::first-letter {
+    float: none;
+    margin: 0 0.14em 0 0;
+    font-size: inherit;
+    line-height: inherit;
+    initial-letter: 3;
+  }
+}
+
+/* Section marks. inc/reader.php wraps each level-2 heading in the post body as
+   .hp-sec with a § link to its id; reader.js also copies the link's address
+   and says so. The link is the heading's sibling, not its child, so the
+   heading keeps its own accessible name. The wrapper takes the heading's place
+   in the flow, with more air above a section than below it. The mark hangs in
+   the left gutter on the heading's first line: hidden until the section is
+   hovered or the mark focused, always shown where there is no hover (an
+   invisible mark would be an invisible tap target), and marked in accent when
+   a shared link lands on its heading. Two classes deep throughout, because
+   theme.json's :root-scoped link rules tie with one class and production
+   prints this sheet ahead of them. Focus keeps the system ring. */
+/* Every section positions its own mark. inc/reader.php also marks a heading
+   nested in a group or column; without this its § escaped to <main>'s corner,
+   off-screen at the top of the page, and keyboard focus vanished into it. */
+.hp-prose .hp-sec {
+  position: relative;
+}
+.hp-prose > .hp-sec {
+  margin-block: var(--wp--preset--spacing--8) var(--wp--preset--spacing--4);
+}
+.hp-prose > .hp-sec:first-child,
+.hp-prose > .hp-sec + * {
+  margin-block-start: 0;
+}
+.hp-sec > h2 {
+  margin: 0;
+  /* The masthead plus clear air, so a shared link lands on the heading rather
+     than under the sticky bar. */
+  scroll-margin-top: calc(var(--hp-header-h) + var(--wp--preset--spacing--5));
+}
+.hp-sec > .hp-sec__link {
+  position: absolute;
+  top: 0;
+  right: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--wp--preset--spacing--6);
+  /* The heading's first line box. */
+  height: calc(var(--wp--preset--font-size--3-xl) * var(--wp--custom--leading--snug));
+  margin-right: var(--wp--preset--spacing--2);
+  font-family: var(--wp--preset--font-family--display);
+  font-size: var(--wp--preset--font-size--xl);
+  line-height: 1;
+  color: var(--wp--custom--text--faint);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+              color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+.hp-sec > .hp-sec__link:hover {
+  color: var(--wp--custom--text--accent);
+}
+.hp-sec:hover > .hp-sec__link,
+.hp-sec > .hp-sec__link:focus-visible,
+.hp-sec:has(:target) > .hp-sec__link {
+  opacity: 1;
+}
+.hp-sec:has(:target) > .hp-sec__link {
+  color: var(--wp--custom--text--accent);
+}
+@media (hover: none) {
+  .hp-sec > .hp-sec__link { opacity: 1; }
+}
+/* No gutter to hang in. The heading keeps its id, so a shared link still lands. */
+@media (max-width: 900px) {
+  .hp-sec > .hp-sec__link { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-sec > .hp-sec__link { transition: none; }
+}
+
+/* End mark: the compass star's outer octagram in gold closes the essay. It
+   takes the body's last paragraph, looking past the Jetpack sharing and likes
+   blocks that the_content appends inside the prose; an essay that ends on
+   anything but a paragraph gets none. Generated content with no text, so
+   nothing reaches assistive technology. */
+.hp-reader .hp-prose > p:nth-last-child(1 of :not(.sharedaddy, .jp-relatedposts))::after {
+  content: "";
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  margin-left: 0.45em;
+  vertical-align: -0.04em;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 3 L63.8 16.7 L83.2 16.8 L83.3 36.2 L97 50 L83.3 63.8 L83.2 83.2 L63.8 83.3 L50 97 L36.2 83.3 L16.8 83.2 L16.7 63.8 L3 50 L16.7 36.2 L16.8 16.8 L36.2 16.7 Z' fill='%23C29A44'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Numbered lists count in the accent: mono figures at 0.8em, as the essay
+   design sets them. */
+.hp-reader .hp-prose ol > li::marker {
+  color: var(--wp--custom--text--accent);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: 0.8em;
+}
+
 .hp-related__title {
   font-family: var(--wp--preset--font-family--display);
   font-weight: 500;
   font-size: var(--wp--preset--font-size--2-xl);
   margin: 0 0 var(--wp--preset--spacing--5);
+}
+/* Related columns by width, not by the template's 18rem auto-fill, which gave
+   two cards and an orphan across roughly 672–990px. In the two-up band the two
+   newest show rather than two and an orphan. Two classes outrank core's
+   generated one-class container rule, so nothing needs !important, and core's
+   own 600px single-column rule agrees with the last step here. */
+.hp-related .wp-block-post-template {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 900px) {
+  .hp-related .wp-block-post-template {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 621px) and (max-width: 900px) {
+  .hp-related .wp-block-post-template > li:nth-child(n+3) {
+    display: none;
+  }
+}
+@media (max-width: 620px) {
+  .hp-related .wp-block-post-template {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 /* With few published essays the related loop (which excludes the current post)
    can return nothing — hide the whole section rather than dangle its heading.
@@ -2466,6 +2668,59 @@ p.hp-contact-form__hint {
    .hp-journal-more above). */
 .hp-related:not(:has(.wp-block-post-template li)) {
   display: none;
+}
+
+/* Reading progress (reader.js): a gold hairline across the top of the
+   viewport, above the sticky masthead and its menus. It tracks the essay
+   itself — empty at the title, full at the last line of prose — because the
+   related cards, the subscribe plate and the footer are not reading. It is
+   scroll-linked rather than animated, so reduced motion needs no special case.
+   It drops below the admin bar when one is showing. */
+.hp-reader-progress {
+  position: fixed;
+  inset: var(--wp-admin--admin-bar--height, 0px) 0 auto;
+  z-index: 40;
+  height: 3px;
+  pointer-events: none;
+}
+.hp-reader-progress > span {
+  display: block;
+  height: 100%;
+  background: var(--wp--custom--rule--gold);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+/* Copy confirmation (reader.js). A polite live region that is present from
+   mount, filled only after the clipboard confirms a copy and emptied 1.8s
+   later, so it never claims a copy that did not happen. */
+.hp-toast {
+  position: fixed;
+  inset: auto 0 calc(var(--wp--preset--spacing--6) + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.hp-toast > p {
+  margin: 0;
+  padding: var(--wp--preset--spacing--2) var(--wp--preset--spacing--4);
+  border-radius: var(--wp--custom--radius--pill);
+  background: var(--wp--custom--surface--inverse);
+  color: var(--wp--custom--text--inverse);
+  font: var(--wp--custom--weight--regular) var(--wp--preset--font-size--xs)/var(--wp--custom--leading--normal) var(--wp--preset--font-family--mono);
+  box-shadow: var(--wp--custom--shadow--lg);
+  transition: opacity var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+              translate var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+@starting-style {
+  .hp-toast > p {
+    opacity: 0;
+    translate: 0 var(--wp--preset--spacing--1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-toast > p { transition: none; }
 }
 
 /* =========================================================================

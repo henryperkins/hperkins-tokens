@@ -191,6 +191,64 @@ if ( cover ) {
 	);
 }
 
+// --- Essay reader (2026-09-28 essay-post hand-off) -------------------------
+// Core's skip link targets the template's first <main>. With the hero before
+// it, a keyboard visitor skipped straight past the H1 to "All essays"; the
+// hero now opens <main>. verify-reader.js checks the rendered result, and
+// verify-reader.php the server half; these are the couplings in source.
+const mainOpen = single.search( /<main\b/ );
+const mainClose = single.indexOf( '</main>' );
+const coverAt = single.search( /<!--\s*wp:cover\b/ );
+const titleAt = single.search( /<!--\s*wp:post-title\s+\{[^}]*"level":1/ );
+const backAt = single.indexOf( 'hp-reader__back' );
+check(
+	mainOpen !== -1 && mainOpen < coverAt && coverAt < mainClose,
+	'templates/single.html must render the reader hero inside <main>, the skip link\'s target.'
+);
+check(
+	coverAt < titleAt && titleAt < backAt,
+	'templates/single.html must keep the H1 inside the hero, ahead of the "All essays" back link.'
+);
+check(
+	/<!--\s*wp:paragraph\s+\{"metadata":\{"bindings":\{"content":\{"source":"hperkins-tokens\/read-time"\}\}\}[^}]*"className":"hp-reader-hero__readtime"/.test( single ) &&
+		single.indexOf( 'hp-reader-hero__readtime' ) > single.indexOf( 'hp-reader-hero__meta' ),
+	'templates/single.html must bind the hero meta row\'s read time to the hperkins-tokens/read-time source.'
+);
+const readerPhp = read( 'inc/reader.php' );
+check(
+	/register_block_bindings_source\(\s*'hperkins-tokens\/read-time'/.test( readerPhp ),
+	'inc/reader.php must register the hperkins-tokens/read-time block-bindings source the template binds.'
+);
+for ( const [ hook, callback ] of [
+	[ 'render_block_core/cover', 'hperkins_tokens_reader_hero_plate' ],
+	[ 'render_block_data', 'hperkins_tokens_reader_open_body' ],
+	[ 'render_block_core/post-content', 'hperkins_tokens_reader_close_body' ],
+	[ 'render_block_core/heading', 'hperkins_tokens_reader_section_mark' ],
+] ) {
+	check(
+		new RegExp( `add_filter\\(\\s*'${ hook.replace( /\//g, '\\/' ) }',\\s*'${ callback }'` ).test( readerPhp ),
+		`inc/reader.php must hook ${ callback } to ${ hook }.`
+	);
+}
+check( /\/inc\/reader\.php/.test( functions ), 'functions.php must require inc/reader.php.' );
+// Enqueued everywhere, not only on single posts: the Interactivity Router
+// swaps a post in without loading the scripts that page would have enqueued.
+check(
+	/'hperkins-reader',[\s\S]{0,200}\/assets\/js\/reader\.js|\$reader_rel\s*=\s*'\/assets\/js\/reader\.js'/.test( functions ) &&
+		! /is_singular\(\s*'post'\s*\)[\s\S]{0,300}hperkins-reader/.test( functions ),
+	'functions.php must enqueue assets/js/reader.js on every route so a router swap into a post finds it loaded.'
+);
+check(
+	/\.hp-related \.wp-block-post-template\s*\{\s*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/.test( pagesDeclarations ),
+	'assets/imladris-pages.css must fix "Continue reading" at three columns (the 18rem auto-fill orphans a third card).'
+);
+// Those columns share the wide column, as the /essays/ grids do. A constrained
+// group narrows its children to the 44rem content size: three 213px cards.
+check(
+	/<!--\s*wp:group\s+\{[^}]*"className":"hp-related"[^\n]*"layout":\{"type":"default"\}/.test( single ),
+	'templates/single.html must lay "Continue reading" out in its wide group ("layout":{"type":"default"}); a constrained group squeezes the three cards into the 44rem text column.'
+);
+
 // --- Empty states ---------------------------------------------------------
 // A Query Loop with no wp:query-no-results renders nothing at all when it has
 // no posts — including under a heading that promises results, and inside the
@@ -273,5 +331,5 @@ if ( violations.length > 0 ) {
 }
 
 console.log(
-	'verified journal template contract: query identity + filter coupling, sticky mode, seed offset, postcard link shape, per-loop empty states, arrow-free pagination labels, reader-hero dim ratio, data-URI palette hexes, pagination touch token'
+	'verified journal template contract: query identity + filter coupling, sticky mode, seed offset, postcard link shape, reader hero inside <main>, read-time binding, reader hooks + global reader.js, related columns in the wide column, per-loop empty states, arrow-free pagination labels, reader-hero dim ratio, data-URI palette hexes, pagination touch token'
 );

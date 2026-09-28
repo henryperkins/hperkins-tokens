@@ -106,6 +106,7 @@ component CSS to refresh either — the theme's `style.css` is a superset.
 | Site-owned research appendix | `content/page-snapshots/placement-method-evidence.html`, `templates/page-placement-method-and-evidence.html` | Published **Placement Method and Evidence** page (slug `placement-method-and-evidence`, ID 599) in DB-owned page-body mode |
 | `ui_kits/blog` (HomeView) | `templates/home.html` | Blog posts index (`is_home`) |
 | `ui_kits/blog` (ReaderView) | `templates/single.html` | Single post reader |
+| `templates/essays` (EssayPost) | `templates/single.html`, `inc/reader.php`, `assets/js/reader.js`, the reader rules in `assets/imladris-pages.css` | Single post reader, from the 2026-09-28 hand-off (0.3.70; section at the end) |
 | page-layout CSS | `assets/imladris-pages.css` | Enqueued (`hperkins-pages`) + editor style, via `functions.php` |
 
 The WordPress database body is canonical for the visitor-facing `page-about`,
@@ -1251,3 +1252,106 @@ taken; markup, class names, sizes, colours and panel anatomy already matched.
   exercises `settle()`. The Interactivity Router reloads the document on that
   popstate because its page cache misses, so the check passes only because the
   fresh page loads closed. That last one is recorded, not fixed.
+
+## 2026-09-28 — Essay post hand-off pass (`templates/essays/EssayPost.dc.html` → reader, 0.3.70)
+
+Source: the design project's `design_handoff_essay_post` package, dated
+2026-09-28 and written against the theme mirror as of 0.3.67. Its
+`EssayPost.reference.dc.html.txt` is a byte-identical copy of
+`templates/essays/EssayPost.dc.html`: a reference, not a dependency. The
+`journal.js` register, the `data-*` hooks and the Tweaks were not ported. Every
+value maps to an existing token, and both artworks are the postcard's compass
+star as a data URI: at a 0.8 stroke for the hero plate, and as the outer
+octagram filled in gold-500 for the end mark.
+
+- **Fixes (A1–A4)** — *A1 was already fixed.* `functions.php`'s
+  `hperkins_tokens_exclude_current_from_related()` excludes the current post
+  from queryId 12, and did before the mirror was taken; the hand-off searched
+  only `inc/`. Production confirms that the newest post's "Continue reading"
+  does not list itself. A2: the cover now opens `<main>`, and main's top
+  padding became the back link's `margin-top` (spacing-8), so the hero stays
+  flush under the header. A3: `.hp-related .wp-block-post-template` fixes three
+  columns; from 900px down there are two, with the third card hidden between
+  621 and 900px; from 620px there is one. Two classes outrank core's one-class
+  container rule, so no `!important` is needed. A4 ships with the § rules.
+- **Additions (B1–B5)** — the plate, the drop cap, the read time and progress
+  hairline, the § marks with their toast, and the end mark, as specified apart
+  from the divergences below.
+- **Print (C)** — the hero's black-on-white re-set already lived in
+  `assets/c/longform.css`, which the mirror omits. The plate joined that hide
+  list, because `hp-reader-hero*` is a longform-owned prefix `style.css` may
+  not name. The hairline, toast and § marks joined `style.css`'s print hide
+  list. `assets/c/interactive.css` already hid the Subscribe plate in print,
+  which is the design project's own choice.
+- **Beyond the hand-off (from `EssayPost.dc.html` itself)** — three details
+  the brief did not list, taken from the design file: "All essays" is a 44px
+  tap target (inline-flex, a spacing-2 gap, `--hp-touch-min`; it was a 17px
+  inline link), a numbered list's markers are text-accent mono at 0.8em, and
+  the standfirst wraps pretty. "Continue reading" also takes the wide column,
+  as it does in the design and as the `/essays/` grids do: its group's
+  constrained layout narrowed the heading and grid to the 44rem content size,
+  so A3's three columns set three 213px cards at 1280px against 363px on
+  `/essays/`. The group now uses the default layout, like `.hp-journal-more`.
+  *Left for a decision:* the design's hero box model — spacing-10 ×
+  spacing-6 padding, and 360px at spacing-9 × spacing-5 from 600px down. Both
+  published heroes carry four-line standfirsts, so it would make them taller
+  (about 487px on desktop and 518px on a phone) rather than shorter. The
+  cover keeps core's 1em padding for now.
+- **Deliberate divergences (recorded, not drift):**
+  - *The plate renders on the server.* The hand-off injects it from
+    `reader.js`. `inc/reader.php` adds it in `render_block_core/cover` whenever
+    core emitted no cover image, so it is present at first paint, without
+    JavaScript, and in every router swap; `reader.js` only turns it.
+  - *An opening dek.* A wholly italic first paragraph is marked
+    `.hp-prose__dek`, and the drop cap moves to the paragraph after it. "The
+    Missing Record" opens on such a dek, where the hand-off's `p:first-child`
+    would drop a three-line initial on a one-line subtitle.
+  - *The end mark and the hairline look past Jetpack.* Jetpack appends its
+    sharing and likes blocks *inside* the post content ("Govern for the
+    Return"), so `p:last-child` never matched there, and the hairline would
+    have counted those blocks as reading. Both use the body's last
+    non-Jetpack child: `:nth-last-child(1 of :not(.sharedaddy,
+    .jp-relatedposts))` in CSS, the same exclusion in the script.
+  - *The copied address is canonical.* Every URL on the site answers with a
+    307 to `?v=<hash>` (WooCommerce geolocation cache-busting), so the
+    hand-off's `new URL(href, location.href)` would share that parameter. The
+    copy uses `<link rel="canonical">` while its path matches the page's, and
+    the location otherwise, because a router swap may leave the previous
+    page's canonical in `<head>`.
+  - *Labels promise only what happens.* The server labels a mark "Link to the
+    section …"; `reader.js` upgrades it to the hand-off's "Copy a link to the
+    section …" only where the clipboard API exists.
+  - *`reader.js` loads on every route.* The hand-off enqueues it on
+    `is_singular('post')` only, but the full-page router swaps a post in
+    without loading the scripts that page enqueues. Like `about-resume.js`, it
+    declines without `main.hp-reader` and re-mounts after router commits.
+  - *Meta separators.* Upstream's gap-only row is kept, as the hand-off
+    allows. Empty items are hidden: an author with no display name left a gap
+    in "Govern for the Return".
+  - *Tokens for literals.* The mask and star geometry derive from
+    `--wp--custom--container--text` (the hand-off's 22rem and 11rem are its
+    half and quarter), and the § height from `--wp--custom--leading--snug`.
+    Headings take `scroll-margin-top` of `--hp-header-h` plus spacing-5
+    (92px) rather than a literal 96px.
+  - *Toast motion.* The message fades in over `dur.fast` through
+    `@starting-style`, and not at all under reduced motion.
+- **Verification** — `scripts/verify-reader.php` renders `single.html` around
+  an unsaved post in 42 checks, and removing any of its three bracket and plate
+  filters fails it. `scripts/verify-reader.js` walks the hand-off's checklist
+  in Chrome on each post from `/essays/`, simulating an image-less hero through
+  a `<main>` swap that also exercises the router re-mount. Nested Group and
+  Column fixtures check that every section positions its own reachable § link
+  at 1280px and 901px, and hides it at 900px and 390px. Only direct article
+  children take the section spacing; nesting does not change the positioning.
+  It also holds the related grid to its wide section at 1280, 924, 800 and
+  400px, "All essays" to 44px, and an added list's markers to the design.
+  `verify-journal-templates.js` pins the source couplings, including the
+  related group's default layout, and fails against the pre-change template.
+- **Corrections to carry back to the design project:** A1's premise (the
+  exclusion is in `functions.php`); the essays index grid is a 17rem
+  auto-fill, not three columns from 901px; `EssayPost.dc.html`'s own comment
+  repeats the A1 claim; the hand-off's line references are stale (the
+  prose measure is near line 3359 and the print block near 4113); A3's
+  premise (the related grid sat in the 44rem content column, not "the 72rem
+  column"); and the overview's claim that the back link ships upstream (the
+  design's 44px target did not).

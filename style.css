@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.69
+Version: 0.3.70
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -4123,6 +4123,9 @@ body.search .wp-block-post-date {
 .hp-pagination,
 .hp-topic-filter,
 .hp-reader__back,
+.hp-reader-progress,
+.hp-toast,
+.hp-sec__link,
 .hp-action-rail,
 .hp-action-panel,
 .wp-block-search {

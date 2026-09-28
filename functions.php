@@ -33,6 +33,7 @@ require_once get_stylesheet_directory() . '/inc/content-integrity.php';
 require_once get_stylesheet_directory() . '/inc/about-gravatar-heading.php';
 require_once get_stylesheet_directory() . '/inc/component-styles.php';
 require_once get_stylesheet_directory() . '/inc/content-images.php';
+require_once get_stylesheet_directory() . '/inc/reader.php';
 require_once get_stylesheet_directory() . '/inc/resume-route.php';
 require_once get_stylesheet_directory() . '/inc/search.php';
 require_once get_stylesheet_directory() . '/inc/react-19-opt-out.php';
@@ -207,6 +208,27 @@ add_action( 'wp_enqueue_scripts', function () {
 			get_stylesheet_directory_uri() . $register_filter_rel,
 			array(),
 			filemtime( $register_filter_file ),
+			array(
+				'in_footer' => true,
+				'strategy'  => 'defer',
+			)
+		);
+	}
+
+	// The essay reader's enhancements: the reading-progress hairline, the turn
+	// of an image-less hero's compass plate, and § section links that also copy
+	// their address (inc/reader.php renders the links). Enqueued on every route,
+	// like about-resume.js, so it is already present when the Interactivity
+	// Router swaps a post in; it declines unless the document holds
+	// main.hp-reader and re-mounts after each router commit.
+	$reader_rel  = '/assets/js/reader.js';
+	$reader_file = get_stylesheet_directory() . $reader_rel;
+	if ( file_exists( $reader_file ) ) {
+		wp_enqueue_script(
+			'hperkins-reader',
+			get_stylesheet_directory_uri() . $reader_rel,
+			array(),
+			filemtime( $reader_file ),
 			array(
 				'in_footer' => true,
 				'strategy'  => 'defer',
