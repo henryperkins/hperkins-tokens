@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.68
+Version: 0.3.69
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -785,6 +785,23 @@ button,
 	background: color-mix(in srgb, var(--wp--preset--color--parchment-50) 94%, transparent);
 	-webkit-backdrop-filter: saturate(140%) blur(10px);
 	backdrop-filter: saturate(140%) blur(10px);
+	transition:
+		box-shadow var(--wp--custom--dur--base) var(--wp--custom--ease--calm),
+		border-color var(--wp--custom--dur--base) var(--wp--custom--ease--calm);
+}
+
+/* Lifted: once content scrolls under the bar, header-controller.js adds this
+	 and the hairline gives way to the md shadow. Only paint changes, so the
+	 sticky bar never moves. */
+.hp-site-header.is-hp-lifted {
+	border-bottom-color: transparent;
+	box-shadow: var(--wp--custom--shadow--md);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hp-site-header {
+		transition: none;
+	}
 }
 
 /* The sticky lives on the header template-part wrapper, not on .hp-site-header:
@@ -2530,6 +2547,14 @@ samp {
 .hp-council-brand__star svg {
 	inline-size: 100%;
 	block-size: 100%;
+	transition: transform var(--wp--custom--dur--slow) var(--wp--custom--ease--calm);
+}
+
+/* The star is four-fold symmetric, so a quarter turn lands it exactly as
+   drawn. */
+.hp-council-brand:hover .hp-council-brand__star svg,
+.hp-council-brand:focus-visible .hp-council-brand__star svg {
+	transform: rotate(90deg);
 }
 
 .hp-council-brand__name {
@@ -2598,7 +2623,10 @@ samp {
 	padding-block-end: 2px;
 }
 
+/* About is a plain link and never takes .is-current, so its aria-current draws
+   the rule; otherwise it is the one destination unmarked on its own page. */
 .hp-council-nav__item.is-current .hp-council-nav__label::after,
+.hp-council-nav__link[aria-current="page"] .hp-council-nav__label::after,
 .hp-council-nav__trigger[aria-expanded="true"] .hp-council-nav__label::after,
 .hp-council-nav__trigger:hover .hp-council-nav__label::after,
 .hp-council-nav__link:hover .hp-council-nav__label::after {
@@ -2670,9 +2698,8 @@ samp {
 
 .hp-council-work-row {
 	display: grid;
-	grid-template-columns: 10px minmax(0, 1fr) auto;
+	grid-template-columns: minmax(0, 1fr);
 	align-items: center;
-	gap: 12px;
 	min-block-size: 43px;
 	padding: 9px 18px;
 	color: var(--wp--custom--text--body);
@@ -2691,37 +2718,12 @@ samp {
 	outline-offset: -3px;
 }
 
-.hp-council-work-row__dot {
-	inline-size: 7px;
-	block-size: 7px;
-	border-radius: 50%;
-}
-
-.hp-council-work-row.is-state-review .hp-council-work-row__dot {
-	background: transparent;
-	border: 1.4px solid var(--hp-status-review);
-}
-
-.hp-council-work-row.is-state-done .hp-council-work-row__dot {
-	background: var(--hp-status-merged);
-}
-
 .hp-council-work-row__label {
 	min-width: 0;
 	font-family: var(--wp--preset--font-family--display);
 	font-size: var(--wp--preset--font-size--sm);
 	line-height: 1.15;
 	color: var(--wp--custom--text--strong);
-}
-
-.hp-council-work-row__status {
-	font-family: var(--wp--preset--font-family--mono);
-	font-size: 9px;
-	line-height: 1.2;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	white-space: nowrap;
-	color: var(--wp--custom--text--faint);
 }
 
 .hp-council-work-panel__all {
@@ -2743,7 +2745,7 @@ samp {
 .hp-council-work-panel__eyebrow {
 	margin: 0 0 14px;
 	font-family: var(--wp--preset--font-family--mono);
-	font-size: 9px;
+	font-size: var(--wp--preset--font-size--2-xs);
 	letter-spacing: 0.15em;
 	text-transform: uppercase;
 	color: var(--wp--custom--text--faint);
@@ -3216,6 +3218,7 @@ samp {
 }
 
 @media (prefers-reduced-motion: reduce) {
+	.hp-council-brand__star svg,
 	.hp-council-work-panel,
 	.hp-council-writing-panel,
 	.hp-council-search-panel,

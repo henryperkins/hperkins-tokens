@@ -32,7 +32,7 @@ node scripts/verify-content-ownership.js
 ```
 
 **3. The header's accessibility contract is pinned, not assumed.**
-[`scripts/verify-header.js`](scripts/verify-header.js) drives Chrome against the rendered site and asserts `aria-current` on all ten destinations, focus restoration after Escape, reduced-motion behaviour, 44px mobile controls, a 13px drawer legend, and the three deliberately sub-12px Council labels at their signed-off sizes — so shrinking one further fails the run instead of passing quietly.
+[`scripts/verify-header.js`](scripts/verify-header.js) drives Chrome against the rendered site and asserts `aria-current` on all ten destinations, focus restoration after Escape, reduced-motion behaviour, 44px mobile controls, a 13px drawer legend, and the one deliberately sub-12px Council label — the 8px Digest cue — at its signed-off size, so shrinking it further fails the run instead of passing quietly. It also drives real mouse, touch and keyboard input through the menus: a click pins a panel hover opened, a touch tap never opens one by hover, a passing pointer never pulls a panel out from under keyboard focus, `/` opens search, and every drawer close folds before it hides.
 
 ## A production bug this repo actually caught
 

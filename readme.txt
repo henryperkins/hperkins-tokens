@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.68
+Stable tag: 0.3.69
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -318,7 +318,8 @@ hash-guarded `node scripts/apply-council-navigation.js` for the approved recut.
 Desktop Work and Writing disclosures, anchored search, and the flat mobile
 drawer share one mutually exclusive state in `assets/js/header-controller.js`.
 The state is `closed|work|writing|search|drawer`, and the controller also owns
-focus restoration, breakpoint settlement, and Interactivity Router cleanup.
+focus restoration, breakpoint settlement, the drawer's closing fold, the `/`
+search shortcut, the masthead's scroll lift, and Interactivity Router cleanup.
 `node scripts/verify-header.js` checks the source contract plus eight-width
 geometry, interactions, focus, reduced motion, containment, and screenshots.
 The mobile drawer intentionally exposes the real Work, Essays, AI Enablement,
@@ -411,6 +412,31 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.69 =
+* Council header hand-off (2026-09-26 design handoff). A click on a menu that
+  hover opened pins it instead of shutting it, and hover answers the mouse
+  alone, so a tap on a touch-screen laptop opens Work and Writing instead of
+  opening and shutting them in one gesture. A passing pointer no longer pulls
+  a menu out from under keyboard focus, and a hover opening closes on leave
+  unless focus is inside that menu. Escape returns focus to the trigger of
+  whichever menu is open, including one reached by hover from another; it
+  used to drop focus to the page.
+* The Work menu lists names only. Release states stay in the ledgers, where
+  they are checked, and the header's last 9px text goes with them; the
+  featured-evidence eyebrow sets at 12px. About now carries the gold
+  current-page rule on /about/.
+* The masthead's hairline gives way to the md shadow once the page scrolls,
+  the brand star turns a quarter on hover or keyboard focus, and "/" opens
+  search (the drawer and its field on a phone). Every way of closing the
+  drawer now folds it shut first, not only choosing a link. Reduced motion
+  stills all of it. "/" is a single-character shortcut with no off switch, a
+  known WCAG 2.1.4 gap recorded in docs/design-system/INDEX.md.
+* Verification: verify-header.js drives real mouse, touch and keyboard input
+  through each change, checks the fold on every close path, and checks the
+  lift, including on a header the router swaps in. It also expects the drawer's
+  real "Search the site" placeholder (it still expected the retired journal
+  copy), and its self-pins can now fail.
 
 = 0.3.68 =
 * Contact hand-off polish (2026-09-24 design handoff). The confirmation card

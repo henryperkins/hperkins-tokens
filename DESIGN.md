@@ -316,7 +316,7 @@ The palette is a natural archive: warm paper, botanical action, river-blue evide
 - **Lead** (400, 22px, 1.7): opening summaries with a narrower 46ch measure where emphasis benefits comprehension.
 - **UI** (400, 17px, 1.5): controls and explanatory interface copy.
 - **Label** (400, 13px, 1.5, 0.04em): Marcellus labels; uppercase only when the control or landmark needs a compact engraved voice.
-- **Mono** (400, 15px, 1.5): artifacts and technical data. Compact statuses use 13px; exceptional Council cues may use 8–9px only where their meaning is repeated elsewhere.
+- **Mono** (400, 15px, 1.5): artifacts and technical data. Compact statuses use 13px; the one exceptional Council cue, the 8px Digest chip, is allowed only because the Digest row repeats its word at full size.
 
 The roles name the jobs; `typography.scale` in the frontmatter is the ramp itself, mirroring the
 `theme.json` font-size presets step for step — fixed steps at 12, 13, 15, 17, 19, 22, and 28px,
@@ -420,7 +420,7 @@ Ring cards are the deliberate inverse exception: Twilight plates with 12px corne
 
 ### Navigation
 
-The Council header uses Marcellus labels, a small Evergreen star, and a centered 26px Gold 700 rule for hover, current, and expanded states. Desktop menus are raised Parchment sheets with the 7px control corner and overlay lift. The small Digest cue uses a pale Mallorn surface and deep Mallorn text. Mobile navigation becomes a flat reachable drawer rather than a miniature desktop menu; disclosure state, focus restoration, keyboard operation, and reduced motion remain part of the component contract.
+The Council header uses Marcellus labels, a small Evergreen star, and a centered 26px Gold 700 rule for hover, current, and expanded states. The star turns a quarter on hover or keyboard focus over the slow duration; being four-fold symmetric, it lands exactly as drawn. Once content scrolls under the bar, its hairline gives way to the md shadow over the base duration. Desktop menus are raised Parchment sheets with the 7px control corner and overlay lift. The Work menu lists names only; release states belong to the ledgers, where they are checked. The small Digest cue uses a pale Mallorn surface and deep Mallorn text. Mobile navigation becomes a flat reachable drawer rather than a miniature desktop menu, and every way of closing it folds the drawer shut before it hides. Disclosure state, focus restoration, keyboard operation (including `/` to open search), and reduced motion, which stills every drop, fold, lift and turn, remain part of the component contract.
 
 ### Footer
 

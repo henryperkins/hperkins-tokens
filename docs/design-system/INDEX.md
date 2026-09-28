@@ -292,6 +292,8 @@ router-safe `assets/js/header-controller.js` state owner.
 - **Intentional live-data correction:** the Work panel uses the repository's current four labels,
   destinations, and release states rather than stale prototype copy. Mobile Work remains a plain route;
   it does not expose the desktop evidence composition.
+  > **Superseded 2026-09-26 (0.3.69):** the Work rows carry names only; release states stay in the
+  > ledgers, where they are checked. See the site header hand-off pass below.
 - **Intentional mobile-IA correction:** there is no published `/writing/` route. The reachable drawer
   order is Work, Essays, AI Enablement, About, Job Placement Digest, Search, and Subscribe. Contact stays
   reachable in the labelled footer rather than returning to the constrained bar.
@@ -1151,3 +1153,101 @@ unchanged; the pass is behaviour plus small layout fixes.
   another keeps who is writing. The spec's other decisions — the "Open email
   draft" label, "Return to message", named profile links, and the subscribe
   bridge — remain open.
+
+## 2026-09-26 — Site header hand-off pass (`components/site/SiteHeader.jsx` → Council header, 0.3.69)
+
+Source: the design project's `design_handoff_site_header` package, dated
+2026-09-26, after `SiteHeader` was rebuilt on the condensed header on
+2026-09-25. Its React port (`SiteHeader.reference.jsx.txt`), props contract
+and preview are references, not dependencies. Only the listed differences were
+taken; markup, class names, sizes, colours and panel anatomy already matched.
+
+- **Controller (A1–A3)** — `header-controller.js` records how a panel opened
+  (`openedBy`: hover, click or key) through a single `open()`. A click on a
+  hover-opened panel pins it instead of shutting it (A1: hover-then-click used
+  to close Work, and a tap on a touch-screen laptop opened and shut it in one
+  gesture), and hover acts on `pointerType === 'mouse'` alone. A passing
+  pointer never switches away from a panel that holds focus, and the hover
+  close checks focus inside that panel rather than anywhere in the header
+  (A2). Escape returns focus to the open panel's own trigger when focus was
+  inside it, and `origin` is gone (A3). A3 also fixed a case the hand-off did
+  not list: when hover opened Work while focus rested elsewhere in the header,
+  `origin` stayed empty, and Escape from a hover-switched panel dropped focus
+  to `<body>`.
+- **Content and CSS (B1–B3)** — Work rows are names only: the state class, dot
+  and status word are gone, and `state`/`status` left the model. The Work
+  panel eyebrow moves from 9px to the 12px `2-xs` preset. About draws the gold
+  current-page rule from its own `aria-current`.
+- **Additions (C1–C4)** — the masthead lifts (`.is-hp-lifted` on
+  `.hp-site-header`: a transparent hairline and `shadow.md` over `dur.base`
+  with `ease.calm`); the brand star turns 90° on hover or keyboard focus over
+  `dur.slow`; `/` opens search, or the drawer and its field below 782px; and
+  every drawer close folds through `closeDrawer()`, with the echo kept for a
+  chosen link. All four stand still under reduced motion.
+- **Deliberate divergences from the hand-off (recorded, not drift):**
+  - *Lift mechanism.* The hand-off preferred an IntersectionObserver on a
+    sentinel placed first in `.wp-site-blocks`. The window is the scroller
+    here: `router-scroll.js` resets it with `window.scrollTo`, and neither the
+    theme nor Assembler sets overflow on `.wp-site-blocks`. The full-page
+    router swaps `<body>`, which would destroy an injected sentinel on every
+    navigation, and a sentinel placed first in `.wp-site-blocks` would also
+    hand the header core's block-gap margin. The reference's passive,
+    frame-throttled `window` scroll listener is used instead, and `settle()`
+    re-applies the lift to a swapped-in header.
+  - *Shadow token.* `var(--wp--custom--shadow--md)` rather than the hand-off's
+    literal, per tokens-first.
+  - *Pinned panels.* Re-entering an open panel never demotes a click or key
+    opening to a hover one; the hand-off's A1 text alone would let a pinned
+    panel close on the pointer's next exit. Hover never replaces open search.
+    Both guards are the reference's.
+  - *`/` guards.* Besides meta, ctrl and alt, `defaultPrevented` and text
+    fields, the shortcut skips IME composition and `aria-modal` dialogs: the
+    Jetpack search overlay sets `aria-modal="true"`, and `/` there would pull
+    focus behind it. With search or the drawer already open it only refocuses
+    the field, and it cancels a fold in flight.
+  - *Fold and settle.* The hand-off asks both that `settle()` cancel a fold
+    and that a chosen link keep its "stranded" focus rescue. Where the two
+    meet — a same-page fragment link, whose navigation fires a synchronous
+    `popstate`, or a router commit inside the 140ms fold — settle wins: the
+    drawer closes at once, as settle already hid it before, and focus stays
+    where the browser puts it. The drawer toggle reverses a fold in flight:
+    `open()` cancels its timer and chosen-link echo. Repeated Escape or
+    outside-click dismissals remain idempotent.
+  - *Title.* The trigger's `title` is built from the menu's search label with
+    a translatable `%s (/)`, so it tracks the accessible name.
+  - *Not ported:* the reference's own skip link (WordPress core adds one) and
+    its `pointerdown` outside-press listener (the existing `click` listener
+    stays). The reference also marks the current Work row with
+    `aria-current`; that is not in the hand-off and would change the
+    ten-destination contract.
+- **Known gap — WCAG 2.1.4 Character Key Shortcuts (Level A).** `/` is a
+  single-character shortcut, live whenever focus is not taking text, with no
+  way to turn it off or remap it. It shipped as specified at the owner's
+  direction on 2026-09-26. The practical risk is low — it opens search, and
+  Escape returns focus to the search button — but conformance needs an off
+  switch or a remap, which the design project should design rather than the
+  theme improvise.
+- **Verification** — `scripts/verify-header.js` gains rendered checks for each
+  item: hover-then-click pins and a touch `pointerover` opens nothing (A1);
+  hovering Writing with focus in Work leaves Work and its focus alone, a hover
+  opening closes on leave while focus sits elsewhere, and hover leaves open
+  search alone (A2); Escape from a hover-switched Writing panel lands on
+  Writing (A3); names-only rows, the 12px eyebrow, and About's rule on
+  `/about/` (B1–B3); the lift at 1px and back, including on a swapped-in
+  header (C1); the star's quarter turn on hover and keyboard focus (C2); `/`
+  at 1440 and 390px, typed inside a field, with each modifier, mid-composition,
+  in a page textarea and in a modal (C3); and every drawer close path, its
+  focus rules, a doubled dismissal, toggle reopening after every close path,
+  `/` during the fold and a route settlement during it (C4), each under reduced
+  motion where it applies. Each feature's
+  checks were written first and watched failing before it was implemented; a
+  mutation pass then broke nineteen controller guards one at a time, and a
+  check caught every one.
+- **Verifier corrections found on the way:** the drawer placeholder
+  expectation still read "Search the journal" although `bc41e6d` renders
+  "Search the site", so the suite had failed against production since
+  2026-09-20; the self-pin list could never fail, because each pin found its
+  own text in the list; and the `history.back()` popstate check no longer
+  exercises `settle()`. The Interactivity Router reloads the document on that
+  popstate because its page cache misses, so the check passes only because the
+  fresh page loads closed. That last one is recorded, not fixed.

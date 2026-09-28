@@ -39,33 +39,28 @@ function hperkins_tokens_get_council_navigation_fallback() {
 /**
  * Return the current repository-owned Work evidence rows.
  *
+ * Names and destinations only. A release claim belongs in the ledgers, where
+ * it is checked; a menu is where a stale status goes unnoticed.
+ *
  * @return array<int, array<string, string>>
  */
 function hperkins_tokens_get_council_work_items() {
 	return array(
 		array(
-			'label'  => 'Flavor Agent',
-			'url'    => '/work/flavor-agent/',
-			'status' => 'Shipped · v0.1.0',
-			'state'  => 'done',
+			'label' => 'Flavor Agent',
+			'url'   => '/work/flavor-agent/',
 		),
 		array(
-			'label'  => 'WordPress AI Stack Contributions',
-			'url'    => '/work/upstream-core-ai-stack/',
-			'status' => 'Merged · upstream',
-			'state'  => 'done',
+			'label' => 'WordPress AI Stack Contributions',
+			'url'   => '/work/upstream-core-ai-stack/',
 		),
 		array(
-			'label'  => 'AI Provider for Codex',
-			'url'    => '/work/ai-provider-for-codex/',
-			'status' => 'Shipped · v2.1',
-			'state'  => 'done',
+			'label' => 'AI Provider for Codex',
+			'url'   => '/work/ai-provider-for-codex/',
 		),
 		array(
-			'label'  => 'DJ Lee & Voices of Judah',
-			'url'    => '/work/dj-lee-voices-of-judah/',
-			'status' => 'Delivered · live site',
-			'state'  => 'done',
+			'label' => 'DJ Lee & Voices of Judah',
+			'url'   => '/work/dj-lee-voices-of-judah/',
 		),
 	);
 }
@@ -367,11 +362,8 @@ function hperkins_tokens_render_council_header( $options = array() ) {
 						<div id="hp-council-work-panel" class="hp-council-work-panel" data-hp-header-panel="work" aria-labelledby="hp-council-work-trigger" hidden>
 							<div class="hp-council-work-panel__ledger">
 								<?php foreach ( $work_items as $item ) : ?>
-									<?php $state_class = 'review' === $item['state'] ? 'is-state-review' : 'is-state-done'; ?>
-									<a class="hp-council-work-row <?php echo esc_attr( $state_class ); ?>" href="<?php echo esc_url( hperkins_tokens_council_url( $item['url'] ) ); ?>">
-										<span class="hp-council-work-row__dot" aria-hidden="true"></span>
+									<a class="hp-council-work-row" href="<?php echo esc_url( hperkins_tokens_council_url( $item['url'] ) ); ?>">
 										<span class="hp-council-work-row__label"><?php echo esc_html( $item['label'] ); ?></span>
-										<span class="hp-council-work-row__status"><?php echo esc_html( $item['status'] ); ?></span>
 									</a>
 								<?php endforeach; ?>
 								<a class="hp-council-work-panel__all" href="<?php echo esc_url( hperkins_tokens_council_url( $model['work']['url'] ) ); ?>"<?php echo hperkins_tokens_council_current_attr( $model['work']['url'], $here ); ?>><?php echo esc_html__( 'View all work', 'hperkins-tokens' ); ?> <span aria-hidden="true">&rarr;</span></a>
@@ -405,7 +397,7 @@ function hperkins_tokens_render_council_header( $options = array() ) {
 			</nav>
 
 			<div class="hp-council-actions">
-				<button id="hp-council-search-trigger" class="hp-council-search-trigger" type="button" data-hp-header-trigger="search" aria-controls="hp-council-search-panel" aria-expanded="false" aria-label="<?php echo esc_attr( $model['search']['label'] ); ?>">
+				<button id="hp-council-search-trigger" class="hp-council-search-trigger" type="button" data-hp-header-trigger="search" aria-controls="hp-council-search-panel" aria-expanded="false" aria-label="<?php echo esc_attr( $model['search']['label'] ); ?>" aria-keyshortcuts="/" title="<?php echo esc_attr( sprintf( /* translators: %s: the search control's label. */ __( '%s (/)', 'hperkins-tokens' ), $model['search']['label'] ) ); ?>">
 					<span class="hp-council-search-trigger__disc"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m15.4 15.4 4.1 4.1"></path></svg></span>
 				</button>
 				<a class="hp-council-subscribe" href="<?php echo esc_url( hperkins_tokens_council_url( $model['subscribe']['url'] ) ); ?>"><?php echo esc_html( $model['subscribe']['label'] ); ?></a>

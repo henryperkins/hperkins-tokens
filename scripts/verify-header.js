@@ -33,32 +33,28 @@ const WORK_LABELS = [
 	'AI Provider for Codex',
 	'DJ Lee & Voices of Judah',
 ];
-// Status is a semantic colour PLUS a redundant word — never colour alone. These
-// are the words, and they must stay in the link's accessible name.
-const WORK_STATUSES = [
-	'Shipped · v0.1.0',
-	'Merged · upstream',
-	'Shipped · v2.1',
-	'Delivered · live site',
-];
 const WRITING_LABELS = [ 'AI Enablement', 'Essays', 'Job Placement Digest' ];
-// Three Council values sit below the site-wide 12px type floor by deliberate,
-// documented exemption (see CLAUDE.md). They are pinned here so the exemption
-// stays a decision rather than drift.
+// The one Council value that sits below the site-wide 12px type floor by
+// deliberate, documented exemption (see CLAUDE.md). It is pinned here so the
+// exemption stays a decision rather than drift.
 const SUB_FLOOR_TYPE = {
-	'.hp-council-work-row__status': 9,
-	'.hp-council-work-panel__eyebrow': 9,
 	'.hp-council-digest-cue': 8,
 };
 const SEARCH_HINT_SIZE = 12;
+// The Work panel eyebrow left the exemption list: it sets at the 12px floor,
+// the size "View all work" already uses beside it.
+const EVIDENCE_EYEBROW_SIZE = 12;
 const DRAWER_LEGEND_SIZE = 13;
+// The search field shows the renderer's copy, not menu 237's: the menu still
+// stores the legacy "Search the journal" placeholder, which
+// council-header.php rewrites to site-wide copy at render time.
 const DRAWER_LABELS = [
 	'Work',
 	'Essays',
 	'AI Enablement',
 	'About',
 	'Job Placement Digest',
-	'Search the journal',
+	'Search the site',
 	'Subscribe',
 ];
 
@@ -121,22 +117,14 @@ function verifySource() {
 		'data-hp-header-panel="search"',
 		'data-hp-header-trigger="drawer"',
 		'data-hp-header-panel="drawer"',
-		"'label'  => 'Flavor Agent'",
-		"'url'    => '/work/flavor-agent/'",
-		"'status' => 'Shipped · v0.1.0'",
-		"'label'  => 'WordPress AI Stack Contributions'",
-		"'url'    => '/work/upstream-core-ai-stack/'",
-		"'status' => 'Merged · upstream'",
-		"'label'  => 'AI Provider for Codex'",
-		"'url'    => '/work/ai-provider-for-codex/'",
-		"'status' => 'Shipped · v2.1'",
-		"'label'  => 'DJ Lee & Voices of Judah'",
-		"'url'    => '/work/dj-lee-voices-of-judah/'",
-		"'status' => 'Delivered · live site'",
-		"'state'  => 'done'",
-		"'state'  => 'done'",
-		'is-state-review',
-		'is-state-done',
+		"'label' => 'Flavor Agent'",
+		"'url'   => '/work/flavor-agent/'",
+		"'label' => 'WordPress AI Stack Contributions'",
+		"'url'   => '/work/upstream-core-ai-stack/'",
+		"'label' => 'AI Provider for Codex'",
+		"'url'   => '/work/ai-provider-for-codex/'",
+		"'label' => 'DJ Lee & Voices of Judah'",
+		"'url'   => '/work/dj-lee-voices-of-judah/'",
 		"preg_replace( '/>\\s+</', '><', $html )",
 		'null === $compact_html ? $html : $compact_html',
 		'hperkins_tokens_pre_render_council_header_block',
@@ -238,14 +226,15 @@ function verifySource() {
 		'registry.settle = settle;',
 		"var STATES = [ 'closed', 'work', 'writing', 'search', 'drawer' ];",
 		"node.setAttribute( 'data-hp-header-state', next );",
-		'applyState( \'closed\', { restoreFocus: inside } );',
 		"window.matchMedia( '(min-width: 782px)' )",
 		"wrapHistory( 'pushState' );",
 		"wrapHistory( 'replaceState' );",
 		"window.addEventListener( 'popstate', settle );",
 		"window.addEventListener( 'pageshow', settle );",
 		"node.classList.add( 'is-hp-closing' );",
-		"drawerLink.classList.add( 'is-hp-chosen' );",
+		"link.classList.add( 'is-hp-chosen' );",
+		"closeDrawer( { link: drawerLink } );",
+		"closeDrawer( { restore: inPanel } );",
 		'event.defaultPrevented ||',
 		'event.button !== 0 ||',
 		'event.metaKey ||',
@@ -254,7 +243,7 @@ function verifySource() {
 		'event.altKey ||',
 		"drawerLink.target === '_blank' ||",
 		"drawerLink.hasAttribute( 'download' )",
-		'var input = searchPanel',
+		"var input = next === 'search' ? searchField( 'search' ) : null;",
 		"var first = panel ? panel.querySelector( 'a[href]' ) : null;",
 		'! node.contains( trigger )',
 		'! node.contains( group )',
@@ -268,38 +257,56 @@ function verifySource() {
 		( controller.match( /setAttribute\( 'aria-expanded'/g ) || [] ).length === 1,
 		'header-controller.js must assign aria-expanded only inside applyState().'
 	);
-	// Every path that opens a panel, and every route settlement, must cancel a
-	// pending hover close — toggle(), the ArrowDown branch, settle(), and
-	// pointerover itself. A survivor shuts the panel the visitor just opened.
+	// Every opening goes through open(), which cancels a pending hover close, as
+	// do settle(), pointerover and pointerout before it sets its own. A survivor
+	// shuts the panel the visitor just opened.
 	assert(
 		( controller.match( /window\.clearTimeout\( hoverTimer \);/g ) || [] ).length === 4,
-		'header-controller.js must clear hoverTimer in toggle(), the ArrowDown branch, settle(), and pointerover.'
+		'header-controller.js must clear hoverTimer in open(), settle(), pointerover, and pointerout.'
+	);
+	assert(
+		/function open\( next, by \) \{\s*window\.clearTimeout\( hoverTimer \);\s*cancelFold\(\);/.test( controller ),
+		'open() must cancel a pending hover close and a drawer fold before it opens anything.'
+	);
+	assert(
+		/function settle\(\) \{\s*window\.clearTimeout\( hoverTimer \);\s*cancelFold\(\);/.test( controller ),
+		'settle() must cancel a drawer fold in flight, or its timer shuts the next drawer opened.'
 	);
 	// applyState() returns early when the router has detached the header, so
 	// settle() has to reset the closure itself or a stale state reads the next
 	// trigger click as a close.
 	assert(
-		/function settle\(\) \{[^]*?state = 'closed';[^]*?origin = null;[^]*?\}/.test( controller ),
-		'settle() must reset state and origin unconditionally, not only via applyState().'
+		/function settle\(\) \{[^]*?state = 'closed';[^]*?openedBy = null;[^]*?\}/.test( controller ),
+		'settle() must reset state and openedBy unconditionally, not only via applyState().'
 	);
-	// Focus ownership: a hover-opened panel records an origin the visitor never
-	// focused, so Escape must not restore to it, and a drifting pointer must not
-	// close a panel the visitor has tabbed into.
+	// Focus ownership: Escape returns focus to the open panel's own trigger, and
+	// only when focus was inside that panel; a drifting pointer must not close a
+	// panel the visitor has tabbed into.
 	assert(
-		! /restoreFocus:\s*true/.test( controller ),
-		'header-controller.js must not restore focus unconditionally — a hover-only open would steal it.'
-	);
-	assert(
-		/if \( state === next && ! focusIsInside\(\) \)/.test( controller ),
-		'The hover close must not fire while focus is inside the header.'
+		/if \( inPanel && trigger \) \{\s*trigger\.focus\(\);/.test( controller ),
+		'Escape must return focus to the open panel\'s trigger only when focus was inside that panel.'
 	);
 	assert(
-		/if \( ! focusIsInside\(\) \) \{\s*origin = triggerFor\( next \);/.test( controller ),
-		'pointerover must not overwrite an origin established by the keyboard.'
+		/if \( state === next && openedBy === 'hover' && ! \( panel && panel\.contains\( document\.activeElement \) \) \)/.test( controller ),
+		'The hover close must close only a hover opening, and never while focus is inside that panel.'
 	);
 	assert(
-		/var stranded = ! active \|\| active === document\.body \|\| drawerLink === active;/.test( controller ),
-		'The drawer close must rescue focus only when it was stranded, so it cannot steal a router-scroll hash target.'
+		/if \( current && current\.contains\( document\.activeElement \) \) \{\s*return;/.test( controller ),
+		'pointerover must never take a panel out from under keyboard focus.'
+	);
+	// Hover is mouse-only, and a click pins what hover opened: a touch tap's
+	// pointerover would otherwise open a panel its own click then shuts.
+	assert(
+		/event\.pointerType === 'mouse'/.test( controller ),
+		'Hover must react to the mouse alone, never to a touch or pen press.'
+	);
+	assert(
+		/if \( openedBy === 'hover' \) \{\s*openedBy = 'click';/.test( controller ),
+		'A click on a hover-opened panel must pin it, not close it.'
+	);
+	assert(
+		/var rescue = current\.link\s*\? lost \|\| current\.link === active/.test( controller ),
+		'A chosen drawer link must rescue focus only when it was stranded, so it cannot steal a router-scroll hash target.'
 	);
 	// Tabbing past an open panel closes it, the way a disclosure does.
 	assert(
@@ -319,14 +326,31 @@ function verifySource() {
 	] );
 	assert( ! exists( 'assets/js/header-search.js' ), 'assets/js/header-search.js must be removed.' );
 	assert( ! exists( 'assets/js/nav-close-delight.js' ), 'assets/js/nav-close-delight.js must be removed.' );
-	assertIncludes( 'scripts/verify-header.js', [
+	// The verifier pins its own checks so a later edit cannot quietly drop one.
+	// Search the file with this list cut out: left in, every needle finds
+	// itself here and no pin can ever fail.
+	const SELF_PINS = [
 		'history.back();',
 		"verifyHoverCorridor( cdp, sessionId, 'work' );",
 		"verifyHoverCorridor( cdp, sessionId, 'writing' );",
+		'await verifyHoverThenClick( cdp, sessionId );',
+		'await verifyHoverRespectsFocus( cdp, sessionId );',
+		'await verifyEscapeAfterHoverSwitch( cdp, sessionId );',
+		'await verifySearchShortcut( cdp, sessionId );',
+		'await verifyMastheadLift( cdp, sessionId );',
+		'await verifyBrandStar( cdp, sessionId );',
+		'await verifyCurrentPageRule( cdp, sessionId );',
+		'for ( const [ label, gesture ] of Object.entries( gestures ) ) {',
 		"type: 'mousePressed', x: 10, y: 300",
 		'fs.statSync( candidate ).isFile()',
 		"fsPromises.mkdtemp( path.join( captureRoot, 'hperkins-header-' ) )",
-	] );
+	];
+	const self = read( 'scripts/verify-header.js' );
+	const pinsStart = self.indexOf( 'const SELF_PINS = [' );
+	const selfBody = self.slice( 0, pinsStart ) + self.slice( self.indexOf( '];', pinsStart ) );
+	for ( const needle of SELF_PINS ) {
+		assert( selfBody.includes( needle ), `scripts/verify-header.js is missing: ${ needle }` );
+	}
 	console.log( 'verified Council header source contract' );
 }
 
@@ -455,25 +479,29 @@ async function evaluate( cdp, sessionId, expression ) {
 	return result.result.value;
 }
 
-async function pressKey( cdp, sessionId, key ) {
+// CDP modifier bits: Alt 1, Ctrl 2, Meta 4, Shift 8.
+async function pressKey( cdp, sessionId, key, modifiers = 0 ) {
 	const keys = {
 		Enter: { key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, nativeVirtualKeyCode: 13, text: '\r', unmodifiedText: '\r' },
 		Space: { key: ' ', code: 'Space', windowsVirtualKeyCode: 32, text: ' ' },
 		ArrowDown: { key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 },
 		Escape: { key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 },
 		Tab: { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9 },
+		Slash: { key: '/', code: 'Slash', windowsVirtualKeyCode: 191, text: '/', unmodifiedText: '/' },
 	};
 	const value = keys[ key ];
 	assert( value, `Unsupported verifier key ${ key }.` );
 	await cdp.send( 'Input.dispatchKeyEvent', {
 		type: 'keyDown',
 		...value,
+		modifiers,
 	}, sessionId );
 	await cdp.send( 'Input.dispatchKeyEvent', {
 		type: 'keyUp',
 		key: value.key,
 		code: value.code,
 		windowsVirtualKeyCode: value.windowsVirtualKeyCode,
+		modifiers,
 	}, sessionId );
 	await wait( 30 );
 }
@@ -671,6 +699,17 @@ async function assertState( cdp, sessionId, expected, context ) {
 	);
 }
 
+function headerStateIs( expected ) {
+	return `document.querySelector('[data-hp-header-root]')?.getAttribute('data-hp-header-state') === ${ JSON.stringify( expected ) }`;
+}
+
+// A closing drawer folds before it hides, so its state settles a beat after the
+// gesture. Wait for the settled state, then assert all of it.
+async function waitForState( cdp, sessionId, expected, context ) {
+	await waitForPageCondition( cdp, sessionId, headerStateIs( expected ), `${ context } to settle at ${ expected }`, 2000 );
+	await assertState( cdp, sessionId, expected, context );
+}
+
 async function clickTrigger( cdp, sessionId, state ) {
 	await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-trigger="${ state }"]').click()` );
 	await wait( 30 );
@@ -681,7 +720,7 @@ async function closeCurrent( cdp, sessionId ) {
 		const trigger = document.querySelector('[data-hp-header-trigger][aria-expanded="true"]');
 		if (trigger) trigger.click();
 	})()` );
-	await wait( 30 );
+	await waitForPageCondition( cdp, sessionId, headerStateIs( 'closed' ), 'the open surface to close', 2000 );
 }
 
 async function accessibleName( cdp, sessionId, selector ) {
@@ -796,43 +835,24 @@ async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
 			left: value.left, right: value.right, width: value.width,
 			navCenter: (nav.left + nav.right) / 2,
 			rows: Array.from(panel.querySelectorAll('.hp-council-work-row__label')).map((label) => label.textContent.trim()),
-			// The design invariant: status is a semantic colour PLUS a redundant
-			// word, and the row anatomy is fixed per component, never per state.
-			statuses: Array.from(panel.querySelectorAll('.hp-council-work-row__status')).map((status) => ({
-				text: status.textContent.trim(),
-				size: parseFloat(getComputedStyle(status).fontSize),
-				hidden: status.getAttribute('aria-hidden') === 'true',
+			// Names only: a release claim belongs in the ledgers, where it is
+			// checked, not in a menu where a stale one goes unnoticed. The link's
+			// whole text is its name, and nothing — no dot, no status word — sits
+			// beside it.
+			rowContents: Array.from(panel.querySelectorAll('.hp-council-work-row')).map((row) => ({
+				text: row.textContent.trim(),
+				children: row.children.length,
 			})),
 			anatomy: Array.from(panel.querySelectorAll('.hp-council-work-row')).map((row) => {
 				const style = getComputedStyle(row);
 				return {
-					state: row.classList.contains('is-state-review') ? 'review' : 'done',
 					padding: [style.paddingTop, style.paddingRight, style.paddingBottom, style.paddingLeft].join(' '),
 					radius: style.borderRadius,
 					borderLeftWidth: style.borderLeftWidth,
 					minBlockSize: style.minBlockSize,
+					height: row.getBoundingClientRect().height,
 				};
 			}),
-			stateAnatomy: (() => {
-				const row = panel.querySelector('.hp-council-work-row');
-				const originalClassName = row.className;
-				const readState = (state) => {
-					row.classList.remove('is-state-review', 'is-state-done');
-					row.classList.add('review' === state ? 'is-state-review' : 'is-state-done');
-					const style = getComputedStyle(row);
-					return {
-						padding: [style.paddingTop, style.paddingRight, style.paddingBottom, style.paddingLeft].join(' '),
-						radius: style.borderRadius,
-						borderLeftWidth: style.borderLeftWidth,
-						minBlockSize: style.minBlockSize,
-					};
-				};
-				try {
-					return { done: readState('done'), review: readState('review') };
-				} finally {
-					row.className = originalClassName;
-				}
-			})(),
 			eyebrowSize: (() => {
 				const eyebrow = panel.querySelector('.hp-council-work-panel__eyebrow');
 				return eyebrow ? parseFloat(getComputedStyle(eyebrow).fontSize) : null;
@@ -842,26 +862,16 @@ async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
 	assert( approximately( work.navCenter, navCenter ), `${ viewport.name } Work opening moved the nav centre.` );
 	assert( approximately( work.width, 592 ), `${ viewport.name } Work panel is ${ work.width }px; expected 592px.` );
 	assert( JSON.stringify( work.rows ) === JSON.stringify( WORK_LABELS ), `${ viewport.name } Work evidence rows are stale or out of order.` );
-	// Status must survive as words in the accessible name — colour and dot shape
-	// alone would fail every colour-blind and screen-reader visitor.
 	assert(
-		JSON.stringify( work.statuses.map( ( status ) => status.text ) ) === JSON.stringify( WORK_STATUSES ),
-		`${ viewport.name } Work status words are stale or out of order: ${ JSON.stringify( work.statuses.map( ( s ) => s.text ) ) }.`
+		JSON.stringify( work.rowContents ) === JSON.stringify( WORK_LABELS.map( ( label ) => ( { text: label, children: 1 } ) ) ),
+		`${ viewport.name } Work rows must carry their names only: ${ JSON.stringify( work.rowContents ) }.`
 	);
 	assert(
-		work.statuses.every( ( status ) => ! status.hidden ),
-		`${ viewport.name } hides a Work status from assistive technology, leaving state as colour alone.`
+		approximately( work.eyebrowSize, EVIDENCE_EYEBROW_SIZE, 0.1 ),
+		`${ viewport.name } Work panel eyebrow is ${ work.eyebrowSize }px; expected the ${ EVIDENCE_EYEBROW_SIZE }px text floor.`
 	);
-	assert(
-		work.statuses.every( ( status ) => approximately( status.size, SUB_FLOOR_TYPE[ '.hp-council-work-row__status' ], 0.1 ) ),
-		`${ viewport.name } Work status type drifted from its pinned ${ SUB_FLOOR_TYPE[ '.hp-council-work-row__status' ] }px exemption.`
-	);
-	assert(
-		approximately( work.eyebrowSize, SUB_FLOOR_TYPE[ '.hp-council-work-panel__eyebrow' ], 0.1 ),
-		`${ viewport.name } Work panel eyebrow is ${ work.eyebrowSize }px; pinned at ${ SUB_FLOOR_TYPE[ '.hp-council-work-panel__eyebrow' ] }px.`
-	);
-	// Row anatomy is fixed per component, never per state: only the rule colour,
-	// the surface tint and the filled-vs-hollow dot may change.
+	// Row anatomy is fixed per component: every row shares one padding, corner,
+	// rule and 43px floor.
 	assert(
 		work.anatomy.length === WORK_LABELS.length,
 		`${ viewport.name } exposes ${ work.anatomy.length } Work rows; expected ${ WORK_LABELS.length }.`
@@ -872,11 +882,11 @@ async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
 			values.size === 1,
 			`${ viewport.name } Work row ${ key } varies across rows (${ [ ...values ].join( ' vs ' ) }); anatomy is fixed per component.`
 		);
-		assert(
-			work.stateAnatomy.done[ key ] === work.stateAnatomy.review[ key ],
-			`${ viewport.name } Work row ${ key } varies by state (${ work.stateAnatomy.done[ key ] } vs ${ work.stateAnatomy.review[ key ] }); anatomy is fixed per component.`
-		);
 	}
+	assert(
+		work.anatomy.every( ( row ) => row.height >= 42.99 ),
+		`${ viewport.name } a Work row is shorter than its 43px floor: ${ JSON.stringify( work.anatomy.map( ( row ) => row.height ) ) }.`
+	);
 	assert( work.left >= -1 && work.right <= initial.clientWidth + 1, `${ viewport.name } Work panel exceeds the viewport.` );
 	if ( viewport.name === 'desktop-edge' ) {
 		// Derive the gutter from the client width rather than the viewport: at
@@ -1130,7 +1140,7 @@ async function verifyDesktopInteractions( cdp, sessionId, viewport ) {
 	await waitForPageCondition(
 		cdp,
 		sessionId,
-		`document.querySelector('[data-hp-header-root]')?.getAttribute('data-hp-header-state') === 'closed'`,
+		headerStateIs( 'closed' ),
 		'the Council header to settle after history.back()'
 	);
 	await assertState( cdp, sessionId, 'closed', 'real history.back popstate settle' );
@@ -1219,6 +1229,25 @@ async function verifyMobileInteractions( cdp, sessionId, viewport ) {
 		await closeCurrent( cdp, sessionId );
 	}
 
+	// On a phone "/" has no search button to open, so it opens the drawer with
+	// focus in the drawer's own field.
+	await evaluate( cdp, sessionId, `document.activeElement && document.activeElement.blur()` );
+	await pressKey( cdp, sessionId, 'Slash' );
+	await assertState( cdp, sessionId, 'drawer', '"/" on a phone' );
+	assert(
+		await evaluate( cdp, sessionId, `(() => {
+			const input = document.getElementById('hp-council-drawer-search-input');
+			return document.activeElement === input && input.value === '';
+		})()` ),
+		'"/" on a phone did not open the drawer with focus in its empty search field.'
+	);
+	await pressKey( cdp, sessionId, 'Escape' );
+	await waitForState( cdp, sessionId, 'closed', 'Escape from the drawer search field' );
+	assert(
+		await evaluate( cdp, sessionId, `document.activeElement === document.querySelector('[data-hp-header-trigger="drawer"]')` ),
+		'Escape from the drawer search field did not return focus to the drawer trigger.'
+	);
+
 	await clickTrigger( cdp, sessionId, 'drawer' );
 	const guardedClicks = await evaluate( cdp, sessionId, `(() => {
 		const root = document.querySelector('[data-hp-header-root]');
@@ -1279,26 +1308,33 @@ async function verifyMobileInteractions( cdp, sessionId, viewport ) {
 		const event = new MouseEvent('click', { bubbles: true, cancelable: true });
 		const timers = [];
 		const originalTimeout = window.setTimeout;
-		let allowed;
+		// Take the click the way the router does, after the controller has seen
+		// it: record whether the controller cancelled it, then cancel the
+		// fragment navigation, whose synchronous popstate would otherwise settle
+		// the header — and cancel the fold — before the fold can be read.
+		let controllerPrevented = null;
+		window.addEventListener('click', (seen) => {
+			controllerPrevented = seen.defaultPrevented;
+			seen.preventDefault();
+		}, { once: true });
 		window.setTimeout = (callback, delay, ...args) => {
 			timers.push(delay);
 			return originalTimeout(callback, delay, ...args);
 		};
 		try {
-			allowed = link.dispatchEvent(event);
+			link.dispatchEvent(event);
 		} finally {
 			window.setTimeout = originalTimeout;
 		}
 		return {
-			allowed,
+			controllerPrevented,
 			timers,
 			duration: parseFloat(getComputedStyle(panel).animationDuration) * 1000,
-			defaultPrevented: event.defaultPrevented,
 			closing: root.classList.contains('is-hp-closing'),
 			chosen: link.classList.contains('is-hp-chosen'),
 		};
 	})()` );
-	assert( clickResult.allowed && ! clickResult.defaultPrevented, 'Normal drawer link navigation was prevented.' );
+	assert( clickResult.controllerPrevented === false, 'The controller prevented normal drawer link navigation.' );
 	assert( clickResult.closing && clickResult.chosen, 'Normal drawer link did not begin the close treatment.' );
 	assert( clickResult.timers.includes( clickResult.duration ), `Drawer close timer does not match its CSS animation: ${ JSON.stringify( clickResult ) }.` );
 	await wait( clickResult.duration + 40 );
@@ -1313,19 +1349,159 @@ async function verifyMobileInteractions( cdp, sessionId, viewport ) {
 	})()` );
 	assert( cleaned, 'Drawer close treatment was not cleaned up.' );
 
-	// Tabbing past the end of the drawer closes it, the way a disclosure should.
-	await clickTrigger( cdp, sessionId, 'drawer' );
-	await assertState( cdp, sessionId, 'drawer', 'drawer tab-out open' );
-	await evaluate( cdp, sessionId, `(() => {
-		const outside = document.createElement('button');
-		outside.id = 'hp-tab-out-probe';
-		outside.textContent = 'Outside';
-		document.body.appendChild(outside);
-		outside.focus();
+	// Every close folds the drawer, not only a chosen link: the same collapse,
+	// timed from the drawer's computed animation, and only then does it hide.
+	// The probe runs each gesture and reads the result in one turn, so the fold
+	// is observed mid-flight rather than raced.
+	const fold = ( gesture ) => evaluate( cdp, sessionId, `(() => {
+		const root = document.querySelector('[data-hp-header-root]');
+		const drawer = root.querySelector('[data-hp-header-panel="drawer"]');
+		const timers = [];
+		const originalTimeout = window.setTimeout;
+		window.setTimeout = (callback, delay, ...args) => {
+			timers.push(delay);
+			return originalTimeout(callback, delay, ...args);
+		};
+		try {
+			(${ gesture })(root, drawer);
+		} finally {
+			window.setTimeout = originalTimeout;
+		}
+		return {
+			state: root.getAttribute('data-hp-header-state'),
+			closing: root.classList.contains('is-hp-closing'),
+			chosen: !!root.querySelector('.is-hp-chosen'),
+			timers,
+			duration: parseFloat(getComputedStyle(drawer).animationDuration) * 1000,
+		};
 	})()` );
-	await wait( 60 );
-	await assertState( cdp, sessionId, 'closed', 'drawer tab-out close' );
-	await evaluate( cdp, sessionId, `document.getElementById('hp-tab-out-probe').remove()` );
+	const focusIs = () => evaluate( cdp, sessionId, `(() => {
+		const root = document.querySelector('[data-hp-header-root]');
+		const active = document.activeElement;
+		if (active === root.querySelector('[data-hp-header-trigger="drawer"]')) return 'trigger';
+		if (root.querySelector('[data-hp-header-panel="drawer"]').contains(active)) return 'drawer';
+		return active ? active.id || active.tagName : 'none';
+	})()` );
+	const gestures = {
+		'an outside click': `() => document.body.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))`,
+		'Escape from inside': `(root, drawer) => {
+			drawer.querySelector('a[href]').focus();
+			document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+		}`,
+		'the trigger': `(root) => root.querySelector('[data-hp-header-trigger="drawer"]').click()`,
+		'focus leaving': `() => {
+			const outside = document.createElement('button');
+			outside.id = 'hp-tab-out-probe';
+			outside.textContent = 'Outside';
+			document.body.appendChild(outside);
+			outside.focus();
+		}`,
+	};
+	for ( const [ label, gesture ] of Object.entries( gestures ) ) {
+		await clickTrigger( cdp, sessionId, 'drawer' );
+		await assertState( cdp, sessionId, 'drawer', `drawer open before ${ label }` );
+		await evaluate( cdp, sessionId, `document.activeElement && document.activeElement.blur()` );
+		const closing = await fold( gesture );
+		assert(
+			closing.state === 'drawer' && closing.closing && ! closing.chosen,
+			`Closing the drawer with ${ label } did not fold it first (the echo belongs to a chosen link alone): ${ JSON.stringify( closing ) }.`
+		);
+		assert(
+			closing.timers.includes( closing.duration ),
+			`The fold after ${ label } is not timed from the drawer's animation: ${ JSON.stringify( closing ) }.`
+		);
+		await waitForState( cdp, sessionId, 'closed', `the drawer after ${ label }` );
+		assert(
+			! await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-root]').classList.contains('is-hp-closing')` ),
+			`The fold after ${ label } left is-hp-closing on the header.`
+		);
+		const focused = await focusIs();
+		if ( label === 'Escape from inside' ) {
+			assert( focused === 'trigger', `Escape from inside the folding drawer left focus on ${ focused }; expected the drawer trigger.` );
+		} else if ( label === 'focus leaving' ) {
+			assert( focused === 'hp-tab-out-probe', `The fold after focus left the drawer moved focus to ${ focused }.` );
+			await evaluate( cdp, sessionId, `document.getElementById('hp-tab-out-probe').remove()` );
+		} else if ( label === 'an outside click' ) {
+			assert( focused !== 'trigger', 'The fold after an outside click pulled focus to the drawer trigger.' );
+		}
+	}
+
+	// Repeated dismissals are still closes. The toggle, however, reverses a
+	// close already in flight, regardless of which gesture began it.
+	const reopenGestures = {
+		...gestures,
+		'a chosen link': `(root, drawer) => {
+			const link = document.createElement('a');
+			link.id = 'hp-reopen-link-probe';
+			link.href = '#hp-reopen-link-probe';
+			link.textContent = 'Chosen link';
+			drawer.appendChild(link);
+			// Cancel navigation after the header has seen the click, so the
+			// route settlement cannot cancel the fold on the toggle's behalf.
+			window.addEventListener('click', (event) => event.preventDefault(), { once: true });
+			link.click();
+		}`,
+	};
+	for ( const [ label, gesture ] of Object.entries( reopenGestures ) ) {
+		await clickTrigger( cdp, sessionId, 'drawer' );
+		const reopenedByToggle = await fold( `(root, drawer) => {
+			(${ gesture })(root, drawer);
+			const trigger = root.querySelector('[data-hp-header-trigger="drawer"]');
+			trigger.focus();
+			trigger.click();
+		}` );
+		assert(
+			reopenedByToggle.state === 'drawer' && ! reopenedByToggle.closing && ! reopenedByToggle.chosen,
+			`The drawer toggle must cancel the fold after ${ label }: ${ JSON.stringify( reopenedByToggle ) }.`
+		);
+		await wait( Math.max( 0, ...reopenedByToggle.timers ) + 80 );
+		await assertState( cdp, sessionId, 'drawer', `the drawer reopened after ${ label }` );
+		assert( await focusIs() === 'trigger', `Reopening after ${ label } moved focus away from the toggle.` );
+		await closeCurrent( cdp, sessionId );
+		await evaluate( cdp, sessionId, `document.querySelectorAll('#hp-tab-out-probe, #hp-reopen-link-probe').forEach((node) => node.remove())` );
+	}
+
+	// A second dismissal during the fold changes nothing; "/" opens search
+	// in the drawer and also cancels the pending close.
+	await clickTrigger( cdp, sessionId, 'drawer' );
+	const twice = await fold( `(root) => {
+		document.body.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+		document.body.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+	}` );
+	assert(
+		twice.closing && twice.timers.filter( ( delay ) => delay === twice.duration ).length === 1,
+		`A second close during the fold scheduled another one: ${ JSON.stringify( twice ) }.`
+	);
+	await waitForState( cdp, sessionId, 'closed', 'the drawer after a doubled close' );
+	await clickTrigger( cdp, sessionId, 'drawer' );
+	const reopened = await fold( `() => {
+		document.body.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+		document.body.dispatchEvent(new KeyboardEvent('keydown', { key: '/', bubbles: true, cancelable: true }));
+	}` );
+	assert(
+		reopened.state === 'drawer' && ! reopened.closing,
+		`"/" during the fold did not cancel it: ${ JSON.stringify( reopened ) }.`
+	);
+	await wait( reopened.duration + 80 );
+	await assertState( cdp, sessionId, 'drawer', 'the drawer kept by "/" during its fold' );
+	assert( await focusIs() === 'drawer', '"/" during the fold did not leave focus in the drawer.' );
+
+	// A route settlement during the fold closes at once, and its cancelled
+	// timer must not shut the drawer the visitor opens next.
+	const settledFold = await fold( `() => {
+		document.body.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+		history.pushState({}, '', location.pathname + location.search + '#hp-fold-settle');
+	}` );
+	assert(
+		settledFold.state === 'closed' && ! settledFold.closing,
+		`A route settlement during the fold did not close the drawer at once: ${ JSON.stringify( settledFold ) }.`
+	);
+	await wait( 90 );
+	await clickTrigger( cdp, sessionId, 'drawer' );
+	await wait( settledFold.duration + 80 );
+	await assertState( cdp, sessionId, 'drawer', 'a drawer opened after a settled fold' );
+	await closeCurrent( cdp, sessionId );
 
 	// The drawer's own closing and chosen-link rules outrank the bare selectors
 	// in the reduced-motion reset, so they have to be exercised directly rather
@@ -1369,6 +1545,21 @@ async function verifyMobileInteractions( cdp, sessionId, viewport ) {
 		maximumDurationSeconds( drawerMotion.panelTransition ) <= 0.001 &&
 		maximumDurationSeconds( drawerMotion.linkTransition ) <= 0.001,
 		`Reduced-motion drawer transitions are ${ drawerMotion.panelTransition } / ${ drawerMotion.linkTransition }.`
+	);
+	const instant = await fold( `() => document.body.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))` );
+	assert(
+		instant.state === 'closed' && ! instant.closing,
+		`Under reduced motion the drawer must close at once, with no fold: ${ JSON.stringify( instant ) }.`
+	);
+	await clickTrigger( cdp, sessionId, 'drawer' );
+	const instantReopened = await fold( `(root) => {
+		const trigger = root.querySelector('[data-hp-header-trigger="drawer"]');
+		trigger.click();
+		trigger.click();
+	}` );
+	assert(
+		instantReopened.state === 'drawer' && ! instantReopened.closing && ! instantReopened.chosen,
+		`Under reduced motion a close then reopen must leave the drawer open: ${ JSON.stringify( instantReopened ) }.`
 	);
 	await closeCurrent( cdp, sessionId );
 	await cdp.send( 'Emulation.setEmulatedMedia', {
@@ -1441,6 +1632,337 @@ async function verifyHoverCorridor( cdp, sessionId, next ) {
 	await assertState( cdp, sessionId, 'closed', `${ next } pointer exit` );
 }
 
+async function centerOf( cdp, sessionId, selector ) {
+	return evaluate( cdp, sessionId, `(() => {
+		const value = document.querySelector(${ JSON.stringify( selector ) }).getBoundingClientRect();
+		return { x: (value.left + value.right) / 2, y: (value.top + value.bottom) / 2 };
+	})()` );
+}
+
+async function movePointer( cdp, sessionId, x, y ) {
+	await cdp.send( 'Input.dispatchMouseEvent', {
+		type: 'mouseMoved', x, y, button: 'none', buttons: 0, pointerType: 'mouse',
+	}, sessionId );
+	await wait( 40 );
+}
+
+// A hover-opened panel is pinned by the click that follows, not shut by it —
+// the mouse visitor who hovers Work and then clicks it should keep the panel.
+// And hover is a mouse affordance: a touch screen laptop matches the
+// fine-pointer query through its trackpad, so the pointerover its tap fires
+// before the click must open nothing, or that click shuts the panel again.
+async function verifyHoverThenClick( cdp, sessionId ) {
+	await assertState( cdp, sessionId, 'closed', 'hover-then-click initial state' );
+	const work = await centerOf( cdp, sessionId, '[data-hp-header-trigger="work"]' );
+	await movePointer( cdp, sessionId, work.x, work.y );
+	await assertState( cdp, sessionId, 'work', 'hover opens Work' );
+	await dispatchMouseClick( cdp, sessionId, work.x, work.y );
+	await assertState( cdp, sessionId, 'work', 'a click on a hover-opened Work panel pins it' );
+	await movePointer( cdp, sessionId, 10, 300 );
+	await wait( 170 );
+	await assertState( cdp, sessionId, 'work', 'a pinned Work panel after the pointer leaves' );
+	// Passing back through must not demote the pin to a hover opening.
+	await movePointer( cdp, sessionId, work.x, work.y );
+	await movePointer( cdp, sessionId, 10, 300 );
+	await wait( 170 );
+	await assertState( cdp, sessionId, 'work', 'a pinned Work panel after the pointer passes back through' );
+	await dispatchMouseClick( cdp, sessionId, work.x, work.y );
+	await assertState( cdp, sessionId, 'closed', 'a click on a pinned Work panel' );
+	await movePointer( cdp, sessionId, 10, 300 );
+	await wait( 170 );
+
+	const touch = await evaluate( cdp, sessionId, `(() => {
+		const root = document.querySelector('[data-hp-header-root]');
+		const trigger = root.querySelector('[data-hp-header-trigger="work"]');
+		trigger.dispatchEvent(new PointerEvent('pointerover', { bubbles: true, pointerType: 'touch', isPrimary: true }));
+		const afterOver = root.getAttribute('data-hp-header-state');
+		trigger.click();
+		return { afterOver, afterTap: root.getAttribute('data-hp-header-state') };
+	})()` );
+	assert( touch.afterOver === 'closed', `A touch pointerover opened ${ touch.afterOver }; hover must be mouse-only.` );
+	assert( touch.afterTap === 'work', `A touch tap on Work left the header ${ touch.afterTap }; the tap's click must open it.` );
+	await closeCurrent( cdp, sessionId );
+	await assertState( cdp, sessionId, 'closed', 'touch tap cleanup' );
+}
+
+// A pointer passing by never takes a panel out from under keyboard focus: the
+// hidden panel would take the focused link with it and drop focus to <body>.
+// And focus holds a hover opening open only from inside that panel — focus
+// resting elsewhere in the header, on the search button say, does not.
+async function verifyHoverRespectsFocus( cdp, sessionId ) {
+	await assertState( cdp, sessionId, 'closed', 'hover-and-focus initial state' );
+	await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-trigger="work"]').focus()` );
+	await pressKey( cdp, sessionId, 'ArrowDown' );
+	await assertState( cdp, sessionId, 'work', 'ArrowDown opens Work for the hover pass' );
+	const writing = await centerOf( cdp, sessionId, '[data-hp-header-trigger="writing"]' );
+	await movePointer( cdp, sessionId, writing.x, writing.y );
+	await wait( 170 );
+	await assertState( cdp, sessionId, 'work', 'hovering Writing while focus is inside Work' );
+	assert(
+		await evaluate( cdp, sessionId, `document.activeElement === document.querySelector('[data-hp-header-panel="work"] a[href]')` ),
+		'Hovering Writing moved focus out of the Work panel.'
+	);
+	await movePointer( cdp, sessionId, 10, 300 );
+	await wait( 170 );
+	await assertState( cdp, sessionId, 'work', 'the pointer leaving while focus is inside Work' );
+	await pressKey( cdp, sessionId, 'Escape' );
+	await assertState( cdp, sessionId, 'closed', 'Escape after the hover pass' );
+	assert(
+		await evaluate( cdp, sessionId, `document.activeElement === document.querySelector('[data-hp-header-trigger="work"]')` ),
+		'Escape after a hover pass over Writing did not return focus to Work.'
+	);
+
+	await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-trigger="search"]').focus()` );
+	const work = await centerOf( cdp, sessionId, '[data-hp-header-trigger="work"]' );
+	await movePointer( cdp, sessionId, work.x, work.y );
+	await assertState( cdp, sessionId, 'work', 'hover opens Work while focus rests on the search button' );
+	await movePointer( cdp, sessionId, 10, 300 );
+	await wait( 170 );
+	await assertState( cdp, sessionId, 'closed', 'the pointer leaving a hover opening while focus sits outside its panel' );
+
+	// Search is an explicit mode: hover does not replace it, even once focus
+	// has stepped back from the field onto its button.
+	await clickTrigger( cdp, sessionId, 'search' );
+	await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-trigger="search"]').focus()` );
+	await assertState( cdp, sessionId, 'search', 'search open with focus on its button' );
+	await movePointer( cdp, sessionId, work.x, work.y );
+	await movePointer( cdp, sessionId, 10, 300 );
+	await wait( 170 );
+	await assertState( cdp, sessionId, 'search', 'a hover pass over Work while search is open' );
+	await closeCurrent( cdp, sessionId );
+	await assertState( cdp, sessionId, 'closed', 'search cleanup after the hover pass' );
+}
+
+// Escape hands focus back to the trigger of the panel it closes. A click can
+// open Work and a hover then move the visitor on to Writing; Escape from inside
+// Writing must land on Writing, not on the Work button that started it.
+async function verifyEscapeAfterHoverSwitch( cdp, sessionId ) {
+	await assertState( cdp, sessionId, 'closed', 'hover-switch Escape initial state' );
+	const work = await centerOf( cdp, sessionId, '[data-hp-header-trigger="work"]' );
+	const writing = await centerOf( cdp, sessionId, '[data-hp-header-trigger="writing"]' );
+	await dispatchMouseClick( cdp, sessionId, work.x, work.y );
+	await assertState( cdp, sessionId, 'work', 'a click opens Work' );
+	await movePointer( cdp, sessionId, writing.x, writing.y );
+	await assertState( cdp, sessionId, 'writing', 'hover moves on from the clicked Work panel to Writing' );
+	await pressKey( cdp, sessionId, 'Tab' );
+	await pressKey( cdp, sessionId, 'Tab' );
+	assert(
+		await evaluate( cdp, sessionId, `document.activeElement === document.querySelector('[data-hp-header-panel="writing"] a[href]')` ),
+		'Tab from the Work button did not reach the first Writing link.'
+	);
+	await pressKey( cdp, sessionId, 'Escape' );
+	await assertState( cdp, sessionId, 'closed', 'Escape from the hover-switched Writing panel' );
+	const focused = await evaluate( cdp, sessionId, `document.activeElement && (document.activeElement.getAttribute('data-hp-header-trigger') || document.activeElement.tagName)` );
+	assert( focused === 'writing', `Escape from the Writing panel returned focus to ${ focused }; expected the Writing trigger.` );
+	await movePointer( cdp, sessionId, 10, 300 );
+	await wait( 170 );
+}
+
+// "/" opens search from anywhere that is not already taking text, as the
+// trigger's aria-keyshortcuts declares. Typed inside a field it is only a
+// character, and it never fires with a modifier held, mid-composition, or
+// from inside a modal dialog such as the Jetpack search overlay.
+async function verifySearchShortcut( cdp, sessionId ) {
+	await assertState( cdp, sessionId, 'closed', 'search shortcut initial state' );
+	const trigger = await evaluate( cdp, sessionId, `(() => {
+		const node = document.querySelector('[data-hp-header-trigger="search"]');
+		return { keyshortcuts: node.getAttribute('aria-keyshortcuts'), title: node.getAttribute('title') };
+	})()` );
+	assert(
+		trigger.keyshortcuts === '/' && trigger.title === 'Search (/)',
+		`The search trigger does not declare its "/" shortcut: ${ JSON.stringify( trigger ) }.`
+	);
+	const name = await accessibleName( cdp, sessionId, '[data-hp-header-trigger="search"]' );
+	assert( name === 'Search', `Search trigger accessible name is "${ name }"; expected exactly "Search".` );
+	const readField = () => evaluate( cdp, sessionId, `(() => {
+		const input = document.getElementById('hp-council-search-input');
+		return { focused: document.activeElement === input, value: input.value };
+	})()` );
+
+	await evaluate( cdp, sessionId, `document.activeElement && document.activeElement.blur()` );
+	await pressKey( cdp, sessionId, 'Slash' );
+	await assertState( cdp, sessionId, 'search', '"/" from the page' );
+	const opened = await readField();
+	assert( opened.focused && opened.value === '', `"/" must open search with focus in an empty field: ${ JSON.stringify( opened ) }.` );
+	await pressKey( cdp, sessionId, 'Slash' );
+	await assertState( cdp, sessionId, 'search', '"/" typed inside the search field' );
+	const typed = await readField();
+	assert( typed.focused && typed.value === '/', `"/" typed inside the search field must be a character: ${ JSON.stringify( typed ) }.` );
+	await evaluate( cdp, sessionId, `document.getElementById('hp-council-search-input').value = ''` );
+	await pressKey( cdp, sessionId, 'Escape' );
+	await assertState( cdp, sessionId, 'closed', 'Escape after "/"' );
+	assert(
+		await evaluate( cdp, sessionId, `document.activeElement === document.querySelector('[data-hp-header-trigger="search"]')` ),
+		'Escape after "/" did not return focus to the search button.'
+	);
+
+	// Already open: "/" only moves focus back to the field.
+	await clickTrigger( cdp, sessionId, 'search' );
+	await evaluate( cdp, sessionId, `document.querySelector('[data-hp-header-trigger="search"]').focus()` );
+	await pressKey( cdp, sessionId, 'Slash' );
+	await assertState( cdp, sessionId, 'search', '"/" with search already open' );
+	const refocused = await readField();
+	assert( refocused.focused && refocused.value === '', `"/" with search open must refocus its empty field: ${ JSON.stringify( refocused ) }.` );
+	await pressKey( cdp, sessionId, 'Escape' );
+	await assertState( cdp, sessionId, 'closed', 'Escape after refocusing search' );
+
+	await evaluate( cdp, sessionId, `document.activeElement && document.activeElement.blur()` );
+	for ( const [ label, modifiers ] of [ [ 'Alt', 1 ], [ 'Ctrl', 2 ], [ 'Meta', 4 ] ] ) {
+		await pressKey( cdp, sessionId, 'Slash', modifiers );
+		await assertState( cdp, sessionId, 'closed', `"/" with ${ label } held` );
+	}
+	const composing = await evaluate( cdp, sessionId, `(() => {
+		const event = new KeyboardEvent('keydown', { key: '/', bubbles: true, cancelable: true, isComposing: true });
+		document.body.dispatchEvent(event);
+		return { prevented: event.defaultPrevented, state: document.querySelector('[data-hp-header-root]').getAttribute('data-hp-header-state') };
+	})()` );
+	assert(
+		! composing.prevented && composing.state === 'closed',
+		`"/" mid-composition was taken as the shortcut: ${ JSON.stringify( composing ) }.`
+	);
+	await evaluate( cdp, sessionId, `(() => {
+		const field = document.createElement('textarea');
+		field.id = 'hp-shortcut-textarea-probe';
+		document.body.appendChild(field);
+		field.focus();
+	})()` );
+	await pressKey( cdp, sessionId, 'Slash' );
+	await assertState( cdp, sessionId, 'closed', '"/" typed into a page textarea' );
+	assert(
+		await evaluate( cdp, sessionId, `(() => {
+			const field = document.getElementById('hp-shortcut-textarea-probe');
+			const kept = document.activeElement === field && field.value === '/';
+			field.remove();
+			return kept;
+		})()` ),
+		'"/" typed into a page textarea did not stay in the textarea.'
+	);
+	await evaluate( cdp, sessionId, `(() => {
+		const dialog = document.createElement('div');
+		dialog.id = 'hp-shortcut-modal-probe';
+		dialog.setAttribute('role', 'dialog');
+		dialog.setAttribute('aria-modal', 'true');
+		dialog.innerHTML = '<button type="button">Close</button>';
+		document.body.appendChild(dialog);
+		dialog.querySelector('button').focus();
+	})()` );
+	await pressKey( cdp, sessionId, 'Slash' );
+	await assertState( cdp, sessionId, 'closed', '"/" inside a modal dialog' );
+	await evaluate( cdp, sessionId, `document.getElementById('hp-shortcut-modal-probe').remove()` );
+}
+
+// Once content scrolls under the masthead, its hairline gives way to the md
+// shadow; back at the top the hairline returns. The router swaps in a fresh
+// header on navigation, so a route settlement has to re-apply the lift.
+async function verifyMastheadLift( cdp, sessionId ) {
+	const read = () => evaluate( cdp, sessionId, `(() => {
+		const shell = document.querySelector('.hp-site-header');
+		const style = getComputedStyle(shell);
+		return {
+			scrollY: window.scrollY,
+			lifted: shell.classList.contains('is-hp-lifted'),
+			border: style.borderBottomColor,
+			shadow: style.boxShadow,
+			transition: style.transitionDuration,
+		};
+	})()` );
+	// border.hair is #DED2B8; shadow.md is 0 4px 14px rgba(27,35,29,0.08), 0 2px 5px rgba(27,35,29,0.05).
+	const HAIR = 'rgb(222, 210, 184)';
+	const MD_SHADOW = 'rgba(27, 35, 29, 0.08) 0px 4px 14px 0px, rgba(27, 35, 29, 0.05) 0px 2px 5px 0px';
+	await evaluate( cdp, sessionId, `window.scrollTo(0, 0)` );
+	await wait( 400 );
+	const top = await read();
+	assert(
+		top.scrollY === 0 && ! top.lifted && top.border === HAIR && top.shadow === 'none',
+		`At the top the masthead must keep its hairline and cast no shadow: ${ JSON.stringify( top ) }.`
+	);
+	await evaluate( cdp, sessionId, `window.scrollTo(0, 1)` );
+	await wait( 400 );
+	const lifted = await read();
+	assert(
+		lifted.scrollY >= 1 && lifted.lifted && lifted.border === 'rgba(0, 0, 0, 0)' && lifted.shadow === MD_SHADOW,
+		`Scrolled 1px, the masthead must trade its hairline for the md shadow: ${ JSON.stringify( lifted ) }.`
+	);
+	const swapped = await evaluate( cdp, sessionId, `new Promise((resolve) => {
+		const shell = document.querySelector('.hp-site-header');
+		const fresh = shell.cloneNode(true);
+		fresh.classList.remove('is-hp-lifted');
+		shell.replaceWith(fresh);
+		history.replaceState(history.state, '', location.href);
+		setTimeout(() => resolve(document.querySelector('.hp-site-header').classList.contains('is-hp-lifted')), 120);
+	})` );
+	assert( swapped, 'A header swapped in while the page is scrolled did not lift on route settlement.' );
+	await evaluate( cdp, sessionId, `window.scrollTo(0, 0)` );
+	await wait( 400 );
+	const back = await read();
+	assert(
+		back.scrollY === 0 && ! back.lifted && back.border === HAIR && back.shadow === 'none',
+		`Back at the top the masthead must restore its hairline: ${ JSON.stringify( back ) }.`
+	);
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		media: 'screen',
+		features: getHeaderMediaFeatures( { reducedMotion: true } ),
+	}, sessionId );
+	const still = await read();
+	assert(
+		maximumDurationSeconds( still.transition ) <= 0.001,
+		`Reduced motion still transitions the masthead lift: ${ still.transition }.`
+	);
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		media: 'screen',
+		features: getHeaderMediaFeatures(),
+	}, sessionId );
+}
+
+// The brand star turns a quarter on hover or keyboard focus. It is four-fold
+// symmetric, so the turn lands it exactly as drawn. Reduced motion keeps the
+// star still in transit: the turn loses its transition.
+async function verifyBrandStar( cdp, sessionId ) {
+	const readTurn = () => evaluate( cdp, sessionId, `(() => {
+		const svg = document.querySelector('.hp-council-brand__star svg');
+		const style = getComputedStyle(svg);
+		const match = style.transform.match(/^matrix\\(([^)]+)\\)$/);
+		const values = match ? match[1].split(',').map(parseFloat) : [1, 0, 0, 1, 0, 0];
+		return {
+			degrees: Math.round(Math.atan2(values[1], values[0]) * 180 / Math.PI),
+			transition: style.transitionDuration,
+		};
+	})()` );
+	await movePointer( cdp, sessionId, 10, 600 );
+	await wait( 480 );
+	const rest = await readTurn();
+	assert( rest.degrees === 0, `The brand star rests turned ${ rest.degrees }°.` );
+	const brand = await centerOf( cdp, sessionId, '.hp-council-brand' );
+	await movePointer( cdp, sessionId, brand.x, brand.y );
+	await wait( 480 );
+	const hovered = await readTurn();
+	assert( hovered.degrees === 90, `Hovering the brand turned its star ${ hovered.degrees }°; expected a quarter turn.` );
+	await movePointer( cdp, sessionId, 10, 600 );
+	await wait( 480 );
+	const left = await readTurn();
+	assert( left.degrees === 0, `The brand star stayed turned ${ left.degrees }° after the pointer left.` );
+	// A keypress first, so the scripted focus counts as keyboard focus.
+	await pressKey( cdp, sessionId, 'Tab' );
+	await evaluate( cdp, sessionId, `document.querySelector('.hp-council-brand').focus()` );
+	await wait( 480 );
+	const focused = await readTurn();
+	assert( focused.degrees === 90, `Keyboard focus on the brand turned its star ${ focused.degrees }°; expected a quarter turn.` );
+	await evaluate( cdp, sessionId, `document.activeElement && document.activeElement.blur()` );
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		media: 'screen',
+		features: getHeaderMediaFeatures( { reducedMotion: true } ),
+	}, sessionId );
+	const still = await readTurn();
+	assert(
+		maximumDurationSeconds( still.transition ) <= 0.001,
+		`Reduced motion still animates the brand star's turn: ${ still.transition }.`
+	);
+	await cdp.send( 'Emulation.setEmulatedMedia', {
+		media: 'screen',
+		features: getHeaderMediaFeatures(),
+	}, sessionId );
+}
+
 async function verifyBoundarySettlement( cdp, sessionId, originalViewport ) {
 	await cdp.send( 'Emulation.setDeviceMetricsOverride', {
 		width: 782, height: 900, deviceScaleFactor: 1, mobile: false,
@@ -1467,6 +1989,74 @@ async function verifyBoundarySettlement( cdp, sessionId, originalViewport ) {
 		mobile: false,
 	}, sessionId );
 	await wait( 80 );
+}
+
+async function loadRoute( cdp, sessionId, route ) {
+	const loaded = cdp.once( 'Page.loadEventFired', sessionId );
+	const url = new URL( route, ORIGIN ).href;
+	await cdp.send( 'Page.navigate', { url }, sessionId );
+	await loaded;
+	await cdp.send( 'Runtime.evaluate', {
+		expression: 'document.fonts && document.fonts.ready',
+		awaitPromise: true,
+	}, sessionId );
+	await waitForPageCondition(
+		cdp,
+		sessionId,
+		`!!document.querySelector('[data-hp-header-root][data-hp-header-state="closed"]')`,
+		'the initialized Council header'
+	);
+	// settle() re-closes at load, next frame, and again 60ms later, because
+	// the Interactivity Router's render/pushState order varies. Interacting
+	// inside that window lets a late settle close the panel a click just
+	// opened, which no real visitor could reproduce but which makes this
+	// suite flaky. Let the window drain first.
+	await wait( 150 );
+	return url;
+}
+
+// About is a plain link, so it never carries the .is-current class Work and
+// Writing take for their sections. Its aria-current has to draw the same gold
+// rule, or About is the one destination with no mark on its own page.
+async function verifyCurrentPageRule( cdp, sessionId ) {
+	const readRules = async () => {
+		await cdp.send( 'Input.dispatchMouseEvent', {
+			type: 'mouseMoved', x: 10, y: 600, button: 'none', buttons: 0, pointerType: 'mouse',
+		}, sessionId );
+		return evaluate( cdp, sessionId, `(() => {
+			const rule = (selector) => {
+				const label = document.querySelector(selector + ' .hp-council-nav__label');
+				if (!label) return null;
+				const style = getComputedStyle(label, '::after');
+				return { content: style.content, width: parseFloat(style.width) || 0, color: style.backgroundColor };
+			};
+			const about = document.querySelector('.hp-council-nav__link');
+			return {
+				aboutCurrent: about && about.getAttribute('aria-current'),
+				about: rule('.hp-council-nav__link'),
+				work: rule('[data-hp-header-trigger="work"]'),
+				writing: rule('[data-hp-header-trigger="writing"]'),
+			};
+		})()` );
+	};
+	const home = await readRules();
+	assert(
+		home.about && home.aboutCurrent === null && home.about.content === 'none',
+		`About draws a current-page rule away from /about/: ${ JSON.stringify( home ) }.`
+	);
+	await loadRoute( cdp, sessionId, '/about/' );
+	const about = await readRules();
+	assert( about.aboutCurrent === 'page', `/about/ does not mark About with aria-current="page": ${ JSON.stringify( about ) }.` );
+	// gold-700 is #9A7530.
+	assert(
+		about.about && about.about.content !== 'none' && approximately( about.about.width, 26, 0.5 ) &&
+			about.about.color === 'rgb(154, 117, 48)',
+		`On /about/, About must draw the 26px gold-700 current-page rule: ${ JSON.stringify( about.about ) }.`
+	);
+	assert(
+		about.work.content === 'none' && about.writing.content === 'none',
+		`On /about/, Work or Writing draws a current-page rule: ${ JSON.stringify( about ) }.`
+	);
 }
 
 async function inspectViewport( cdp, viewport, captureDir ) {
@@ -1499,26 +2089,7 @@ async function inspectViewport( cdp, viewport, captureDir ) {
 			features: getHeaderMediaFeatures(),
 		}, sessionId );
 
-		const loaded = cdp.once( 'Page.loadEventFired', sessionId );
-		const url = new URL( '/', ORIGIN ).href;
-		await cdp.send( 'Page.navigate', { url }, sessionId );
-		await loaded;
-		await cdp.send( 'Runtime.evaluate', {
-			expression: 'document.fonts && document.fonts.ready',
-			awaitPromise: true,
-		}, sessionId );
-		await waitForPageCondition(
-			cdp,
-			sessionId,
-			`!!document.querySelector('[data-hp-header-root][data-hp-header-state="closed"]')`,
-			'the initialized Council header'
-		);
-		// settle() re-closes at load, next frame, and again 60ms later, because
-		// the Interactivity Router's render/pushState order varies. Interacting
-		// inside that window lets a late settle close the panel a click just
-		// opened, which no real visitor could reproduce but which makes this
-		// suite flaky. Let the window drain first.
-		await wait( 150 );
+		const url = await loadRoute( cdp, sessionId, '/' );
 
 		const loadedState = await evaluate( cdp, sessionId, `({
 			href: location.href,
@@ -1569,12 +2140,21 @@ async function inspectViewport( cdp, viewport, captureDir ) {
 				await verifyDesktopInteractions( cdp, sessionId, viewport );
 				await verifyHoverCorridor( cdp, sessionId, 'work' );
 				await verifyHoverCorridor( cdp, sessionId, 'writing' );
+				await verifyHoverThenClick( cdp, sessionId );
+				await verifyHoverRespectsFocus( cdp, sessionId );
+				await verifyEscapeAfterHoverSwitch( cdp, sessionId );
+				await verifySearchShortcut( cdp, sessionId );
+				await verifyMastheadLift( cdp, sessionId );
+				await verifyBrandStar( cdp, sessionId );
 				await verifyBoundarySettlement( cdp, sessionId, viewport );
+				// Navigates to /about/, so it runs last.
+				await verifyCurrentPageRule( cdp, sessionId );
 			}
 		} else {
 			await verifyMobileGeometry( cdp, sessionId, viewport, captureDir );
 			if ( viewport.name === 'mobile-390' ) {
 				await verifyMobileInteractions( cdp, sessionId, viewport );
+				await verifyMastheadLift( cdp, sessionId );
 			}
 		}
 		console.log( `verified ${ viewport.name } (${ viewport.width }×${ viewport.height })` );

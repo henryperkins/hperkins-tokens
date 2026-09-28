@@ -14,8 +14,13 @@
 	window[ REGISTRY ] = registry;
 	var STATES = [ 'closed', 'work', 'writing', 'search', 'drawer' ];
 	var state = 'closed';
-	var origin = null;
+	// How the open panel opened: 'hover' | 'click' | 'key', or null when closed.
+	// Only a hover opening closes when the pointer leaves; a click pins it.
+	var openedBy = null;
 	var hoverTimer = 0;
+	// The drawer's closing fold while it runs: { node, link, restore, timer }.
+	var fold = null;
+	var liftFrame = 0;
 
 	function root() {
 		return document.querySelector( ROOT );
@@ -40,7 +45,6 @@
 		if ( ! node || STATES.indexOf( next ) === -1 ) {
 			return;
 		}
-		var restore = options && options.restoreFocus;
 		var triggers = node.querySelectorAll( TRIGGER );
 		var panels = node.querySelectorAll( PANEL );
 		for ( var i = 0; i < triggers.length; i++ ) {
@@ -58,34 +62,185 @@
 		// assertion that this line exists.
 		node.setAttribute( 'data-hp-header-state', next );
 		state = next;
-		if ( next === 'closed' && restore && origin && document.contains( origin ) ) {
-			origin.focus();
-		}
-		if ( next === 'closed' ) {
-			origin = null;
-		}
+		openedBy = next === 'closed' ? null : ( options && options.by ) || 'click';
 	}
 
-	function focusIsInside() {
-		var node = root();
-		return !! ( node && document.activeElement && node.contains( document.activeElement ) );
-	}
-
-	function toggle( next, trigger ) {
-		// A pending hover close targets whatever was open a moment ago; letting it
-		// survive an explicit open would shut the panel the visitor just asked for.
+	// Every opening — click, ArrowDown, hover, "/" — comes through here. A
+	// pending hover close targets whatever was open a moment ago, and a folding
+	// drawer is about to hide itself; letting either survive an explicit open
+	// would shut the panel the visitor just asked for.
+	function open( next, by ) {
 		window.clearTimeout( hoverTimer );
-		origin = trigger;
-		applyState( state === next ? 'closed' : next );
-		if ( next === 'search' && state === 'search' ) {
-			var searchPanel = panelFor( 'search' );
-			var input = searchPanel
-				? searchPanel.querySelector( 'input[type="search"]' )
-				: null;
+		cancelFold();
+		applyState( next, { by: by } );
+	}
+
+	function cancelFold() {
+		if ( ! fold ) {
+			return;
+		}
+		window.clearTimeout( fold.timer );
+		fold.node.classList.remove( 'is-hp-closing' );
+		if ( fold.link ) {
+			fold.link.classList.remove( 'is-hp-chosen' );
+		}
+		fold = null;
+	}
+
+	// The drawer folds shut on every close — the collapse a chosen link always
+	// ran — and hides only once the fold ends. A chosen link also echoes.
+	function closeDrawer( options ) {
+		var node = root();
+		var drawer = panelFor( 'drawer' );
+		// Already folding: a second close changes nothing.
+		if ( fold || ! node || ! drawer ) {
+			return;
+		}
+		var link = options && options.link;
+		var delay = 0;
+		if ( ! reducedMotion() ) {
+			node.classList.add( 'is-hp-closing' );
+			if ( link ) {
+				link.classList.add( 'is-hp-chosen' );
+			}
+			// Computed CSS durations are seconds. Read the closing animation after
+			// its class is applied so the hide timer follows the theme token.
+			delay = ( parseFloat( window.getComputedStyle( drawer ).animationDuration ) || 0 ) * 1000;
+		}
+		fold = { node: node, link: link, restore: !! ( options && options.restore ), timer: 0 };
+		if ( delay > 0 ) {
+			fold.timer = window.setTimeout( finishFold, delay );
+		} else {
+			finishFold();
+		}
+	}
+
+	function finishFold() {
+		var current = fold;
+		fold = null;
+		if ( ! current ) {
+			return;
+		}
+		var drawer = panelFor( 'drawer' );
+		var active = document.activeElement;
+		var lost = ! active || active === document.body;
+		var inside = !! ( drawer && active && drawer.contains( active ) );
+		applyState( 'closed' );
+		current.node.classList.remove( 'is-hp-closing' );
+		if ( current.link ) {
+			current.link.classList.remove( 'is-hp-chosen' );
+		}
+		// router-scroll.js focuses a hash target across the same commit window,
+		// so a chosen link rescues focus only when it is still on the link we
+		// just hid — never stealing it from that target. Escape from inside hands
+		// focus to the trigger; any other close leaves focus where it is.
+		var rescue = current.link
+			? lost || current.link === active
+			: current.restore && ( lost || inside );
+		var drawerTrigger = rescue ? triggerFor( 'drawer' ) : null;
+		if ( drawerTrigger ) {
+			drawerTrigger.focus();
+		}
+	}
+
+	function close() {
+		if ( state === 'drawer' ) {
+			closeDrawer();
+			return;
+		}
+		applyState( 'closed' );
+	}
+
+	// Escape. Focus inside the open panel returns to that panel's trigger —
+	// whichever panel is open now, however the visitor got there. Focus
+	// anywhere else stays where they put it, and the key is claimed only when
+	// this surface owns focus.
+	function dismiss( event ) {
+		if ( state === 'closed' ) {
+			return;
+		}
+		var panel = panelFor( state );
+		var trigger = triggerFor( state );
+		var active = document.activeElement;
+		var inPanel = !! ( panel && active && panel.contains( active ) );
+		if ( inPanel || ( trigger && active === trigger ) ) {
+			event.preventDefault();
+		}
+		if ( state === 'drawer' ) {
+			// The fold hands focus to the trigger once it ends.
+			closeDrawer( { restore: inPanel } );
+			return;
+		}
+		applyState( 'closed' );
+		if ( inPanel && trigger ) {
+			trigger.focus();
+		}
+	}
+
+	function searchField( next ) {
+		var panel = panelFor( next );
+		return panel ? panel.querySelector( 'input[type="search"]' ) : null;
+	}
+
+	function toggle( next ) {
+		// The drawer stays open until its fold finishes. A toggle during that
+		// fold reverses it through open(), clearing the timer and chosen link.
+		if ( state !== next || ( next === 'drawer' && fold ) ) {
+			open( next, 'click' );
+			var input = next === 'search' ? searchField( 'search' ) : null;
 			if ( input ) {
 				input.focus();
 			}
+			return;
 		}
+		// The pointer opened this panel on its way to the trigger, so the click
+		// that follows pins it rather than shutting it.
+		if ( openedBy === 'hover' ) {
+			openedBy = 'click';
+			return;
+		}
+		close();
+	}
+
+	// Anything already taking text keeps its "/", and so does a modal dialog
+	// such as the Jetpack search overlay: pulling focus to the header would
+	// strand it behind the overlay.
+	function keepsSlash( node ) {
+		if ( ! node || ! node.tagName ) {
+			return false;
+		}
+		return !! (
+			node.isContentEditable ||
+			/^(INPUT|TEXTAREA|SELECT)$/.test( node.tagName ) ||
+			( node.closest && node.closest( '[aria-modal="true"], dialog[open]' ) )
+		);
+	}
+
+	// "/" opens search, as the search trigger's aria-keyshortcuts declares. A
+	// phone has no search button, so there it opens the drawer and its field.
+	function searchShortcut( event ) {
+		if (
+			event.metaKey ||
+			event.ctrlKey ||
+			event.altKey ||
+			event.defaultPrevented ||
+			event.isComposing ||
+			keepsSlash( event.target )
+		) {
+			return;
+		}
+		var next = window.matchMedia && ! window.matchMedia( '(min-width: 782px)' ).matches
+			? 'drawer'
+			: 'search';
+		var input = searchField( next );
+		if ( ! input ) {
+			return;
+		}
+		event.preventDefault();
+		// Already open, this only refocuses the field — but it still cancels a
+		// fold in flight, which would otherwise hide the drawer around the focus.
+		open( next, 'key' );
+		input.focus();
 	}
 
 	function reducedMotion() {
@@ -102,25 +257,41 @@
 		);
 	}
 
+	// The masthead lifts once content scrolls under it: its hairline gives way
+	// to a shadow. The window is the scroller — router-scroll.js resets it with
+	// window.scrollTo — so a frame-throttled passive listener is enough.
+	function syncLift() {
+		liftFrame = 0;
+		var node = root();
+		var shell = node && node.closest ? node.closest( '.hp-site-header' ) : null;
+		if ( shell ) {
+			shell.classList.toggle( 'is-hp-lifted', ( window.scrollY || window.pageYOffset || 0 ) > 0 );
+		}
+	}
+
 	function settle() {
 		window.clearTimeout( hoverTimer );
+		cancelFold();
 		// applyState() returns early when the router has detached the header, so
 		// it cannot be relied on to clear the closure. Reset the state directly:
 		// a stale 'drawer' here reads the next drawer click as a close and the
 		// panel refuses to open.
 		state = 'closed';
-		origin = null;
-		applyState( 'closed' );
+		openedBy = null;
+		settleHeader();
 		if ( window.requestAnimationFrame ) {
-			window.requestAnimationFrame( function () {
-				applyState( 'closed' );
-			} );
+			window.requestAnimationFrame( settleHeader );
 		}
-		window.setTimeout( function () {
-			applyState( 'closed' );
-		}, 60 );
+		window.setTimeout( settleHeader, 60 );
 	}
 	registry.settle = settle;
+
+	// The router swaps in a fresh, unlifted header, so each pass re-applies the
+	// lift along with the closed state.
+	function settleHeader() {
+		applyState( 'closed' );
+		syncLift();
+	}
 
 	function wrapHistory( method ) {
 		var original = window.history[ method ];
@@ -148,7 +319,7 @@
 
 		var trigger = event.target.closest( TRIGGER );
 		if ( trigger && node.contains( trigger ) ) {
-			toggle( trigger.getAttribute( 'data-hp-header-trigger' ), trigger );
+			toggle( trigger.getAttribute( 'data-hp-header-trigger' ) );
 			return;
 		}
 
@@ -168,50 +339,23 @@
 			) {
 				return;
 			}
-			if ( ! reducedMotion() ) {
-				node.classList.add( 'is-hp-closing' );
-				drawerLink.classList.add( 'is-hp-chosen' );
-			}
-			// Computed CSS durations are seconds. Read the closing animation after
-			// its class is applied so the hide timer follows the theme token.
-			var drawer = panelFor( 'drawer' );
-			var closeDelay = reducedMotion() || ! drawer ? 0 :
-				( parseFloat( window.getComputedStyle( drawer ).animationDuration ) || 0 ) * 1000;
-			window.setTimeout( function () {
-				// router-scroll.js focuses a hash target across the same commit
-				// window; only rescue focus when it is still on the link we are
-				// about to hide, so this never steals focus from that target.
-				var active = document.activeElement;
-				var stranded = ! active || active === document.body || drawerLink === active;
-				applyState( 'closed' );
-				node.classList.remove( 'is-hp-closing' );
-				drawerLink.classList.remove( 'is-hp-chosen' );
-				var drawerTrigger = stranded ? triggerFor( 'drawer' ) : null;
-				if ( drawerTrigger ) {
-					drawerTrigger.focus();
-				}
-			}, closeDelay );
+			closeDrawer( { link: drawerLink } );
 			return;
 		}
 
 		if ( state !== 'closed' && ! node.contains( event.target ) ) {
-			applyState( 'closed' );
+			close();
 		}
 	} );
 
 	document.addEventListener( 'keydown', function ( event ) {
 		if ( event.key === 'Escape' || event.key === 'Esc' ) {
-			if ( state !== 'closed' ) {
-				// A hover-opened panel records an origin the visitor never focused.
-				// Restoring to it would rip focus out of wherever they actually
-				// are, so only restore when focus is genuinely inside the header —
-				// and only claim the key in that case.
-				var inside = focusIsInside();
-				if ( inside ) {
-					event.preventDefault();
-				}
-				applyState( 'closed', { restoreFocus: inside } );
-			}
+			dismiss( event );
+			return;
+		}
+
+		if ( event.key === '/' ) {
+			searchShortcut( event );
 			return;
 		}
 
@@ -228,9 +372,7 @@
 			return;
 		}
 		event.preventDefault();
-		window.clearTimeout( hoverTimer );
-		origin = trigger;
-		applyState( next );
+		open( next, 'key' );
 		var panel = panelFor( next );
 		var first = panel ? panel.querySelector( 'a[href]' ) : null;
 		if ( first ) {
@@ -254,11 +396,19 @@
 		) {
 			return;
 		}
-		applyState( 'closed' );
+		close();
 	} );
 
+	// Hover is a mouse affordance. A touch or pen press fires pointerover just
+	// before its click, and a panel opened there would be shut again by that
+	// click — on a touch-screen laptop, whose trackpad satisfies
+	// desktopPointer(), Work and Writing would seem to do nothing.
+	function mouseHover( event ) {
+		return event.pointerType === 'mouse' && desktopPointer() && !! event.target.closest;
+	}
+
 	document.addEventListener( 'pointerover', function ( event ) {
-		if ( ! desktopPointer() || ! event.target.closest ) {
+		if ( ! mouseHover( event ) ) {
 			return;
 		}
 		var group = event.target.closest( '[data-hp-header-hover]' );
@@ -273,16 +423,23 @@
 		}
 		window.clearTimeout( hoverTimer );
 		var next = group.getAttribute( 'data-hp-header-hover' );
-		// Never overwrite an origin a keyboard visitor established; the pointer
-		// is only passing through.
-		if ( ! focusIsInside() ) {
-			origin = triggerFor( next );
+		// Re-entering an open panel must not demote a click or key opening to a
+		// hover one, which the pointer's next exit would close; and search and
+		// the drawer are explicit modes a passing pointer never replaces.
+		if ( state === next || state === 'search' || state === 'drawer' ) {
+			return;
 		}
-		applyState( next );
+		// A pointer passing by never takes a panel out from under keyboard focus:
+		// hiding it would take the focused link with it and drop focus to <body>.
+		var current = state === 'closed' ? null : panelFor( state );
+		if ( current && current.contains( document.activeElement ) ) {
+			return;
+		}
+		open( next, 'hover' );
 	} );
 
 	document.addEventListener( 'pointerout', function ( event ) {
-		if ( ! desktopPointer() || ! event.target.closest ) {
+		if ( ! mouseHover( event ) ) {
 			return;
 		}
 		var group = event.target.closest( '[data-hp-header-hover]' );
@@ -296,10 +453,14 @@
 			return;
 		}
 		var next = group.getAttribute( 'data-hp-header-hover' );
+		window.clearTimeout( hoverTimer );
 		hoverTimer = window.setTimeout( function () {
-			// Closing on pointer-out while focus sits inside the panel would
+			// Only the pointer's own opening closes on leave; a click or a key
+			// pinned the rest. Closing while focus sits inside the panel would
 			// destroy it — the visitor tabbed in and the pointer merely drifted.
-			if ( state === next && ! focusIsInside() ) {
+			// Focus anywhere else in the header does not hold the panel open.
+			var panel = panelFor( next );
+			if ( state === next && openedBy === 'hover' && ! ( panel && panel.contains( document.activeElement ) ) ) {
 				applyState( 'closed' );
 			}
 		}, 120 );
@@ -316,9 +477,22 @@
 		}
 	}
 
+	window.addEventListener( 'scroll', function () {
+		if ( liftFrame ) {
+			return;
+		}
+		if ( window.requestAnimationFrame ) {
+			liftFrame = window.requestAnimationFrame( syncLift );
+		} else {
+			syncLift();
+		}
+	}, { passive: true } );
+
 	wrapHistory( 'pushState' );
 	wrapHistory( 'replaceState' );
 	window.addEventListener( 'popstate', settle );
 	window.addEventListener( 'pageshow', settle );
 	applyState( 'closed' );
+	// A reload can restore a scrolled page before this runs.
+	syncLift();
 }() );
