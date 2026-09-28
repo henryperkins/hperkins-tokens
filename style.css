@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.67
+Version: 0.3.68
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -2271,7 +2271,9 @@ samp {
 
 /* Contact confirmation state (form-enhance.js progressive enhancement).
 	 The Imladris confirmation card: ringed in gold on all four sides rather than
-	 left-ruled, with a 44px mark and the display h3 step on the title.
+	 left-ruled, with a 44px mark and the display h3 step on its h2 title. The
+	 title is a real heading because the card is a region named by it; as a <p>
+	 it also missed the heading weight (500) and leading.
 
 	 Two of those reads are intent, not pixels: `rule.gold` and `gold-500` are the
 	 same hex (#C29A44), so the ring's COLOUR is unchanged from the 3px left rule
@@ -2285,6 +2287,11 @@ samp {
 	 than kept as an unreachable variant that documentation described as live —
 	 which is also why these declarations sit on the base selectors instead of
 	 behind a `:not(.hp-form-confirm--inverse)` guard with nothing to guard. */
+/* The card arrives once: a 4px rise and fade, then the check draws. No bounce,
+	 no loop, no scale. Both keyframes name only their `from` state, so the
+	 resting style IS the finished card — anything that stops the animation (the
+	 reduced-motion rule below, keyframes that never loaded) leaves the card and
+	 its check fully drawn instead of stranded at frame zero. */
 .hp-form-confirm {
 	display: grid;
 	gap: var(--wp--preset--spacing--2);
@@ -2292,6 +2299,7 @@ samp {
 	border: 1px solid var(--wp--custom--rule--gold);
 	border-radius: var(--wp--custom--radius--lg, 12px);
 	background: var(--wp--custom--surface--card);
+	animation: hp-form-confirm-in var(--wp--custom--dur--base) var(--wp--custom--ease--calm) backwards;
 }
 /* The panel takes focus when it replaces the form, so it needs the site's own
 	 ring. The rule beside the button primitive lists interactive elements only,
@@ -2321,6 +2329,31 @@ samp {
 	stroke-linecap: round;
 	stroke-linejoin: round;
 }
+/* form-enhance.js writes Lucide's check from its left tip (M4 12l5 5L20 6), so
+	 the stroke draws tip → vertex → tip. The path is 22.6 units long: one 24-unit
+	 dash covers it at rest, and an offset of 25 — one past the dash — hides even
+	 the round cap before the draw starts. */
+.hp-form-confirm__mark path {
+	stroke-dasharray: 24 30;
+	animation: hp-form-confirm-check var(--wp--custom--dur--slow) var(--wp--custom--ease--out) var(--wp--custom--dur--fast) backwards;
+}
+@keyframes hp-form-confirm-in {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+}
+@keyframes hp-form-confirm-check {
+	from {
+		stroke-dashoffset: 25;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.hp-form-confirm,
+	.hp-form-confirm__mark path {
+		animation: none;
+	}
+}
 .hp-form-confirm__title {
 	margin: 0;
 	font-family: var(--hp-font-display);
@@ -2333,6 +2366,79 @@ samp {
 	font-size: var(--wp--preset--font-size--sm);
 	line-height: var(--wp--custom--leading--relaxed);
 	color: var(--wp--custom--text--muted, var(--hp-neutral-600));
+}
+/* The way on when no mail handler answered: the card has replaced the form, so
+	 without this line the visitor's words are out of reach. The draft link is an
+	 openable reference, so it is river; the copy control is an action, so it is
+	 evergreen with the gold content-link underline. Each grows its hit area with
+	 padding-block and gives it back with a matching negative margin, so the
+	 line itself does not move. */
+.hp-form-confirm__recovery {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	column-gap: var(--wp--preset--spacing--2);
+	row-gap: var(--wp--preset--spacing--1);
+	margin: 0;
+	font-size: var(--wp--preset--font-size--sm);
+	line-height: var(--wp--custom--leading--relaxed);
+	color: var(--wp--custom--text--muted);
+}
+.hp-form-confirm__draft,
+.hp-form-confirm__copy {
+	padding-block: 10px;
+	margin-block: -10px;
+	text-decoration-line: underline;
+	text-underline-offset: 0.14em;
+	transition:
+		color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm),
+		text-decoration-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+.hp-form-confirm__draft {
+	color: var(--wp--custom--artifact-link);
+	text-decoration-color: color-mix(in srgb, var(--wp--custom--artifact-link) 35%, transparent);
+}
+.hp-form-confirm__draft:hover {
+	color: var(--wp--custom--artifact-link);
+	text-decoration-color: var(--wp--custom--artifact-link);
+}
+.hp-form-confirm__copy {
+	appearance: none;
+	padding-inline: 0;
+	border: 0;
+	border-radius: 0;
+	background: none;
+	font: inherit;
+	color: var(--wp--custom--text--link);
+	text-decoration-color: color-mix(in srgb, var(--wp--custom--rule--gold) 55%, transparent);
+	cursor: pointer;
+}
+.hp-form-confirm__copy:hover {
+	color: var(--wp--custom--text--accent);
+	text-decoration-color: var(--wp--custom--rule--gold);
+}
+/* At the component-stack width the line can wrap its two controls onto
+	 adjacent rows, where each grown hit area would sit over the other's text.
+	 Stack them instead: dropping the negative margin lets the same padding take
+	 real space, so each control owns a 44px row. They stay in text flow rather
+	 than becoming flex boxes, which would split "Open the draft ↗" into items
+	 and swallow the space before the glyph. The separator only makes sense
+	 between two items on one line. */
+@media (max-width: 600px) {
+	.hp-form-confirm__recovery {
+		flex-direction: column;
+		align-items: flex-start;
+		row-gap: 0;
+	}
+	.hp-form-confirm__draft,
+	.hp-form-confirm__copy {
+		box-sizing: border-box;
+		min-block-size: var(--hp-touch-min);
+		margin-block: 0;
+	}
+	.hp-form-confirm__separator {
+		display: none;
+	}
 }
 /* Compose another is the secondary Button primitive: transparent ground, a 1px
 	 inset brand ring, label family at the touch-target height. Deliberately NOT

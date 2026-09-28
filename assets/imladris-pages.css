@@ -214,15 +214,23 @@
    /ai-enablement/ and the digest, so this stays scoped to the template. */
 .hp-contact-template .hp-page-hero__lead {
   max-width: var(--wp--custom--measure--contact-lead);
+  text-wrap: pretty;
 }
 
 .hp-contact-form { display: flex; flex-direction: column; gap: var(--wp--preset--spacing--5); }
+/* Cells align to the start. .hp-input is itself a grid, so under the default
+   stretch an Email error line (the 13px helper) stretched the Name cell too
+   and its auto rows shared the slack: the Name control dropped 15px and grew
+   15px taller beside a control that had not moved. Now only the Email column
+   grows. minmax(0, …) lets a long value shrink its track instead of widening
+   the row. */
 .hp-contact-form__row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
   gap: var(--wp--preset--spacing--5);
 }
-@media (max-width: 600px) { .hp-contact-form__row { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .hp-contact-form__row { grid-template-columns: minmax(0, 1fr); } }
 
 /* Message textarea, matched to the hp-input control treatment. */
 .hp-contact-form textarea {
@@ -263,6 +271,24 @@
    it clears the 15px long-copy floor; the inline <span> helpers stay compact. */
 p.hp-contact-form__hint {
   font-size: var(--wp--preset--font-size--sm);
+}
+/* The inline address is an openable reference, so it reads as the river
+   artifact link rather than the evergreen body link: a quiet 35% underline
+   that turns solid on hover. Both rules carry the template scope so they
+   outrank theme.json's link rule AND its :hover on specificity — production
+   prints the file sheets above the inline global styles, so a tie would go
+   the other way there. The confirmation card's draft link (style.css) wears
+   the same treatment. */
+.hp-contact-template .hp-contact-form__hint a {
+  color: var(--wp--custom--artifact-link);
+  text-decoration-line: underline;
+  text-decoration-color: color-mix(in srgb, var(--wp--custom--artifact-link) 35%, transparent);
+  text-underline-offset: 0.14em;
+  transition: text-decoration-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+.hp-contact-template .hp-contact-form__hint a:hover {
+  color: var(--wp--custom--artifact-link);
+  text-decoration-color: var(--wp--custom--artifact-link);
 }
 .hp-contact-form__actions {
   display: flex;

@@ -99,7 +99,7 @@ component CSS to refresh either — the theme's `style.css` is a superset.
 |---|---|---|
 | `templates/front-page` | `content/page-snapshots/front-page.html`, `templates/front-page.html`, `patterns/wapuu-home-hero.php` | Published **Home** page (slug `home`, ID 36) in hybrid mode: theme-owned Wapuu hero + Three Rings shell, DB-owned Work ledger and closing panel |
 | `templates/about` | `content/page-drafts/about.html` (the only human-authored About candidate), `content/page-snapshots/about.html` (accepted snapshot, export-only mirror), `patterns/about-resume.php` (portrait-only thin accepted-snapshot adapter — no page markup of its own), `templates/page-about.html`, About page layer in `assets/imladris-pages.css` | Published **About + Resume** page (slug `about`, ID 6) in DB-owned page-body mode. The letterhead, timeline, numbered evidence layout and backdrop showcase were promoted on 2026-09-07 in 0.3.62. The reviewed draft, accepted snapshot and production body match; the obsolete saved 44rem template override was removed. Future draft application still requires explicit `--page=about`; a new candidate is not the deployed body until it passes review and controlled promotion |
-| `templates/contact` | `patterns/contact.php`, `templates/page-contact.html`, the Contact section of `assets/imladris-pages.css`, `.hp-form-confirm*` in `style.css` | Published **Contact** page (slug `contact`, ID 233) in repository-owned mode — the body comes from the pattern, not the database, so this route is outside the page-snapshot contract. Aligned to the design template on 2026-08-18 (section below) |
+| `templates/contact` | `patterns/contact.php`, `templates/page-contact.html`, the Contact section of `assets/imladris-pages.css`, `.hp-form-confirm*` in `style.css` | Published **Contact** page (slug `contact`, ID 233) in repository-owned mode — the body comes from the pattern, not the database, so this route is outside the page-snapshot contract. Aligned to the design template on 2026-08-18 and polished from its 2026-09-24 hand-off (sections below) |
 | `templates/ai-enablement` | `content/page-snapshots/ai-enablement.html`, `templates/page-ai-enablement.html`, `patterns/ai-enablement.php` (thin accepted-snapshot adapter — re-derives only the six Three Rings image URLs, no essay markup of its own) | Published **AI Enablement** page (slug `ai-enablement`, ID 175) in DB-owned page-body mode; the pattern re-emits the accepted snapshot, so re-inserting it cannot revert the route to an older draft (`scripts/verify-ai-enablement-source.js`) |
 | `templates/work-index` | `content/page-snapshots/work.html`, `templates/page-work.html` | Published **Work** page (slug `work`, ID 13) in DB-owned page-body mode; `patterns/work-index.php` remains a reusable seed/reference copy |
 | `templates/digest` | `content/page-snapshots/job-placement-digest.html`, `templates/page-job-placement-digest.html` | Published **Job Placement Digest** (slug `job-placement-digest`, ID 433) in DB-owned page-body mode; the former full-page pattern is retired |
@@ -1062,3 +1062,92 @@ sizes, containment, and complete no-JavaScript rendering at 320, 390, 600, 601,
 781, 900, and desktop widths. The responsive image sources, artwork cap,
 parchment wash, mobile bitmap safeguard, status copy, and destinations remain
 unchanged.
+
+## 2026-09-24 — Contact hand-off pass (`templates/contact` → `/contact/`, 0.3.68)
+
+A polish of the live route from the design project's dated hand-off ("hand-off,
+recovery and focus"; reference `templates/contact/Contact.dc.html`). Its
+`ds-base.js` and `support.js` are the design tool's loader and runtime and are
+not dependencies. Structure, copy and the accepted 600px/54ch composition are
+unchanged; the pass is behaviour plus small layout fixes.
+
+- **Form** — `patterns/contact.php` gives each control an id
+  (`contact-name/-email/-subject/-message`) and Name/Email their autofill
+  tokens. The Name/Email row aligns its cells to the start: `.hp-input` is a
+  grid, so under the default stretch an Email error stretched the Name cell
+  too, and the Name control dropped 15px and grew 15px taller. The lead wraps
+  `pretty`. The inline mailto address reads as the river artifact link with a
+  35% underline that turns solid on hover, scoped to the template so it
+  outranks theme.json's link rule and its `:hover` in either stylesheet order.
+- **Validation** — late to accuse, early to forgive: the email error appears on
+  blur (non-empty and invalid) or submit, clears only once the address is valid,
+  and never on a keystroke that leaves it invalid. One visually hidden
+  `role="status"` region (`#contact-status`) sits beside the form so it
+  survives the swap; it announces the error, describes the field while it is
+  in error, and later carries the copy result. The visible helper drops its own
+  `role="alert"` on this route so the error is announced once. The subscribe
+  plate keeps its clear-on-keystroke behaviour.
+- **Confirmation** — the card is built, inserted and focused before
+  `window.location.assign()` hands the draft to the mail client, so it is the
+  fallback when nothing answers. It is a region named by an `h2` title (the
+  `<p>` title rendered Cormorant 400 at 1.7 leading) and described by its body.
+  The recovery line reads "No mail app opened? Open the draft ↗ · Copy the
+  draft": the draft link re-opens the same mailto; the copy control writes the
+  plain-text draft through the async clipboard with a textarea fallback,
+  restores focus, and changes its word (Draft copied / Copy blocked) for
+  3200ms. "Compose another" keeps the name and email, clears the subject and
+  message, and focuses the first field still owed.
+- **Draft** — composed once: a CRLF-encoded mailto (RFC 6068) and plain copy
+  text, signed `— Name <email>`.
+- **Motion** — the card rises 4px and fades over `dur.base` with `ease.calm`;
+  the check (Lucide's path written from its left tip, `M4 12l5 5L20 6`) draws
+  over `dur.slow` with `ease.out` after `dur.fast`. No token was added.
+- **Deliberate divergences from the hand-off (recorded, not drift):**
+  - *Card copy.* The hand-off believed the live card said "Your mail app has
+    it"; it said "This composes a mail to … nothing was sent from this page. If
+    nothing opened, email that address directly." The prototype sentence is not
+    adopted — the page cannot know what the mail app did (see the 2026-08-18
+    divergence above). Only the last sentence is dropped, because the recovery
+    line now carries that instruction.
+  - *Default subject kept.* `form-enhance.js` is not mirrored in the design
+    project, and an empty subject still becomes "Hello from hperkins.blog" in
+    both the mailto and the copy text.
+  - *No `#subscribe` scroll margin.* The hand-off's 61px/98px were measured on
+    the project's pre-Council `SiteHeader` (its nav still lists Home, Placement
+    Digest and Resume). The Council header measures 63px at ≤781px and 69px
+    from 782px and never wraps, and `[id] { scroll-margin-top: spacing-10 }`
+    already gives the anchor 80px.
+  - *Motion authored from the resting state.* Both keyframes name only `from`,
+    so anything that stops them leaves the card and check drawn. Reduced
+    motion uses `animation: none`, the header's convention, rather than zeroing
+    the delay under the global 0.01ms rule. The keyframes live beside
+    `.hp-form-confirm` in `style.css`, not split into `imladris-pages.css`.
+  - *Recovery line stacks at ≤600px.* Wrapped onto adjacent rows, each
+    control's padding-grown hit area would sit over the other's text; stacked,
+    each owns a 44px row. The padding/negative-margin mechanism is used on one
+    line only. (The hand-off cites a "2026-09-08 ruling" for it; this record
+    has no such entry.)
+  - *No focus-retry loop.* The ten-frame retry works around React's commit
+    timing; the DOM swap here is synchronous.
+  - *Additions:* the ↗ is `aria-hidden` (the About convention), the card is
+    `aria-describedby` its body, and a blur caused by a pointer press waits for
+    the release — the error line grows the row, and "Send message" moving out
+    from under a pressed pointer would swallow the click.
+  - *Not ported from the reference:* its `SiteHeader` navigation and its
+    subscribe-plate copy ("Prefer to read first?"). The shared
+    `hperkins-tokens/imladris-subscribe` copy is unchanged.
+- **Verification** — `scripts/verify-contact-form-styling.js` rewrites
+  `form-enhance.js` on the wire so `window.location` records instead of
+  navigating, and refuses a valid submit if that rewrite did not take. It then
+  pins the row alignment, field ids and autofill tokens, validation timing,
+  the status region, the exact CRLF mailto and copy text (hand-derived), the
+  hand-off order, card semantics and title weight, recovery-line names, paint
+  and 44px non-overlapping targets at 1280/390/320, copy success, reset and
+  blocked paths, Compose another, the entrance and check timings against the
+  duration tokens, reduced motion, and a real mouse click on Send.
+- **Relation to the 2026-08-18 follow-up spec** — this pass polishes the live
+  route and does not implement that spec. It meets part of the spec's recovery
+  goal differently: the draft stays reachable from the card, and Compose
+  another keeps who is writing. The spec's other decisions — the "Open email
+  draft" label, "Return to message", named profile links, and the subscribe
+  bridge — remain open.

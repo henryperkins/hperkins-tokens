@@ -21,6 +21,22 @@
  * geometry in patterns/contact.php against parts/footer.html, since "one icon
  * family with the footer" is a claim about provenance that stroke widths alone
  * cannot prove.
+ *
+ * The 2026-09-24 hand-off pass adds the behaviour around the message: the
+ * Name/Email row keeping its cells aligned when only Email grows an error,
+ * the email field accused late (blur or submit) and forgiven early (the moment
+ * it is valid), one status region that survives the swap, the draft written
+ * once as a CRLF mailto and once as plain copy text, the recovery line's draft
+ * link and copy control with their state words, "Compose another" keeping who
+ * is writing, and the entrance and check draw falling back to a visible card
+ * under reduced motion.
+ *
+ * A valid submit hands a mailto: URL to the browser, which can open a real
+ * compose window on a desktop that has a mail handler. So the enhancement
+ * script is rewritten as it is served: inside it, `window.location` becomes a
+ * recorder, and the run refuses to submit a valid form if that rewrite did not
+ * take. The recorder also proves the order the hand-off promises — the card is
+ * in place and focused before the mail client is asked for anything.
  */
 const { spawn } = require( 'node:child_process' );
 const fs = require( 'node:fs/promises' );
@@ -247,7 +263,55 @@ const SHARED_GLYPHS = [
 	contact: extractGlyph( CONTACT_PATTERN, glyph.hrefFragment, 'patterns/contact.php' ),
 } ) );
 
+const CONTACT_EMAIL_ERROR = 'Enter a valid email so I can reply.';
+
+// Autofill tokens for the two identity fields, and an id on every control so
+// script can hand focus to the field still owed.
+const FIELD_CONTRACT = [
+	{ name: 'name', id: 'contact-name', autocomplete: 'name' },
+	{ name: 'email', id: 'contact-email', autocomplete: 'email' },
+	{ name: 'subject', id: 'contact-subject' },
+	{ name: 'message', id: 'contact-message' },
+];
+
+// A pointer user learns where an icon-only pill goes before opening it.
+const CHANNEL_TITLES = {
+	'GitHub profile': 'github.com/henryperkins',
+	'LinkedIn profile': 'linkedin.com/in/henryperkins',
+	'WordPress.org profile': 'profiles.wordpress.org/htperkins',
+};
+
+// The draft the valid submit types, and the two things it must become. Both
+// are derived by hand, not with the code under test: RFC 6068 carries a mailto
+// body's line breaks as CRLF, while the copy text is plain.
+const DRAFT_FIELDS = {
+	name: 'Ada Lovelace',
+	email: 'ada@example.com',
+	subject: 'Hello there',
+	message: 'Line one\nLine two',
+};
+const EXPECTED_DRAFT_HREF = `mailto:${ CONTACT_EMAIL }?subject=Hello%20there&body=Line%20one%0D%0ALine%20two%0D%0A%0D%0A%E2%80%94%20Ada%20Lovelace%20%3Cada%40example.com%3E`;
+const EXPECTED_DRAFT_TEXT = `To: ${ CONTACT_EMAIL }\nSubject: Hello there\n\nLine one\nLine two\n\n— Ada Lovelace <ada@example.com>`;
+
+// The copy control's state is a word, not a colour, so the words are the
+// contract and are pinned here (verify-header.js pins its status words the
+// same way). The confirmation's title, body and reset label stay read out of
+// form-enhance.js above.
+const RECOVERY_PROMPT = 'No mail app opened?';
+const DRAFT_LINK_NAME = 'Open the draft';
+const COPY_STATE_WORDS = {
+	idle: 'Copy the draft',
+	copied: 'Draft copied',
+	failed: 'Copy blocked',
+};
+const COPY_NOTES = {
+	copied: 'Draft copied to the clipboard.',
+	failed: `The browser blocked the clipboard. Open the draft, or email ${ CONTACT_EMAIL } directly.`,
+};
+const COPY_RESET_MS = 3200;
+
 const VIEWPORT = { width: 390, height: 1400, deviceScaleFactor: 1, mobile: false };
+const NARROW_VIEWPORT = { width: 320, height: 1400, deviceScaleFactor: 1, mobile: false };
 // The form column and the hero measures are narrower than the page spine, so
 // they only bind on a viewport wider than they are: at 390px the panel would
 // satisfy "600px wide, centred" by simply running out of room.
@@ -295,6 +359,7 @@ function createCdpClient( wsUrl ) {
 	let nextId = 1;
 	const pending = new Map();
 	const listeners = new Map();
+	const subscribers = new Map();
 
 	ws.addEventListener( 'message', ( event ) => {
 		const message = JSON.parse( event.data );
@@ -311,11 +376,18 @@ function createCdpClient( wsUrl ) {
 
 		if ( message.method ) {
 			const key = `${ message.sessionId || '' }:${ message.method }`;
+			( subscribers.get( key ) || [] ).forEach( ( callback ) => callback( message.params || {} ) );
 			const callbacks = listeners.get( key ) || [];
 			listeners.delete( key );
 			callbacks.forEach( ( callback ) => callback( message.params || {} ) );
 		}
 	} );
+
+	// Unlike once(), stays subscribed: Fetch.requestPaused fires per request.
+	function on( method, sessionId, callback ) {
+		const key = `${ sessionId || '' }:${ method }`;
+		subscribers.set( key, [ ...( subscribers.get( key ) || [] ), callback ] );
+	}
 
 	function send( method, params = {}, sessionId, timeout = 15000 ) {
 		const id = nextId++;
@@ -352,9 +424,112 @@ function createCdpClient( wsUrl ) {
 	}
 
 	return new Promise( ( resolve, reject ) => {
-		ws.addEventListener( 'open', () => resolve( { send, once, close: () => ws.close() } ) );
+		ws.addEventListener( 'open', () => resolve( { send, once, on, close: () => ws.close() } ) );
 		ws.addEventListener( 'error', reject );
 	} );
+}
+
+async function evaluate( cdp, sessionId, expression, label ) {
+	const evaluated = await cdp.send( 'Runtime.evaluate', {
+		expression,
+		awaitPromise: true,
+		returnByValue: true,
+	}, sessionId );
+	if ( evaluated.exceptionDetails ) {
+		throw new Error( `${ label } evaluation failed: ${ evaluated.exceptionDetails.exception?.description || evaluated.exceptionDetails.text }` );
+	}
+	return evaluated.result.value;
+}
+
+/**
+ * Keep the valid submits below from reaching the operating system's mail
+ * handler, and record what they would have handed it.
+ *
+ * The enhancement script is rewritten on the wire so `window.location` inside
+ * it is a recorder. Page code elsewhere is untouched. The returned state counts
+ * the rewrites; a run that sees none must not submit a valid form.
+ */
+async function neutralizeMailHandoff( cdp, sessionId ) {
+	const state = { rewrites: 0, error: null };
+	await cdp.send( 'Page.addScriptToEvaluateOnNewDocument', {
+		source: `(() => {
+			window.__hpHandoffs = [];
+			const record = (href) => {
+				const card = document.querySelector('.hp-form-confirm');
+				window.__hpHandoffs.push({
+					href: String(href),
+					cardPresent: !! card,
+					cardFocused: !! card && document.activeElement === card,
+				});
+			};
+			window.__hpLocation = {
+				assign: record,
+				replace: record,
+				get href() { return window.location.href; },
+				set href(value) { record(value); },
+			};
+		})();`,
+	}, sessionId );
+	cdp.on( 'Fetch.requestPaused', sessionId, async ( params ) => {
+		try {
+			const { body, base64Encoded } = await cdp.send( 'Fetch.getResponseBody', { requestId: params.requestId }, sessionId );
+			const source = base64Encoded ? Buffer.from( body, 'base64' ).toString( 'utf8' ) : body;
+			const rewritten = source.replace( /\bwindow\.location\b/g, () => {
+				state.rewrites++;
+				return 'window.__hpLocation';
+			} );
+			// The body handed back is decoded, so the original length and
+			// encoding headers would describe a different payload.
+			const headers = ( params.responseHeaders || [] )
+				.filter( ( header ) => ! /^(content-length|content-encoding)$/i.test( header.name ) );
+			await cdp.send( 'Fetch.fulfillRequest', {
+				requestId: params.requestId,
+				responseCode: params.responseStatusCode || 200,
+				responseHeaders: headers,
+				body: Buffer.from( rewritten, 'utf8' ).toString( 'base64' ),
+			}, sessionId );
+		} catch ( error ) {
+			state.error = error;
+			await cdp.send( 'Fetch.continueRequest', { requestId: params.requestId }, sessionId ).catch( () => {} );
+		}
+	} );
+	await cdp.send( 'Fetch.enable', {
+		patterns: [ { urlPattern: '*form-enhance.js*', resourceType: 'Script', requestStage: 'Response' } ],
+	}, sessionId );
+	return state;
+}
+
+async function forcePseudoState( cdp, sessionId, selector, forcedPseudoClasses ) {
+	const { root } = await cdp.send( 'DOM.getDocument', { depth: 0 }, sessionId );
+	const { nodeId } = await cdp.send( 'DOM.querySelector', { nodeId: root.nodeId, selector }, sessionId );
+	if ( ! nodeId ) {
+		throw new Error( `cannot force a pseudo-class on ${ selector }: no such element.` );
+	}
+	await cdp.send( 'CSS.forcePseudoState', { nodeId, forcedPseudoClasses }, sessionId );
+}
+
+// Colour and underline at rest and under a forced :hover. The hover read waits
+// out the 140ms calm transition, so it sees the settled value, not frame one.
+async function paintAtRestAndHover( cdp, sessionId, selector ) {
+	const read = `(() => {
+		const el = document.querySelector(${ JSON.stringify( selector ) });
+		if (!el) { return null; }
+		const s = getComputedStyle(el);
+		return { color: s.color, decorationColor: s.textDecorationColor, decorationLine: s.textDecorationLine };
+	})()`;
+	const rest = await evaluate( cdp, sessionId, read, `${ selector } at rest` );
+	if ( ! rest ) {
+		return null;
+	}
+	await forcePseudoState( cdp, sessionId, selector, [ 'hover' ] );
+	await wait( 400 );
+	const hover = await evaluate( cdp, sessionId, read, `${ selector } on hover` );
+	await forcePseudoState( cdp, sessionId, selector, [] );
+	return { rest, hover };
+}
+
+function boxesIntersect( a, b ) {
+	return !! a && !! b && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
 }
 
 async function inspectContactPage( cdp ) {
@@ -367,6 +542,13 @@ async function inspectContactPage( cdp ) {
 
 	await cdp.send( 'Page.enable', {}, sessionId );
 	await cdp.send( 'Runtime.enable', {}, sessionId );
+	await cdp.send( 'DOM.enable', {}, sessionId );
+	await cdp.send( 'CSS.enable', {}, sessionId );
+	// The email field is accused on blur, so focus and blur are under test; a
+	// background headless tab only fires them reliably when it believes it has
+	// focus.
+	await cdp.send( 'Emulation.setFocusEmulationEnabled', { enabled: true }, sessionId );
+	const handoff = await neutralizeMailHandoff( cdp, sessionId );
 	// Load wide, measure the page composition, then shrink to the mobile
 	// viewport the input/focus contract has always been checked at. One page
 	// load carries both: a second navigation is the slowest thing this script
@@ -475,6 +657,72 @@ async function inspectContactPage( cdp ) {
 		throw new Error( `contact layout evaluation failed: ${ layoutEvaluated.exceptionDetails.exception?.description || layoutEvaluated.exceptionDetails.text }` );
 	}
 
+	// Still wide: the Name/Email row is two columns only here, so this is where
+	// an Email error can drag the Name cell with it.
+	const desktop = await evaluate( cdp, sessionId, `(() => {
+		const form = document.querySelector('.hp-contact-form');
+		const email = form.querySelector('input[name="email"]');
+		const nameControl = form.querySelector('input[name="name"]').closest('.hp-input__control');
+		const box = (el) => { const r = el.getBoundingClientRect(); return { top: r.top, height: r.height }; };
+		const before = box(nameControl);
+		email.value = 'not-an-email';
+		// requestSubmit() runs constraint validation first; type=email rejects
+		// this value, so the invalid event fires and no submit follows.
+		form.requestSubmit(form.querySelector('button[type="submit"]'));
+		const after = box(nameControl);
+		const showedError = !! email.closest('.hp-input.has-error');
+		// Leave a clean form for the mobile pass: a valid value forgives the
+		// error, then the field empties without an event and loses focus empty.
+		email.value = 'reset@example.com';
+		email.dispatchEvent(new Event('input', { bubbles: true }));
+		email.value = '';
+		email.blur();
+		const lead = document.querySelector('.hp-contact-template .hp-page-hero__lead');
+		const status = document.querySelector('.hp-contact-panel [role="status"]');
+		return {
+			rowAlignment: { before, after, showedError, errorAfterReset: !! email.closest('.hp-input.has-error') },
+			leadTextWrap: lead ? getComputedStyle(lead).textWrapStyle || '' : '',
+			fields: Array.from(form.querySelectorAll('input, textarea')).map((el) => ({
+				name: el.name,
+				id: el.id,
+				autocomplete: el.getAttribute('autocomplete'),
+			})),
+			channelTitles: Array.from(document.querySelectorAll('.hp-channels a')).map((link) => ({
+				label: link.getAttribute('aria-label') || '',
+				title: link.getAttribute('title'),
+			})),
+			status: status ? {
+				id: status.id,
+				insideForm: !! status.closest('.hp-contact-form'),
+				position: getComputedStyle(status).position,
+				width: status.getBoundingClientRect().width,
+				text: status.textContent.trim(),
+			} : null,
+		};
+	})()`, 'contact desktop contract' );
+
+	// What the hand-off's links and controls should paint, resolved from the
+	// theme's own tokens by the browser rather than from the rules under test.
+	const paint = await evaluate( cdp, sessionId, `(() => {
+		const resolve = (value) => {
+			const probe = document.createElement('span');
+			probe.style.color = value;
+			document.body.appendChild(probe);
+			const resolved = getComputedStyle(probe).color;
+			probe.remove();
+			return resolved;
+		};
+		return {
+			river: resolve('var(--wp--custom--artifact-link)'),
+			riverUnderline: resolve('color-mix(in srgb, var(--wp--custom--artifact-link) 35%, transparent)'),
+			link: resolve('var(--wp--custom--text--link)'),
+			goldUnderline: resolve('color-mix(in srgb, var(--wp--custom--rule--gold) 55%, transparent)'),
+			accent: resolve('var(--wp--custom--text--accent)'),
+			gold: resolve('var(--wp--custom--rule--gold)'),
+		};
+	})()`, 'paint expectations' );
+	desktop.hintLink = await paintAtRestAndHover( cdp, sessionId, '.hp-contact-form__actions .hp-contact-form__hint a' );
+
 	await cdp.send( 'Emulation.setDeviceMetricsOverride', VIEWPORT, sessionId );
 	await wait( 150 );
 
@@ -555,6 +803,43 @@ async function inspectContactPage( cdp ) {
 			result.focusedControl = styles(nameControl);
 			textarea.focus();
 			result.focusedTextarea = styles(textarea);
+
+			// Late to accuse, early to forgive: typing never raises the email
+			// error, leaving the field (or submitting) does, and only a valid
+			// address clears it.
+			const subjectInput = form.querySelector('input[name="subject"]');
+			const status = document.querySelector('.hp-contact-panel [role="status"]');
+			const emailState = () => {
+				const helper = emailInput.closest('.hp-input')?.querySelector('.hp-input__helper');
+				return {
+					hasError: !! emailInput.closest('.hp-input.has-error'),
+					ariaInvalid: emailInput.getAttribute('aria-invalid') || '',
+					helperText: helper ? helper.textContent.trim() : '',
+					helperRole: helper ? helper.getAttribute('role') || '' : '',
+					describedBy: (emailInput.getAttribute('aria-describedby') || '').split(/\\s+/).filter(Boolean),
+					statusText: status ? status.textContent.trim() : null,
+					active: (document.activeElement && document.activeElement.name) || '',
+				};
+			};
+			const type = (value) => {
+				emailInput.value = value;
+				emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+			};
+			result.timing = {};
+			emailInput.focus();
+			type('not-an');
+			result.timing.typingInvalid = emailState();
+			subjectInput.focus();
+			result.timing.blurInvalid = emailState();
+			emailInput.focus();
+			type('not-an-emai');
+			result.timing.stillInvalidKeystroke = emailState();
+			type('someone@example.com');
+			result.timing.becameValid = emailState();
+			type('');
+			subjectInput.focus();
+			result.timing.blurEmpty = emailState();
+
 			emailInput.value = 'not-an-email';
 			form.querySelector('button[type="submit"]').click();
 			result.invalidInput = styles(emailInput);
@@ -565,6 +850,7 @@ async function inspectContactPage( cdp ) {
 				ariaInvalid: emailInput.getAttribute('aria-invalid') || '',
 				helperText: (emailInput.closest('.hp-input')?.querySelector('.hp-input__helper')?.textContent || '').trim(),
 				stillForm: !! document.querySelector('.hp-contact-form'),
+				...emailState(),
 			};
 			result.channels = Array.from(document.querySelectorAll('.hp-channels a')).map((link) => {
 				const s = getComputedStyle(link);
@@ -602,68 +888,303 @@ async function inspectContactPage( cdp ) {
 				hasWhatToInclude: !! document.querySelector('.hp-contact-aside .hp-callout'),
 				hasOfficeHours: !! document.querySelector('.hp-contact-aside .hp-officehours'),
 			};
-			// Last, because it replaces the form: a real valid submit is the only
-			// way to measure the confirmation the shipped code actually builds
-			// (a hand-injected stand-in would drift from confirmPanel()). It is
-			// safe headless — handleContactSubmit assigns window.location.href a
-			// mailto: URL, which Chrome has no protocol handler for and drops,
-			// and the panel is built synchronously right after that assignment,
-			// so these reads run in the same task regardless.
-			emailInput.value = 'someone@example.com';
-			form.querySelector('button[type="submit"]').click();
-			const confirmPanel = document.querySelector('.hp-form-confirm');
-			if (!confirmPanel) { throw new Error('a valid contact submit did not swap the form for .hp-form-confirm'); }
-			const confirmStyle = getComputedStyle(confirmPanel);
-			const mark = confirmPanel.querySelector('.hp-form-confirm__mark');
-			const markSvg = mark && mark.querySelector('svg');
-			const title = confirmPanel.querySelector('.hp-form-confirm__title');
-			const body = confirmPanel.querySelector('.hp-form-confirm__body');
-			const again = confirmPanel.querySelector('.hp-form-confirm__again');
-			const againStyle = again && getComputedStyle(again);
-			result.confirm = {
-				// The retired --inverse modifier would show up here, as would any
-				// other stray state class.
-				classes: Array.from(confirmPanel.classList).sort().join(' '),
-				// form-enhance.js focuses the panel, so this is the state a
-				// keyboard visitor actually sees.
-				hasFocus: document.activeElement === confirmPanel,
-				focusVisible: confirmPanel.matches(':focus-visible'),
-				outlineStyle: confirmStyle.outlineStyle,
-				outlineWidth: confirmStyle.outlineWidth,
-				outlineColor: confirmStyle.outlineColor,
-				outlineOffset: confirmStyle.outlineOffset,
-				borderTopColor: confirmStyle.borderTopColor,
-				borderRightColor: confirmStyle.borderRightColor,
-				borderBottomColor: confirmStyle.borderBottomColor,
-				borderLeftColor: confirmStyle.borderLeftColor,
-				borderTopWidth: confirmStyle.borderTopWidth,
-				borderLeftWidth: confirmStyle.borderLeftWidth,
-				title: title ? title.textContent.trim() : '',
-				titleFontSize: title ? getComputedStyle(title).fontSize : '',
-				body: body ? body.textContent.trim() : '',
-				markWidth: mark ? Math.round(mark.getBoundingClientRect().width) : 0,
-				markHeight: mark ? Math.round(mark.getBoundingClientRect().height) : 0,
-				markSvgWidth: markSvg ? Math.round(markSvg.getBoundingClientRect().width) : 0,
-				againLabel: again ? again.textContent.trim() : '',
-				againHeight: again ? Math.round(again.getBoundingClientRect().height) : 0,
-				againBoxShadow: againStyle ? againStyle.boxShadow : '',
-				againColor: againStyle ? againStyle.color : '',
-				againBorderTopWidth: againStyle ? againStyle.borderTopWidth : '',
-			};
 			return result;
 			})()`;
 
-	const evaluated = await cdp.send( 'Runtime.evaluate', {
-		expression,
-		awaitPromise: true,
-		returnByValue: true,
-	}, sessionId );
-	if ( evaluated.exceptionDetails ) {
-		throw new Error( `contact page evaluation failed: ${ evaluated.exceptionDetails.exception?.description || evaluated.exceptionDetails.text }` );
+	const mobile = await evaluate( cdp, sessionId, expression, 'contact page' );
+
+	// A real valid submit is the only way to measure the confirmation the
+	// shipped code builds (a hand-injected stand-in would drift from it), so it
+	// is only safe once the hand-off recorder is in place.
+	if ( handoff.error ) {
+		throw new Error( `could not rewrite form-enhance.js to record the mailto hand-off (${ handoff.error.message }); refusing to submit a valid form that could open a real mail client.` );
+	}
+	if ( ! handoff.rewrites ) {
+		throw new Error( 'form-enhance.js was never rewritten to record the mailto hand-off (no request matched, or it no longer navigates through window.location); refusing to submit a valid form that could open a real mail client.' );
 	}
 
+	const confirm = await evaluate( cdp, sessionId, `(() => {
+		const form = document.querySelector('.hp-contact-form');
+		const draft = ${ JSON.stringify( DRAFT_FIELDS ) };
+		Object.keys(draft).forEach((name) => {
+			const field = form.querySelector('[name="' + name + '"]');
+			field.value = draft[name];
+			field.dispatchEvent(new Event('input', { bubbles: true }));
+		});
+		form.querySelector('button[type="submit"]').click();
+		const confirmPanel = document.querySelector('.hp-form-confirm');
+		if (!confirmPanel) { throw new Error('a valid contact submit did not swap the form for .hp-form-confirm'); }
+		const confirmStyle = getComputedStyle(confirmPanel);
+		const mark = confirmPanel.querySelector('.hp-form-confirm__mark');
+		const markSvg = mark && mark.querySelector('svg');
+		const checkPath = markSvg && markSvg.querySelector('path');
+		const checkStyle = checkPath ? getComputedStyle(checkPath) : null;
+		const checkStart = checkPath ? checkPath.getPointAtLength(0) : null;
+		const title = confirmPanel.querySelector('.hp-form-confirm__title');
+		const body = confirmPanel.querySelector('.hp-form-confirm__body');
+		const again = confirmPanel.querySelector('.hp-form-confirm__again');
+		const againStyle = again && getComputedStyle(again);
+		const recovery = confirmPanel.querySelector('.hp-form-confirm__recovery');
+		const draftLink = recovery && recovery.querySelector('.hp-form-confirm__draft');
+		const copyButton = recovery && recovery.querySelector('.hp-form-confirm__copy');
+		const status = document.querySelector('.hp-contact-panel [role="status"]');
+		const rootStyle = getComputedStyle(document.documentElement);
+		const ms = (value) => {
+			const text = String(value).trim();
+			return text.endsWith('ms') ? parseFloat(text) : parseFloat(text) * 1000;
+		};
+		// What a screen reader is given: aria-hidden glyphs are not part of it.
+		const accessibleText = (el) => {
+			if (!el) { return ''; }
+			const clone = el.cloneNode(true);
+			clone.querySelectorAll('[aria-hidden="true"]').forEach((node) => node.remove());
+			return clone.textContent.replace(/\\s+/g, ' ').trim();
+		};
+		return {
+			// The retired --inverse modifier would show up here, as would any
+			// other stray state class.
+			classes: Array.from(confirmPanel.classList).sort().join(' '),
+			// form-enhance.js focuses the panel, so this is the state a
+			// keyboard visitor actually sees.
+			hasFocus: document.activeElement === confirmPanel,
+			focusVisible: confirmPanel.matches(':focus-visible'),
+			outlineStyle: confirmStyle.outlineStyle,
+			outlineWidth: confirmStyle.outlineWidth,
+			outlineColor: confirmStyle.outlineColor,
+			outlineOffset: confirmStyle.outlineOffset,
+			borderTopColor: confirmStyle.borderTopColor,
+			borderRightColor: confirmStyle.borderRightColor,
+			borderBottomColor: confirmStyle.borderBottomColor,
+			borderLeftColor: confirmStyle.borderLeftColor,
+			borderTopWidth: confirmStyle.borderTopWidth,
+			borderLeftWidth: confirmStyle.borderLeftWidth,
+			title: title ? title.textContent.trim() : '',
+			titleFontSize: title ? getComputedStyle(title).fontSize : '',
+			body: body ? body.textContent.trim() : '',
+			markWidth: mark ? Math.round(mark.getBoundingClientRect().width) : 0,
+			markHeight: mark ? Math.round(mark.getBoundingClientRect().height) : 0,
+			markSvgWidth: markSvg ? Math.round(markSvg.getBoundingClientRect().width) : 0,
+			againLabel: again ? again.textContent.trim() : '',
+			againHeight: again ? Math.round(again.getBoundingClientRect().height) : 0,
+			againBoxShadow: againStyle ? againStyle.boxShadow : '',
+			againColor: againStyle ? againStyle.color : '',
+			againBorderTopWidth: againStyle ? againStyle.borderTopWidth : '',
+			semantics: {
+				role: confirmPanel.getAttribute('role') || '',
+				ariaLive: confirmPanel.getAttribute('aria-live') || '',
+				labelledBy: confirmPanel.getAttribute('aria-labelledby') || '',
+				describedBy: confirmPanel.getAttribute('aria-describedby') || '',
+				titleId: title ? title.id : '',
+				titleTag: title ? title.tagName : '',
+				titleWeight: title ? getComputedStyle(title).fontWeight : '',
+				bodyId: body ? body.id : '',
+			},
+			recovery: recovery ? {
+				accessibleText: accessibleText(recovery),
+				renderedText: recovery.textContent.replace(/\\s+/g, ' ').trim(),
+				draftHref: draftLink ? draftLink.getAttribute('href') || '' : '',
+				draftName: accessibleText(draftLink),
+				copyType: copyButton ? copyButton.getAttribute('type') || '' : '',
+				copyName: accessibleText(copyButton),
+			} : null,
+			statusText: status ? status.textContent.trim() : null,
+			statusInsideCard: status ? !! status.closest('.hp-form-confirm') : null,
+			handoffs: (window.__hpHandoffs || []).slice(),
+			motion: {
+				cardAnimation: confirmStyle.animationName,
+				cardDuration: ms(confirmStyle.animationDuration),
+				checkAnimation: checkStyle ? checkStyle.animationName : '',
+				checkDuration: checkStyle ? ms(checkStyle.animationDuration) : null,
+				checkDelay: checkStyle ? ms(checkStyle.animationDelay) : null,
+				checkStart: checkStart ? { x: Math.round(checkStart.x * 100) / 100, y: Math.round(checkStart.y * 100) / 100 } : null,
+				durBase: ms(rootStyle.getPropertyValue('--wp--custom--dur--base')),
+				durSlow: ms(rootStyle.getPropertyValue('--wp--custom--dur--slow')),
+				durFast: ms(rootStyle.getPropertyValue('--wp--custom--dur--fast')),
+			},
+		};
+	})()`, 'contact confirmation' );
+
+	// Hit areas at the phone widths. A recovery line that wraps its two
+	// controls onto adjacent rows must not let one control's grown target sit
+	// over the other's text.
+	const recoveryBoxes = `(() => {
+		const box = (el) => {
+			if (!el) { return null; }
+			const r = el.getBoundingClientRect();
+			return { top: r.top, bottom: r.bottom, left: r.left, right: r.right, height: r.height };
+		};
+		return {
+			draft: box(document.querySelector('.hp-form-confirm__draft')),
+			copy: box(document.querySelector('.hp-form-confirm__copy')),
+		};
+	})()`;
+	confirm.boxes = { 390: await evaluate( cdp, sessionId, recoveryBoxes, 'recovery hit areas at 390px' ) };
+	await cdp.send( 'Emulation.setDeviceMetricsOverride', NARROW_VIEWPORT, sessionId );
+	await wait( 150 );
+	confirm.boxes[ 320 ] = await evaluate( cdp, sessionId, recoveryBoxes, 'recovery hit areas at 320px' );
+	await cdp.send( 'Emulation.setDeviceMetricsOverride', VIEWPORT, sessionId );
+	await wait( 150 );
+	confirm.draftPaint = await paintAtRestAndHover( cdp, sessionId, '.hp-form-confirm__draft' );
+	confirm.copyPaint = await paintAtRestAndHover( cdp, sessionId, '.hp-form-confirm__copy' );
+
+	// The clipboard is the operating system's, so it is the one thing stubbed:
+	// what the control hands it, and what the control says afterwards, are the
+	// contract. Focus is placed first because a mouse click on a button
+	// focuses it, and the copy must not move focus away.
+	const copy = {};
+	copy.success = await evaluate( cdp, sessionId, `(async () => {
+		const button = document.querySelector('.hp-form-confirm__copy');
+		const status = document.querySelector('.hp-contact-panel [role="status"]');
+		if (!button) { return { label: '(no copy control)', status: null, clipboard: [], focusKept: false }; }
+		window.__hpClipboard = [];
+		if (!navigator.clipboard) {
+			Object.defineProperty(navigator, 'clipboard', { value: {}, configurable: true });
+		}
+		navigator.clipboard.writeText = (text) => {
+			window.__hpClipboard.push(String(text));
+			return Promise.resolve();
+		};
+		button.focus();
+		button.click();
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		return {
+			label: button.textContent.trim(),
+			status: status ? status.textContent.trim() : null,
+			clipboard: window.__hpClipboard.slice(),
+			focusKept: document.activeElement === button,
+		};
+	})()`, 'copy the draft' );
+	await wait( COPY_RESET_MS + 300 );
+	copy.reset = await evaluate( cdp, sessionId, `(() => {
+		const button = document.querySelector('.hp-form-confirm__copy');
+		const status = document.querySelector('.hp-contact-panel [role="status"]');
+		return { label: button ? button.textContent.trim() : '', status: status ? status.textContent.trim() : null };
+	})()`, 'copy label reset' );
+	copy.failure = await evaluate( cdp, sessionId, `(async () => {
+		const button = document.querySelector('.hp-form-confirm__copy');
+		const status = document.querySelector('.hp-contact-panel [role="status"]');
+		if (!button) { return { label: '(no copy control)', status: null, commands: [], focusKept: false, strayTextareas: 0 }; }
+		navigator.clipboard.writeText = () => Promise.reject(new DOMException('Denied', 'NotAllowedError'));
+		const execCommand = document.execCommand;
+		const commands = [];
+		document.execCommand = function (command) { commands.push(command); return false; };
+		button.focus();
+		button.click();
+		await new Promise((resolve) => setTimeout(resolve, 50));
+		document.execCommand = execCommand;
+		return {
+			label: button.textContent.trim(),
+			status: status ? status.textContent.trim() : null,
+			commands,
+			focusKept: document.activeElement === button,
+			strayTextareas: document.querySelectorAll('body > textarea').length,
+		};
+	})()`, 'copy blocked' );
+
+	// Compose another, while the blocked label's reset timer is still pending:
+	// the timer has to die with the card, or it later clears whatever the
+	// status region is saying by then.
+	const composeAnother = await evaluate( cdp, sessionId, `(() => {
+		document.querySelector('.hp-form-confirm__again').click();
+		const form = document.querySelector('.hp-contact-form');
+		const status = document.querySelector('.hp-contact-panel [role="status"]');
+		const value = (name) => (form ? form.querySelector('[name="' + name + '"]').value : null);
+		const state = {
+			formBack: !! form,
+			cardGone: ! document.querySelector('.hp-form-confirm'),
+			values: { name: value('name'), email: value('email'), subject: value('subject'), message: value('message') },
+			active: (document.activeElement && document.activeElement.name) || '',
+			status: status ? status.textContent.trim() : null,
+		};
+		if (form) {
+			const email = form.querySelector('input[name="email"]');
+			email.focus();
+			email.value = 'not-an-email';
+			email.dispatchEvent(new Event('input', { bubbles: true }));
+			form.querySelector('input[name="subject"]').focus();
+		}
+		return state;
+	})()`, 'compose another' );
+	await wait( COPY_RESET_MS + 300 );
+	composeAnother.lateStatus = await evaluate( cdp, sessionId, `(() => {
+		const status = document.querySelector('.hp-contact-panel [role="status"]');
+		return status ? status.textContent.trim() : null;
+	})()`, 'status after the stale copy timer' );
+
+	// Reduced motion: the card and its check must end visible with no
+	// animation at all, which only holds if the resting state is the drawn one.
+	await cdp.send( 'Emulation.setEmulatedMedia', { features: [ { name: 'prefers-reduced-motion', value: 'reduce' } ] }, sessionId );
+	const reducedMotion = await evaluate( cdp, sessionId, `(() => {
+		const form = document.querySelector('.hp-contact-form');
+		const email = form.querySelector('input[name="email"]');
+		email.value = ${ JSON.stringify( DRAFT_FIELDS.email ) };
+		email.dispatchEvent(new Event('input', { bubbles: true }));
+		form.querySelector('button[type="submit"]').click();
+		const card = document.querySelector('.hp-form-confirm');
+		const path = card && card.querySelector('.hp-form-confirm__mark path');
+		return {
+			card: !! card,
+			cardAnimation: card ? getComputedStyle(card).animationName : '',
+			checkAnimation: path ? getComputedStyle(path).animationName : '',
+			checkDashoffset: path ? getComputedStyle(path).strokeDashoffset : '',
+		};
+	})()`, 'reduced-motion confirmation' );
+	await cdp.send( 'Emulation.setEmulatedMedia', { features: [] }, sessionId );
+
+	await cdp.send( 'Emulation.setDeviceMetricsOverride', DESKTOP_VIEWPORT, sessionId );
+	await wait( 150 );
+	confirm.boxes.desktop = await evaluate( cdp, sessionId, recoveryBoxes, 'recovery hit areas on desktop' );
+
+	// Last, because a real mouse press changes how Chrome decides
+	// :focus-visible for later scripted focus, and the card's ring is asserted
+	// above. A real click on Send while the email field holds an address that
+	// passes type=email but not the site's check: pressing the button blurs the
+	// field, and if the blur error drew at once, the grown row would carry the
+	// button out from under the pointer. The release would land elsewhere and
+	// the click — with the submit that accuses and focuses the field — would
+	// never happen.
+	const sendPoint = await evaluate( cdp, sessionId, `(() => {
+		document.querySelector('.hp-form-confirm__again').click();
+		const form = document.querySelector('.hp-contact-form');
+		const email = form.querySelector('input[name="email"]');
+		email.focus();
+		email.value = 'ada@example';
+		email.dispatchEvent(new Event('input', { bubbles: true }));
+		const button = form.querySelector('button[type="submit"]');
+		button.scrollIntoView({ block: 'center', behavior: 'instant' });
+		const r = button.getBoundingClientRect();
+		return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+	})()`, 'send button position' );
+	for ( const type of [ 'mouseMoved', 'mousePressed', 'mouseReleased' ] ) {
+		await cdp.send( 'Input.dispatchMouseEvent', {
+			type,
+			x: sendPoint.x,
+			y: sendPoint.y,
+			button: 'left',
+			clickCount: 'mouseMoved' === type ? 0 : 1,
+		}, sessionId );
+	}
+	await wait( 150 );
+	const sendClick = await evaluate( cdp, sessionId, `(() => {
+		const email = document.querySelector('.hp-contact-form input[name="email"]');
+		return {
+			active: (document.activeElement && (document.activeElement.name || document.activeElement.tagName)) || '',
+			accused: !! email.closest('.hp-input.has-error'),
+		};
+	})()`, 'send click outcome' );
+
 	await cdp.send( 'Target.closeTarget', { targetId: target.targetId } );
-	return { ...evaluated.result.value, layout: layoutEvaluated.result.value };
+	return {
+		...mobile,
+		layout: layoutEvaluated.result.value,
+		desktop,
+		paint,
+		confirm,
+		copy,
+		composeAnother,
+		reducedMotion,
+		sendClick,
+	};
 }
 
 async function inspectSubscribeStatusPage( cdp, status ) {
@@ -819,7 +1340,7 @@ function validate( result ) {
 	failUnless(
 		result.invalidInline.hasErrorClass &&
 			result.invalidInline.ariaInvalid === 'true' &&
-			result.invalidInline.helperText === 'Enter a valid email so I can reply.' &&
+			result.invalidInline.helperText === CONTACT_EMAIL_ERROR &&
 			result.invalidInline.stillForm,
 		failures,
 		`real invalid click did not render the inline contact error (class=${ result.invalidInline.hasErrorClass }, aria=${ result.invalidInline.ariaInvalid || 'none' }, helper="${ result.invalidInline.helperText }", stillForm=${ result.invalidInline.stillForm }).`
@@ -1130,7 +1651,298 @@ function validate( result ) {
 		failures,
 		`invalid subscribe status has ${ JSON.stringify( result.subscribeInvalidStatus.before ) }, expected hp-subscribe__status + role=alert with no explicit aria-live.`
 	);
+
+	validateHandoffPass( result, failures );
 	return failures;
+}
+
+/**
+ * The 2026-09-24 hand-off pass: row alignment, field contract, validation
+ * timing, the status region, and the confirmation's recovery line, copy
+ * control, reset, and motion.
+ */
+function validateHandoffPass( result, failures ) {
+	const { desktop, paint, confirm, copy, composeAnother, reducedMotion } = result;
+	const describe = ( value ) => JSON.stringify( value );
+
+	// ---- Form ---------------------------------------------------------------
+	const row = desktop.rowAlignment;
+	failUnless(
+		row.showedError,
+		failures,
+		'the desktop invalid submit did not show the email error, so the Name/Email row alignment went unmeasured.'
+	);
+	failUnless(
+		Math.abs( row.after.top - row.before.top ) < 0.5 && Math.abs( row.after.height - row.before.height ) < 0.5,
+		failures,
+		`the Email error moved the Name control from top ${ row.before.top.toFixed( 1 ) }px / ${ row.before.height.toFixed( 1 ) }px tall to top ${ row.after.top.toFixed( 1 ) }px / ${ row.after.height.toFixed( 1 ) }px tall. The row has to align its cells to the start so only the Email column grows.`
+	);
+	failUnless(
+		! row.errorAfterReset,
+		failures,
+		'a valid address typed after the desktop error did not clear it, so the mobile pass started accused.'
+	);
+	failUnless(
+		result.sendClick.active === 'email' && result.sendClick.accused,
+		failures,
+		`a mouse click on Send with an invalid address left ${ describe( result.sendClick ) }; the click has to land and submit, which accuses the field and focuses it. A blur error drawn while the button was still pressed moves it out from under the pointer.`
+	);
+	for ( const expected of FIELD_CONTRACT ) {
+		const field = desktop.fields.find( ( item ) => item.name === expected.name );
+		failUnless(
+			!! field && field.id === expected.id,
+			failures,
+			`the ${ expected.name } control has id "${ field ? field.id : '(missing)' }", expected "${ expected.id }" so script can hand it focus.`
+		);
+		if ( expected.autocomplete ) {
+			failUnless(
+				!! field && field.autocomplete === expected.autocomplete,
+				failures,
+				`the ${ expected.name } control has autocomplete="${ field ? field.autocomplete : '(missing)' }", expected "${ expected.autocomplete }".`
+			);
+		}
+	}
+	failUnless(
+		desktop.leadTextWrap === 'pretty',
+		failures,
+		`the Contact lead wraps as "${ desktop.leadTextWrap || '(unset)' }", expected text-wrap: pretty so its last line does not strand a word.`
+	);
+	for ( const [ label, title ] of Object.entries( CHANNEL_TITLES ) ) {
+		const channel = desktop.channelTitles.find( ( item ) => item.label === label );
+		failUnless(
+			!! channel && channel.title === title,
+			failures,
+			`"${ label }" carries title "${ channel ? channel.title : '(missing pill)' }", expected "${ title }" so a pointer learns the destination before opening it.`
+		);
+	}
+	const hint = desktop.hintLink;
+	failUnless(
+		!! hint &&
+			hint.rest.color === paint.river &&
+			hint.rest.decorationLine === 'underline' &&
+			hint.rest.decorationColor === paint.riverUnderline &&
+			hint.hover.decorationColor === paint.river,
+		failures,
+		`the inline mailto link paints ${ describe( hint ) }; expected the river artifact link (${ paint.river }) with a ${ paint.riverUnderline } underline that turns solid on hover.`
+	);
+
+	// ---- Status region and validation timing ------------------------------
+	const status = desktop.status;
+	failUnless(
+		!! status && !! status.id && ! status.insideForm && status.position === 'absolute' && status.width <= 1 && status.text === '',
+		failures,
+		`expected one empty, visually hidden role=status region beside the form (outside it, so it survives the swap), found ${ describe( status ) }.`
+	);
+	const statusId = status ? status.id : '(missing)';
+	const timing = result.timing;
+	failUnless(
+		! timing.typingInvalid.hasError && timing.typingInvalid.statusText === '',
+		failures,
+		`typing an unfinished address accused the field before the visitor left it: ${ describe( timing.typingInvalid ) }.`
+	);
+	failUnless(
+		timing.blurInvalid.hasError &&
+			timing.blurInvalid.ariaInvalid === 'true' &&
+			timing.blurInvalid.helperText === CONTACT_EMAIL_ERROR &&
+			timing.blurInvalid.statusText === CONTACT_EMAIL_ERROR &&
+			timing.blurInvalid.describedBy.includes( statusId ) &&
+			timing.blurInvalid.active === 'subject',
+		failures,
+		`leaving the email field with an invalid address must show "${ CONTACT_EMAIL_ERROR }", announce it in #${ statusId }, describe the field by it, and leave focus where the visitor went; got ${ describe( timing.blurInvalid ) }.`
+	);
+	failUnless(
+		timing.stillInvalidKeystroke.hasError && timing.stillInvalidKeystroke.statusText === CONTACT_EMAIL_ERROR,
+		failures,
+		`a keystroke that left the address invalid cleared the error: ${ describe( timing.stillInvalidKeystroke ) }. It clears only once the address is valid.`
+	);
+	failUnless(
+		! timing.becameValid.hasError &&
+			timing.becameValid.ariaInvalid === '' &&
+			timing.becameValid.helperText === '' &&
+			timing.becameValid.statusText === '' &&
+			! timing.becameValid.describedBy.includes( statusId ),
+		failures,
+		`a valid address did not clear the error, its announcement and its description: ${ describe( timing.becameValid ) }.`
+	);
+	failUnless(
+		! timing.blurEmpty.hasError,
+		failures,
+		`an empty email field was accused on blur: ${ describe( timing.blurEmpty ) }. Required-ness is for submit to raise.`
+	);
+	const invalid = result.invalidInline;
+	failUnless(
+		invalid.statusText === CONTACT_EMAIL_ERROR && invalid.describedBy.includes( statusId ) && invalid.helperRole === '',
+		failures,
+		`an invalid submit must announce once, through #${ statusId }, which also describes the field; the visible helper carries no role of its own. Got ${ describe( invalid ) }.`
+	);
+
+	// ---- Confirmation -------------------------------------------------------
+	const semantics = confirm.semantics;
+	failUnless(
+		semantics.role === 'region' &&
+			semantics.ariaLive === '' &&
+			!! semantics.titleId &&
+			semantics.labelledBy === semantics.titleId &&
+			semantics.titleTag === 'H2',
+		failures,
+		`the confirmation card must be a region named by its own h2 title, not a live region that also takes focus; got ${ describe( semantics ) }.`
+	);
+	failUnless(
+		!! semantics.bodyId && semantics.describedBy === semantics.bodyId,
+		failures,
+		`the focused card is not described by its body (aria-describedby "${ semantics.describedBy }", body id "${ semantics.bodyId }"), so the sentence saying nothing was sent is not read with it.`
+	);
+	failUnless(
+		semantics.titleWeight === '500',
+		failures,
+		`the confirmation title renders at weight ${ semantics.titleWeight }; the display h3 step is Cormorant 500.`
+	);
+	const handoffs = confirm.handoffs;
+	failUnless(
+		handoffs.length === 1 && handoffs[ 0 ].href === EXPECTED_DRAFT_HREF,
+		failures,
+		`the valid submit handed the mail client ${ describe( handoffs.map( ( item ) => item.href ) ) }, expected exactly ${ EXPECTED_DRAFT_HREF }.`
+	);
+	failUnless(
+		handoffs.length > 0 && handoffs[ 0 ].cardPresent && handoffs[ 0 ].cardFocused,
+		failures,
+		`the mailto hand-off ran before the card was in place and focused (${ describe( handoffs[ 0 ] ) }); if no mail app answers, the card is the fallback, so it has to exist first.`
+	);
+	const recovery = confirm.recovery;
+	failUnless(
+		!! recovery && recovery.accessibleText === `${ RECOVERY_PROMPT } ${ DRAFT_LINK_NAME } ${ COPY_STATE_WORDS.idle }`,
+		failures,
+		`the recovery line reads "${ recovery ? recovery.accessibleText : '(missing)' }" to assistive tech, expected "${ RECOVERY_PROMPT } ${ DRAFT_LINK_NAME } ${ COPY_STATE_WORDS.idle }".`
+	);
+	failUnless(
+		!! recovery && recovery.renderedText.includes( '↗' ) && recovery.renderedText.includes( '·' ),
+		failures,
+		`the recovery line does not render its opens-away arrow and separator (${ recovery ? recovery.renderedText : '(missing)' }); they are drawn, and hidden from assistive tech only.`
+	);
+	failUnless(
+		!! recovery && recovery.draftHref === EXPECTED_DRAFT_HREF && recovery.draftName === DRAFT_LINK_NAME,
+		failures,
+		`"${ DRAFT_LINK_NAME }" links ${ recovery ? recovery.draftHref : '(missing)' }, expected the same draft the hand-off opened: ${ EXPECTED_DRAFT_HREF }.`
+	);
+	failUnless(
+		!! recovery && recovery.copyType === 'button' && recovery.copyName === COPY_STATE_WORDS.idle,
+		failures,
+		`the copy control is ${ recovery ? `a "${ recovery.copyType }" named "${ recovery.copyName }"` : 'missing' }, expected a type=button "${ COPY_STATE_WORDS.idle }".`
+	);
+	failUnless(
+		confirm.statusText === '' && confirm.statusInsideCard === false,
+		failures,
+		`after the swap the status region reads "${ confirm.statusText }" (inside the card: ${ confirm.statusInsideCard }); it must survive the swap, outside the card, and start quiet.`
+	);
+	for ( const [ width, boxes ] of Object.entries( confirm.boxes ) ) {
+		failUnless(
+			!! boxes.draft && !! boxes.copy && boxes.draft.height >= 44 && boxes.copy.height >= 44 && ! boxesIntersect( boxes.draft, boxes.copy ),
+			failures,
+			`at ${ width } the recovery targets are ${ describe( boxes ) }: each owes the 44px touch floor, and neither may grow over the other.`
+		);
+	}
+	failUnless(
+		!! confirm.boxes.desktop.draft &&
+			!! confirm.boxes.desktop.copy &&
+			Math.abs( confirm.boxes.desktop.draft.top - confirm.boxes.desktop.copy.top ) < 1,
+		failures,
+		`on desktop the recovery controls sit on different rows (${ describe( confirm.boxes.desktop ) }); the line is one row there.`
+	);
+	const draftPaint = confirm.draftPaint;
+	failUnless(
+		!! draftPaint &&
+			draftPaint.rest.color === paint.river &&
+			draftPaint.rest.decorationColor === paint.riverUnderline &&
+			draftPaint.hover.decorationColor === paint.river,
+		failures,
+		`"${ DRAFT_LINK_NAME }" paints ${ describe( draftPaint ) }; it is an openable reference, so river (${ paint.river }) with a ${ paint.riverUnderline } underline that turns solid on hover.`
+	);
+	const copyPaint = confirm.copyPaint;
+	failUnless(
+		!! copyPaint &&
+			copyPaint.rest.color === paint.link &&
+			copyPaint.rest.decorationLine === 'underline' &&
+			copyPaint.rest.decorationColor === paint.goldUnderline &&
+			copyPaint.hover.color === paint.accent &&
+			copyPaint.hover.decorationColor === paint.gold,
+		failures,
+		`the copy control paints ${ describe( copyPaint ) }; it is an action, so evergreen (${ paint.link }) with a ${ paint.goldUnderline } underline, turning ${ paint.accent } over a solid ${ paint.gold } underline on hover.`
+	);
+
+	// ---- Copy the draft -----------------------------------------------------
+	failUnless(
+		copy.success.clipboard.length === 1 && copy.success.clipboard[ 0 ] === EXPECTED_DRAFT_TEXT,
+		failures,
+		`the clipboard received ${ describe( copy.success.clipboard ) }, expected ${ describe( EXPECTED_DRAFT_TEXT ) }.`
+	);
+	failUnless(
+		copy.success.label === COPY_STATE_WORDS.copied && copy.success.status === COPY_NOTES.copied && copy.success.focusKept,
+		failures,
+		`a successful copy left ${ describe( copy.success ) }; expected the label "${ COPY_STATE_WORDS.copied }", the status "${ COPY_NOTES.copied }", and focus still on the control.`
+	);
+	failUnless(
+		copy.reset.label === COPY_STATE_WORDS.idle && copy.reset.status === '',
+		failures,
+		`${ COPY_RESET_MS }ms after the copy, the control reads ${ describe( copy.reset ) }; it returns to "${ COPY_STATE_WORDS.idle }" and the status region goes quiet.`
+	);
+	failUnless(
+		copy.failure.label === COPY_STATE_WORDS.failed &&
+			copy.failure.status === COPY_NOTES.failed &&
+			copy.failure.commands.includes( 'copy' ) &&
+			copy.failure.focusKept &&
+			copy.failure.strayTextareas === 0,
+		failures,
+		`a blocked clipboard left ${ describe( copy.failure ) }; expected the textarea fallback to be tried and removed, focus restored to the control, the label "${ COPY_STATE_WORDS.failed }" and the status "${ COPY_NOTES.failed }".`
+	);
+
+	// ---- Compose another ------------------------------------------------------
+	failUnless(
+		composeAnother.formBack &&
+			composeAnother.cardGone &&
+			composeAnother.values.name === DRAFT_FIELDS.name &&
+			composeAnother.values.email === DRAFT_FIELDS.email &&
+			composeAnother.values.subject === '' &&
+			composeAnother.values.message === '' &&
+			composeAnother.status === '',
+		failures,
+		`Compose another left ${ describe( composeAnother ) }; it keeps who is writing (name and email), clears only the subject and message, and quiets the status region.`
+	);
+	failUnless(
+		composeAnother.active === 'subject',
+		failures,
+		`Compose another put focus on "${ composeAnother.active || '(nothing)' }"; with the name and a valid email kept, the first field still owed is the subject.`
+	);
+	failUnless(
+		composeAnother.lateStatus === CONTACT_EMAIL_ERROR,
+		failures,
+		`the status region read "${ composeAnother.lateStatus }" once the old copy timer would have fired; the blocked-copy reset outlived Compose another and wiped the email error.`
+	);
+
+	// ---- Motion ---------------------------------------------------------------
+	const motion = confirm.motion;
+	failUnless(
+		motion.cardAnimation === 'hp-form-confirm-in' && motion.cardDuration === motion.durBase,
+		failures,
+		`the card enters with ${ motion.cardAnimation } over ${ motion.cardDuration }ms, expected hp-form-confirm-in over dur.base (${ motion.durBase }ms).`
+	);
+	failUnless(
+		motion.checkAnimation === 'hp-form-confirm-check' && motion.checkDuration === motion.durSlow && motion.checkDelay === motion.durFast,
+		failures,
+		`the check draws with ${ motion.checkAnimation } over ${ motion.checkDuration }ms after ${ motion.checkDelay }ms, expected hp-form-confirm-check over dur.slow (${ motion.durSlow }ms) after dur.fast (${ motion.durFast }ms).`
+	);
+	failUnless(
+		!! motion.checkStart && motion.checkStart.x === 4 && motion.checkStart.y === 12,
+		failures,
+		`the check path starts at ${ describe( motion.checkStart ) }; it has to start at its left tip (4, 12) so it draws tip → vertex → tip.`
+	);
+	failUnless(
+		reducedMotion.card &&
+			reducedMotion.cardAnimation === 'none' &&
+			reducedMotion.checkAnimation === 'none' &&
+			reducedMotion.checkDashoffset === '0px',
+		failures,
+		`under reduced motion the confirmation is ${ describe( reducedMotion ) }; the card and check take no animation and rest drawn (stroke-dashoffset 0).`
+	);
 }
 
 async function main() {
@@ -1156,7 +1968,7 @@ async function main() {
 		if ( failures.length ) {
 			throw new Error( failures.join( '\n' ) );
 		}
-		console.log( 'checked contact form input, focus, invalid, confirmation, channel, and page-measure states (incl. production stylesheet order)' );
+		console.log( 'checked contact form input, focus, validation timing, invalid, confirmation, recovery, copy, reset, motion, channel, and page-measure states (incl. production stylesheet order)' );
 	} finally {
 		if ( ! chrome.killed ) {
 			chrome.kill( 'SIGTERM' );

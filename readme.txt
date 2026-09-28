@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.67
+Stable tag: 0.3.68
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -411,6 +411,27 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.68 =
+* Contact hand-off polish (2026-09-24 design handoff). The confirmation card
+  now appears and takes focus before the mail client is asked to open, and
+  carries a recovery line — "Open the draft" re-opens the same composed mailto,
+  and "Copy the draft" copies it as plain text (with a textarea fallback and
+  state words: Draft copied / Copy blocked) for when no mail app answers.
+* The draft encodes line breaks as CRLF (RFC 6068) and signs with the typed
+  name and reply address. "Compose another" keeps the name and email, clears
+  only the subject and message, and focuses the first field still owed.
+* Email validation is late to accuse, early to forgive: the error appears on
+  blur or submit (a blur caused by a click waits for the click to land) and
+  clears only once the address is valid. One visually hidden status region
+  outside the form announces the error and the copy result.
+* The card is a region named by an h2 title (Cormorant 500) and described by
+  its body. It rises in over dur.base and its check draws over dur.slow; under
+  reduced motion both rest fully drawn with no animation.
+* Name/Email cells align to the start so an Email error no longer drags the
+  Name control down; fields gain ids and name/email autocomplete; the lead
+  wraps pretty; inline mailto links read as river artifact links; profile
+  pills name their destination on hover.
 
 = 0.3.67 =
 * Reuse the existing fast/base duration and calm easing tokens for hover states,
