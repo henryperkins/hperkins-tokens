@@ -132,6 +132,9 @@ async function inspectHomepage( cdp, viewport ) {
 	if ( viewport.noScript ) {
 		await cdp.send( 'Emulation.setScriptExecutionDisabled', { value: true }, sessionId );
 	}
+	if ( viewport.reducedMotion ) {
+		await cdp.send( 'Emulation.setEmulatedMedia', { features: [ { name: 'prefers-reduced-motion', value: 'reduce' } ] }, sessionId );
+	}
 	await cdp.send( 'Emulation.setDeviceMetricsOverride', {
 		width: viewport.width,
 		height: viewport.height,
@@ -207,6 +210,79 @@ async function inspectHomepage( cdp, viewport ) {
 				width: Math.round(art.getBoundingClientRect().width),
 				height: Math.round(art.getBoundingClientRect().height),
 			} : null,
+			fidelity: (() => {
+				const $ = selector => document.querySelector(selector);
+				const cs = (node, pseudo) => getComputedStyle(node, pseudo || null);
+				const width = node => node.getBoundingClientRect().width;
+				// Resolve the tokens the template names, so each check compares like
+				// with like instead of hard-coding a colour serialization.
+				const ref = document.createElement('span');
+				ref.style.cssText = 'color: var(--hp-artifact); border-top-color: var(--hp-gold); text-decoration-color: color-mix(in srgb, var(--hp-gold) 55%, transparent);';
+				document.body.append(ref);
+				const refStyle = cs(ref);
+				const refColors = { artifact: refStyle.color, gold: refStyle.borderTopColor, goldSoft: refStyle.textDecorationColor };
+				ref.remove();
+				const lead = $('.hp-wapuu-hero__text:not(.hp-wapuu-hero__note)');
+				const halo = $('.hp-wapuu-hero__star');
+				const expose = $('#framework .hp-template-hero__lead a');
+				const panel = $('.hp-front-template__cta');
+				const emblem = cs(panel, '::after');
+				const footer = $('.hp-footer');
+				return {
+					ref: refColors,
+					leadMarginTop: parseFloat(cs(lead).marginTop),
+					noteMarginTop: parseFloat(cs($('.hp-wapuu-hero__note')).marginTop),
+					copyMaxWidth: cs($('.hp-wapuu-hero__copy')).maxWidth,
+					copyWidth: width($('.hp-wapuu-hero__copy')),
+					leadWidth: width(lead),
+					leadMaxWidth: parseFloat(cs(lead).maxWidth),
+					artWidth: width($('.hp-wapuu-hero__art')),
+					figureWidth: width($('.hp-wapuu-hero__figure')),
+					// Layout width, not the bounding box: the halo may still be
+					// finishing its settle turn, and a rotated box measures wider.
+					haloWidth: halo.offsetWidth,
+					haloAnimation: cs(halo).animationName,
+					haloDuration: parseFloat(cs(halo).animationDuration),
+					haloInnerStarOpacity: halo.querySelectorAll('path')[1]?.getAttribute('opacity') ?? null,
+					eyebrowTracking: parseFloat(cs($('.hp-wapuu-hero__eyebrow')).letterSpacing) / parseFloat(cs($('.hp-wapuu-hero__eyebrow')).fontSize),
+					eyebrowLinkBorder: cs($('.hp-wapuu-hero__eyebrow a')).borderBottomColor,
+					chips: [...document.querySelectorAll('.hp-wapuu-hero__signals .hp-chip')].map(chip => ({
+						text: chip.textContent.replace(/\\s+/g, ' ').trim(),
+						links: [...chip.querySelectorAll('a')].map(link => ({
+							text: link.textContent.trim(),
+							name: (link.getAttribute('aria-label') || link.textContent).trim(),
+						})),
+					})),
+					ringCtas: [...document.querySelectorAll('#framework .hp-ring-card__cta:not(.is-in-review)')].map(cta => {
+						const link = cta.querySelector('a');
+						return {
+							family: cs(cta).fontFamily,
+							shadow: cs(cta).textShadow,
+							linkFamily: cs(link).fontFamily,
+							linkSize: parseFloat(cs(link).fontSize),
+							linkShadow: cs(link).textShadow,
+							linkColor: cs(link).color,
+						};
+					}),
+					expose: {
+						color: cs(expose).color,
+						deco: cs(expose).textDecorationColor,
+						offset: parseFloat(cs(expose).textUnderlineOffset),
+						size: parseFloat(cs(expose).fontSize),
+					},
+					workLinkColor: cs($('#work .hp-work__footer a')).color,
+					emblem: {
+						mask: emblem.maskImage || emblem.webkitMaskImage || '',
+						width: parseFloat(emblem.width),
+						transition: emblem.transitionProperty,
+						duration: parseFloat(emblem.transitionDuration),
+					},
+					footerInnerOffset: $('.hp-footer__inner').getBoundingClientRect().top - footer.getBoundingClientRect().top,
+					footerPadTop: parseFloat(cs(footer).borderTopWidth) + parseFloat(cs(footer).paddingTop),
+					anchors: ['#framework', '#work'].map(selector => parseFloat(cs($(selector)).scrollMarginTop)),
+					headerHeight: $('header.wp-block-template-part').getBoundingClientRect().height,
+				};
+			})(),
 		};
 	})()`;
 	const evaluated = await cdp.send( 'Runtime.evaluate', {
@@ -214,9 +290,44 @@ async function inspectHomepage( cdp, viewport ) {
 		awaitPromise: true,
 		returnByValue: true,
 	}, sessionId );
+	if ( evaluated.exceptionDetails ) {
+		throw new Error( `Home probe failed at ${ viewport.width }px: ${ evaluated.exceptionDetails.exception?.description || evaluated.exceptionDetails.text }` );
+	}
+	const page = evaluated.result.value;
+
+	if ( viewport.hover ) {
+		page.hover = await probeHoverStates( cdp, sessionId );
+	}
 
 	await cdp.send( 'Target.closeTarget', { targetId: target.targetId } );
-	return evaluated.result.value;
+	return page;
+}
+
+// Hover is forced through DevTools rather than a synthetic pointer, so each
+// state is read in isolation. The wait outlasts --dur-slow (420ms), the
+// longest transition these rules run.
+const HOVER_PROBES = [
+	[ 'eyebrow', '.hp-wapuu-hero__eyebrow a', `getComputedStyle(document.querySelector('.hp-wapuu-hero__eyebrow a')).borderBottomColor` ],
+	[ 'ringCta', '#framework .hp-ring-card.is-air .hp-ring-card__cta a', `(() => { const s = getComputedStyle(document.querySelector('#framework .hp-ring-card.is-air .hp-ring-card__cta a')); return { color: s.color, border: s.borderBottomColor }; })()` ],
+	[ 'expose', '#framework .hp-template-hero__lead a', `(() => { const s = getComputedStyle(document.querySelector('#framework .hp-template-hero__lead a')); return { color: s.color, deco: s.textDecorationColor }; })()` ],
+	[ 'work', '#work .hp-work__footer a', `getComputedStyle(document.querySelector('#work .hp-work__footer a')).color` ],
+	[ 'emblem', '.hp-front-template__cta', `(() => { const t = getComputedStyle(document.querySelector('.hp-front-template__cta'), '::after').transform; if (t === 'none') return 0; const m = new DOMMatrixReadOnly(t); return Math.round(Math.atan2(m.b, m.a) * 180 / Math.PI); })()` ],
+];
+
+async function probeHoverStates( cdp, sessionId ) {
+	await cdp.send( 'DOM.enable', {}, sessionId );
+	await cdp.send( 'CSS.enable', {}, sessionId );
+	const states = {};
+	for ( const [ key, selector, probe ] of HOVER_PROBES ) {
+		const { root } = await cdp.send( 'DOM.getDocument', { depth: 0 }, sessionId );
+		const { nodeId } = await cdp.send( 'DOM.querySelector', { nodeId: root.nodeId, selector }, sessionId );
+		assert( nodeId, `Home hover probe could not find ${ selector }.` );
+		await cdp.send( 'CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [ 'hover' ] }, sessionId );
+		await wait( 600 );
+		states[ key ] = ( await cdp.send( 'Runtime.evaluate', { expression: probe, returnByValue: true }, sessionId ) ).result.value;
+		await cdp.send( 'CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] }, sessionId );
+	}
+	return states;
 }
 
 async function withChrome( callback ) {
@@ -291,9 +402,89 @@ function verifyComposition( page, width ) {
 	}
 }
 
+// The values templates/home/Home.dc.html declares, pinned after the
+// 2026-09-28 fidelity pass. The deliberate theme deltas docs/design-system/
+// INDEX.md records (17px ledger copy, 44px actions, the mobile weight, the
+// ring text tints, the hidden mobile bitmap) are asserted above, not here.
+function verifyTemplateFidelity( page, width ) {
+	const f = page.fidelity;
+	const near = ( actual, expected, tolerance = 0.5 ) => Math.abs( actual - expected ) <= tolerance;
+	assert(
+		near( f.leadMarginTop, 24 ) && near( f.noteMarginTop, 16 ),
+		`Home lead must sit 24px under the title and the note 16px under the lead at ${ width }px; got ${ f.leadMarginTop }px / ${ f.noteMarginTop }px.`
+	);
+	assert(
+		f.copyMaxWidth === 'none' && near( f.leadWidth, Math.min( f.copyWidth, f.leadMaxWidth ), 1 ),
+		`Home copy must cap each paragraph at its own measure, not the whole column, at ${ width }px; lead ${ f.leadWidth }px, column ${ f.copyWidth }px, cap ${ f.copyMaxWidth }.`
+	);
+	if ( width <= 600 ) {
+		assert(
+			f.figureWidth <= 240.5 && near( f.haloWidth, Math.min( 288, f.artWidth * 1.18 ), 1 ),
+			`Home phone Wapuu must shrink to 15rem inside an 18rem halo at ${ width }px; got ${ f.figureWidth }px / ${ f.haloWidth }px in a ${ f.artWidth }px column.`
+		);
+	} else {
+		assert( near( f.figureWidth, Math.min( 440, f.artWidth ), 1 ), `Home Wapuu must fill its column up to 27.5rem at ${ width }px; got ${ f.figureWidth }px.` );
+	}
+	assert( f.haloAnimation === 'hp-halo-settle', `Home halo must settle in with hp-halo-settle at ${ width }px; got ${ f.haloAnimation }.` );
+	assert( f.haloInnerStarOpacity === '0.45', `Home halo's inner star must draw at 0.45; got ${ f.haloInnerStarOpacity }.` );
+	assert( near( f.eyebrowTracking, 0.2, 0.005 ), `Home eyebrow must track at 0.2em; got ${ f.eyebrowTracking.toFixed( 3 ) }em.` );
+	assert(
+		f.chips.length === 4 && f.chips.every( ( chip ) =>
+			chip.links.length === 1 &&
+			chip.links[ 0 ].text === '↗' &&
+			chip.links[ 0 ].name !== '↗' &&
+			chip.text.includes( chip.links[ 0 ].name )
+		),
+		'Home proof chips must set the full label as text, then one ↗ link named after the artifact it opens.'
+	);
+	assert(
+		f.ringCtas.length === 2 && f.ringCtas.every( ( cta ) =>
+			! /Marcellus/.test( cta.family ) &&
+			cta.shadow === 'none' &&
+			/Marcellus/.test( cta.linkFamily ) &&
+			near( cta.linkSize, 13 ) &&
+			cta.linkShadow === 'none'
+		),
+		`Home ring CTAs must keep the body line with only the link in 13px Marcellus and no shadow at ${ width }px.`
+	);
+	assert(
+		f.expose.color === f.ref.artifact && f.expose.deco === f.ref.goldSoft && near( f.expose.offset, f.expose.size * 0.14, 0.15 ),
+		`Home "Expose · Govern · Attest" must be an artifact link with a 55% gold underline at 0.14em (${ width }px).`
+	);
+	assert( f.workLinkColor === f.ref.artifact, `Home "See the full Work index." must use the artifact link colour at ${ width }px; got ${ f.workLinkColor }.` );
+	assert(
+		/emblem-commission\.svg/.test( f.emblem.mask ) && near( f.emblem.width, 32 ) && /transform/.test( f.emblem.transition ),
+		`Home closing emblem must be the 32px commission emblem, ready to turn, at ${ width }px; got ${ f.emblem.width }px, ${ f.emblem.mask.slice( -40 ) }.`
+	);
+	assert(
+		near( f.footerInnerOffset, f.footerPadTop ),
+		`Footer content must start at the plate's padding, with no flow gap, at ${ width }px; got ${ f.footerInnerOffset }px for ${ f.footerPadTop }px of rule and padding.`
+	);
+	assert(
+		f.anchors.every( ( margin ) => near( margin, f.headerHeight + 12 ) ),
+		`#framework and #work must clear the ${ f.headerHeight }px masthead by 12px at ${ width }px; got ${ f.anchors.join( '/' ) }px.`
+	);
+}
+
+function verifyHoverFidelity( page ) {
+	const f = page.fidelity;
+	const h = page.hover;
+	assert( h.eyebrow === f.eyebrowLinkBorder, 'Home eyebrow link must not change on hover.' );
+	assert(
+		h.ringCta.color === f.ringCtas[ 0 ].linkColor && h.ringCta.border === h.ringCta.color,
+		`Home ring CTA hover must turn its underline solid in its own colour; got ${ h.ringCta.color } / ${ h.ringCta.border }.`
+	);
+	assert(
+		h.expose.color === f.ref.artifact && h.expose.deco === f.ref.gold,
+		`Home "Expose · Govern · Attest" hover must keep its colour and turn the underline solid gold; got ${ h.expose.color } / ${ h.expose.deco }.`
+	);
+	assert( h.work === f.ref.artifact, `Home "See the full Work index." must keep the artifact colour on hover; got ${ h.work }.` );
+	assert( h.emblem === 90, `Home closing emblem must turn a quarter on panel hover; got ${ h.emblem }deg.` );
+}
+
 async function main() {
 	await withChrome( async ( cdp ) => {
-		const desktop = await inspectHomepage( cdp, { width: 1440, height: 1000 } );
+		const desktop = await inspectHomepage( cdp, { width: 1440, height: 1000, hover: true } );
 		assert( desktop.titleFound, 'Homepage Wapuu hero title was not found at desktop.' );
 		assert( desktop.artFound, 'Homepage Wapuu hero artwork was not found at desktop.' );
 		assert(
@@ -324,12 +515,20 @@ async function main() {
 		for ( const width of widths ) {
 			const page = width === 1440 ? desktop : width === 390 ? mobile : await inspectHomepage( cdp, { width, height: 1000 } );
 			verifyComposition( page, width );
+			verifyTemplateFidelity( page, width );
 		}
+		verifyHoverFidelity( desktop );
+		const still = await inspectHomepage( cdp, { width: 390, height: 1000, reducedMotion: true } );
+		assert(
+			still.fidelity.haloDuration <= 0.001 && still.fidelity.emblem.duration <= 0.001,
+			`Reduced motion must cut the halo settle and the emblem turn to their end states; got ${ still.fidelity.haloDuration }s / ${ still.fidelity.emblem.duration }s.`
+		);
 		for ( const width of [ 320, 390, 600, 601, 781, 900, 1440 ] ) {
 			const noScript = await inspectHomepage( cdp, { width, height: 1000, noScript: true } );
 			verifyComposition( noScript, width );
 		}
 		console.log( 'checked Home composition at 9 widths and 7 no-JavaScript widths: accessible hero order, responsive grid, touch targets, overflow, section order, shared edges, complete ledger, paired actions, labelled footer' );
+		console.log( 'checked Home template fidelity at 9 widths plus desktop hover and reduced motion: hero rhythm and measure, phone Wapuu, halo settle, eyebrow, proof chips, ring CTAs, artifact links, closing emblem, footer inset, anchor clearance' );
 
 		console.log(
 			`checked homepage hero: desktop weight=${ desktop.title.fontWeight }, mobile weight=${ mobile.title.fontWeight }`

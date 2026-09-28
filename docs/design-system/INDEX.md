@@ -1355,3 +1355,98 @@ octagram filled in gold-500 for the end mark.
   premise (the related grid sat in the 44rem content column, not "the 72rem
   column"); and the overview's claim that the back link ships upstream (the
   design's 44px target did not).
+
+## 2026-09-28 — Home template fidelity pass (`templates/home/Home.dc.html` → `/`, 0.3.72)
+
+Source: an audit that compared the values the Home template declares (its
+markup, the `RingCard`, `ProofBar`, `WorkEntry`, `Button` and `SiteFooter`
+components, and the token sheets) with production's computed styles at 1440,
+900 and 390px on theme 0.3.67, and found 25 deviations. There is no
+`design_handoff_home` package, so the template is the reference. Every
+deviation was re-measured on the local mirror before the change and again
+after it.
+
+- **Aligned (16):**
+  - *Hero rhythm.* The lead sat flush under the title, and under the Wapuu
+    once stacked. Core's `:root :where(.is-layout-flow) > :first-child`
+    (0,2,0) zeroed the copy group's first child and outranked
+    `.hp-wapuu-hero__text` (0,1,0). The lead's 24px and the note's 16px are
+    now restated at (0,3,0), so they hold in either stylesheet order.
+  - *Measure.* The copy group's own 68ch cap resolved against the 19px body
+    (620px) and held the 22px lead under its own 68ch (718px). Each paragraph
+    now carries its own measure, as the template does.
+  - *Phone Wapuu.* At 600px and below the figure is 15rem and the halo 18rem,
+    the design's 2026-09-25 departure. The pattern's `sizes` follows it
+    (`(max-width: 600px) 15rem`).
+  - *Halo.* `hp-halo-settle` is a quarter turn and fade-in over `dur.veil`
+    with `ease.out`, once. The inner star draws at 0.45; it was 0.6.
+  - *Eyebrow.* The eyebrow tracks at 0.2em; the re-skin group's
+    `tracking-caps` (0.18em) used to override it. It has no hover state.
+  - *Proof chips.* Each chip sets the full claim as text, then a ↗ link.
+    The link's `aria-label` is the text the link used to carry, so the
+    0.3.61 promise of descriptive accessible names still holds. The
+    self-hosted JetBrains Mono subset has no U+2197, so the arrow falls back
+    to a system symbol face, as the chip's ● dot already did. The design uses
+    the same font files and renders it the same way.
+  - *Ring CTAs.* A linked row keeps the card's 19/1.7 body line, and only the
+    link is set in 13px Marcellus caps, with no shadow. Hover firms the
+    underline in the ring's own colour instead of turning the text
+    parchment. The in-review row keeps the slot's label type.
+  - *Artifact links.* The rings sit outside post content, so "Expose ·
+    Govern · Attest" gets the content-link treatment written out: river under
+    a 55% gold underline at 0.14em, turning solid gold on hover. "See the full
+    Work index." is river at rest and on hover.
+  - *Commission emblem.* Home masks the new
+    `assets/img/emblem-commission.svg`, drawn from the template's inline
+    emblem: 2px strokes, the ring at 1.4 and 0.5 opacity, the inner star at
+    0.6. The shared `emblem.svg`, byte-identical to the design project's own
+    `assets/img/emblem.svg`, stays on every other closing panel. Home's
+    emblem stays 32px on phones and turns a quarter over `dur.slow` on panel
+    hover or focus.
+  - *Footer.* The plate's first child is the absolutely positioned backdrop,
+    so core's constrained-layout block gap landed on `.hp-footer__inner`. It
+    set every page's footer content 24px below the plate's padding.
+    `.hp-footer > .hp-footer__inner` resets it, which is a site-wide change
+    matching `SiteFooter`.
+  - *Anchors.* `#framework` and `#work` clear the masthead by spacing-3:
+    `--hp-header-h-compact` or `--hp-header-h`, plus the 1px hairline, for
+    75px and 81px. The generic `[id]` rule gave 80px at every width.
+- **Kept: recorded deltas, not drift.** Each one would need its owning rule
+  changed first:
+  - *Ring text tints (river-200, gold-200), for AA.* On the Vilya head,
+    river-400 measures 4.31:1 at 12px caps. Gold-400 passes on flat colour
+    (6.0:1) but not over the backdrop's bright patches.
+  - *17px ledger descriptions.* DESIGN.md: "supporting copy explains it at
+    the 17px UI floor".
+  - *17px Marcellus buttons with 44px targets at every width.* DESIGN.md sets
+    the primary button at 17px and forbids shrinking pinned targets, and
+    `verify-prominent-actions.js` pins 44px on Home at 1440px. As a result,
+    "Start a conversation" wraps to two lines at 390px; the template's 15px
+    default Button fits on one. The hero's 44px (template: 42.8px) is the
+    same rule.
+  - *Phone title weight 500 and the hidden phone backdrop* (0.3.61).
+    `verify-performance-assets.js` keeps the bitmap out of the mobile LCP
+    path.
+  - *The ring CTAs' 44px phone targets and the in-review pill's wrap*
+    (0.3.61).
+  - *Footer name leading 1.15, meta 1.5 and the 13px colophon* (2026-07
+    typography review; functional text keeps the 13px floor).
+  - *The ledger labels.* They are the accepted page-36 copy, so changing them
+    is a database change.
+- **Not copied.** The template's `filter: drop-shadow(var(--shadow-md))` on
+  the Wapuu is invalid, because `drop-shadow()` takes one shadow and the
+  token holds two, so neither side draws it. The theme carries the same dead
+  declaration.
+- **Verification.** `verify-homepage-hero-polish.js` gains a fidelity probe at
+  all nine widths: hero margins and measure, the phone art, the halo's
+  animation and star opacity, eyebrow tracking, chip structure and names,
+  ring CTA type, artifact link colours and underline, the commission emblem,
+  the footer inset and anchor clearance. It adds forced-hover checks at
+  1440px for the eyebrow, the ring CTA, both artifact links and the emblem's
+  quarter turn, plus a reduced-motion pass. The probe was written first and
+  failed against 0.3.70 on the lead's 0px margin.
+  `verify-performance-assets.js` pins the new `sizes`.
+- **Production note.** Jetpack Boost inlines critical CSS generated from the
+  theme sheet, and the captured production page still carries the old hero
+  rules. Regenerate it after deploy; until then, a phone's first paint sets
+  the old Wapuu and lead position before the full sheet lands.

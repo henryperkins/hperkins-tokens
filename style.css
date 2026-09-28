@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.71
+Version: 0.3.72
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -895,10 +895,12 @@ header.wp-block-template-part {
 	margin-block-start: 0;
 }
 
+/* No measure on the column itself: each paragraph takes the prose measure at
+	 its own size, as the Home template does. A 68ch cap here resolved against
+	 the 19px body and held the 22px lead to 620px of its 718px. */
 .hp-wapuu-hero__copy {
 	grid-area: copy;
 	min-width: 0;
-	max-width: var(--wp--custom--measure--prose);
 }
 
 .hp-wapuu-hero__eyebrow {
@@ -907,24 +909,23 @@ header.wp-block-template-part {
 	font-family: var(--wp--preset--font-family--label);
 	font-size: var(--wp--preset--font-size--2-xs);
 	line-height: 1.4;
+	/* Wider than the shared --tracking-caps (0.18em): the Home template sets
+		 its one eyebrow at 0.2em. */
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
-	/* Color comes from the re-skin layer (.hp-wapuu-hero__eyebrow, .hp-eyebrow
-		 → text.muted); the gold-700 that used to sit here was dead weight and
-		 under AA on parchment anyway (2026-07 typography review). */
+	/* text.muted, not the gold-700 that used to sit here: that was under AA
+		 on parchment (2026-07 typography review). */
+	color: var(--wp--custom--text--muted);
 }
 
 /* Linked eyebrow (AI Leaders finalist showcase) keeps the lapidary-caps register:
-   inherit the eyebrow colour, signal the link with a hairline rule, not link-blue. */
+   inherit the eyebrow colour, signal the link with a hairline rule, not link-blue.
+   Like the Home template it has no hover state; the pointer and the gold focus
+   ring say it is a link. */
 .hp-wapuu-hero__eyebrow a {
 	color: inherit;
 	text-decoration: none;
 	border-bottom: 1px solid color-mix(in srgb, currentColor 32%, transparent);
-}
-
-.hp-wapuu-hero__eyebrow a:hover,
-.hp-wapuu-hero__eyebrow a:focus-visible {
-	border-bottom-color: currentColor;
 }
 
 .hp-wapuu-hero__title {
@@ -940,7 +941,7 @@ header.wp-block-template-part {
 }
 
 .hp-wapuu-hero__text {
-	/* The Home prototype uses the full copy column, capped at prose measure. */
+	/* Prose measure at the paragraph's own size (the lead's 68ch is ~718px). */
 	max-width: var(--wp--custom--measure--prose);
 	margin: var(--wp--preset--spacing--5) 0 0;
 	font-size: var(--wp--preset--font-size--lg);
@@ -955,6 +956,20 @@ header.wp-block-template-part {
 	margin-top: var(--wp--preset--spacing--4);
 	font-size: var(--wp--preset--font-size--base);
 	color: var(--wp--custom--text--muted);
+}
+
+/* The copy group is a flow layout, and core's
+	 `:root :where(.is-layout-flow) > :first-child` (0,2,0) zeroes its first
+	 child's top margin: it outranked the lead's own rule and set the lead flush
+	 under the title, and under the Wapuu once stacked. These two restate the
+	 template's 24px and 16px at (0,3,0), so they hold in either stylesheet
+	 order. */
+.hp-wapuu-hero .hp-wapuu-hero__copy > .hp-wapuu-hero__text {
+	margin-top: var(--wp--preset--spacing--5);
+}
+
+.hp-wapuu-hero .hp-wapuu-hero__copy > .hp-wapuu-hero__note {
+	margin-top: var(--wp--preset--spacing--4);
 }
 
 .hp-wapuu-hero__signals {
@@ -988,7 +1003,22 @@ header.wp-block-template-part {
 	display: block;
 }
 
-/* Faint elven-star halo behind the signature mascot (Imladris Home). */
+/* Faint elven-star halo behind the signature mascot (Imladris Home). It
+	 settles in once: a quarter turn, which is a symmetry of both stars, so it
+	 comes to rest exactly as drawn, while it fades up to its resting opacity.
+	 The reduced-motion rule cuts it to that end state. */
+@keyframes hp-halo-settle {
+	from {
+		opacity: 0;
+		transform: translate(-50%, -50%) rotate(-90deg);
+	}
+
+	to {
+		opacity: 0.16;
+		transform: translate(-50%, -50%) rotate(0deg);
+	}
+}
+
 .hp-wapuu-hero__star {
 	position: absolute;
 	inset: 50% auto auto 50%;
@@ -999,6 +1029,7 @@ header.wp-block-template-part {
 	opacity: 0.16;
 	z-index: 0;
 	pointer-events: none;
+	animation: hp-halo-settle var(--wp--custom--dur--veil) var(--wp--custom--ease--out) both;
 }
 
 .hp-wapuu-hero__star svg {
@@ -1033,6 +1064,18 @@ header.wp-block-template-part {
 
 	.hp-wapuu-hero__art {
 		margin-top: var(--wp--preset--spacing--5);
+	}
+}
+
+/* Phone: a smaller Wapuu, so the lead reaches the first screen. The halo keeps
+	 its 1.2 ratio to the art, and the pattern's `sizes` follows the 15rem. */
+@media (max-width: 600px) {
+	.hp-wapuu-hero__figure {
+		width: min(100%, 15rem);
+	}
+
+	.hp-wapuu-hero__star {
+		width: min(118%, 18rem);
 	}
 }
 
@@ -1087,6 +1130,13 @@ header.wp-block-template-part {
 }
 .hp-footer__inner {
 	position: relative;
+}
+
+/* The plate is a constrained layout whose first child is the absolutely
+	 positioned backdrop, so core's block gap landed on this column instead and
+	 set every footer's content 24px below the plate's own padding. */
+.hp-footer > .hp-footer__inner {
+	margin-block-start: 0;
 }
 .hp-footer__top {
 	align-items: flex-start;
@@ -1329,8 +1379,8 @@ h3,
 	overflow-wrap: break-word;
 }
 
-/* Brand eyebrow -> Marcellus lapidary caps (register/status labels stay mono). */
-.hp-wapuu-hero__eyebrow,
+/* Brand eyebrow -> Marcellus lapidary caps (register/status labels stay mono).
+	 The Home hero eyebrow sets its own face, 0.2em tracking and ink above. */
 .hp-eyebrow {
 	font-family: var(--hp-font-label);
 	letter-spacing: var(--wp--custom--tracking--caps);
@@ -2023,6 +2073,19 @@ samp {
 	gap: var(--wp--preset--spacing--3);
 }
 
+/* Home's two section anchors clear the sticky masthead by 12px, as the Home
+	 template sets them: the bar plus its 1px hairline is 63px below 782px and
+	 69px from 782px. Every other [id] keeps the generic clearance above. */
+.hp-front-template :is(#framework, #work) {
+	scroll-margin-top: calc(var(--hp-header-h-compact) + 1px + var(--wp--preset--spacing--3));
+}
+
+@media (min-width: 782px) {
+	.hp-front-template :is(#framework, #work) {
+		scroll-margin-top: calc(var(--hp-header-h) + 1px + var(--wp--preset--spacing--3));
+	}
+}
+
 .hp-template-hero {
 	padding-block: var(--wp--preset--spacing--8);
 }
@@ -2089,8 +2152,18 @@ samp {
 	margin: 0;
 }
 
+/* The section sits outside post content, so it takes the content-link rule by
+	 hand: artifact ink under a 55% gold underline that turns solid on hover. */
 .hp-front-template__rings .hp-template-hero__lead a {
 	color: var(--hp-artifact);
+	text-decoration-color: color-mix(in srgb, var(--hp-gold) 55%, transparent);
+	text-underline-offset: 0.14em;
+	transition: text-decoration-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+
+.hp-front-template__rings .hp-template-hero__lead a:hover {
+	color: var(--hp-artifact);
+	text-decoration-color: var(--hp-gold);
 }
 
 .hp-front-template__rings .hp-ring-card__description {
@@ -2103,10 +2176,33 @@ samp {
 	letter-spacing: 0.08em;
 }
 
+/* A linked instrument row keeps the card's body line, as the Home template
+	 does: only the link is set in Marcellus caps, and neither carries the
+	 shared slot's shadow. The in-review row has no link, so it keeps the slot's
+	 label type. Ring colours stay on the AA text tints (INDEX.md). */
+.hp-front-template__rings .hp-ring-card__cta:not(.is-in-review) {
+	font-family: inherit;
+	font-size: inherit;
+	letter-spacing: normal;
+	text-transform: none;
+	text-shadow: none;
+}
+
 .hp-front-template__rings .hp-ring-card__cta a {
 	display: inline-flex;
 	gap: 0.4em;
+	font-family: var(--hp-font-label);
+	font-size: var(--wp--preset--font-size--xs);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
 	border-bottom: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+	transition: border-color var(--wp--custom--dur--fast) var(--wp--custom--ease--calm);
+}
+
+/* Hover firms the underline in the ring's own colour; the text holds. */
+.hp-front-template__rings .hp-ring-card__cta a:hover {
+	color: var(--hp-ring-tint-text);
+	border-bottom-color: currentColor;
 }
 
 @media (max-width: 600px) {
@@ -2147,6 +2243,13 @@ samp {
 	margin: var(--wp--preset--spacing--4) 0 0;
 }
 
+/* The index link is an artifact link, river at rest and on hover; its gold
+	 underline comes from the content-link rule. */
+.hp-front-template__work .hp-work__footer a,
+.hp-front-template__work .hp-work__footer a:hover {
+	color: var(--hp-artifact);
+}
+
 .hp-front-template__commission {
 	margin-block: 0;
 	padding-block: var(--wp--preset--spacing--9) var(--wp--preset--spacing--10);
@@ -2155,6 +2258,28 @@ samp {
 .hp-front-template__cta.hp-action-panel {
 	box-sizing: border-box;
 	padding: var(--wp--preset--spacing--5);
+}
+
+/* Home's commission panel draws the emblem heavier than the shared mark (2px
+	 strokes, its ring at 0.5, the inner star at 0.6), keeps it at 32px on a
+	 phone, and turns it a quarter on hover or focus. A quarter turn is a
+	 symmetry of the star, so it lands on itself. */
+.hp-front-template__cta.hp-action-panel.is-closing::after {
+	-webkit-mask-image: url("assets/img/emblem-commission.svg");
+	mask-image: url("assets/img/emblem-commission.svg");
+	transition: transform var(--wp--custom--dur--slow) var(--wp--custom--ease--calm);
+}
+
+.hp-front-template__cta.hp-action-panel.is-closing:is(:hover, :focus-within)::after {
+	transform: rotate(90deg);
+}
+
+@media (max-width: 600px) {
+	.hp-front-template__cta.hp-action-panel.is-closing::after {
+		inset: var(--wp--preset--spacing--4) var(--wp--preset--spacing--4) auto auto;
+		inline-size: var(--wp--preset--spacing--6);
+		block-size: var(--wp--preset--spacing--6);
+	}
 }
 
 .hp-front-template__cta-kicker {

@@ -7,6 +7,9 @@
  */
 // Signature mascot floating over the elven-star halo, matching the Imladris Home
 // composition (same framed Wapuu-Dalf medallion the design uses).
+// Each proof chip states its whole claim as text and links the artifact from a
+// trailing ↗, as the Home template's ProofBar does; the aria-label names what
+// the arrow opens, so a links list never reads "north east arrow" four times.
 $hperkins_wapuu_png_url  = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu-color.png' ) );
 $hperkins_wapuu_webp_url = esc_url( hperkins_tokens_asset_url( 'assets/img/wapuu-color.webp' ) );
 // Keep both responsive sources: the Home art fills its column up to 440px;
@@ -28,11 +31,11 @@ $hperkins_wapuu_webp_448_url = esc_url( hperkins_tokens_asset_url( 'assets/img/w
 		<!-- wp:group {"className":"hp-wapuu-hero__art","layout":{"type":"default"}} -->
 		<div class="wp-block-group hp-wapuu-hero__art">
 			<!-- wp:html -->
-			<span class="hp-wapuu-hero__star" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none"><g stroke="currentColor" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 L63.8 16.7 L83.2 16.8 L83.3 36.2 L97 50 L83.3 63.8 L83.2 83.2 L63.8 83.3 L50 97 L36.2 83.3 L16.8 83.2 L16.7 63.8 L3 50 L16.7 36.2 L16.8 16.8 L36.2 16.7 Z"></path><path d="M50 21 L57.5 42.5 L79 50 L57.5 57.5 L50 79 L42.5 57.5 L21 50 L42.5 42.5 Z" opacity="0.6"></path><circle cx="50" cy="50" r="4.5" fill="currentColor" stroke="none"></circle></g></svg></span>
+			<span class="hp-wapuu-hero__star" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none"><g stroke="currentColor" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round"><path d="M50 3 L63.8 16.7 L83.2 16.8 L83.3 36.2 L97 50 L83.3 63.8 L83.2 83.2 L63.8 83.3 L50 97 L36.2 83.3 L16.8 83.2 L16.7 63.8 L3 50 L16.7 36.2 L16.8 16.8 L36.2 16.7 Z"></path><path d="M50 21 L57.5 42.5 L79 50 L57.5 57.5 L50 79 L42.5 57.5 L21 50 L42.5 42.5 Z" opacity="0.45"></path><circle cx="50" cy="50" r="4.5" fill="currentColor" stroke="none"></circle></g></svg></span>
 			<!-- /wp:html -->
 
 			<!-- wp:html -->
-			<figure class="wp-block-image size-full hp-wapuu-hero__figure"><picture><source srcset="<?php echo $hperkins_wapuu_webp_448_url; ?> 448w, <?php echo $hperkins_wapuu_webp_url; ?> 640w" sizes="(max-width: 504px) calc(100vw - 4rem), (max-width: 900px) 27.5rem, (max-width: 1152px) calc((100vw - 9rem) * 0.45), 27.5rem" type="image/webp" /><img src="<?php echo $hperkins_wapuu_png_url; ?>" alt="Wapuu dressed as a grey-robed wizard with a pointed hat, long beard, and wooden staff, holding a WordPress logo orb." width="962" height="1024" fetchpriority="high" decoding="async" /></picture></figure>
+			<figure class="wp-block-image size-full hp-wapuu-hero__figure"><picture><source srcset="<?php echo $hperkins_wapuu_webp_448_url; ?> 448w, <?php echo $hperkins_wapuu_webp_url; ?> 640w" sizes="(max-width: 600px) 15rem, (max-width: 900px) 27.5rem, (max-width: 1152px) calc((100vw - 9rem) * 0.45), 27.5rem" type="image/webp" /><img src="<?php echo $hperkins_wapuu_png_url; ?>" alt="Wapuu dressed as a grey-robed wizard with a pointed hat, long beard, and wooden staff, holding a WordPress logo orb." width="962" height="1024" fetchpriority="high" decoding="async" /></picture></figure>
 			<!-- /wp:html -->
 		</div>
 		<!-- /wp:group -->
@@ -50,19 +53,19 @@ $hperkins_wapuu_webp_448_url = esc_url( hperkins_tokens_asset_url( 'assets/img/w
 			<!-- wp:group {"className":"hp-proof-bar hp-wapuu-hero__signals","layout":{"type":"flex","flexWrap":"wrap"}} -->
 			<div class="wp-block-group hp-proof-bar hp-wapuu-hero__signals">
 				<!-- wp:paragraph {"className":"hp-chip is-status-merged"} -->
-				<p class="hp-chip is-status-merged"><a href="https://github.com/WordPress/ai/pull/501">core/ai PR #501</a> — merged</p>
+				<p class="hp-chip is-status-merged">core/ai PR #501 — merged <a href="https://github.com/WordPress/ai/pull/501" aria-label="core/ai PR #501">↗</a></p>
 				<!-- /wp:paragraph -->
 
 				<!-- wp:paragraph {"className":"hp-chip is-status-merged"} -->
-				<p class="hp-chip is-status-merged"><a href="https://github.com/WordPress/ai/issues/529">core/ai #529</a> — fixed in 1.0.1</p>
+				<p class="hp-chip is-status-merged">core/ai #529 — fixed in 1.0.1 <a href="https://github.com/WordPress/ai/issues/529" aria-label="core/ai #529">↗</a></p>
 				<!-- /wp:paragraph -->
 
 				<!-- wp:paragraph {"className":"hp-chip is-status-merged"} -->
-				<p class="hp-chip is-status-merged"><a href="https://github.com/henryperkins/agent-skills">agent-skills fork</a> — +3 WP AI skills · maintained</p>
+				<p class="hp-chip is-status-merged">agent-skills fork — +3 WP AI skills · maintained <a href="https://github.com/henryperkins/agent-skills" aria-label="agent-skills fork">↗</a></p>
 				<!-- /wp:paragraph -->
 
 				<!-- wp:paragraph {"className":"hp-chip is-status-merged"} -->
-				<p class="hp-chip is-status-merged"><a href="/work/flavor-agent/">flavor-agent</a> — v0.1.0 · Aug 2026</p>
+				<p class="hp-chip is-status-merged">flavor-agent — v0.1.0 · Aug 2026 <a href="/work/flavor-agent/" aria-label="flavor-agent">↗</a></p>
 				<!-- /wp:paragraph -->
 			</div>
 			<!-- /wp:group -->

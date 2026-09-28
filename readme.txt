@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.71
+Stable tag: 0.3.72
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -412,6 +412,34 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.72 =
+* Home template fidelity pass (templates/home/Home.dc.html). The lead sits
+  24px under the title again: core's flow rule zeroed the copy group's first
+  child and outranked the lead's own margin. Each hero paragraph takes the
+  prose measure at its own size instead of a 620px cap on the column, and
+  phones set a 15rem Wapuu in an 18rem halo so the lead reaches the first
+  screen. The halo settles in once with a quarter turn, its inner star at
+  0.45, and the eyebrow tracks at 0.2em with no hover change.
+* Proof chips state the whole claim and link the artifact from a trailing ↗
+  whose accessible name is the artifact it opens. Ring CTAs keep the card's
+  body line with only the link in Marcellus caps, and hover firms the
+  underline in the ring's colour. "Expose · Govern · Attest" and "See the
+  full Work index." are river artifact links under the gold content
+  underline.
+* The closing panel draws the template's heavier emblem (new
+  assets/img/emblem-commission.svg), keeps it at 32px on phones, and turns it
+  a quarter on hover or focus; every other closing panel keeps the shared
+  mark. #framework and #work clear the masthead by 12px (75px / 81px).
+* Every page's footer content starts at the plate's padding: core's block
+  gap had landed on the inner column and pushed it 24px lower.
+* Kept on purpose and recorded in docs/design-system/INDEX.md: the ring text
+  tints (AA), 17px ledger copy, 17px buttons with 44px targets, the phone
+  title weight and hidden phone backdrop, the footer's leading and 13px
+  colophon, and the ledger labels.
+* Verification: verify-homepage-hero-polish.js checks the template's values
+  at nine widths, hover states at 1440px and reduced motion;
+  verify-performance-assets.js pins the new Wapuu sizes.
 
 = 0.3.71 =
 * Add the selected consolidated placement brief as the Digest page draft,
