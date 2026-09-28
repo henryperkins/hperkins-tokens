@@ -20,7 +20,8 @@ const { assertRuleDeclarations } = require( './style-coverage' );
 
 const THEME_ROOT = path.join( __dirname, '..', '..' );
 const DIGEST = fs.readFileSync(
-	path.join( THEME_ROOT, 'content', 'page-drafts', 'job-placement-digest.html' ),
+	// Keep the previous dossier's mutation coverage while the new brief is a candidate.
+	path.join( THEME_ROOT, 'scripts', 'fixtures', 'placement-dossier-2026-08.html' ),
 	'utf8'
 ).replace( /\r\n/g, '\n' );
 const APPENDIX = fs.readFileSync(

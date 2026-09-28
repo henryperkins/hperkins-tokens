@@ -17,7 +17,7 @@
  * instantly, exactly like a full load.
  *
  * Hooking pushState scopes this to router navigations by construction: full
- * loads never run it (native behavior untouched), history traversal (popstate)
+ * loads never run it (native behavior untouched), ordinary history traversal
  * is left to the browser's own scroll restoration, and replaceState is skipped
  * because it fires for non-navigation URL bookkeeping. Same-path pushes with
  * no hash are also left alone for the same reason. Like header-controller.js
@@ -39,6 +39,27 @@
 			/* malformed percent-encoding — treat as a missing anchor */
 			return null;
 		}
+	}
+
+	// A fragment may live inside a closed research disclosure. Reveal every
+	// ancestor before measuring or scrolling, including nested disclosures.
+	function revealTarget( target ) {
+		var changed = false;
+		for ( var node = target; node; node = node.parentElement ) {
+			if ( node.tagName === 'DETAILS' && ! node.open ) {
+				node.open = true;
+				changed = true;
+			}
+		}
+		return changed;
+	}
+
+	function revealCurrentHash() {
+		var target = resolveHash( window.location.hash );
+		if ( target && revealTarget( target ) ) {
+			target.scrollIntoView( { behavior: 'auto', block: 'start' } );
+		}
+		return target;
 	}
 
 	// Scrolling alone leaves focus on the link that was activated, so a screen
@@ -68,6 +89,7 @@
 		if ( hash && hash.length > 1 ) {
 			var target = resolveHash( hash );
 			if ( target ) {
+				revealTarget( target );
 				var reduce = !! ( window.matchMedia &&
 					window.matchMedia( '(prefers-reduced-motion: reduce)' ).matches );
 				target.scrollIntoView( {
@@ -121,13 +143,46 @@
 
 	wrapHistory( 'pushState' );
 
-	// Same-page fragment links (the digest's "Read the verified artifacts" ->
-	// #resume-keyword-bank) never reach the code above: the router leaves them
-	// alone and the browser navigates natively, so no pushState fires. The
-	// browser has already scrolled by the time hashchange lands — only focus is
-	// missing. Initial loads carrying a hash are deliberately not handled here;
-	// stealing focus during load fights the browser's own restoration.
+	// Native fragment navigation also needs disclosure reveal. Initial loads
+	// and history traversal reveal only a hidden target and never steal focus;
+	// plain-page history restoration remains entirely native.
 	window.addEventListener( 'hashchange', function () {
-		focusTarget( resolveHash( window.location.hash ) );
+		focusTarget( revealCurrentHash() );
+	} );
+	window.addEventListener( 'popstate', function () {
+		revealCurrentHash();
+		if ( window.requestAnimationFrame ) {
+			window.requestAnimationFrame( revealCurrentHash );
+		}
+		window.setTimeout( revealCurrentHash, 120 );
+	} );
+	if ( document.readyState === 'loading' ) {
+		document.addEventListener( 'DOMContentLoaded', revealCurrentHash, { once: true } );
+	} else {
+		revealCurrentHash();
+	}
+
+	// Clicking the current hash emits no hashchange. Reveal synchronously so
+	// native navigation can still find a target the reader has closed again.
+	document.addEventListener( 'click', function ( event ) {
+		if ( event.defaultPrevented || event.button !== 0 || event.metaKey ||
+			event.ctrlKey || event.shiftKey || event.altKey ) {
+			return;
+		}
+		var link = event.target.closest && event.target.closest( 'a[href]' );
+		if ( ! link || link.hasAttribute( 'download' ) ||
+			( link.target && link.target !== '_self' ) ) {
+			return;
+		}
+		try {
+			var url = new URL( link.href, window.location.href );
+			if ( url.origin === window.location.origin &&
+				url.pathname === window.location.pathname &&
+				url.search === window.location.search && url.hash ) {
+				revealTarget( resolveHash( url.hash ) );
+			}
+		} catch ( e ) {
+			/* Invalid URLs keep their native behavior. */
+		}
 	} );
 }() );

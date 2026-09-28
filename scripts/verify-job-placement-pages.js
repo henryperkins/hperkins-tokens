@@ -38,6 +38,14 @@ const ORIGIN = getOrigin();
 const SOURCE_ONLY = ARGV.includes( '--source-only' );
 const DIGEST_SOURCE = selectDigestSource( ARGV );
 const APPENDIX_SOURCE = selectPlacementMethodSource( ARGV );
+// The candidate brief has a different outline and disclosure contract. Keep
+// the accepted two-page matrix intact until the database body is promoted.
+if ( /class="[^\"]*\bhp-placement-brief\b/.test( fs.readFileSync( DIGEST_SOURCE, 'utf8' ) ) ) {
+	const { spawnSync } = require( 'node:child_process' );
+	const result = spawnSync( process.execPath, [ path.join( __dirname, 'verify-placement-brief.js' ), ...ARGV ], { stdio: 'inherit' } );
+	if ( result.error ) throw result.error;
+	process.exit( result.status ?? 1 );
+}
 // Studio's single-process preview can take longer than the generic CDP request
 // ceiling while WordPress warms. DOM/style readiness still has its own bounded
 // polling below; this only prevents Page.navigate from expiring first.

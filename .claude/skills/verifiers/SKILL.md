@@ -78,7 +78,7 @@ wp --path="$HPERKINS_WP_PATH" cache flush                # after theme.json / gl
 
 # Unit tests for the shared script libraries. Name every file explicitly — the
 # directory form of `node --test` is unreliable on Windows.
-node --test scripts/lib/about-page-contract.test.js scripts/lib/about-page-rendered-probe.test.js scripts/lib/about-gravatar-heading.test.js scripts/lib/about-resume-style.test.js scripts/lib/about-resume.test.js scripts/lib/content-integrity.test.js scripts/lib/content-ownership-docs.test.js scripts/lib/council-header-block.test.js scripts/lib/event-copy-retirement-runbook.test.js scripts/lib/impeccable-artifacts.test.js scripts/lib/job-placement-digest-source-contract.test.js scripts/lib/job-placement-metadata-contract.test.js scripts/lib/journal-route-discovery.test.js scripts/lib/market-screen-parity.test.js scripts/lib/navigation-content-contract.test.js scripts/lib/page-content-contract.test.js scripts/lib/page-markup-contract.test.js scripts/lib/page-phase-contract.test.js scripts/lib/placement-artifact-contract.test.js scripts/lib/placement-artifact-links.test.js scripts/lib/production-gates-workflow.test.js scripts/lib/react-19-opt-out.test.js scripts/lib/release-record.test.js scripts/lib/resume-route-contract.test.js scripts/lib/search-policy.test.js scripts/lib/search-blocks.test.js scripts/lib/site-url.test.js scripts/lib/style-coverage.test.js scripts/lib/support-resume-cleanup.test.js scripts/lib/wp-cli.test.js scripts/lib/zip-archive.test.js
+node --test scripts/lib/about-page-contract.test.js scripts/lib/about-page-rendered-probe.test.js scripts/lib/about-gravatar-heading.test.js scripts/lib/about-resume-style.test.js scripts/lib/about-resume.test.js scripts/lib/content-integrity.test.js scripts/lib/content-ownership-docs.test.js scripts/lib/council-header-block.test.js scripts/lib/event-copy-retirement-runbook.test.js scripts/lib/impeccable-artifacts.test.js scripts/lib/job-placement-digest-source-contract.test.js scripts/lib/job-placement-metadata-contract.test.js scripts/lib/journal-route-discovery.test.js scripts/lib/market-screen-parity.test.js scripts/lib/navigation-content-contract.test.js scripts/lib/page-content-contract.test.js scripts/lib/page-markup-contract.test.js scripts/lib/page-phase-contract.test.js scripts/lib/placement-artifact-contract.test.js scripts/lib/placement-artifact-links.test.js scripts/lib/placement-brief-contract.test.js scripts/lib/production-gates-workflow.test.js scripts/lib/react-19-opt-out.test.js scripts/lib/release-record.test.js scripts/lib/resume-route-contract.test.js scripts/lib/router-scroll.test.js scripts/lib/search-policy.test.js scripts/lib/search-blocks.test.js scripts/lib/site-url.test.js scripts/lib/style-coverage.test.js scripts/lib/support-resume-cleanup.test.js scripts/lib/wp-cli.test.js scripts/lib/zip-archive.test.js
 
 # Re-classify this repo after structural changes with the wp-project-triage skill.
 ```
@@ -86,6 +86,16 @@ node --test scripts/lib/about-page-contract.test.js scripts/lib/about-page-rende
 `scripts/export-support-resume.ps1` resolves `HPERKINS_PYTHON_BIN` first, then `python` from `PATH`. The selected interpreter must import `python-docx`, `pdfplumber`, and `pypdf`; dependency preflight runs before Word can overwrite the PDF.
 
 ### WCUS portfolio ownership and phase gate
+
+The consolidated placement candidate uses `.hp-placement-brief`. With `--drafts`,
+`verify-job-placement-pages.js` delegates to `verify-placement-brief.js`: seven
+widths from 320–1440px, the 36rem prose limit, H2/H3 outline, single contact and
+résumé actions, closed research, keyboard access, preserved section fragments,
+reduced motion, 200% text, and no-JS access to all 54 research rows. Unflagged
+checks still test the accepted two-page snapshots. The isolated redirect check
+is `php scripts/verify-placement-route.php`; it requires a published combined
+body and emits no fragment in the redirect target. Local preview proof does not
+promote a database body or establish production router behavior.
 
 `/one-page-resume/` is the stable visible-link destination. The final PDF remains a theme-owned artifact verified directly. `about-resume` substitutes only the portrait URL. Digest and About database bodies remain canonical; drafts are candidates and snapshots are accepted mirrors. Production page/footer writes are separate from a theme deploy.
 

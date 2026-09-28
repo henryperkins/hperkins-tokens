@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.70
+Stable tag: 0.3.71
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -412,6 +412,16 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.71 =
+* Add the selected consolidated placement brief as the Digest page draft,
+  with selected work, a resume action, and dated research in a native
+  disclosure. Keep accepted page snapshots unchanged until publication.
+* Preserve old research links by opening ancestor disclosures on fragment
+  navigation. Redirect the former method routes only after the published
+  Digest body contains the consolidated brief.
+* Add candidate, fragment-navigation, and redirect-guard verification while
+  retaining the earlier dossier's source-contract tests as a dated fixture.
 
 = 0.3.70 =
 * Keep nested essay section links beside their headings, and let the mobile

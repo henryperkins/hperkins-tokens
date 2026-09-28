@@ -8168,3 +8168,196 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		display: none !important;
 	}
 }
+/* Consolidated placement brief. Scoped to the reviewed candidate so the
+   published dossier retains its existing layout until the body is promoted. */
+.hp-digest-template .hp-placement-brief {
+  --hp-placement-measure: 36rem;
+  max-inline-size: calc(var(--hp-placement-measure) * 1.5);
+  margin-inline: auto;
+}
+
+.hp-placement-brief :is(p, li, h3, h4) {
+  max-inline-size: var(--hp-placement-measure);
+}
+
+.hp-placement-brief p {
+  font-size: var(--wp--preset--font-size--md);
+  line-height: 1.55;
+}
+
+.hp-placement-brief h1 {
+  margin: 0 0 var(--wp--preset--spacing--5);
+  font-size: var(--wp--preset--font-size--4-xl);
+  line-height: 1.05;
+}
+
+.hp-placement-brief__hero > p {
+  margin-block: var(--wp--preset--spacing--4);
+}
+
+.hp-placement-brief p:is(.hp-placement-brief__identity, .hp-placement-brief__date) {
+  color: var(--wp--custom--text--muted);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--sm);
+  line-height: 1.6;
+}
+
+.hp-placement-brief :is(.hp-placement-brief__work, .hp-placement-brief__method, .hp-placement-brief__closing) {
+  margin-block-start: var(--wp--preset--spacing--7);
+  padding-block-start: var(--wp--preset--spacing--6);
+  border-block-start: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-placement-brief :is(.hp-placement-brief__work, .hp-placement-brief__method) > h2 {
+  margin-block: 0 var(--wp--preset--spacing--3);
+  color: var(--wp--custom--text--muted);
+  font-family: var(--wp--preset--font-family--label);
+  font-size: var(--wp--preset--font-size--base);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hp-placement-brief__date {
+  margin-block: 0 var(--wp--preset--spacing--6);
+}
+
+.hp-placement-brief__featured h3 {
+  margin-block: 0 var(--wp--preset--spacing--4);
+  font-size: var(--wp--preset--font-size--3-xl);
+  line-height: 1.15;
+}
+
+.hp-placement-brief p + p {
+  margin-block-start: var(--wp--preset--spacing--4);
+}
+
+.hp-placement-brief .hp-placement-brief__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--5);
+  margin-block: var(--wp--preset--spacing--5) 0;
+  font-size: var(--wp--preset--font-size--base);
+}
+
+.hp-placement-brief__links a {
+  padding-block: var(--wp--preset--spacing--1);
+  text-underline-offset: 0.2em;
+}
+
+.hp-placement-brief__supporting {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--wp--preset--spacing--6);
+  margin-block-start: var(--wp--preset--spacing--6);
+  padding-block-start: var(--wp--preset--spacing--6);
+  border-block-start: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-placement-brief__item {
+  margin-block: 0;
+  min-inline-size: 0;
+}
+
+.hp-placement-brief__item h3 {
+  margin-block: 0 var(--wp--preset--spacing--3);
+  font-size: var(--wp--preset--font-size--2-xl);
+  line-height: 1.2;
+}
+
+.hp-placement-brief__item + .hp-placement-brief__item {
+  padding-inline-start: var(--wp--preset--spacing--6);
+  border-inline-start: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-placement-brief .hp-action-rail {
+  margin-block-start: var(--wp--preset--spacing--5);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.hp-placement-brief .hp-action-rail .wp-block-button__link {
+  font-family: var(--wp--preset--font-family--label);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.hp-placement-brief__hero .wp-block-button__link {
+  padding-inline: 0;
+  color: var(--wp--custom--text--link);
+  border: 0;
+  background: none;
+  box-shadow: none;
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.hp-placement-brief .hp-placement-brief__closing {
+  padding-inline: 0;
+  padding-block-end: 0;
+  border-inline: 0;
+  border-block-end: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.hp-placement-brief__closing::after {
+  display: none;
+}
+
+.hp-placement-brief__closing h2 {
+  margin: 0;
+  font-size: var(--wp--preset--font-size--3-xl);
+  line-height: 1.15;
+}
+
+.hp-placement-brief__research {
+  margin-block-start: var(--wp--preset--spacing--5);
+}
+
+.hp-placement-brief__research > summary {
+  width: fit-content;
+  max-inline-size: 100%;
+  min-block-size: var(--hp-touch-min);
+  padding-block: var(--wp--preset--spacing--2);
+  cursor: pointer;
+}
+
+.hp-placement-brief__research-section {
+  margin-block-start: var(--wp--preset--spacing--7);
+}
+
+.hp-placement-brief__research h3 {
+  font-size: var(--wp--preset--font-size--2-xl);
+}
+
+.hp-placement-brief__research h4 {
+  font-size: var(--wp--preset--font-size--xl);
+}
+
+.hp-placement-brief__research :is(p, li) {
+  font-size: var(--wp--preset--font-size--base);
+}
+
+.hp-placement-brief__research .hp-placement-ledger {
+  margin-inline: 0;
+  max-inline-size: 100%;
+}
+
+@media (max-width: 781px) {
+  .hp-placement-brief__supporting {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--wp--preset--spacing--6);
+  }
+
+  .hp-placement-brief__item + .hp-placement-brief__item {
+    padding-inline-start: 0;
+    padding-block-start: var(--wp--preset--spacing--6);
+    border-inline-start: 0;
+    border-block-start: 1px solid var(--wp--custom--border--hair);
+  }
+}

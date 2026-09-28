@@ -464,6 +464,9 @@ function verifyEvidenceRegister( markup ) {
 // option explicitly still overrides, which is how the unit tests assert both
 // directions against a single fixture.
 function verifyMain( markup, _themeVersion, _deployedCommit, options = {} ) {
+	if ( /class="[^\"]*\bhp-placement-brief\b/.test( markup ) ) {
+		return require( './lib/placement-brief-contract' ).verifyPlacementBrief( markup );
+	}
 	const requireEvent = options.requireEvent ?? /hp-wcus-callout/.test( markup );
 	verifyHeadingContract( 'Main digest draft', markup );
 	verifyNoPublicationPlaceholders( 'Main digest draft', markup );
