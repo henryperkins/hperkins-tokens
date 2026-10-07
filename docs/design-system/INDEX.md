@@ -1483,6 +1483,17 @@ after it.
   records current evidence and the separate publication boundary. Accepted
   snapshots remain database mirrors.
 
+## Job-market availability cleanup (2026-10-06)
+
+The later authorized job-market availability cleanup supersedes the handoff's
+20-record retention rule above. It retains all 34 keywords and five anchors,
+removes ten confirmed unavailable market entries, and synchronizes the ten
+remaining rows with the Google Sheet and downloadable workbook. The July
+state cells remain historical; an October note distinguishes two current
+named applications, three future talent pools and five unresolved originals.
+See `docs/verification/2026-10-06-market-cleanup-publication.md` for the
+publication and validation record.
+
 ## One-page résumé refinement (2026-10-06)
 
 The supplied OnePageResume screenshot is the visual reference for the native

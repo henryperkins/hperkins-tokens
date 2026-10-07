@@ -25,8 +25,8 @@ const DIGEST = fs.readFileSync(
 	'utf8'
 ).replace( /\r\n/g, '\n' );
 const APPENDIX = fs.readFileSync(
-	// Preserve the historical appendix contract independently of archive copy edits.
-	path.join( THEME_ROOT, 'content', 'page-snapshots', 'placement-method-evidence.html' ),
+	// Exercise the reviewed current archive independently of the legacy dossier.
+	path.join( THEME_ROOT, 'content', 'page-drafts', 'placement-method-evidence.html' ),
 	'utf8'
 ).replace( /\r\n/g, '\n' );
 const FILTER_SCRIPT = fs.readFileSync(
@@ -346,7 +346,7 @@ test( 'never reintroduces a moving branch URL, stale Flavor release, or publicat
    the contract now depends on.
    ----------------------------------------------------------------------- */
 
-test( 'the accepted appendix snapshot satisfies its selected phase contract', () => {
+test( 'the reviewed ten-row archive satisfies its selected phase contract', () => {
 	assert.doesNotThrow( () => verifyAppendix( APPENDIX ) );
 } );
 
@@ -360,9 +360,9 @@ test( 'opens the Method appendix with a back-link and verifier-backed audit plat
 	assert( hero.outer.includes( 'href="/job-placement-digest/">' + backLink + '</a>' ) );
 	assert.deepEqual(
 		[ ...hero.outer.matchAll( /class="hp-placement-audit__value">(\d+)<\/p>/g ) ].map( ( match ) => Number( match[ 1 ] ) ),
-		[ 34, 20, 3 ]
+		[ 34, 10, 2 ]
 	);
-	assert.match( hero.outer, /Every row retained; delistings kept visible\./ );
+	assert.match( hero.outer, /Ten confirmed unavailable entries removed in October\./ );
 	assert.doesNotMatch( hero.outer, /Every state dated/i );
 	assert.doesNotMatch( hero.outer, /hp-method-scope/ );
 } );
@@ -398,7 +398,7 @@ test( 'shows the 10 / 11 / 13 standing distribution in three teaching tiles', ()
 test( 'keeps Method core/table cells schema-safe and phone labels CSS-backed', () => {
 	for ( const [ className, labels, expectedRows ] of [
 		[ 'hp-keyword-table', [ 'Keyword', 'Posting signal', 'Evidence boundary' ], 34 ],
-		[ 'hp-market-table', [ 'Job title', 'Company', 'Posting', 'Last checked', 'State', 'Reasoning' ], 20 ],
+		[ 'hp-market-table', [ 'Job title', 'Company', 'Posting', 'Last checked', 'State', 'Reasoning' ], 10 ],
 	] ) {
 		const body = new RegExp( `${ className }[\\s\\S]*?<tbody>([\\s\\S]*?)<\\/tbody>` ).exec( APPENDIX )[ 1 ];
 		const rows = [ ...body.matchAll( /<tr>([\s\S]*?)<\/tr>/g ) ];
@@ -489,7 +489,7 @@ test( 'keeps the screen questions and the overturn admission verbatim', () => {
 test( 'keeps the filter cue on both ledgers, so a reader knows the list can narrow', () => {
 	const mutant = replaceOnce(
 		APPENDIX,
-		'filter the screen to hold one state at a time',
+		'filter the screen to hold one historical state at a time',
 		'states are listed together'
 	);
 	assert.throws( () => verifyAppendix( mutant ), /missing required copy: filter the screen/ );

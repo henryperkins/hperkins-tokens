@@ -1,4 +1,6 @@
 const assert = require( 'node:assert/strict' );
+const { spawnSync } = require( 'node:child_process' );
+const path = require( 'node:path' );
 const test = require( 'node:test' );
 
 const placementArtifacts = require( '../verify-placement-artifacts' );
@@ -35,8 +37,8 @@ const matchingAppendix = `
 <section class="hp-page-hero hp-method-hero">
 	<aside class="hp-placement-audit">
 		<div class="hp-placement-audit__figure"><dt>Résumé terms audited</dt><dd class="hp-placement-audit__value">3</dd><dd class="hp-placement-audit__note">Each against five Solutions Engineer postings.</dd></div>
-		<div class="hp-placement-audit__figure"><dt>Market rows screened</dt><dd class="hp-placement-audit__value">7</dd><dd class="hp-placement-audit__note">Every row retained; delistings kept visible.</dd></div>
-		<div class="hp-placement-audit__figure"><dt>Rows failed by hand</dt><dd class="hp-placement-audit__value">2</dd><dd class="hp-placement-audit__note">One overturned an AI pass.</dd></div>
+<div class="hp-placement-audit__figure"><dt>Market rows retained</dt><dd class="hp-placement-audit__value">7</dd><dd class="hp-placement-audit__note">Ten confirmed unavailable entries removed in October.</dd></div>
+<div class="hp-placement-audit__figure"><dt>Retained rows failed by hand</dt><dd class="hp-placement-audit__value">2</dd><dd class="hp-placement-audit__note">One overturned an AI pass.</dd></div>
 	</aside>
 </section>
 <section id="resume-keyword-bank">
@@ -62,7 +64,7 @@ const matchingAppendix = `
 			<tr><th>Second failure</th><td>Company G</td><td></td><td>2026-07-19</td><td>Live when screened · Fail</td><td>Exact second failure reasoning.</td></tr>
 		</tbody>
 	</table></figure>
-	<p class="hp-market-date-summary">Last checked distribution: 2026-07-20 — 2 rows; 2026-07-19 — 2 rows; 2026-07-18 — 1 row; not recorded — 2 rows.</p>
+	<p class="hp-market-date-summary">Historical Last checked distribution among the 7 retained rows: 2026-07-20 — 2 rows; 2026-07-19 — 2 rows; 2026-07-18 — 1 row; not recorded — 2 rows. The 6 October cleanup did not overwrite these July date cells.</p>
 </section>`;
 
 test( 'appendix reproduces every workbook value through the six-column projection', () => {
@@ -134,4 +136,11 @@ test( 'appendix parity rejects an audit note that overstates the machine overtur
 		),
 		/audit figure 3 note differs/
 	);
+} );
+
+test( 'artifact verifier validates the candidate appendix with --drafts before snapshot promotion', () => {
+	const themeRoot = path.join( __dirname, '..', '..' );
+	const result = spawnSync( process.execPath, [ 'scripts/verify-placement-artifacts.js', '--drafts' ], { cwd: themeRoot, encoding: 'utf8' } );
+	assert.equal( result.status, 0, result.stderr );
+	assert.match( result.stdout, /verified placement artifact contracts/ );
 } );

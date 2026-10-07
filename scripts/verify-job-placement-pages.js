@@ -392,7 +392,7 @@ function verifyStackedLedgerLabels() {
 	const ledgers = [
 		{ source: digest, table: 'hp-evidence-table', expectedRows: 11 },
 		{ source: appendix, table: 'hp-keyword-table', expectedRows: 34 },
-		{ source: appendix, table: 'hp-market-table', expectedRows: 20 },
+		{ source: appendix, table: 'hp-market-table', expectedRows: 10 },
 	];
 
 	for ( const { source, table, expectedRows } of ledgers ) {
@@ -1197,13 +1197,13 @@ const APPENDIX_LEDGERS = [
 		name: 'market screen',
 		root: '.hp-live-states',
 		table: '.hp-market-table table',
-		rows: 20,
-		initialRows: 20,
+		rows: 10,
+		initialRows: 10,
 		defaultState: 'all',
-		openingStatus: 'Showing all 20 rows',
+		openingStatus: 'Showing all 10 rows',
 		narrowState: 'live',
-		narrowRows: 9,
-		narrowStatus: 'Showing 9 of 20 rows · live passes',
+		narrowRows: 5,
+		narrowStatus: 'Showing 5 of 10 rows · live passes',
 		order: [ 'all', 'live', 'historical', 'recheck', 'failed' ],
 		standing: 'td:nth-of-type(4)',
 	},

@@ -1,5 +1,10 @@
 # Digest and one-page résumé production release — 6 October 2026
 
+The later market availability cleanup is recorded in
+`2026-10-06-market-cleanup-publication.md`. It supersedes this release's
+20-market-row / 54-total-row retention state; the original evidence below
+describes the redesign as first published.
+
 The user explicitly authorized publication of both redesigns. The release
 includes the Support Engineering body at the stable Digest route, the dated
 July method/evidence archive, and the editable résumé source and final PDF.

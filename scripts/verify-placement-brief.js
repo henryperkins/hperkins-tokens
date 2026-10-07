@@ -100,7 +100,7 @@ function inspectArchive() {
 		title: document.querySelector( 'main h1' )?.textContent.trim(),
 		overflow: document.documentElement.scrollWidth > innerWidth + 1,
 		tables,
-		copy: document.querySelector( 'main' ).textContent.includes( 'No longer updated' ),
+		copy: document.querySelector( 'main' ).textContent.includes( 'Availability cleanup 6 October 2026' ),
 	};
 }
 
@@ -220,17 +220,17 @@ async function main() {
 			const archive = await probe( inspectArchive );
 			assert.equal( archive.title, 'Placement Method and Evidence' );
 			assert( ! archive.overflow && archive.copy, width + 'px archive: ' + JSON.stringify( archive ) );
-			assert.deepEqual( archive.tables.map( ( table ) => [ table.rows, table.visible ] ), [ [ 34, 34 ], [ 20, 20 ] ], 'Archive defaults to all 54 records.' );
+			assert.deepEqual( archive.tables.map( ( table ) => [ table.rows, table.visible ] ), [ [ 34, 34 ], [ 10, 10 ] ], 'Archive defaults to all 44 records.' );
 			assert( archive.tables.every( ( table ) => table.controls === 1 && /all/i.test( table.state ) ), 'Both archive filters mount once on All: ' + JSON.stringify( archive ) );
 			if ( [ 1440, 390 ].includes( width ) ) await screenshot( 'archive-' + width );
-			for ( const [ root, state, expected ] of [ [ '.hp-resume-keyword-bank', 'partial', [ 11, 20 ] ], [ '.hp-live-states', 'live', [ 34, 9 ] ] ] ) {
+			for ( const [ root, state, expected ] of [ [ '.hp-resume-keyword-bank', 'partial', [ 11, 10 ] ], [ '.hp-live-states', 'live', [ 34, 5 ] ] ] ) {
 				const selector = root + ' .hp-evidence-filter button[data-state="' + state + '"]';
 				await assertFocus( selector );
 				await pressKey( cdp, sessionId, 'Enter' );
 				assert.deepEqual( ( await probe( inspectArchive ) ).tables.map( ( table ) => table.visible ), expected, 'Keyboard narrows the archive ' + root );
 				await assertFocus( root + ' .hp-evidence-filter button[data-state="all"]' );
 				await pressKey( cdp, sessionId, 'Enter' );
-				assert.deepEqual( ( await probe( inspectArchive ) ).tables.map( ( table ) => table.visible ), [ 34, 20 ], 'All restores every archive record.' );
+				assert.deepEqual( ( await probe( inspectArchive ) ).tables.map( ( table ) => table.visible ), [ 34, 10 ], 'All restores every archive record.' );
 			}
 			console.log( width + 'px: Digest hierarchy, 40rem measure, numbered articles, 15px metadata, 44px controls, keyboard/focus and complete archive passed.' );
 		}
@@ -238,7 +238,7 @@ async function main() {
 		for ( const anchor of RESEARCH_ANCHORS ) {
 			await navigate( ARCHIVE_ROUTE, '#' + anchor );
 			await assertFragment( anchor );
-			assert.deepEqual( ( await probe( inspectArchive ) ).tables.map( ( table ) => table.visible ), [ 34, 20 ], 'Direct archive fragments retain all records.' );
+			assert.deepEqual( ( await probe( inspectArchive ) ).tables.map( ( table ) => table.visible ), [ 34, 10 ], 'Direct archive fragments retain all records.' );
 		}
 		for ( const anchor of [ 'appendix', 'research-notes' ] ) {
 			await navigate( DIGEST_ROUTE, '#' + anchor );
@@ -257,7 +257,7 @@ async function main() {
 				const resized = await probe( inspectTextResize );
 				assert( ! resized.overflow, route + ' 200% text fits ' + width + 'px: ' + JSON.stringify( resized ) );
 				if ( route === DIGEST_ROUTE ) assert( resized.actionCount === 4 && resized.actions.every( ( action ) => action.visible && action.rectCount > 0 && action.contained ), '200% actions remain visible with contained text: ' + JSON.stringify( resized ) );
-				else assert.deepEqual( ( await probe( inspectArchive ) ).tables.map( ( table ) => table.visible ), [ 34, 20 ] );
+				else assert.deepEqual( ( await probe( inspectArchive ) ).tables.map( ( table ) => table.visible ), [ 34, 10 ] );
 			}
 		}
 		await cdp.send( 'Emulation.setScriptExecutionDisabled', { value: true }, sessionId );
@@ -273,7 +273,7 @@ async function main() {
 		for ( const anchor of [ '', ...RESEARCH_ANCHORS ] ) {
 			await navigate( ARCHIVE_ROUTE, anchor ? '#' + anchor : '' );
 			const archive = await probe( inspectArchive );
-			assert.deepEqual( archive.tables.map( ( table ) => [ table.rows, table.visible, table.controls ] ), [ [ 34, 34, 0 ], [ 20, 20, 0 ] ], 'No-JS archive retains all 54 readable rows without generated controls.' );
+			assert.deepEqual( archive.tables.map( ( table ) => [ table.rows, table.visible, table.controls ] ), [ [ 34, 34, 0 ], [ 10, 10, 0 ] ], 'No-JS archive retains all 44 readable rows without generated controls.' );
 			if ( anchor ) await assertFragment( anchor );
 		}
 		assert.deepEqual( errors, [], 'No runtime exceptions.' );

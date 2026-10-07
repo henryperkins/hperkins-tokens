@@ -1,9 +1,10 @@
 const assert = require( 'node:assert/strict' );
 const fs = require( 'node:fs' );
+const os = require( 'node:os' );
 const path = require( 'node:path' );
 const test = require( 'node:test' );
 
-const { openZip } = require( './zip-archive' );
+const { crc32, openZip } = require( './zip-archive' );
 const {
 	compactText,
 	externalHyperlinkSequence,
@@ -16,6 +17,7 @@ const {
 const themeRoot = path.join( __dirname, '..', '..' );
 const docxPath = path.join( themeRoot, 'assets', 'documents', 'henry-perkins-wordpress-support-engineer-resume.docx' );
 const pdfPath = path.join( themeRoot, 'assets', 'documents', 'henry-perkins-wordpress-support-engineer-resume.pdf' );
+const workbookPath = path.join( themeRoot, 'assets', 'documents', 'wordpress-job-market-screen-live-states.xlsx' );
 
 const REQUIRED_RESUME_COPY = [
 	'WORDCAMP US 2026 — Phoenix · Staffed the Core AI booth, walking maintainers and agency developers through AI provider tooling',
@@ -227,4 +229,98 @@ test( 'PDF is a tagged, searchable, one-page document with semantic headings', (
 	assert.match( source, /\/StructTreeRoot\b/ );
 	assert.match( source, /\/H1\b/ );
 	assert.ok( ( source.match( /\/H2\b/g ) || [] ).length >= 4 );
+} );
+
+test( 'public workbook accepts the ten retained jobs without restoring removed originals', () => {
+	const { verifyWorkbook } = require( '../verify-placement-artifacts' );
+	assert.equal( typeof verifyWorkbook, 'function', 'The public workbook contract must be callable independently of résumé and appendix checks.' );
+	const rows = verifyWorkbook( workbookPath );
+	assert.equal( rows.length, 11 );
+	assert.deepEqual( rows.slice( 1 ).map( ( row ) => row.slice( 0, 2 ) ), [
+		[ 'Technical Account Manager, Newspack', 'Automattic (Newspack)' ],
+		[ 'Senior Web Engineer (Contract)', 'Fueled (10up practice)' ],
+		[ 'Senior WordPress Engineer (Freelance)', 'XWP' ],
+		[ 'Freelance Senior Web Engineer', 'Human Made (Altis DXP)' ],
+		[ 'Senior WordPress Engineer', 'Syde' ],
+		[ 'Solutions Engineer — Media, WordPress VIP', 'Automattic (WordPress VIP)' ],
+		[ 'Full Stack Web Engineer', '10up (Fueled)' ],
+		[ 'Customer support role (anonymized)', 'Target-ecosystem employer (anonymized)' ],
+		[ 'Staff Web Engineer', '10up (Fueled)' ],
+		[ 'Technical Support L1', 'WP Engine' ],
+	] );
+} );
+
+// Repackage the real export after one controlled XML mutation, exercising the
+// same ZIP/worksheet boundary as the public artifact without changing it.
+function mutatedWorkbook( context, changeContents, changedEntry = 'xl/worksheets/sheet1.xml' ) {
+	const archive = openZip( workbookPath );
+	const localRecords = [];
+	const centralRecords = [];
+	let offset = 0;
+	for ( const entry of archive.list() ) {
+		const name = Buffer.from( entry );
+		let contents = archive.read( entry );
+		if ( entry === changedEntry ) {
+			const before = contents.toString( 'utf8' );
+			const after = changeContents( before );
+			assert.ok( after !== before, 'The regression fixture must change the real workbook XML.' );
+			contents = Buffer.from( after );
+		}
+		const checksum = crc32( contents );
+		const local = Buffer.alloc( 30 + name.length );
+		local.writeUInt32LE( 0x04034b50, 0 );
+		local.writeUInt16LE( 20, 4 );
+		local.writeUInt16LE( 0x0800, 6 );
+		local.writeUInt32LE( checksum, 14 );
+		local.writeUInt32LE( contents.length, 18 );
+		local.writeUInt32LE( contents.length, 22 );
+		local.writeUInt16LE( name.length, 26 );
+		name.copy( local, 30 );
+		localRecords.push( local, contents );
+		const central = Buffer.alloc( 46 + name.length );
+		central.writeUInt32LE( 0x02014b50, 0 );
+		central.writeUInt16LE( 20, 4 );
+		central.writeUInt16LE( 20, 6 );
+		central.writeUInt16LE( 0x0800, 8 );
+		central.writeUInt32LE( checksum, 16 );
+		central.writeUInt32LE( contents.length, 20 );
+		central.writeUInt32LE( contents.length, 24 );
+		central.writeUInt16LE( name.length, 28 );
+		central.writeUInt32LE( offset, 42 );
+		name.copy( central, 46 );
+		centralRecords.push( central );
+		offset += local.length + contents.length;
+	}
+	const directory = Buffer.concat( centralRecords );
+	const end = Buffer.alloc( 22 );
+	end.writeUInt32LE( 0x06054b50, 0 );
+	end.writeUInt16LE( centralRecords.length, 8 );
+	end.writeUInt16LE( centralRecords.length, 10 );
+	end.writeUInt32LE( directory.length, 12 );
+	end.writeUInt32LE( offset, 16 );
+	const temporaryDir = fs.mkdtempSync( path.join( os.tmpdir(), 'hperkins-workbook-contract-' ) );
+	context.after( () => fs.rmSync( temporaryDir, { recursive: true, force: true } ) );
+	const fixturePath = path.join( temporaryDir, 'mutated.xlsx' );
+	fs.writeFileSync( fixturePath, Buffer.concat( [ ...localRecords, directory, end ] ) );
+	return fixturePath;
+}
+
+test( 'public workbook rejects a stale 20-row used range', ( context ) => {
+	const fixture = mutatedWorkbook( context, ( source ) => source.replace( /(<worksheet\b[^>]*>)/, '$1<dimension ref="A1:G21"/>' ) );
+	assert.throws( () => require( '../verify-placement-artifacts' ).verifyWorkbook( fixture ), /used range must be exactly A1:G11/ );
+} );
+
+test( 'public workbook rejects a removed job restored without changing row count', ( context ) => {
+	const fixture = mutatedWorkbook( context, ( source ) => source.replace( 'Technical Account Manager, Newspack', 'Support Engineer, VIP' ), 'xl/sharedStrings.xml' );
+	assert.throws( () => require( '../verify-placement-artifacts' ).verifyWorkbook( fixture ), /must retain job identity and canonical URL/ );
+} );
+
+test( 'public workbook rejects a replacement URL promoted as the retained original', ( context ) => {
+	const fixture = mutatedWorkbook( context, ( source ) => source.replace( 'https://syde.com/career/senior-wordpress-engineer/', 'https://syde.com/career/senior-wordpress-engineer-2/' ), 'xl/sharedStrings.xml' );
+	assert.throws( () => require( '../verify-placement-artifacts' ).verifyWorkbook( fixture ), /must retain job identity and canonical URL/ );
+} );
+
+test( 'public workbook still rejects private application notes after cleanup', ( context ) => {
+	const fixture = mutatedWorkbook( context, ( source ) => source.replace( 'Q1 passes because the output', 'Interview status: Q1 passes because the output' ), 'xl/sharedStrings.xml' );
+	assert.throws( () => require( '../verify-placement-artifacts' ).verifyWorkbook( fixture ), /private interview progress data/ );
 } );

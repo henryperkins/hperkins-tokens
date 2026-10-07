@@ -1,5 +1,9 @@
 # Support Engineering candidate verification — 6 October 2026
 
+The later market availability cleanup is recorded in
+`2026-10-06-market-cleanup-publication.md`. It supersedes the original
+20-market-row / 54-total-row preview state documented below.
+
 The Option A implementation is in the managed worktree
 `C:\Users\htper\.codex\worktrees\support-engineering-v2\hperkins-tokens`,
 based on `9f892761012a32bab4949a61a55623a097233cad`. The primary checkout,

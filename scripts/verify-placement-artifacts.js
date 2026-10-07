@@ -4,6 +4,7 @@
  *
  * Usage:
  *   node scripts/verify-placement-artifacts.js
+ *   node scripts/verify-placement-artifacts.js --drafts
  *   node scripts/verify-placement-artifacts.js --check-links
  */
 const { createHash } = require( 'node:crypto' );
@@ -13,6 +14,7 @@ const { inflateSync } = require( 'node:zlib' );
 
 const { openZip } = require( './lib/zip-archive' );
 const { readReleaseRecord } = require( './lib/release-record' );
+const { assertKnownOptions, selectPlacementMethodSource } = require( './lib/page-phase-contract' );
 // The market screen's state vocabulary is declared once, beside the register's,
 // and asserted there against the browser script. Import it rather than keeping
 // a third copy that can drift from both.
@@ -20,7 +22,6 @@ const { MARKET_TOKENS, classifyWith } = require( './verify-job-placement-digest-
 
 const themeRoot = join( __dirname, '..' );
 const artifactDir = join( themeRoot, 'assets', 'documents' );
-const appendixDraftPath = join( themeRoot, 'content', 'page-drafts', 'placement-method-evidence.html' );
 const artifactNames = [
 	'henry-perkins-wordpress-support-engineer-resume.docx',
 	'henry-perkins-wordpress-support-engineer-resume.pdf',
@@ -35,7 +36,20 @@ const approvedColumns = [
 	'Screen verdict',
 	'Concise reasoning',
 ];
-const supportPostingUrl = 'https://job-boards.greenhouse.io/automatticcareers/jobs/7875064';
+// The 2026-10-06 cleanup removes ten unavailable originals. Pin the retained
+// identities and URLs so a same-title replacement cannot silently revive one.
+const retainedMarketIdentities = [
+	[ 'Technical Account Manager, Newspack', 'Automattic (Newspack)', 'https://automattic.com/work-with-us/job/technical-account-manager-newspack/' ],
+	[ 'Senior Web Engineer (Contract)', 'Fueled (10up practice)', 'https://fueled.com/careers/freelance-contract-senior-web-engineer/' ],
+	[ 'Senior WordPress Engineer (Freelance)', 'XWP', 'https://ats.rippling.com/xwp/jobs/5b0018fe-f09c-4c09-b8c1-f85fda642455' ],
+	[ 'Freelance Senior Web Engineer', 'Human Made (Altis DXP)', 'https://apply.workable.com/humanmade/j/B613C43D6D/' ],
+	[ 'Senior WordPress Engineer', 'Syde', 'https://syde.com/career/senior-wordpress-engineer/' ],
+	[ 'Solutions Engineer — Media, WordPress VIP', 'Automattic (WordPress VIP)', '' ],
+	[ 'Full Stack Web Engineer', '10up (Fueled)', '' ],
+	[ 'Customer support role (anonymized)', 'Target-ecosystem employer (anonymized)', '' ],
+	[ 'Staff Web Engineer', '10up (Fueled)', '' ],
+	[ 'Technical Support L1', 'WP Engine', '' ],
+];
 const providerVersion = '2.1';
 // The résumé is rebuilt from scripts/update-support-resume.py; these strings pin
 // the copy that review settled on 2026-09-04: post-event WCUS wording, the two
@@ -768,7 +782,9 @@ function lastCheckedSummary( workbookRows ) {
 	const dated = [ ...counts.entries() ]
 		.sort( ( left, right ) => right[0].localeCompare( left[0] ) )
 		.map( ( [ date, count ] ) => `${ date } — ${ count } ${ count === 1 ? 'row' : 'rows' }` );
-	return `Last checked distribution: ${ [ ...dated, `not recorded — ${ missing } ${ missing === 1 ? 'row' : 'rows' }` ].join( '; ' ) }.`;
+	const count = workbookRows.length - 1;
+	const countLabel = count === 10 ? 'ten' : String( count );
+	return `Historical Last checked distribution among the ${ countLabel } retained rows: ${ [ ...dated, `not recorded — ${ missing } ${ missing === 1 ? 'row' : 'rows' }` ].join( '; ' ) }. The 6 October cleanup did not overwrite these July date cells.`;
 }
 
 // The masthead's three audit figures are claims. Derive each value from the
@@ -794,12 +810,12 @@ function verifyAppendixAuditFigures( workbookRows, appendixHtml, groups ) {
 			note: 'Each against five Solutions Engineer postings.',
 		},
 		{
-			label: 'Market rows screened',
+			label: 'Market rows retained',
 			value: String( dataRows.length ),
-			note: 'Every row retained; delistings kept visible.',
+			note: 'Ten confirmed unavailable entries removed in October.',
 		},
 		{
-			label: 'Rows failed by hand',
+			label: 'Retained rows failed by hand',
 			value: String( groups.failed ),
 			note: `${ overturned === 1 ? 'One' : String( overturned ) } overturned an AI pass.`,
 		},
@@ -854,8 +870,8 @@ function verifyAppendixWorkbookParity( workbookRows, appendixHtml ) {
 function verifyWorkbook( path ) {
 	const archive = openZip( path );
 	// OOXML permits either package-level shared strings or inline strings in
-	// cells. Google Sheets currently exports this public workbook with inline
-	// strings, which worksheetRows() already supports.
+	// cells. Native Google Sheets exports can use either representation, both
+	// of which worksheetRows() supports.
 	for ( const entry of [ 'xl/workbook.xml', 'xl/worksheets/sheet1.xml' ] ) {
 		assert( archive.has( entry ), `${ basename( path ) } is missing ${ entry }.` );
 	}
@@ -879,9 +895,9 @@ function verifyWorkbook( path ) {
 	const sharedStrings = spreadsheetStrings( archive );
 	const worksheetXml = archive.text( 'xl/worksheets/sheet1.xml' );
 	const dimension = worksheetXml.match( /<dimension\b[^>]*\bref="([^"]+)"/ );
-	assert( ! dimension || dimension[1] === 'A1:G21', `Public workbook used range must be exactly A1:G21 when declared; found ${ dimension ? dimension[1] : '<omitted>' }.` );
+	assert( ! dimension || dimension[1] === 'A1:G11', `Public workbook used range must be exactly A1:G11 when declared; found ${ dimension ? dimension[1] : '<omitted>' }.` );
 	const rows = worksheetRows( worksheetXml, sharedStrings );
-	assert( rows.length === 21, `Public workbook has ${ rows.length } rows; expected 21 including the header.` );
+	assert( rows.length === 11, `Public workbook has ${ rows.length } rows; expected 11 including the header.` );
 	for ( let index = 0; index < rows.length; index += 1 ) {
 		const row = rows[index];
 		assert( row.rowNumber === index + 1, `Public workbook skips or reorders row ${ index + 1 }.` );
@@ -897,17 +913,19 @@ function verifyWorkbook( path ) {
 	);
 	if ( archive.has( 'xl/tables/table1.xml' ) ) {
 		const tableXml = archive.text( 'xl/tables/table1.xml' );
-		assert( /<table\b[^>]*\bref="A1:G21"/.test( tableXml ), 'Public workbook table must be exactly A1:G21.' );
+		assert( /<table\b[^>]*\bref="A1:G11"/.test( tableXml ), 'Public workbook table must be exactly A1:G11.' );
 		assert(
 			approvedColumns.every( ( column ) => tableXml.includes( `name="${ column.replace( /&/g, '&amp;' ) }"` ) ),
 			'Public workbook table metadata does not match the seven approved columns.'
 		);
 	}
 
-	const supportRow = values.find( ( row ) => row[0] === 'Support Engineer, VIP' );
-	assert( supportRow, 'Public workbook is missing the Support Engineer, VIP row.' );
-	assert( supportRow[2] === supportPostingUrl, `Support Engineer, VIP must use canonical URL ${ supportPostingUrl }.` );
-	assert( supportRow[4] === 'Live' && supportRow[5] === 'Pass', 'Support Engineer, VIP must be visibly labeled Live and Pass.' );
+	for ( const [ index, identity ] of retainedMarketIdentities.entries() ) {
+		assert(
+			identity.every( ( value, column ) => values[index + 1][column] === value ),
+			`Public workbook row ${ index + 2 } must retain job identity and canonical URL: ${ identity.join( ' | ' ) }.`
+		);
+	}
 
 	const privatePatterns = [
 		[ /\bcitizenship\b/i, 'citizenship' ],
@@ -995,9 +1013,7 @@ async function verifyLinks( urls, inspect = verifyLink, log = console.log ) {
 
 async function main() {
 	const args = process.argv.slice( 2 );
-	for ( const arg of args ) {
-		assert( arg === '--check-links', `Unknown option: ${ arg }.` );
-	}
+	assertKnownOptions( args, [ '--check-links', '--drafts' ] );
 	const checkLinks = args.includes( '--check-links' );
 
 	const directoryEntries = readdirSync( artifactDir, { withFileTypes: true } );
@@ -1014,7 +1030,7 @@ async function main() {
 	const docxUrls = verifyDocx( paths[ artifactNames[0] ], themeVersion );
 	const pdfUrls = verifyPdf( paths[ artifactNames[1] ], docxUrls );
 	const workbookRows = verifyWorkbook( paths[ artifactNames[2] ] );
-	verifyAppendixWorkbookParity( workbookRows, readFileSync( appendixDraftPath, 'utf8' ) );
+	verifyAppendixWorkbookParity( workbookRows, readFileSync( selectPlacementMethodSource( args ), 'utf8' ) );
 	if ( checkLinks ) {
 		await verifyLinks( new Set( pdfUrls ) );
 	}
@@ -1044,6 +1060,7 @@ module.exports = {
 	verifyDocx,
 	verifyLinks,
 	verifyPdf,
+	verifyWorkbook,
 	xmlAttributes,
 	xmlText,
 };

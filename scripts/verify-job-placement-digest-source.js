@@ -111,12 +111,12 @@ const REGISTER_ROWS = 11;
 const REGISTER_GROUP_COUNTS = { released: 6, open: 3, unreleased: 2 };
 const KEYWORD_ROWS = 34;
 const KEYWORD_GROUP_COUNTS = { demonstrated: 10, partial: 11, gap: 13 };
-const MARKET_ROWS = 20;
+const MARKET_ROWS = 10;
 const PRIMARY_PROOF_MARKER = 'Primary proof · card above';
 const METHOD_AUDIT_FIGURES = [
 	[ 'Résumé terms audited', KEYWORD_ROWS ],
-	[ 'Market rows screened', MARKET_ROWS ],
-	[ 'Rows failed by hand', 3 ],
+	[ 'Market rows retained', MARKET_ROWS ],
+	[ 'Retained rows failed by hand', 2 ],
 ];
 
 // The appendix's spine. Same shape as the dossier's: a gold ordinal, a label
@@ -694,7 +694,7 @@ function verifyAppendix( markup ) {
 			`The Method audit plate must derive and display ${ value} for ${ label }.`
 		);
 	}
-	assert( hero.outer.includes( 'Every row retained; delistings kept visible.' ), 'The Method audit plate must use the accurate neutral market-row note.' );
+	assert( hero.outer.includes( 'Ten confirmed unavailable entries removed in October.' ), 'The Method audit plate must use the accurate neutral market-row note.' );
 	assert( ! /Every state dated/i.test( hero.outer ), 'The Method audit plate must not claim that every market state has a recorded date.' );
 
 	// The four numbered parts form the appendix spine, and every fragment has to
@@ -774,7 +774,7 @@ function verifyAppendix( markup ) {
 		'I favor roles where technical and customer outcomes produce inspectable evidence—code, releases, live systems, documented incidents, or customer-facing artifacts—in addition to narrative reporting.',
 		'Will the work survive inspection by someone who isn’t me?',
 		'filter the ledger to hold one standing at a time',
-		'filter the screen to hold one state at a time',
+		'filter the screen to hold one historical state at a time',
 		'an employer-level association overrode row-level evidence about the customer',
 		'The failure was not missing data: the role text and the model’s own rationale both contained the consumer, single-site context that disqualified it. I overturned the result.',
 		'The corrective control is simple: each question must cite the posting evidence that answers it, and an explicit failure cannot be canceled by the company name or the job title.',

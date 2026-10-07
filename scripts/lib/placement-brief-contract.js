@@ -15,6 +15,80 @@ const ARCHIVE_COPY_EDITS = [
 	[ 'Read the Job Placement Digest', 'Back to Support Engineering' ],
 ];
 
+// Reviewed October cleanup only; these identities retain their July cells.
+const RETAINED_MARKET_IDENTITIES = [
+  [
+    "Technical Account Manager, Newspack",
+    "Automattic (Newspack)"
+  ],
+  [
+    "Senior Web Engineer (Contract)",
+    "Fueled (10up practice)"
+  ],
+  [
+    "Senior WordPress Engineer (Freelance)",
+    "XWP"
+  ],
+  [
+    "Freelance Senior Web Engineer",
+    "Human Made (Altis DXP)"
+  ],
+  [
+    "Senior WordPress Engineer",
+    "Syde"
+  ],
+  [
+    "Solutions Engineer — Media, WordPress VIP",
+    "Automattic (WordPress VIP)"
+  ],
+  [
+    "Full Stack Web Engineer",
+    "10up (Fueled)"
+  ],
+  [
+    "Customer support role (anonymized)",
+    "Target-ecosystem employer (anonymized)"
+  ],
+  [
+    "Staff Web Engineer",
+    "10up (Fueled)"
+  ],
+  [
+    "Technical Support L1",
+    "WP Engine"
+  ]
+];
+const ARCHIVE_CLEANUP_COPY_EDITS = [
+  [
+    "<p class=\"hp-digest__dateline\">Method published 13 Jul 2026 · Ledger reconciled 21 Jul 2026 · No longer updated</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph {\"fontSize\":\"base\"} -->\n<p class=\"has-base-font-size\">This archive keeps the research behind the Support Engineering page: the full keyword ledger, the screen behind it, every row state, and the decisions I overturned. I no longer update it, so each posting state is a July 2026 observation, not a promise that a vacancy is still open.</p>",
+    "<p class=\"hp-digest__dateline\">Method published 13 Jul 2026 · Historical ledger reconciled 21 Jul 2026 · Availability cleanup 6 October 2026</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph {\"fontSize\":\"base\"} -->\n<p class=\"has-base-font-size\">This archive keeps the research behind the Support Engineering page: the full keyword ledger, the remaining market-screen records, and the decisions I overturned. An availability check removed ten confirmed unavailable entries on 6 October 2026. The retained posting states, checked dates, and screen verdicts remain historical July observations, not current vacancy or qualification claims.</p>"
+  ],
+  [
+    "<p>Market rows screened</p>\n<!-- /wp:paragraph --></dt>\n<!-- /wp:group -->\n\n<!-- wp:group {\"tagName\":\"dd\",\"className\":\"hp-placement-audit__value\",\"layout\":{\"type\":\"default\"}} -->\n<dd class=\"wp-block-group hp-placement-audit__value\"><!-- wp:paragraph {\"className\":\"hp-placement-audit__value\"} -->\n<p class=\"hp-placement-audit__value\">20</p>\n<!-- /wp:paragraph --></dd>\n<!-- /wp:group -->\n\n<!-- wp:group {\"tagName\":\"dd\",\"className\":\"hp-placement-audit__note\",\"layout\":{\"type\":\"default\"}} -->\n<dd class=\"wp-block-group hp-placement-audit__note\"><!-- wp:paragraph -->\n<p>Every row retained; delistings kept visible.</p>\n<!-- /wp:paragraph --></dd>\n<!-- /wp:group --></div>\n<!-- /wp:group -->\n\n<!-- wp:group {\"className\":\"hp-placement-audit__figure\",\"layout\":{\"type\":\"default\"}} -->\n<div class=\"wp-block-group hp-placement-audit__figure\"><!-- wp:group {\"tagName\":\"dt\",\"layout\":{\"type\":\"default\"}} -->\n<dt class=\"wp-block-group\"><!-- wp:paragraph -->\n<p>Rows failed by hand</p>\n<!-- /wp:paragraph --></dt>\n<!-- /wp:group -->\n\n<!-- wp:group {\"tagName\":\"dd\",\"className\":\"hp-placement-audit__value\",\"layout\":{\"type\":\"default\"}} -->\n<dd class=\"wp-block-group hp-placement-audit__value\"><!-- wp:paragraph {\"className\":\"hp-placement-audit__value\"} -->\n<p class=\"hp-placement-audit__value\">3</p>",
+    "<p>Market rows retained</p>\n<!-- /wp:paragraph --></dt>\n<!-- /wp:group -->\n\n<!-- wp:group {\"tagName\":\"dd\",\"className\":\"hp-placement-audit__value\",\"layout\":{\"type\":\"default\"}} -->\n<dd class=\"wp-block-group hp-placement-audit__value\"><!-- wp:paragraph {\"className\":\"hp-placement-audit__value\"} -->\n<p class=\"hp-placement-audit__value\">10</p>\n<!-- /wp:paragraph --></dd>\n<!-- /wp:group -->\n\n<!-- wp:group {\"tagName\":\"dd\",\"className\":\"hp-placement-audit__note\",\"layout\":{\"type\":\"default\"}} -->\n<dd class=\"wp-block-group hp-placement-audit__note\"><!-- wp:paragraph -->\n<p>Ten confirmed unavailable entries removed in October.</p>\n<!-- /wp:paragraph --></dd>\n<!-- /wp:group --></div>\n<!-- /wp:group -->\n\n<!-- wp:group {\"className\":\"hp-placement-audit__figure\",\"layout\":{\"type\":\"default\"}} -->\n<div class=\"wp-block-group hp-placement-audit__figure\"><!-- wp:group {\"tagName\":\"dt\",\"layout\":{\"type\":\"default\"}} -->\n<dt class=\"wp-block-group\"><!-- wp:paragraph -->\n<p>Retained rows failed by hand</p>\n<!-- /wp:paragraph --></dt>\n<!-- /wp:group -->\n\n<!-- wp:group {\"tagName\":\"dd\",\"className\":\"hp-placement-audit__value\",\"layout\":{\"type\":\"default\"}} -->\n<dd class=\"wp-block-group hp-placement-audit__value\"><!-- wp:paragraph {\"className\":\"hp-placement-audit__value\"} -->\n<p class=\"hp-placement-audit__value\">2</p>"
+  ],
+  [
+    "<p>This is the sanitized public workbook reconciled on 21 July 2026, 20 data rows. The six non-URL fields reproduce the workbook’s displayed values verbatim; a non-empty canonical URL is rendered as a safe link to that exact value, and an empty workbook cell remains empty. Delisted, replaced, paused, pending, and screened-out rows stay visible, carrying the date I last checked them wherever the workbook recorded one, and they are not presented as current opportunities.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph {\"className\":\"hp-market-note\"} -->\n<p class=\"hp-market-note\">Every count is a share of the same 20-row denominator — filter the screen to hold one state at a time.</p>",
+    "<p>This is the sanitized public workbook’s ten retained market records after the 6 October 2026 availability cleanup. The six non-URL fields reproduce the workbook’s displayed values verbatim; a non-empty canonical URL is rendered as a safe link to that exact value, and an empty workbook cell remains empty. The table’s State, Last checked, and screening reasoning preserve the July research, including missing dates and unresolved original identities. They do not present these records as ten current opportunities.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph {\"className\":\"hp-market-note\"} -->\n<p class=\"hp-market-note\"><strong>6 October 2026 cleanup:</strong> Ten confirmed unavailable entries were removed. The ten retained records comprise two current named applications (Newspack and Syde), three future talent pools (Fueled, XWP, and Human Made), and five unresolved original listings. Syde’s current role page does not prove continuity with the historical requisition. The original July cell values remain intact; current availability, Q1–Q3 role fit, and candidate qualification are separate judgments.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph {\"className\":\"hp-market-note\"} -->\n<p class=\"hp-market-note\">Every filter count is a share of the same ten-row denominator and classifies the preserved July states — filter the screen to hold one historical state at a time.</p>"
+  ],
+  [
+    "<p class=\"hp-market-date-summary\">Last checked distribution: 2026-07-21 — 1 row; 2026-07-20 — 10 rows; 2026-07-18 — 4 rows; not recorded — 5 rows.</p>",
+    "<p class=\"hp-market-date-summary\">Historical Last checked distribution among the ten retained rows: 2026-07-20 — 4 rows; 2026-07-18 — 4 rows; not recorded — 2 rows. The 6 October cleanup did not overwrite these July date cells.</p>"
+  ],
+  [
+    "<p>Five validated rows are now delisted, replaced, or dead, and one more is paused. They stay in the ledger with the date I last checked them, or with that date recorded as missing, because removal is part of the market evidence: a dated ledger should show when a good match stopped being actionable, and say so plainly where it cannot.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p>Three rows failed on my judgment rather than the machine’s, and one of those the AI had passed. The employer’s brand matched my target ecosystem, so an employer-level association overrode row-level evidence about the customer. The failure was not missing data: the role text and the model’s own rationale both contained the consumer, single-site context that disqualified it. I overturned the result.</p>",
+    "<p>The October cleanup removed ten entries whose original applications were confirmed unavailable. Five retained original listings remain unresolved because their posting URLs are missing, so their historical delisted, replaced, removed, or live labels do not establish present availability. They remain visible rather than being substituted with similarly named jobs or removed on an unverified assumption.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p>In the original July screen, three rows failed on my judgment rather than the machine’s; two remain in the cleaned ledger, including the one the AI had passed. The employer’s brand matched my target ecosystem, so an employer-level association overrode row-level evidence about the customer. The failure was not missing data: the role text and the model’s own rationale both contained the consumer, single-site context that disqualified it. I overturned the result.</p>"
+  ]
+];
+
+function marketRows( body ) {
+	return [ ...body.matchAll( /<tr>[\s\S]*?<\/tr>/g ) ].map( ( match ) => match[ 0 ] );
+}
+
+function marketIdentity( row ) {
+	return [ ...row.matchAll( /<(?:th|td)\b[^>]*>([\s\S]*?)<\/(?:th|td)>/g ) ].slice( 0, 2 ).map( ( match ) => extractExactText( match[ 1 ] ) );
+}
+
 function verifyUniqueIds( markup ) {
 	const ids = [ ...markup.matchAll( /\bid="([^"]+)"/g ) ].map( ( match ) => match[ 1 ] );
 	assert.equal( new Set( ids ).size, ids.length, 'Anchor IDs are unique.' );
@@ -87,15 +161,20 @@ function verifyPlacementBrief( markup ) {
 }
 
 function verifyPlacementArchive( markup, acceptedMarkup ) {
+	markup = markup.replace( /\r\n?/g, '\n' );
+	if ( acceptedMarkup !== undefined ) acceptedMarkup = acceptedMarkup.replace( /\r\n?/g, '\n' );
 	verifyUniqueIds( markup );
 	for ( const anchor of RESEARCH_ANCHORS ) assert( markup.includes( 'id="' + anchor + '"' ), 'Archive retains #' + anchor + '.' );
 	assert.equal( findHeadings( markup, 'placement archive' )[ 0 ].text, 'Placement Method and Evidence' );
 	const tables = [ ...markup.matchAll( /<tbody>([\s\S]*?)<\/tbody>/g ) ].map( ( match ) => match[ 1 ] );
-	assert.deepEqual( tables.map( ( table ) => ( table.match( /<tr>/g ) || [] ).length ), [ 34, 20 ], 'The archive retains all 34 keyword and 20 market records.' );
-	for ( const [ , updated ] of ARCHIVE_COPY_EDITS ) assert( markup.includes( updated ), 'Missing dated archive copy: ' + updated );
+	assert.deepEqual( tables.map( ( table ) => ( table.match( /<tr>/g ) || [] ).length ), [ 34, 10 ], 'The archive retains all 34 keyword and ten market records.' );
+	assert.deepEqual( marketRows( tables[ 1 ] ).map( marketIdentity ), RETAINED_MARKET_IDENTITIES, 'The archive keeps the exact retained market identities in worksheet order.' );
+	for ( const updated of [ ARCHIVE_COPY_EDITS[ 0 ][ 1 ], ...ARCHIVE_CLEANUP_COPY_EDITS.map( ( edit ) => edit[ 1 ] ) ] ) assert( markup.includes( updated ), 'Missing dated archive cleanup copy: ' + updated );
 	if ( acceptedMarkup !== undefined ) {
 		const acceptedTables = [ ...acceptedMarkup.matchAll( /<tbody>([\s\S]*?)<\/tbody>/g ) ].map( ( match ) => match[ 1 ] );
-		assert.deepEqual( tables, acceptedTables, 'Archive records retain byte parity with the accepted snapshot.' );
+		assert.equal( tables[ 0 ], acceptedTables[ 0 ], 'Keyword records retain byte parity with the accepted snapshot.' );
+		const retained = marketRows( acceptedTables[ 1 ] ).filter( ( row ) => RETAINED_MARKET_IDENTITIES.some( ( identity ) => JSON.stringify( identity ) === JSON.stringify( marketIdentity( row ) ) ) );
+		assert.deepEqual( marketRows( tables[ 1 ] ), retained, 'Retained market records preserve byte parity and order with the accepted snapshot.' );
 		let expected = acceptedMarkup;
 		if ( ! acceptedMarkup.includes( 'Archived placement research · July 2026' ) ) {
 			for ( const [ before, after ] of ARCHIVE_COPY_EDITS ) {
@@ -103,9 +182,17 @@ function verifyPlacementArchive( markup, acceptedMarkup ) {
 				expected = expected.replace( before, after );
 			}
 		}
-		assert.equal( markup, expected, 'Archive allows only the five reviewed copy edits against its accepted snapshot.' );
+		if ( marketRows( acceptedTables[ 1 ] ).length === 20 ) {
+			for ( const [ before, after ] of ARCHIVE_CLEANUP_COPY_EDITS ) {
+				assert( expected.includes( before ), 'Accepted archive is missing the guarded cleanup baseline.' );
+				expected = expected.replace( before, after );
+			}
+			let tableIndex = 0;
+			expected = expected.replace( /<tbody>([\s\S]*?)<\/tbody>/g, ( table ) => tableIndex++ === 1 ? '<tbody>' + tables[ 1 ] + '</tbody>' : table );
+		}
+		assert.equal( markup, expected, 'Archive allows only the reviewed cleanup copy and ten unavailable-row removals against its accepted snapshot.' );
 	}
-	return { researchAnchors: RESEARCH_ANCHORS, rows: [ 34, 20 ] };
+	return { researchAnchors: RESEARCH_ANCHORS, rows: [ 34, 10 ] };
 }
 
 module.exports = { verifyPlacementBrief, verifyPlacementArchive, RESEARCH_ANCHORS, EXAMPLES };

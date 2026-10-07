@@ -23,8 +23,12 @@ the viewport. Narrow screens retain responsive gutters.
 candidate based on the accepted method snapshot. Its H1 remains Placement
 Method and Evidence. Five copy edits date the archive and point back to Support
 Engineering. Existing tables, anchors and filters remain intact. The keyword
-ledger starts on **all 34 terms**, and the market screen retains all 20 posting
-records. July states remain historical observations.
+ledger starts on **all 34 terms**. After the separately authorized 6 October
+availability cleanup, the market screen retains 10 posting records: two
+current named applications, three future talent pools and five unresolved
+original listings. The ten confirmed unavailable listings are removed from
+the Sheet, website and downloadable workbook. July state labels remain
+historical observations, qualified by the October validation note.
 
 The ZIP's HTML previews and DC templates are design references. Their runtime,
 design-system bundle, stand-in shell and exploration controls do not ship.
@@ -81,7 +85,8 @@ node scripts/verify-job-placement-pages.js --drafts
 Rendered checks cover 320–1440px, the 40rem measure, heading outline, three
 stacked examples and their 782px outdent, jumps, 15px facts/chips/evidence links,
 44px controls, keyboard/focus, reduced motion, 200% text, closed disclosure,
-and all 54 archive rows with and without JavaScript. Preview results are
+and all 44 retained archive rows with and without JavaScript. The original
+20-market-row / 54-total-row preview results are
 recorded in `docs/verification/2026-10-06-support-engineering-v2.md`.
 
 ## Publication boundary

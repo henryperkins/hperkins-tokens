@@ -14,6 +14,17 @@ function mutate( value, before, after ) {
 	return value.replace( before, after );
 }
 
+test( 'the canonical archive keeps precisely the ten retained market identities and 34 keyword terms', () => {
+	assert.deepEqual( verifyPlacementArchive( archive ).rows, [ 34, 10 ] );
+	assert.throws( () => verifyPlacementArchive( mutate( archive, '<th scope="row">Technical Account Manager, Newspack</th>', '<th scope="row">Support Engineer, VIP</th>' ) ), /retained market identities/ );
+	let tableIndex = 0;
+	const reordered = archive.replace( /<tbody>([\s\S]*?)<\/tbody>/g, ( table, body ) => {
+		if ( tableIndex++ !== 1 ) return table;
+		return '<tbody>' + body.replace( /(<tr>[\s\S]*?<\/tr>)(\s*)(<tr>[\s\S]*?<\/tr>)/, '$3$2$1' ) + '</tbody>';
+	} );
+	assert.throws( () => verifyPlacementArchive( reordered ), /retained market identities/ );
+} );
+
 test( 'rendered route matching accepts WooCommerce queries and rejects different destinations', () => {
 	const current = 'https://hperkins.blog/job-placement-digest/?v=0b3b97fa6688#codex-provider';
 	for ( const href of [ '/placement-method-and-evidence/', '/placement-method-and-evidence/?v=0b3b97fa6688', 'https://hperkins.blog/placement-method-and-evidence/?v=0b3b97fa6688' ] ) {
@@ -75,7 +86,7 @@ test( 'one dateline records the current evidence date without duplicate status d
 	assert.throws( () => verifyPlacementBrief( source.replace( /datetime="\d{4}-\d{2}-\d{2}"/, 'datetime="2026-07-21"' ) ), /dateline/ );
 } );
 
-test( 'the archive keeps all five old targets and all 34 plus 20 rows', () => {
+test( 'the archive keeps all five old targets and all 34 plus ten rows', () => {
 	for ( const anchor of RESEARCH_ANCHORS ) {
 		assert.throws( () => verifyPlacementArchive( mutate( archive, 'id="' + anchor + '"', 'id="lost"' ) ), /retains/ );
 	}
@@ -85,6 +96,16 @@ test( 'the archive keeps all five old targets and all 34 plus 20 rows', () => {
 test( 'record parity catches changed standings, links and reasoning even with unchanged row counts', () => {
 	assert.throws( () => verifyPlacementArchive( mutate( archive, 'SIEM / log analytics', 'SIEM / analytics' ), acceptedArchive ), /byte parity/ );
 	assert.throws( () => verifyPlacementArchive( archive.replace( /(<tbody>[\s\S]*?href=")[^"]+/, '$1https://example.com/' ), acceptedArchive ), /byte parity/ );
+	for ( const [ before, after ] of [
+		[ 'Live · Pass — manual review', 'Live · Pass' ],
+		[ 'inspectable, migrated live news site.', 'reliable news site.' ],
+		[ 'https://automattic.com/work-with-us/job/technical-account-manager-newspack/', 'https://example.com/newspack/' ],
+	] ) assert.throws( () => verifyPlacementArchive( mutate( archive, before, after ), acceptedArchive ), /byte parity/ );
+} );
+
+test( 'the removal transition permits only reviewed cleanup copy and keeps layout ownership', () => {
+	assert.throws( () => verifyPlacementArchive( mutate( archive, 'current availability, Q1–Q3 role fit, and candidate qualification are separate judgments.', 'Every retained applicant is qualified.' ), acceptedArchive ), /cleanup copy/ );
+	assert.throws( () => verifyPlacementArchive( mutate( archive, 'alignwide hp-page-hero hp-method-hero', 'alignwide hp-page-hero hp-method-hero unexpected-layout' ), acceptedArchive ), /reviewed cleanup copy/ );
 } );
 
 test( 'Option A never loads the retired method redirect', () => {

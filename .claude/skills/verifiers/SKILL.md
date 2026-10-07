@@ -59,7 +59,7 @@ node scripts/verify-impeccable-artifacts.js     # PRODUCT / DESIGN / generated s
 node scripts/verify-journal-templates.js        # blog template source contract: query IDs vs functions.php filters, sticky mode, seed offset, postcard link shape, reader hero inside <main> + read-time binding/source, reader hooks + every-route reader.js, related columns in the wide group, per-loop empty states, arrow-free pagination labels, reader-hero dim ratio, data-URI palette hexes, pagination touch token (pure file reads)
 node scripts/verify-job-placement-digest-source.js # recruiter brief word/link budget, four-block structure, selected proof attribution, appendix row counts/fragment target, immutable links, and retired-pattern contract
 node scripts/verify-job-placement-digest-metadata.js # read-only public SEO/share gate: exact title, description, canonical, OG title/description, and absolute OG image (`HPERKINS_ORIGIN` base; `--url` exact override)
-node scripts/verify-placement-artifacts.js      # one-page/searchable résumé, public/private workbook boundary, version/link consistency (--check-links performs the public HTTP pass). The résumé's HPerkins Tokens entry names a *shipped* version and links a release tag `--check-links` actually fetches, so it is checked against README.md's release record through `scripts/lib/release-record.js` rather than against style.css.
+node scripts/verify-placement-artifacts.js      # one-page/searchable résumé, public/private workbook boundary, version/link consistency (--check-links performs the public HTTP pass; --drafts selects the reviewed appendix before database promotion, default reads the accepted snapshot). The résumé's HPerkins Tokens entry names a *shipped* version and links a release tag `--check-links` actually fetches, so it is checked against README.md's release record through `scripts/lib/release-record.js` rather than against style.css.
 node scripts/verify-performance-assets.js       # image budgets, fontDisplay, eager LCP hero (fetchpriority=high, never loading=lazy), front-page CSS skip, responsive srcset/sizes contracts, and the 0.3.57 bundle split: PHP/JS bundle maps agree, no selector on both sides of the load order, and neither the front page nor the always-rendered markup (template parts, the patterns they delegate to, and inc/council-header.php) uses a bundle-owned class
 node scripts/verify-style-token-usage.js        # every var() in style.css, the three assets/c/ bundles, AND assets/imladris-pages.css resolves against theme.json-generated variables, scoped per sheet to what actually loads with it (wp-cli)
 node scripts/verify-about-page-source.js          # exact accepted v3 résumé contract: ordered sections, seven contribution rows, four current + three earlier roles, 34 evidence-filter terms across six groups, three impact signals, five showcase cards, the exact closing contact panel, stable /contact/ and /one-page-resume/ actions, thin pattern adapter, and exclusive imladris-pages.css ownership. Add --drafts only while a future reviewed candidate differs; accepted mode requires candidate↔snapshot parity.
@@ -105,8 +105,10 @@ widths from 320–1440px, the 40rem prose limit, H2/H3 outline, three equal
 numbered articles, paired contact and résumé actions, closed research, keyboard
 jumps, 15px facts/chips/evidence links, 44px controls, reduced motion and 200%
 text. Option A keeps the method route as a dated archive: its keyword ledger
-starts on all 34 terms, all 20 market rows remain, and the five old section
-fragments stay reachable. No-JS checks retain all 54 research rows. Unflagged
+starts on all 34 terms, the authorized availability cleanup retains 10 market
+rows, and the five old section fragments stay reachable. No-JS checks retain
+all 44 research rows. Historical July states are qualified by the October
+availability note. Unflagged
 checks still test accepted snapshots. The method-to-Digest redirect and its
 PHP verifier are retired. Local preview proof does not promote a database body
 or establish production router behavior.
