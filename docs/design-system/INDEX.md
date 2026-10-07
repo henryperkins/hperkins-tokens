@@ -1573,8 +1573,9 @@ this working copy's theme files, the same Chromium rendering both.
   it can no longer shrink.
 - **Deliberate divergences (recorded, not drift):**
   - *The plate renders on the server.* The brief's first choice is an empty
-    group in each template. Production's `/essays/` renders a Site Editor copy
-    of `home` (`source: custom`), which template markup can never reach, so
+    group in each template. Production's `/essays/` rendered a Site Editor copy
+    of `home` (`source: custom`) until the reset recorded below, and template
+    markup can never reach such a copy, so
     `inc/postcards.php` appends `<span class="hp-postcard__plate"
     aria-hidden="true">` to every postcard media group through
     `render_block_core/group`, the alternative the brief offers and the reader
@@ -1589,35 +1590,44 @@ this working copy's theme files, the same Chromium rendering both.
 - **Not ported**, as the brief says: the in-place re-filter fade and count, the
   lead's faded backdrop and the unlinked cards, the Tweaks and `data-*` hooks,
   and Home's kept deltas.
-- **D, page bodies: pending database edits, not in 0.3.74.** Both bodies are
-  database-owned, and the snapshots may change only after the live bodies do.
-  Both faults were confirmed on the live pages on 2026-10-07; WordPress/ai's
-  tags are `1.0.0`, `1.0.1` and `1.0.2`, with no `v`.
-  - *D1, `/work/`:* `<p class="hp-artifact__link"><a
-    href="https://github.com/WordPress/ai/releases/tag/v1.0.1">v1.0.1</a></p>`
-    becomes `…/releases/tag/1.0.1">1.0.1</a></p>`. The same commit as the
-    snapshot export edits `patterns/work-index.php`, which
-    `verify-no-duplicate-pages.js` holds byte-identical to the snapshot.
-  - *D2, `/ai-enablement/`:* the first maturity chip, "expose: foundation
-    shipped", becomes `"fontSize":"xs","fontFamily":"mono"` with
+- **D, page bodies: published to the database on 2026-10-07, not part of the
+  theme package.** Both bodies are database-owned. Both faults were confirmed on
+  the live pages first; WordPress/ai's tags are `1.0.0`, `1.0.1` and `1.0.2`,
+  with no `v`. Each edit replaced one top-level block under the connector's
+  optimistic locks, and each snapshot changed only after a fresh read proved
+  the live body equal to it. Hashes and timestamps are in
+  `docs/verification/2026-10-07-unshipped-refinements-publication.md`.
+  - *D1, `/work/` (page 13):* the WordPress AI release link now reads
+    `…/releases/tag/1.0.1">1.0.1</a>`. `patterns/work-index.php` takes the
+    same edit and stays byte-identical to the snapshot.
+  - *D2, `/ai-enablement/` (page 175):* the first maturity chip, "expose:
+    foundation shipped", is `"fontSize":"xs","fontFamily":"mono"` with
     `has-mono-font-family has-xs-font-size`, like the other two.
-  - Then: `node scripts/export-page-snapshots.js --page=work
-    --page=ai-enablement`, `node scripts/verify-content-ownership.js`,
-    `node scripts/verify-no-duplicate-pages.js` and
-    `node scripts/verify-ai-enablement-source.js`.
+  - *A drift the mirror now carries.* Production's artifact row (block 2) had
+    gained `align: wide`, 60/50 padding, a 50 block gap and the
+    `artifact-row` anchor, none of which the snapshot had. The snapshot now
+    matches production, so the `ai-enablement` pattern adapter emits them too.
 - **Production findings outside the brief:**
-  - *The `/essays/` template copy.* Besides keeping template markup away,
-    production's `home` copy has drifted from `templates/home.html`: its post
-    templates use the default layout, which also sets the secondaries 24px
-    below the lead's top; featured excerpts are 20 words at `sm` with a
-    `spacing|30` margin this theme does not define; and the subscribe pattern
-    is frozen into a `core/html` block carrying the nonce minted when the
-    template was saved (its `_wp_http_referer` is the editor's
-    `/wp-json/wp/v2/templates/lookup?slug=home`). A nonce bound to an editor's
-    session cannot verify for a visitor, so the handler answers every
-    `/essays/` subscription `invalid-request`. Resetting `home` to the theme
-    file restores all of it; nothing in the copy looked intentional, but check
-    it before resetting. `index` is customized too.
+  - *The `/essays/` template copy: reset 2026-10-07.* Besides keeping template
+    markup away, production's `home` copy had drifted from
+    `templates/home.html`: its post templates used the default layout, which
+    also set the secondaries 24px below the lead's top; featured excerpts were
+    20 words at `sm` with a `spacing|30` margin this theme does not define; and
+    the subscribe pattern was frozen into a `core/html` block carrying the
+    nonce minted when the template was saved (its `_wp_http_referer` was the
+    editor's `/wp-json/wp/v2/templates/lookup?slug=home`). A nonce bound to an
+    editor's session cannot verify for a visitor, so the handler answered every
+    `/essays/` subscription `invalid-request`. With approval the copy was
+    reverted (the connector moved it to the trash); `home` now reports
+    `source: theme`, and `/essays/` renders the theme's grid post templates
+    with a nonce minted per request. `index` is still customized and was left
+    alone.
+  - *The freeze can recur.* The REST templates endpoint resolves `wp:pattern`
+    blocks into their rendered markup (after the reset, reading `home` returned
+    the subscribe form with a nonce minted for that API request), so saving
+    `home`, `single` or `page-contact` (which reaches the form through the
+    `contact` pattern) in the Site Editor would freeze a nonce again. Until the
+    theme re-mints it at render time, do not save those templates there.
   - *The header model.* Every production page renders the Council header from
     its `fallback` model, so `verify-header.js` stops at its source assertion
     against production before any geometry check: menu 237 no longer

@@ -446,9 +446,15 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   verify-about-page-rendered.js checks the colophon dots at every width;
   verify-journal-templates.js pins the source couplings; and
   scripts/lib/postcard-plate.test.js runs the filter under a PHP shim.
-* Not in this release: the hand-off's two page-body edits, the Work page's
-  WordPress AI release link and the first AI Enablement chip, are database
-  changes. See docs/design-system/INDEX.md.
+* The hand-off's two page-body edits are database changes, published on
+  2026-10-07: the Work page's WordPress AI release link reads 1.0.1, and the
+  first AI Enablement maturity chip is set in xs mono like the other two. The
+  Work and AI Enablement snapshots and the work-index pattern mirror the new
+  bodies; the AI Enablement mirror also takes production's anchored, padded
+  artifact row. The same day, production's Site Editor copy of the home
+  template was reverted to templates/home.html, which restores the /essays/
+  grid and a subscribe form whose nonce is minted per request. See
+  docs/verification/2026-10-07-unshipped-refinements-publication.md.
 
 = 0.3.73 =
 * Remove one further market entry from the blog on request, retain nine

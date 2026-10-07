@@ -136,7 +136,7 @@
 <!-- /wp:paragraph -->
 
 <!-- wp:paragraph {"className":"hp-artifact__link"} -->
-<p class="hp-artifact__link"><a href="https://github.com/WordPress/ai/releases/tag/v1.0.1">v1.0.1</a></p>
+<p class="hp-artifact__link"><a href="https://github.com/WordPress/ai/releases/tag/1.0.1">1.0.1</a></p>
 <!-- /wp:paragraph --></div>
 <!-- /wp:column -->
 
