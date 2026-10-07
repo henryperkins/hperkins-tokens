@@ -3,6 +3,7 @@ const fs = require( 'node:fs' );
 const path = require( 'node:path' );
 const test = require( 'node:test' );
 const { verifyPlacementBrief, verifyPlacementArchive, RESEARCH_ANCHORS } = require( './placement-brief-contract' );
+const { matchesRouteLink } = require( '../verify-placement-brief' );
 const root = path.join( __dirname, '../..' );
 const source = fs.readFileSync( path.join( root, 'content/page-drafts/job-placement-digest.html' ), 'utf8' );
 const archive = fs.readFileSync( path.join( root, 'content/page-drafts/placement-method-evidence.html' ), 'utf8' );
@@ -12,6 +13,17 @@ function mutate( value, before, after ) {
 	assert( value.includes( before ), 'Missing mutation seam: ' + before );
 	return value.replace( before, after );
 }
+
+test( 'rendered route matching accepts WooCommerce queries and rejects different destinations', () => {
+	const current = 'https://hperkins.blog/job-placement-digest/?v=0b3b97fa6688#codex-provider';
+	for ( const href of [ '/placement-method-and-evidence/', '/placement-method-and-evidence/?v=0b3b97fa6688', 'https://hperkins.blog/placement-method-and-evidence/?v=0b3b97fa6688' ] ) {
+		assert.equal( matchesRouteLink( href, current, '/placement-method-and-evidence/' ), true );
+	}
+	for ( const href of [ 'https://example.com/placement-method-and-evidence/', '//example.com/placement-method-and-evidence/', '/placement-method-and-evidence/other/', '/placement-method-and-evidence/#unexpected', 'javascript:alert(1)' ] ) {
+		assert.equal( matchesRouteLink( href, current, '/placement-method-and-evidence/' ), false );
+	}
+	assert.equal( matchesRouteLink( '/placement-method-and-evidence/?v=1#resume-keyword-bank', current, '/placement-method-and-evidence/', '#resume-keyword-bank' ), true );
+} );
 
 test( 'Support Engineering has three equal examples, exact attribution and both action pairs', () => {
 	assert.doesNotThrow( () => verifyPlacementBrief( source ) );

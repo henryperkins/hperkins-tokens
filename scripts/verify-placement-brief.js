@@ -12,6 +12,17 @@ const WIDTHS = [ 1440, 1024, 782, 781, 600, 390, 320 ];
 const DIGEST_ROUTE = '/job-placement-digest/';
 const ARCHIVE_ROUTE = '/placement-method-and-evidence/';
 
+function matchesRouteLink( href, currentUrl, expectedPath, expectedHash = '' ) {
+	try {
+		const current = new URL( currentUrl );
+		const target = new URL( href, current );
+		// WooCommerce may append its geolocation query to native internal links.
+		return target.origin === current.origin && target.pathname === expectedPath && target.hash === expectedHash;
+	} catch {
+		return false;
+	}
+}
+
 function inspectBrief( width ) {
 	const root = document.querySelector( '.hp-placement-brief' );
 	if ( ! root ) throw Error( 'Rendered route does not contain the selected brief' );
@@ -158,9 +169,13 @@ async function main() {
 			await settle();
 			assert.equal( await run( 'location.pathname' ), route, 'The archive route must remain directly reachable without a method redirect.' );
 		}
-		async function assertFocus( selector ) {
+		async function assertFocus( selector, route = null ) {
 			await pressKey( cdp, sessionId, 'Tab' );
-			await run( 'document.querySelector(' + JSON.stringify( selector ) + ').focus()' );
+			if ( route ) {
+				await run( '(() => { const links = [...document.querySelectorAll(' + JSON.stringify( selector ) + ')].filter(a => (' + matchesRouteLink.toString() + ')(a.getAttribute("href"), location.href, ' + JSON.stringify( route ) + ')); if (links.length !== 1) throw Error("Expected one same-origin route action, found " + links.length); links[0].focus(); })()' );
+			} else {
+				await run( 'document.querySelector(' + JSON.stringify( selector ) + ').focus()' );
+			}
 			const focus = await probe( inspectFocus );
 			assert( focus.focused && focus.outlineWidth >= 2 && focus.outlineStyle !== 'none', 'Keyboard focus is visible on ' + selector + ': ' + JSON.stringify( focus ) );
 		}
@@ -194,9 +209,9 @@ async function main() {
 			assert( await run( 'document.querySelector(".hp-placement-brief details").open' ), 'Keyboard opens native research.' );
 			assert( await run( 'document.documentElement.scrollWidth <= innerWidth + 1' ), 'Expanded summary fits ' + width + 'px.' );
 			if ( width <= 781 ) assert( await run( '[...document.querySelectorAll(".hp-placement-brief details .hp-placement-brief__links a")].every(e => e.getBoundingClientRect().height >= 43.9)' ), 'Expanded archive links meet the phone touch floor.' );
-			await assertFocus( '.hp-placement-brief details a[href="/placement-method-and-evidence/"]' );
-			await assertFocus( '.hp-placement-brief__hero a[href="/contact/"]' );
-			await assertFocus( '.hp-placement-brief__closing a[href="/one-page-resume/"]' );
+			await assertFocus( '.hp-placement-brief details a', ARCHIVE_ROUTE );
+			await assertFocus( '.hp-placement-brief__hero a', '/contact/' );
+			await assertFocus( '.hp-placement-brief__closing a', '/one-page-resume/' );
 			await pressKey( cdp, sessionId, 'Tab' );
 			await run( 'document.querySelector(".hp-placement-brief summary").focus()' );
 			await pressKey( cdp, sessionId, 'Enter' );
@@ -267,4 +282,4 @@ async function main() {
 }
 
 if ( require.main === module ) main().catch( ( error ) => { console.error( error ); process.exitCode = 1; } );
-module.exports = { main, WIDTHS, assertBriefMetrics };
+module.exports = { main, WIDTHS, assertBriefMetrics, matchesRouteLink };
