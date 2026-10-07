@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.72
+Stable tag: 0.3.73
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -412,6 +412,20 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.73 =
+* Publish the Support Engineering redesign at /job-placement-digest/ with a
+  40rem reading column, three numbered examples, direct evidence, paired
+  Contact/resume actions and a closed research summary.
+* Preserve Placement Method and Evidence as a dated July archive with all
+  34 keyword terms, 20 market records and five historical section anchors.
+  Retire the method-to-Digest redirect and retain fragment/filter remounts.
+* Refine the one-page editable DOCX and tagged PDF with an 11pt body, six
+  embedded theme font faces, clearer heading hierarchy and aligned metadata.
+  The client evidence link now opens the maintained case study.
+* Extend complete text/link/font parity and phase-aware action checks.
+  Saved Gutenberg editor round trips and local native router integration
+  pass; production verification is recorded in the release report.
 
 = 0.3.72 =
 * Home template fidelity pass (templates/home/Home.dc.html). The lead sits

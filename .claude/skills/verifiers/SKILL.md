@@ -36,7 +36,7 @@ node scripts/verify-ring-cards-mobile.js        # 320px: three ring cards render
 node scripts/verify-contact-form-styling.js     # /contact/: themed .hp-input beats parent input rules; gold-700 border + 2px outline focus ring; subscribe status states, and the redirected-to status taking focus
 node scripts/verify-homepage-hero-polish.js     # / at 320/390/600/601/781/900/901/1024/1440 plus no-JS at the primary boundaries: semantic + rendered eyebrow → H1 → Wapuu → support order, 900px grid transition without CSS order, touch targets, containment, section geometry, and medium-mobile/semibold-desktop title weight; plus the Home template's declared values at every width (hero rhythm and measure, 15rem phone Wapuu, halo settle, chip ↗ links with descriptive names, ring CTA type, artifact links, commission emblem, footer inset, 75/81px anchors), forced-hover states at 1440px, and reduced motion
 node scripts/verify-prominent-actions.js        # /, /about/, /job-placement-digest/, and Flavor Agent demo: rail/panel counts, 44px targets, focus, mobile stacking, overflow, screenshots
-node scripts/verify-job-placement-pages.js      # recruiter main + appendix candidate matrices (Digest 1440/1024/1023/940/782/781/768/600/390/320/512; appendix 1440/1024/940/782/781/768/600/599/390/320/512): outline, responsive chassis and labelled records, overflow/wrapping, recruiter-dossier height budgets, fragment targets, CTAs, and reduced motion. Digest register complete by default; appendix keyword ledger Demonstrated-first and market screen complete before filtering. Also checks complete no-JS ledgers, per-ledger fail-closed classification, and idempotent router remounts. Reads the accepted snapshots; add --drafts while an appendix or Digest redesign is in review
+node scripts/verify-job-placement-pages.js      # recruiter main + appendix candidate matrices (Digest 1440/1024/1023/940/782/781/768/600/390/320/512; appendix 1440/1024/940/782/781/768/600/599/390/320/512): outline, responsive chassis and labelled records, overflow/wrapping, recruiter-dossier height budgets, fragment targets, CTAs, and reduced motion. Digest register complete by default; appendix keyword ledger and market screen complete before filtering. Also checks complete no-JS ledgers, per-ledger fail-closed classification, and idempotent router remounts. Reads the accepted snapshots; add --drafts while an appendix or Digest redesign is in review
 node scripts/verify-header.js                    # Condensed Council source + eight-width geometry, interaction (real mouse/touch/keyboard: hover pinning, touch never hovers, focus-safe hover, "/" shortcut, drawer fold on every close, masthead lift, star turn, About's current rule), focus, reduced-motion, router cleanup, and screenshot checks (--source-only for the static half)
 node scripts/verify-search.js                    # anonymous captured Jetpack DOM + real upstream CSS: 1440/390/320px controls, filters, images, recovery, focus and remount regression; --baseline reproduces pre-fix failures. Also verify the real plugin/API before release.
 node scripts/verify-search-beta.js               # blocks beta: captured anonymous shell + actual Jetpack/Interactivity modules and public API; controls, images, metadata, recovery and keyboard/reload checks. Set HPERKINS_WP_PATH to the matching local plugin installation; --serve exposes a loopback page for manual browser QA; --baseline uses HEAD assets.
@@ -85,17 +85,31 @@ node --test scripts/lib/about-page-contract.test.js scripts/lib/about-page-rende
 
 `scripts/export-support-resume.ps1` resolves `HPERKINS_PYTHON_BIN` first, then `python` from `PATH`. The selected interpreter must import `python-docx`, `pdfplumber`, and `pypdf`; dependency preflight runs before Word can overwrite the PDF.
 
+The résumé builder `scripts/update-support-resume.py` also needs `fonttools[woff]`
+to derive and embed static OpenType instances of the existing theme fonts.
+Its font cache lives under ignored `.design-pull/resume-layout/fonts`; it does
+not install system fonts. The reviewed 2026-10-06 artifact uses 11pt body,
+9.5pt scoped metadata, a separate letterhead and a right-hand record rail.
+`scripts/verify-placement-text-parity.py` proves complete table-aware text and
+ordered logical-link parity, one page, semantic headings and all six actual
+embedded font faces. Multiple hit rectangles may count as one link only when
+their PDF tags point to the same Link element. The exporter accepts optional
+`-DocxPath` / `-PdfPath` arguments for alternate-paper QA; normalization accepts
+`--pdf=<path>` and leaves the canonical PDF alone when an alternate is selected.
+
 ### WCUS portfolio ownership and phase gate
 
-The consolidated placement candidate uses `.hp-placement-brief`. With `--drafts`,
+The Support Engineering candidate uses `.hp-placement-brief`. With `--drafts`,
 `verify-job-placement-pages.js` delegates to `verify-placement-brief.js`: seven
-widths from 320–1440px, the 36rem prose limit, H2/H3 outline, single contact and
-résumé actions, closed research, keyboard access, preserved section fragments,
-reduced motion, 200% text, and no-JS access to all 54 research rows. Unflagged
-checks still test the accepted two-page snapshots. The isolated redirect check
-is `php scripts/verify-placement-route.php`; it requires a published combined
-body and emits no fragment in the redirect target. Local preview proof does not
-promote a database body or establish production router behavior.
+widths from 320–1440px, the 40rem prose limit, H2/H3 outline, three equal
+numbered articles, paired contact and résumé actions, closed research, keyboard
+jumps, 15px facts/chips/evidence links, 44px controls, reduced motion and 200%
+text. Option A keeps the method route as a dated archive: its keyword ledger
+starts on all 34 terms, all 20 market rows remain, and the five old section
+fragments stay reachable. No-JS checks retain all 54 research rows. Unflagged
+checks still test accepted snapshots. The method-to-Digest redirect and its
+PHP verifier are retired. Local preview proof does not promote a database body
+or establish production router behavior.
 
 `/one-page-resume/` is the stable visible-link destination. The final PDF remains a theme-owned artifact verified directly. `about-resume` substitutes only the portrait URL. Digest and About database bodies remain canonical; drafts are candidates and snapshots are accepted mirrors. Production page/footer writes are separate from a theme deploy.
 

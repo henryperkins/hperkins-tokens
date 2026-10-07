@@ -1318,6 +1318,31 @@ p.hp-contact-form__hint {
   color: var(--wp--preset--color--gold-700);
 }
 
+/* Enlarged text can leave less space than a single word inside the archive's
+   nested plates. Keep the normal insets while room permits; reserve a usable
+   text measure before an inset grows, and let long words wrap when necessary. */
+@media (max-width: 599px) {
+  .hp-method-template .hp-placement-part__content p {
+    overflow-wrap: anywhere;
+  }
+
+  .hp-method-template .hp-standing-legend__item {
+    padding-inline: clamp(var(--wp--preset--spacing--2), calc((100% - 6ch) / 2), var(--wp--preset--spacing--4));
+  }
+
+  .hp-method-template .hp-numbered-rule {
+    padding-inline: clamp(var(--wp--preset--spacing--2), calc((100% - 6ch) / 2), var(--wp--preset--spacing--5));
+  }
+
+  .hp-method-template .wp-block-table:is(.hp-keyword-table, .hp-market-table) tbody tr {
+    padding-inline: clamp(var(--wp--preset--spacing--2), calc((100% - 6ch) / 2), var(--wp--preset--spacing--4));
+  }
+
+  .hp-method-template .wp-block-table:is(.hp-keyword-table, .hp-market-table) tbody :is(th, td) {
+    overflow-wrap: anywhere;
+  }
+}
+
 /* The screen is the page's densest object, so it sits on its own plate rather
    than on the page ground. */
 .hp-method-plate {
@@ -8168,38 +8193,85 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		display: none !important;
 	}
 }
-/* Consolidated placement brief. Scoped to the reviewed candidate so the
-   published dossier retains its existing layout until the body is promoted. */
-.hp-digest-template .hp-placement-brief {
-  --hp-placement-measure: 36rem;
-  max-inline-size: calc(var(--hp-placement-measure) * 1.5);
-  margin-inline: auto;
+/* Support Engineering v2 — the reviewed Option A candidate. The existing
+   dossier and archive keep their page rules until their bodies are promoted.
+   Only this candidate clears the legacy shell's inline/top/bottom padding. */
+/* Without scripting, noscript exposes the complete navigation at its natural
+   height. Let that header scroll away so native section links remain visible
+   without guessing a clearance for every viewport and text-size setting. */
+.wp-site-blocks:has(.hp-placement-brief, .hp-method-template) > header.wp-block-template-part:has(.hp-council-noscript) {
+  position: static;
 }
 
-.hp-placement-brief :is(p, li, h3, h4) {
-  max-inline-size: var(--hp-placement-measure);
+.hp-digest-template:has(.hp-placement-brief) {
+  padding: 0 !important;
+}
+
+/* Core's alignfull margins assume global shell padding; this candidate owns
+   its gutters, so the native post-content wrapper must stay inside the shell. */
+.hp-digest-template:has(.hp-placement-brief) > .wp-block-post-content {
+  margin: 0;
+  padding: 0;
+}
+
+.hp-digest-template .hp-placement-brief {
+  --hp-placement-measure: 40rem;
+  --hp-placement-gutter: var(--wp--preset--spacing--4);
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: calc(var(--hp-placement-measure) + 2 * var(--hp-placement-gutter));
+  /* Assembler negates post-content padding on first/last alignfull blocks
+     with important physical margins. Neither offset belongs to this column. */
+  margin-block: 0 !important;
+  margin-inline: auto;
+  padding-inline: var(--hp-placement-gutter);
+  color: var(--wp--custom--text--body);
+}
+
+.hp-placement-brief :is(p, li, h1, h2, h3, .wp-block-group) {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
 }
 
 .hp-placement-brief p {
-  font-size: var(--wp--preset--font-size--md);
-  line-height: 1.55;
+  margin: 0;
+  font: var(--wp--custom--type--body);
+  text-wrap: pretty;
+}
+
+.hp-placement-brief .hp-placement-brief__hero {
+  margin-block-start: 0;
+  padding-block-start: var(--wp--preset--spacing--7);
+}
+
+.hp-placement-brief p.hp-placement-brief__eyebrow {
+  font-family: var(--wp--preset--font-family--label);
+  font-size: var(--wp--preset--font-size--2-xs);
+  letter-spacing: var(--wp--custom--tracking--caps);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--accent);
 }
 
 .hp-placement-brief h1 {
-  margin: 0 0 var(--wp--preset--spacing--5);
-  font-size: var(--wp--preset--font-size--4-xl);
-  line-height: 1.05;
+  margin: var(--wp--preset--spacing--3) 0 0;
+  font: var(--wp--custom--type--h-1);
+  letter-spacing: var(--wp--custom--tracking--tight);
+  color: var(--wp--custom--text--strong);
+  text-wrap: balance;
 }
 
-.hp-placement-brief__hero > p {
-  margin-block: var(--wp--preset--spacing--4);
-}
-
-.hp-placement-brief p:is(.hp-placement-brief__identity, .hp-placement-brief__date) {
-  color: var(--wp--custom--text--muted);
-  font-family: var(--wp--preset--font-family--mono);
-  font-size: var(--wp--preset--font-size--sm);
+.hp-placement-brief p.hp-placement-brief__identity {
+  margin-block-start: var(--wp--preset--spacing--5);
+  font: var(--wp--custom--type--mono);
   line-height: 1.6;
+  letter-spacing: var(--wp--custom--tracking--wide);
+  color: var(--wp--custom--text--muted);
+}
+
+.hp-placement-brief p.hp-placement-brief__lead {
+  margin-block-start: var(--wp--preset--spacing--4);
+  font: var(--wp--custom--type--lead);
+  color: var(--wp--custom--text--strong);
 }
 
 .hp-placement-brief :is(.hp-placement-brief__work, .hp-placement-brief__method, .hp-placement-brief__closing) {
@@ -8208,70 +8280,291 @@ html.has-about-v3-print-view footer.wp-block-template-part {
   border-block-start: 1px solid var(--wp--custom--border--hair);
 }
 
-.hp-placement-brief :is(.hp-placement-brief__work, .hp-placement-brief__method) > h2 {
-  margin-block: 0 var(--wp--preset--spacing--3);
+.hp-placement-brief h2 {
+  margin: 0;
+  font: var(--wp--custom--type--h-3);
+  letter-spacing: var(--wp--custom--tracking--tight);
+  text-transform: none;
+  color: var(--wp--custom--text--strong);
+  text-wrap: balance;
+}
+
+.hp-placement-brief p.hp-placement-brief__date {
+  margin-block-start: var(--wp--preset--spacing--2);
+  font: var(--wp--custom--type--mono);
   color: var(--wp--custom--text--muted);
-  font-family: var(--wp--preset--font-family--label);
-  font-size: var(--wp--preset--font-size--base);
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }
 
-.hp-placement-brief__date {
-  margin-block: 0 var(--wp--preset--spacing--6);
+.hp-placement-brief .hp-placement-brief__jump-list {
+  margin: var(--wp--preset--spacing--5) 0 0;
+  padding: var(--wp--preset--spacing--1) var(--wp--preset--spacing--4);
+  list-style: none;
+  background: var(--wp--custom--surface--card);
+  border: 1px solid var(--wp--custom--border--hair);
+  border-radius: var(--hp-radius-card);
 }
 
-.hp-placement-brief__featured h3 {
-  margin-block: 0 var(--wp--preset--spacing--4);
-  font-size: var(--wp--preset--font-size--3-xl);
-  line-height: 1.15;
+.hp-placement-brief__jump-list > li {
+  margin: 0;
 }
 
-.hp-placement-brief p + p {
-  margin-block-start: var(--wp--preset--spacing--4);
-}
-
-.hp-placement-brief .hp-placement-brief__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--5);
-  margin-block: var(--wp--preset--spacing--5) 0;
-  font-size: var(--wp--preset--font-size--base);
-}
-
-.hp-placement-brief__links a {
-  padding-block: var(--wp--preset--spacing--1);
-  text-underline-offset: 0.2em;
-}
-
-.hp-placement-brief__supporting {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--wp--preset--spacing--6);
-  margin-block-start: var(--wp--preset--spacing--6);
-  padding-block-start: var(--wp--preset--spacing--6);
+.hp-placement-brief__jump-list > li + li {
   border-block-start: 1px solid var(--wp--custom--border--hair);
 }
 
-.hp-placement-brief__item {
-  margin-block: 0;
+.hp-placement-brief__jump-list a {
+  display: grid;
+  grid-template-columns: var(--wp--preset--spacing--6) minmax(0, 1fr);
+  align-items: baseline;
+  box-sizing: border-box;
+  min-block-size: var(--hp-touch-min);
+  padding-block: var(--wp--preset--spacing--3);
+  color: var(--wp--custom--text--body);
+  text-decoration: none;
+}
+
+.hp-placement-brief__jump-number {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  color: var(--wp--custom--text--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.hp-placement-brief__jump-kind,
+.hp-placement-brief p:is(.hp-placement-brief__kind, .hp-placement-brief__aside-label),
+.hp-placement-brief__fact-label {
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--2-xs);
+  font-weight: var(--wp--custom--weight--regular);
+  line-height: 1.6;
+  letter-spacing: var(--hp-tracking-label);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--muted);
+}
+
+.hp-placement-brief__jump-kind,
+.hp-placement-brief__jump-title {
+  display: block;
+}
+
+.hp-placement-brief__jump-title {
+  font-family: var(--wp--preset--font-family--body);
+  font-size: var(--wp--preset--font-size--base);
+  line-height: 1.4;
+}
+
+.hp-placement-brief .hp-placement-brief__example {
+  margin-block-start: var(--wp--preset--spacing--7);
+}
+
+.hp-placement-brief p.hp-placement-brief__number {
+  display: flex;
+  align-items: center;
+  gap: var(--wp--preset--spacing--4);
+  margin-block-end: var(--wp--preset--spacing--3);
+  font-family: var(--wp--preset--font-family--mono);
+  font-size: var(--wp--preset--font-size--md);
+  line-height: 1.35;
+  color: var(--wp--custom--text--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.hp-placement-brief__number::after {
+  content: "";
+  flex: 1 1 auto;
+  block-size: 1px;
+  background: var(--wp--custom--border--hair);
+}
+
+.hp-placement-brief .hp-placement-brief__example-body {
+  margin-block-start: 0;
+}
+
+.hp-placement-brief__example h3 {
+  margin: var(--wp--preset--spacing--2) 0 0;
+  font-family: var(--wp--preset--font-family--display);
+  font-size: var(--wp--preset--font-size--lg);
+  font-weight: var(--wp--custom--weight--semibold);
+  line-height: 1.3;
+  color: var(--wp--custom--text--strong);
+  text-wrap: balance;
+}
+
+.hp-placement-brief .hp-placement-brief__facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--4);
+  margin-block-start: var(--wp--preset--spacing--4);
+}
+
+.hp-placement-brief p.hp-placement-brief__fact {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: max-content minmax(0, 1fr);
+  grid-template-columns: subgrid;
+  gap: var(--wp--preset--spacing--2) var(--wp--preset--spacing--4);
+  align-items: baseline;
+  margin: 0;
+  font: var(--wp--custom--type--mono);
+}
+
+.hp-placement-brief__fact-value {
   min-inline-size: 0;
 }
 
-.hp-placement-brief__item h3 {
-  margin-block: 0 var(--wp--preset--spacing--3);
-  font-size: var(--wp--preset--font-size--2-xl);
-  line-height: 1.2;
+/* The glyph is explicit aria-hidden markup; suppress the primitive's dot
+   so assistive technology gets only the written state and sighted readers
+   see one redundant status mark. Keep the primitive's touch padding. */
+.hp-placement-brief .hp-chip {
+  display: inline-block;
+  box-sizing: border-box;
+  max-inline-size: 100%;
+  font-size: var(--wp--preset--font-size--sm);
 }
 
-.hp-placement-brief__item + .hp-placement-brief__item {
-  padding-inline-start: var(--wp--preset--spacing--6);
-  border-inline-start: 1px solid var(--wp--custom--border--hair);
+.hp-placement-brief .hp-chip::before {
+  content: none;
+}
+
+.hp-placement-brief .hp-chip--review {
+  border-inline-start-color: var(--hp-status-review);
+  background: var(--hp-surface-review);
+}
+
+.hp-placement-brief .hp-chip--merged {
+  border-inline-start-color: var(--hp-status-merged);
+  background: var(--hp-surface-merged);
+}
+
+.hp-placement-brief .hp-chip > [aria-hidden="true"] {
+  margin-inline-end: 0.5em;
+}
+
+.hp-placement-brief .hp-chip--review > [aria-hidden="true"] {
+  color: var(--hp-status-review);
+}
+
+.hp-placement-brief .hp-chip--merged > [aria-hidden="true"] {
+  color: var(--hp-status-merged);
+}
+
+.hp-placement-brief__example-body > p:not(.hp-placement-brief__kind) {
+  margin-block-start: var(--wp--preset--spacing--3);
+}
+
+.hp-placement-brief p.hp-placement-brief__links {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: var(--wp--preset--spacing--5);
+  margin-block-start: var(--wp--preset--spacing--3);
+  font: var(--wp--custom--type--mono);
+}
+
+.hp-placement-brief :is(.hp-placement-brief__links, .hp-placement-brief__aside) a {
+  color: var(--wp--custom--text--link);
+}
+
+.hp-placement-brief :is(.hp-placement-brief__links, .hp-placement-brief__aside) a[href^="https://"] {
+  color: var(--hp-artifact);
+}
+
+.hp-placement-brief :is(.hp-placement-brief__links, .hp-placement-brief__aside) a:hover {
+  color: var(--wp--custom--text--accent);
+}
+
+.hp-placement-brief .hp-placement-brief__aside {
+  margin-block-start: var(--wp--preset--spacing--5);
+  padding: var(--wp--preset--spacing--3) var(--wp--preset--spacing--4);
+  border: 1px solid var(--wp--custom--border--hair);
+  border-radius: var(--hp-radius-tile);
+}
+
+.hp-placement-brief__aside > p:not(.hp-placement-brief__aside-label, .hp-placement-brief__links) {
+  margin-block-start: var(--wp--preset--spacing--1);
+  font: var(--wp--custom--type--ui);
+}
+
+.hp-placement-brief .hp-placement-brief__aside > .hp-placement-brief__links {
+  margin-block-start: var(--wp--preset--spacing--1);
+}
+
+.hp-placement-brief__method > h2,
+.hp-placement-brief__closing > h2 {
+  margin-block-end: var(--wp--preset--spacing--4);
+}
+
+.hp-placement-brief__method > p + p {
+  margin-block-start: var(--wp--preset--spacing--4);
+}
+
+.hp-placement-brief .hp-placement-brief__research-wrap {
+  margin-block-start: var(--wp--preset--spacing--6);
+}
+
+.hp-placement-brief .hp-placement-brief__research {
+  margin: 0;
+  padding-block-end: var(--wp--preset--spacing--5);
+  border-block: 1px solid var(--wp--custom--border--hair);
+}
+
+.hp-placement-brief .hp-placement-brief__research:not([open]) {
+  padding-block-end: 0;
+}
+
+.hp-placement-brief__research > summary {
+  box-sizing: border-box;
+  min-block-size: var(--hp-touch-min);
+  padding-block: var(--wp--preset--spacing--3);
+  cursor: pointer;
+  font-family: var(--wp--preset--font-family--label);
+  font-size: var(--wp--preset--font-size--xs);
+  line-height: 1.6;
+  letter-spacing: var(--wp--custom--tracking--caps);
+  text-transform: uppercase;
+  color: var(--wp--custom--text--strong);
+}
+
+.hp-placement-brief__research > summary::marker {
+  color: var(--wp--custom--text--accent);
+}
+
+.hp-placement-brief__research p:not(.hp-placement-brief__links) {
+  margin-block-start: var(--wp--preset--spacing--3);
+  font: var(--wp--custom--type--ui);
+}
+
+.hp-placement-brief__research > summary + p,
+.hp-placement-brief__research > :not(summary) > p:first-child {
+  margin-block-start: var(--wp--preset--spacing--2);
+}
+
+.hp-placement-brief .hp-placement-brief__questions {
+  display: grid;
+  gap: var(--wp--preset--spacing--2);
+  margin: var(--wp--preset--spacing--3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hp-placement-brief__questions li {
+  display: grid;
+  grid-template-columns: calc(var(--wp--preset--spacing--6) + var(--wp--preset--spacing--1)) minmax(0, 1fr);
+  align-items: baseline;
+  margin: 0;
+  font: var(--wp--custom--type--ui);
+}
+
+.hp-placement-brief__questions strong {
+  font: var(--wp--custom--type--mono);
+  color: var(--wp--custom--text--accent);
 }
 
 .hp-placement-brief .hp-action-rail {
+  inline-size: 100%;
   margin-block-start: var(--wp--preset--spacing--5);
+  gap: var(--wp--preset--spacing--3) var(--wp--preset--spacing--5);
+  justify-content: center;
+  align-items: center;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -8280,84 +8573,105 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 }
 
 .hp-placement-brief .hp-action-rail .wp-block-button__link {
-  font-family: var(--wp--preset--font-family--label);
-  font-weight: 400;
-  text-transform: uppercase;
+  min-block-size: var(--hp-touch-min);
+  max-inline-size: 100%;
+  overflow-wrap: anywhere;
 }
 
-.hp-placement-brief__hero .wp-block-button__link {
-  padding-inline: 0;
+.hp-placement-brief .hp-action-rail .is-style-link > .wp-block-button__link {
+  padding: 0;
+  font: var(--wp--custom--type--ui);
+  letter-spacing: var(--wp--custom--tracking--normal);
+  text-transform: none;
   color: var(--wp--custom--text--link);
-  border: 0;
-  background: none;
-  box-shadow: none;
   text-decoration: underline;
   text-underline-offset: 0.25em;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
 }
 
 .hp-placement-brief .hp-placement-brief__closing {
   padding-inline: 0;
-  padding-block-end: 0;
+  padding-block-end: var(--wp--preset--spacing--8);
   border-inline: 0;
   border-block-end: 0;
   border-radius: 0;
   background: none;
   box-shadow: none;
+  overflow: visible;
 }
 
 .hp-placement-brief__closing::after {
   display: none;
 }
 
-.hp-placement-brief__closing h2 {
-  margin: 0;
-  font-size: var(--wp--preset--font-size--3-xl);
-  line-height: 1.15;
+.hp-placement-brief .hp-placement-brief__closing > .hp-action-rail {
+  margin-block-start: var(--wp--preset--spacing--6);
 }
 
-.hp-placement-brief__research {
-  margin-block-start: var(--wp--preset--spacing--5);
+@media (hover: hover) {
+  .hp-placement-brief__jump-list a:hover .hp-placement-brief__jump-title {
+    color: var(--wp--custom--text--strong);
+    text-decoration: underline;
+    text-decoration-color: var(--wp--custom--rule--gold);
+    text-underline-offset: var(--hp-tracking-label);
+  }
 }
 
-.hp-placement-brief__research > summary {
-  width: fit-content;
-  max-inline-size: 100%;
-  min-block-size: var(--hp-touch-min);
-  padding-block: var(--wp--preset--spacing--2);
-  cursor: pointer;
-}
+@media (min-width: 600px) {
+  .hp-digest-template .hp-placement-brief {
+    --hp-placement-gutter: var(--wp--preset--spacing--6);
+  }
 
-.hp-placement-brief__research-section {
-  margin-block-start: var(--wp--preset--spacing--7);
-}
+  .hp-placement-brief .hp-placement-brief__hero {
+    padding-block-start: var(--wp--preset--spacing--9);
+  }
 
-.hp-placement-brief__research h3 {
-  font-size: var(--wp--preset--font-size--2-xl);
-}
+  .hp-placement-brief :is(.hp-placement-brief__work, .hp-placement-brief__method, .hp-placement-brief__closing) {
+    margin-block-start: var(--wp--preset--spacing--8);
+    padding-block-start: var(--wp--preset--spacing--7);
+  }
 
-.hp-placement-brief__research h4 {
-  font-size: var(--wp--preset--font-size--xl);
-}
-
-.hp-placement-brief__research :is(p, li) {
-  font-size: var(--wp--preset--font-size--base);
-}
-
-.hp-placement-brief__research .hp-placement-ledger {
-  margin-inline: 0;
-  max-inline-size: 100%;
+  .hp-placement-brief .hp-placement-brief__closing {
+    padding-block-end: var(--wp--preset--spacing--10);
+  }
 }
 
 @media (max-width: 781px) {
-  .hp-placement-brief__supporting {
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--wp--preset--spacing--6);
+  .hp-placement-brief :is(.hp-placement-brief__links, .hp-placement-brief__aside) a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--hp-touch-min);
+    max-inline-size: 100%;
+  }
+}
+
+@media (min-width: 782px) {
+  /* Reserve the hanging numeral's gutter when the wider reading column
+     approaches the viewport edge. */
+  .hp-digest-template .hp-placement-brief {
+    --hp-placement-gutter: var(--wp--preset--spacing--9);
   }
 
-  .hp-placement-brief__item + .hp-placement-brief__item {
-    padding-inline-start: 0;
-    padding-block-start: var(--wp--preset--spacing--6);
-    border-inline-start: 0;
+  .hp-placement-brief .hp-placement-brief__example {
+    display: grid;
+    grid-template-columns: var(--wp--preset--spacing--8) minmax(0, 1fr);
+    column-gap: var(--wp--preset--spacing--4);
+    align-items: baseline;
+    margin-inline-start: calc(-1 * (var(--wp--preset--spacing--8) + var(--wp--preset--spacing--4)));
+    padding-block-start: var(--wp--preset--spacing--5);
     border-block-start: 1px solid var(--wp--custom--border--hair);
   }
+
+  .hp-placement-brief p.hp-placement-brief__number {
+    display: block;
+    margin: 0;
+  }
+
+  .hp-placement-brief__number::after {
+    display: none;
+  }
+
 }

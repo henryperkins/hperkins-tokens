@@ -1450,3 +1450,58 @@ after it.
   theme sheet, and the captured production page still carries the old hero
   rules. Regenerate it after deploy; until then, a phone's first paint sets
   the old Wapuu and lead position before the full sheet lands.
+
+## Support Engineering and placement archive handoff (2026-10-06)
+
+- **Source.** `ImladrisDesignSystem.zip`, SHA-256
+  `5d48fbfd530acc981b0405d2009b278fe695ac86709c507a4506b5e5a9a14fcd`.
+  The handoff maps `templates/support-engineering-v2/SupportEngineeringV2.dc.html`
+  and `templates/placement-archive/PlacementArchive.dc.html` to native page
+  drafts; the bundled DC sources and standalone exports are references.
+- **Selected shape.** Henry chose Option A. The Support Engineering candidate
+  keeps the canonical Digest route, a 40rem reading column, three equal
+  numbered articles with a jump list, Role/Status facts, paired Contact/PDF
+  actions, and a closed July research summary. The method route becomes a
+  dated archive holding all 34 keyword and 20 market records plus the five
+  original anchors. The method-to-Digest redirect is retired.
+- **Preview adjustment.** The supplied handoff used a 30rem measure. Henry
+  requested more width after viewing the native candidate; its reading column
+  is now 40rem (640px), with 64px desktop gutters reserving the numeral outdent.
+- **Mapping.** `content/page-drafts/job-placement-digest.html` and
+  `content/page-drafts/placement-method-evidence.html` own candidate bodies.
+  Candidate composition stays in `assets/imladris-pages.css`; the archive's
+  filter opens on all terms. Native block markup, theme tokens, and the
+  production header/footer replace the reference runtime and stand-in shell.
+- **Kept theme rules.** Identity, facts, chips and evidence links use the 15px
+  mono role; Contact retains a 44px target at every width. The direct native
+  disclosure target remains closed, while a fragment inside a disclosure
+  reveals its ancestors. No new asset, token, font or motion is introduced.
+- **Evidence and ownership.** The dated archive draft permits exactly five
+  copy edits against the accepted method snapshot; table bodies retain exact
+  byte parity. Candidate source/mutation and rendered contracts cover both
+  routes. The runbook at `docs/runbooks/2026-09-28-placement-consolidation.md`
+  records current evidence and the separate publication boundary. Accepted
+  snapshots remain database mirrors.
+
+## One-page résumé refinement (2026-10-06)
+
+The supplied OnePageResume screenshot is the visual reference for the native
+Word/PDF artifact. `scripts/update-support-resume.py` owns its content and
+layout; `scripts/lib/resume-fonts.py` derives static instances from the existing
+WOFF2 assets and embeds them in the editable DOCX. Colors are read from
+`theme.json`. No design-project runtime or new theme font asset is introduced.
+
+The reviewed white-paper version has a 30pt Cormorant letterhead, an 11pt
+EB Garamond body, 9.5pt Marcellus labels and JetBrains Mono metadata, stronger
+company/project names, a right-hand date/status rail and explicit date wraps.
+The résumé prose and evidence attribution remain intact. The contact address
+prints the full GitHub path; summary precedes the post-event WCUS line.
+
+`scripts/export-support-resume.ps1` uses native Word to produce the tagged PDF.
+The strict parity checker walks physical DOCX cells in document order and
+audits actual embedded TrueType bytes. It preserves independent duplicate
+URLs while treating multiple rectangles sharing one semantic Link as one
+hyperlink. `/one-page-resume/` and its filemtime-based redirect stay unchanged.
+
+See `docs/verification/2026-10-06-resume-refinement.md` for local Letter/A4,
+grayscale, text/link/font evidence and the separate publication boundary.

@@ -5,7 +5,7 @@ const path = require( 'node:path' );
 const { spawnSync } = require( 'node:child_process' );
 
 const { DIGEST_OPENING_CONTRACTS } = require( './job-placement-page-style-contracts' );
-const { deriveAboutActionContract, selectAboutSource, selectDigestSource } = require( './page-phase-contract' );
+const { deriveAboutActionContract, selectAboutSource, selectDigestSource, selectPlacementMethodSource } = require( './page-phase-contract' );
 
 const themeRoot = path.join( __dirname, '..', '..' );
 
@@ -41,6 +41,11 @@ test( 'selects the reviewed Digest candidate only when drafts are explicit', () 
 		selectDigestSource( [] ),
 		path.join( themeRoot, 'content', 'page-snapshots', 'job-placement-digest.html' )
 	);
+} );
+
+test( 'selects the reviewed archive with the same explicit draft boundary as the Digest', () => {
+	assert.equal( selectPlacementMethodSource( [ '--drafts' ] ), path.join( themeRoot, 'content/page-drafts/placement-method-evidence.html' ) );
+	assert.equal( selectPlacementMethodSource(), path.join( themeRoot, 'content/page-snapshots/placement-method-evidence.html' ) );
 } );
 
 test( 'keeps local About acceptance on drafts and deployed About on snapshots', () => {
@@ -79,6 +84,40 @@ test( 'derives prominent-action counts for legacy, proof-first, v2, and v3 About
 		railCount: 2,
 		panelCount: 1,
 	} );
+} );
+
+test( 'prominent-action presentation follows the selected Digest body and rejects the wrong chrome', () => {
+	const verifier = require( '../verify-prominent-actions' );
+	assert.equal( typeof verifier.deriveDigestActionPresentation, 'function', 'The rendered gate must derive its presentation from the selected body.' );
+	const brief = verifier.deriveDigestActionPresentation( '<div class="wp-block-group hp-placement-brief"></div>' );
+	const dossier = verifier.deriveDigestActionPresentation( '<section class="hp-digest__hero"></section>' );
+	assert.deepEqual( brief, { openRows: true, openPanels: true } );
+	assert.deepEqual( dossier, { openRows: false, openPanels: false } );
+	assert.deepEqual( verifier.deriveDigestActionPresentation( '<div class="hp-placement-brief__hero"></div>' ), dossier, 'Only the actual brief marker selects the open presentation.' );
+	const openRail = { borderTopWidth: 0, boxShadow: 'none', backgroundImage: 'none', backgroundColor: 'rgba(0, 0, 0, 0)', links: [ {}, {} ] };
+	const decoratedRail = { ...openRail, borderTopWidth: 1, boxShadow: '0 1px 3px #000', backgroundColor: 'rgb(250, 246, 236)' };
+	const openPanel = { borderLeftWidth: 0, borderTopWidth: 1, backgroundImage: 'none', backgroundColor: 'rgba(0, 0, 0, 0)', boxShadow: 'none' };
+	const decoratedPanel = { ...openPanel, borderLeftWidth: 7, backgroundImage: 'linear-gradient(#fff,#eee)', boxShadow: '0 1px 3px #000' };
+	assert.doesNotThrow( () => verifier.assertRailPresentation( openRail, brief, '/job-placement-digest/' ) );
+	assert.doesNotThrow( () => verifier.assertPanelPresentation( openPanel, brief, '/job-placement-digest/' ) );
+	assert.doesNotThrow( () => verifier.assertRailPresentation( decoratedRail, dossier, '/job-placement-digest/' ) );
+	assert.doesNotThrow( () => verifier.assertPanelPresentation( decoratedPanel, dossier, '/job-placement-digest/' ) );
+	assert.throws( () => verifier.assertRailPresentation( decoratedRail, brief, '/job-placement-digest/' ), /open row/ );
+	assert.throws( () => verifier.assertRailPresentation( openRail, dossier, '/job-placement-digest/' ), /hairline border/ );
+	assert.throws( () => verifier.assertPanelPresentation( decoratedPanel, brief, '/job-placement-digest/' ), /open closing/ );
+	assert.throws( () => verifier.assertPanelPresentation( openPanel, dossier, '/job-placement-digest/' ), /gold rule/ );
+	assert.throws( () => verifier.assertRailPresentation( { ...openRail, backgroundColor: 'rgb(250, 246, 236)' }, brief, '/job-placement-digest/' ), /page surface/ );
+	assert.throws( () => verifier.assertPanelPresentation( { ...openPanel, borderTopWidth: 0 }, brief, '/job-placement-digest/' ), /hairline separator/ );
+	for ( const [ change, expected ] of [
+		[ { borderTopWidth: 0 }, /hairline border/ ],
+		[ { backgroundColor: 'rgba(0, 0, 0, 0)' }, /owned surface/ ],
+		[ { boxShadow: 'none' }, /shadow/ ],
+	] ) assert.throws( () => verifier.assertRailPresentation( { ...decoratedRail, ...change }, dossier, '/job-placement-digest/' ), expected );
+	for ( const [ change, expected ] of [
+		[ { borderLeftWidth: 0 }, /gold rule/ ],
+		[ { backgroundImage: 'none' }, /parchment surface/ ],
+		[ { boxShadow: 'none' }, /shadow/ ],
+	] ) assert.throws( () => verifier.assertPanelPresentation( { ...decoratedPanel, ...change }, dossier, '/job-placement-digest/' ), expected );
 } );
 
 test( 'phase-aware page verifiers reject unknown options', () => {
@@ -330,10 +369,10 @@ test( 'the verifier skill names the current candidate matrices and opening state
 		skill.includes( `Digest ${ digestWidths.join( '/' ) }; appendix ${ appendixWidths.join( '/' ) }` ),
 		'The verifier skill viewport matrices have drifted from the executable verifier.'
 	);
-	assert.match( ledgers, /name: 'keyword ledger'[\s\S]*?defaultState: 'demonstrated'/ );
+	assert.match( ledgers, /name: 'keyword ledger'[\s\S]*?defaultState: 'all'/ );
 	assert.match( ledgers, /name: 'market screen'[\s\S]*?defaultState: 'all'/ );
 	assert.match(
 		skill,
-		/Digest register complete by default; appendix keyword ledger Demonstrated-first and market screen complete before filtering/
+		/Digest register complete by default; appendix keyword ledger and market screen complete before filtering/
 	);
 } );

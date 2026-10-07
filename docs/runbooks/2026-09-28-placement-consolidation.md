@@ -1,37 +1,56 @@
-# Consolidated placement brief candidate
+# Support Engineering and the dated placement archive
 
-The selected option 3 becomes the candidate body at
-`content/page-drafts/job-placement-digest.html`. Keep `/job-placement-digest/`
-as the canonical route. The hero names Support Engineer work, offers the
-résumé PDF, and dates the former Happiness Engineer role to 2012. Selected work
-contains one featured investigation and two supporting H3 items. Prose is
-limited to 36rem; the existing four fonts, header, and footer remain in use.
+The 6 October 2026 Imladris handoff replaces the September consolidated
+candidate. Henry selected **Option A**: keep the full July research at
+`/placement-method-and-evidence/`, with a closed summary linking to it from
+the Support Engineering page at the stable `/job-placement-digest/` route.
 
-## Evidence checked on 28 September 2026
+## Candidate composition
 
-- [PR #757](https://github.com/WordPress/ai/pull/757) is open and unmerged;
-  Anubhav Anand authored it. Henry's
-  [integration test comment](https://github.com/WordPress/ai/pull/757#issuecomment-4980297831)
-  records restored success rows, duplicate successes with the provider bridge,
-  and absent failure events. This describes that test, not a new test of the
-  latest PR head or a live authenticated Codex account.
-- [Issue #529](https://github.com/WordPress/ai/issues/529) was resolved by the
-  maintainer-authored [PR #593](https://github.com/WordPress/ai/pull/593), credited
-  in the [1.0.1 release](https://github.com/WordPress/ai/releases/tag/1.0.1).
-- Henry authored [PR #501](https://github.com/WordPress/ai/pull/501); it changed
-  eight files, was merged, and appears in the
-  [1.0.0 release notes](https://github.com/WordPress/ai/releases/tag/1.0.0).
-- [Provider v2.1](https://github.com/henryperkins/ai-provider-for-codex/releases/tag/v2.1)
-  is a published stable release. Its README describes a local sidecar and
-  ChatGPT-managed authentication. The page also links the theme source and
-  `/how-this-was-built/`.
+`content/page-drafts/job-placement-digest.html` uses native blocks, a centred
+40rem reading column, the production header/footer, existing fonts and tokens,
+three equal numbered examples, a jump list, two Contact/résumé action pairs,
+and a closed native research disclosure. Roles, status words and artifact
+links separate attribution from release state. The general Support Engineer
+positioning follows the reviewed handoff.
+
+The supplied handoff specified 30rem. After viewing the local candidate,
+Henry requested a wider content column on 6 October; the implementation uses
+40rem (640px) with 64px desktop gutters to keep the outdented numbers inside
+the viewport. Narrow screens retain responsive gutters.
+
+`content/page-drafts/placement-method-evidence.html` is a guarded archive
+candidate based on the accepted method snapshot. Its H1 remains Placement
+Method and Evidence. Five copy edits date the archive and point back to Support
+Engineering. Existing tables, anchors and filters remain intact. The keyword
+ledger starts on **all 34 terms**, and the market screen retains all 20 posting
+records. July states remain historical observations.
+
+The ZIP's HTML previews and DC templates are design references. Their runtime,
+design-system bundle, stand-in shell and exploration controls do not ship.
+Page styling lives in `assets/imladris-pages.css`.
+
+## Evidence checked on 6 October 2026
+
+- [PR #757](https://github.com/WordPress/ai/pull/757) remains open and unmerged,
+  authored by Anubhav Anand. The anonymous GitHub API reported head
+  `92ddff8b548b3dfc6099e146994bbe6cceed162f` and last update
+  `2026-09-17T17:48:10Z`. This rechecks publication state, not the latest code.
+  Henry's [integration test comment](https://github.com/WordPress/ai/pull/757#issuecomment-4980297831)
+  records restored successes, duplicate successes with the provider bridge,
+  and missing failures. The candidate qualifies this as the version tested.
+- Existing evidence retained from the 28 September review: maintainer PR #593
+  resolved Henry's issue #529 and shipped in WordPress AI 1.0.1; Henry's
+  eight-file documentation PR #501 was merged and credited in the 1.0.0
+  release notes; Provider v2.1 is a stable release describing a local sidecar
+  and ChatGPT-managed authentication. Recheck release claims and the single
+  States checked dateline on publication day.
 
 ## Research and old links
 
-The native “Placement research, July 2026” disclosure retains all 34 keyword
-rows, all 20 market rows, and the screening rationale. Its dated archive notice
-does not recertify old vacancies. Filter controls, numbered spines, and status
-tiles are removed. These method-page anchors retain their identities:
+The method page stays reachable. The Digest disclosure links to the archive
+and contains the short Q1/Q2/Q3 summary, not a second copy of the research
+tables. These five original archive targets remain:
 
 - `resume-keyword-bank`
 - `what-i-optimize-for`
@@ -39,45 +58,43 @@ tiles are removed. These method-page anchors retain their identities:
 - `live-states`
 - `delisted-and-overturned`
 
-`inc/placement-route.php` redirects the two method-route spellings with a 301
-only after the Digest's actual published body contains the combined-page class.
-The target has no fragment, allowing a browser to carry the incoming fragment.
-`router-scroll.js` opens ancestor disclosures for initial loads, fragment
-changes, router pushes, history traversal, and repeat clicks on the same hash.
+The method-to-Digest redirect and its PHP verifier are retired. A published
+`.hp-placement-brief` body must never redirect the archive back to its own
+referring page. `router-scroll.js` retains generic fragment/disclosure support.
 
 ## Candidate verification
 
-The old dossier remains an explicitly dated test fixture at
+The old dossier remains a dated fixture at
 `scripts/fixtures/placement-dossier-2026-08.html`; its mutation tests still run.
-New candidate and redirect tests are in the canonical unit-test inventory and
-CI. Source checks dispatch according to the selected page phase.
+Phase-aware brief checks cover both reviewed drafts. Accepted-source checks
+continue to read published mirrors.
 
 ```powershell
+node --test scripts/lib/placement-brief-contract.test.js scripts/lib/job-placement-digest-source-contract.test.js scripts/lib/page-phase-contract.test.js
 node scripts/verify-job-placement-digest-source.js
 node scripts/verify-job-placement-pages.js --source-only --drafts
 node scripts/verify-prominent-actions.js --source-only --drafts
-php scripts/verify-placement-route.php
-# Point HPERKINS_ORIGIN at the rendered candidate before this command:
+# Point HPERKINS_ORIGIN at the unsaved candidate preview:
 node scripts/verify-job-placement-pages.js --drafts
 ```
 
-The review preview uses an unsaved WordPress render with the public header,
-footer, and global-style shell, plus this worktree's CSS and controllers. It is
-not a saved local page. The preview's redirect is an equivalent HTTP fixture;
-PHP tests separately exercise the actual redirect's request and publication
-guard. Verify the complete WordPress router and production redirects after
-publication. The design detector's remaining findings refer to existing CSS
-outside this candidate, plus an unstyled standalone-HTML color advisory; the
-rendered candidate uses the theme palette.
+Rendered checks cover 320–1440px, the 40rem measure, heading outline, three
+stacked examples and their 782px outdent, jumps, 15px facts/chips/evidence links,
+44px controls, keyboard/focus, reduced motion, 200% text, closed disclosure,
+and all 54 archive rows with and without JavaScript. Preview results are
+recorded in `docs/verification/2026-10-06-support-engineering-v2.md`.
 
 ## Publication boundary
 
-No database body, accepted snapshot, primary checkout, or production route is
-changed by this candidate. Publish only after explicit publication approval.
-Deploy the theme change and apply only the reviewed Digest body; freshly read
-the published body and prove equality before promoting its snapshot. The
-method redirect then activates. Retain the old method body for recovery rather
-than deleting it. Recheck the canonical route, PDF, contact, case study, old
-section links, and the full router in production. Run the public ownership,
-typography, and selected-page gates against the published result; the local
-preview does not establish those production results.
+Implementation does not promote database bodies or accepted snapshots.
+Publication is a separate explicitly approved step. Apply only the two
+reviewed bodies, read each back and prove equality before promoting its
+snapshot. Deploy redirect retirement with Option A; preserve the method route
+and old section links. Navigation labels and SEO records need a deliberate
+publication decision if they become Support Engineering; menu 237 uses the
+hash-guarded flow.
+
+After publication, recheck the canonical route, archive/back links, PDF,
+Contact, case study, all five old section links and the full WordPress router.
+Run public ownership, typography, metadata and selected-page gates. Local
+preview proof does not establish production behavior.

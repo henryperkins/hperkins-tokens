@@ -89,7 +89,7 @@
 			noun: 'terms',
 			allSuffix: '',
 			label: 'Filter the keyword ledger by standing',
-			defaultState: 'demonstrated',
+			defaultState: 'all',
 			filters: [
 				{ key: 'demonstrated', label: 'Demonstrated' },
 				{ key: 'partial', label: 'Partial' },

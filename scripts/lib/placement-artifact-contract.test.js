@@ -29,7 +29,8 @@ const REQUIRED_RESUME_COPY = [
 	'Directed and reviewed an AI-assisted',
 	'Independent projects developed with AI assistance under my direction and review; public tagged releases.',
 	'Flavor Agent — Creator',
-	'v0.1.0 released Aug 26, 2026',
+	'v0.1.0',
+	'Aug 26, 2026',
 	'Provides validation, admin approval, audit records, and undo workflows for supported AI-proposed WordPress changes.',
 	'AI Provider for Codex — Creator',
 	'HPerkins Tokens — Creator',
@@ -104,6 +105,20 @@ test( 'resume carries the approved current WCUS and evidence copy', () => {
 	}
 } );
 
+test( 'resume uses the separate letterhead and readable record metadata', () => {
+	const archive = openZip( docxPath );
+	const text = compactText( xmlText( archive.text( 'word/document.xml' ) ) );
+	assert.ok( text.startsWith( 'Henry Perkins WORDPRESS SUPPORT ENGINEER' ) );
+	assert.ok( text.includes( 'github.com/henryperkins' ) );
+	assert.ok( text.includes( 'Lakefront Digital — Independent Technology Consultant' ) );
+	assert.ok( text.indexOf( 'WordPress support professional' ) < text.indexOf( 'WORDCAMP US 2026' ), 'The support summary must precede the event credential.' );
+	assert.equal( ( text.match( /\bFIX SHIPPED\b/g ) || [] ).length, 1 );
+	assert.equal( ( text.match( /\bOPEN\b/g ) || [] ).length, 2 );
+	assert.equal( ( text.match( /\bMERGED\b/g ) || [] ).length, 2 );
+	const flavorRecord = text.slice( text.indexOf( 'Flavor Agent — Creator' ), text.indexOf( 'AI Provider for Codex — Creator' ) );
+	assert.ok( flavorRecord.includes( 'v0.1.0' ) && flavorRecord.includes( 'Aug 26, 2026' ), 'The release metadata must remain in the Flavor Agent record.' );
+} );
+
 test( 'forbidden numeric copy uses whole-number boundaries', () => {
 	assert.equal( findForbiddenResumeCopy( '30 contracts' ), '30 contracts' );
 	assert.equal( findForbiddenResumeCopy( '35 contracts' ), '35 contracts' );
@@ -157,6 +172,44 @@ endobj
 		'https://example.test/tab-first',
 		'https://example.test/serialized-first',
 	] );
+} );
+
+test( 'PDF combines wrapped annotation rectangles only for one semantic Link owner', () => {
+	const source = `%PDF-1.4
+1 0 obj
+<</Subtype/Link/StructParent 1/A<</S/URI/URI(https://example.test/)>>>>
+endobj
+2 0 obj
+<</Subtype/Link/StructParent 2/A<</S/URI/URI(https://example.test/)>>>>
+endobj
+3 0 obj
+<</Subtype/Link/StructParent 3/A<</S/URI/URI(https://example.test/)>>>>
+endobj
+4 0 obj
+<</Type/Page/Annots[1 0 R 2 0 R 3 0 R]>>
+endobj
+5 0 obj
+<</Type/Catalog/Pages 4 0 R/StructTreeRoot 6 0 R>>
+endobj
+6 0 obj
+<</Type/StructTreeRoot/ParentTree 7 0 R>>
+endobj
+7 0 obj
+<</Kids[10 0 R]>>
+endobj
+8 0 obj
+<</Type/StructElem/S/Link>>
+endobj
+9 0 obj
+<</Type/StructElem/S/Link>>
+endobj
+10 0 obj
+<</Nums[1 8 0 R 2 8 0 R 3 9 0 R]>>
+endobj
+`;
+	assert.deepEqual( pdfAnnotationUriSequence( source ), [ 'https://example.test/', 'https://example.test/' ] );
+	assert.throws( () => pdfAnnotationUriSequence( source.replace( '/StructParent 2/A<</S/URI/URI(https://example.test/)', '/StructParent 2/A<</S/URI/URI(https://example.test/different)' ) ), /inconsistent destinations/ );
+	assert.throws( () => pdfAnnotationUriSequence( source.replace( '/StructParent 3', '/StructParent 99' ) ), /unresolved Link structure parent/ );
 } );
 
 test( 'PDF is a tagged, searchable, one-page document with semantic headings', () => {

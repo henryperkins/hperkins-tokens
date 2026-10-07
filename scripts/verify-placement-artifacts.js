@@ -43,6 +43,8 @@ const providerVersion = '2.1';
 // directed and reviewed rather than "authored", Creator rather than Author on
 // the independent projects, and Flavor Agent's shipped v0.1.0. The 2026-09-05
 // final pass bounds the project capabilities and clarifies the AI attribution.
+// The 2026-10-06 print redesign separates name/role, company/role, and the
+// release/status metadata while preserving those evidence and attribution pins.
 const REQUIRED_RESUME_COPY = [
 	'WORDCAMP US 2026 — Phoenix · Staffed the Core AI booth, walking maintainers and agency developers through AI provider tooling',
 	'WordPress/ai PR #501',
@@ -55,7 +57,8 @@ const REQUIRED_RESUME_COPY = [
 	'Directed and reviewed an AI-assisted',
 	'Independent projects developed with AI assistance under my direction and review; public tagged releases.',
 	'Flavor Agent — Creator',
-	'v0.1.0 released Aug 26, 2026',
+	'v0.1.0',
+	'Aug 26, 2026',
 	'Provides validation, admin approval, audit records, and undo workflows for supported AI-proposed WordPress changes.',
 	'AI Provider for Codex — Creator',
 	'HPerkins Tokens — Creator',
@@ -214,13 +217,16 @@ function verifyDocx( path, themeVersion ) {
 
 	const text = compactText( xmlText( archive.text( 'word/document.xml' ) ) );
 	assert(
-		text.startsWith( 'Henry Perkins — WordPress Support Engineer' ),
-		'Résumé must begin with the approved WordPress Support Engineer heading.'
+		text.startsWith( 'Henry Perkins WORDPRESS SUPPORT ENGINEER' ),
+		'Résumé must begin with the approved name and separate WordPress Support Engineer role.'
 	);
+	assert( text.includes( 'github.com/henryperkins' ), 'Résumé must print the GitHub address so it remains useful on paper.' );
+	assert( text.includes( 'Lakefront Digital — Independent Technology Consultant' ), 'Résumé must present the company before the consulting role.' );
 	assert(
 		text.includes( 'WordPress · Gutenberg · REST/HTTP/DNS · Defect reproduction · Fix validation · Customer communication' ),
 		'Résumé is missing the approved technical-support header line.'
 	);
+	assertOrdered( text, [ 'WordPress support professional', 'WORDCAMP US 2026' ], 'Résumé introduction' );
 	assertOrdered( text, [
 		'EXPERIENCE',
 		'SELECTED WORDPRESS INVESTIGATIONS & CONTRIBUTIONS',
@@ -242,6 +248,11 @@ function verifyDocx( path, themeVersion ) {
 	] ) {
 		assert( text.includes( claim ), `Résumé is missing required evidence: ${ claim }.` );
 	}
+	const flavorSection = text.slice( text.indexOf( 'Flavor Agent — Creator' ), text.indexOf( 'AI Provider for Codex — Creator' ) );
+	assert( flavorSection.includes( 'v0.1.0' ) && flavorSection.includes( 'Aug 26, 2026' ), 'Résumé must retain Flavor Agent’s shipped version and release date in its record.' );
+	assert( /\bFIX SHIPPED\b/.test( text ), 'Résumé must label the shipped guidelines fix.' );
+	assert( ( text.match( /\bOPEN\b/g ) || [] ).length === 2, 'Résumé must label the two open contributions.' );
+	assert( ( text.match( /\bMERGED\b/g ) || [] ).length === 2, 'Résumé must label the two merged contributions.' );
 	const forbiddenCopy = findForbiddenResumeCopy( text );
 	assert( ! forbiddenCopy, `Résumé contains forbidden stale copy: ${ forbiddenCopy }.` );
 
@@ -420,7 +431,31 @@ function pdfUriFromAnnotation( body, objects ) {
 
 function pdfAnnotationUriSequence( source ) {
 	const objects = pdfIndirectObjects( source );
+	const parents = new Map();
+	const catalog = [ ...objects.values() ].find( ( body ) => /\/Type\s*\/Catalog\b/.test( body ) );
+	const structureReference = catalog && catalog.match( /\/StructTreeRoot\s+(\d+)\s+(\d+)\s+R\b/ );
+	const structure = structureReference && objects.get( `${ structureReference[1] } ${ structureReference[2] }` );
+	const parentReference = structure && structure.match( /\/ParentTree\s+(\d+)\s+(\d+)\s+R\b/ );
+	const visitParents = ( reference, visited = new Set() ) => {
+		assert( ! visited.has( reference ), 'Résumé PDF structure parent tree contains a cycle.' );
+		visited.add( reference );
+		const body = objects.get( reference );
+		assert( body, 'Résumé PDF structure parent tree contains an unresolved node.' );
+		const numbers = pdfArrayForKey( body, 'Nums', objects );
+		for ( const match of ( numbers || '' ).matchAll( /(\d+)\s+(\d+)\s+(\d+)\s+R\b/g ) ) {
+			const key = Number( match[1] );
+			assert( ! parents.has( key ), 'Résumé PDF structure parent tree repeats a key.' );
+			parents.set( key, `${ match[2] } ${ match[3] }` );
+		}
+		for ( const child of pdfReferences( pdfArrayForKey( body, 'Kids', objects ) || '' ) ) {
+			visitParents( child, visited );
+		}
+	};
+	if ( parentReference ) {
+		visitParents( `${ parentReference[1] } ${ parentReference[2] }` );
+	}
 	const urls = [];
+	const seenLinks = new Map();
 	for ( const pageReference of pdfPageSequence( objects ) ) {
 		const pageBody = objects.get( pageReference );
 		const annots = pdfArrayForKey( pageBody, 'Annots', objects );
@@ -428,6 +463,16 @@ function pdfAnnotationUriSequence( source ) {
 			const annotationBody = objects.get( annotationReference );
 			const url = annotationBody && pdfUriFromAnnotation( annotationBody, objects );
 			if ( url ) {
+				const parent = annotationBody.match( /\/StructParent\s+(\d+)\b/ );
+				if ( parent ) {
+					const owner = parents.get( Number( parent[1] ) );
+					assert( owner && /\/S\s*\/Link\b/.test( objects.get( owner ) || '' ), 'Résumé PDF hyperlink has an unresolved Link structure parent.' );
+					if ( seenLinks.has( owner ) ) {
+						assert( seenLinks.get( owner ) === url, 'Résumé PDF logical hyperlink contains inconsistent destinations.' );
+						continue;
+					}
+					seenLinks.set( owner, url );
+				}
 				urls.push( url );
 			}
 		}

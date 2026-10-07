@@ -23,9 +23,19 @@ function Resolve-SupportResumePython {
 }
 
 function Invoke-SupportResumeExport {
+    param(
+        [string]$DocxPath,
+        [string]$PdfPath
+    )
     $themeRoot = Split-Path -Parent $PSScriptRoot
-    $docxPath = Join-Path $themeRoot 'assets\documents\henry-perkins-wordpress-support-engineer-resume.docx'
-    $pdfPath = Join-Path $themeRoot 'assets\documents\henry-perkins-wordpress-support-engineer-resume.pdf'
+    if ([string]::IsNullOrWhiteSpace($DocxPath)) {
+        $DocxPath = Join-Path $themeRoot 'assets\documents\henry-perkins-wordpress-support-engineer-resume.docx'
+    }
+    if ([string]::IsNullOrWhiteSpace($PdfPath)) {
+        $PdfPath = Join-Path $themeRoot 'assets\documents\henry-perkins-wordpress-support-engineer-resume.pdf'
+    }
+    $DocxPath = [IO.Path]::GetFullPath($DocxPath)
+    $PdfPath = [IO.Path]::GetFullPath($PdfPath)
     $python = Resolve-SupportResumePython
     $wordProcessIdsBefore = @(Get-Process -Name WINWORD -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id)
     $state = @{
@@ -96,7 +106,7 @@ function Invoke-SupportResumeExport {
 
     # Word emits valid heading tags inside compressed PDF object streams.
     # Rewrite them losslessly so the portable raw-structure gate can audit H1/H2.
-    & $python (Join-Path $PSScriptRoot 'verify-placement-text-parity.py') --normalize-word-pdf
+    & $python (Join-Path $PSScriptRoot 'verify-placement-text-parity.py') --normalize-word-pdf "--pdf=$PdfPath"
     if ($LASTEXITCODE -ne 0) {
         throw "Tagged-PDF normalization failed with exit code $LASTEXITCODE"
     }

@@ -43,9 +43,10 @@
 
 	// A fragment may live inside a closed research disclosure. Reveal every
 	// ancestor before measuring or scrolling, including nested disclosures.
+	// A disclosure targeted directly keeps its current open/closed state.
 	function revealTarget( target ) {
 		var changed = false;
-		for ( var node = target; node; node = node.parentElement ) {
+		for ( var node = target && target.parentElement; node; node = node.parentElement ) {
 			if ( node.tagName === 'DETAILS' && ! node.open ) {
 				node.open = true;
 				changed = true;

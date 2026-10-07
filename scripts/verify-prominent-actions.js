@@ -75,6 +75,7 @@ const DIGEST_ACTION_COUNTS = {
 		[ 'hp-action-panel', 'is-closing' ].every( ( className ) => classes.includes( className ) )
 	).length,
 };
+const DIGEST_ACTION_PRESENTATION = deriveDigestActionPresentation( DIGEST_BODY );
 
 const LIVE_PAGES = [
 	{ route: '/', railCount: 2, panelCount: 1, openRows: true },
@@ -83,7 +84,7 @@ const LIVE_PAGES = [
 		railCount: ABOUT_ACTION_CONTRACT.railCount,
 		panelCount: ABOUT_ACTION_CONTRACT.panelCount,
 	},
-	{ route: '/job-placement-digest/', ...DIGEST_ACTION_COUNTS, digest: true },
+	{ route: '/job-placement-digest/', ...DIGEST_ACTION_COUNTS, ...DIGEST_ACTION_PRESENTATION, digest: true },
 	{ route: '/work/flavor-agent/demo/', railCount: 1, panelCount: 1 },
 ];
 
@@ -108,6 +109,41 @@ function classLists( contents ) {
 	return Array.from( contents.matchAll( /\bclass="([^"]*)"/g ), ( match ) =>
 		match[1].trim().split( /\s+/ ).filter( Boolean )
 	);
+}
+
+function deriveDigestActionPresentation( contents ) {
+	const isBrief = classLists( contents ).some( ( classes ) => classes.includes( 'hp-placement-brief' ) );
+	return { openRows: isBrief, openPanels: isBrief };
+}
+
+function assertRailPresentation( rail, page, url ) {
+	if ( page.openRows ) {
+		assert( rail.borderTopWidth === 0 && rail.boxShadow === 'none', `${ url } actions must use an open row.` );
+		assert( rail.links.length === 2, `${ url } open action rows must have two destinations.` );
+		if ( page.openPanels ) {
+			assert( rail.backgroundImage === 'none' && rail.backgroundColor === 'rgba(0, 0, 0, 0)', `${ url } open row must retain the page surface.` );
+		}
+	} else {
+		assert( rail.borderTopWidth >= 1, `${ url } action rail has no hairline border.` );
+		assert(
+			rail.backgroundImage !== 'none' || rail.backgroundColor !== 'rgba(0, 0, 0, 0)',
+			`${ url } action rail has no owned surface.`
+		);
+		assert( rail.boxShadow !== 'none', `${ url } action rail has no shadow.` );
+	}
+}
+
+function assertPanelPresentation( panel, page, url ) {
+	if ( page.openPanels ) {
+		assert( panel.borderLeftWidth === 0 && panel.boxShadow === 'none' &&
+			panel.backgroundImage === 'none' && panel.backgroundColor === 'rgba(0, 0, 0, 0)',
+		`${ url } must use an open closing section.` );
+		assert( panel.borderTopWidth >= 1, `${ url } open closing section lost its hairline separator.` );
+	} else {
+		assert( panel.borderLeftWidth >= 3, `${ url } closing panel lost its fixed gold rule.` );
+		assert( panel.backgroundImage !== 'none', `${ url } closing panel lost its parchment surface.` );
+		assert( panel.boxShadow !== 'none', `${ url } closing panel lost its owned shadow.` );
+	}
 }
 
 function hasClassSet( contents, expectedClasses ) {
@@ -402,6 +438,8 @@ async function inspectPage( cdp, page, viewport ) {
 				return {
 					rect: rect(panel),
 					borderLeftWidth: number(style.borderLeftWidth),
+					borderTopWidth: number(style.borderTopWidth),
+					backgroundColor: style.backgroundColor,
 					backgroundImage: style.backgroundImage,
 					boxShadow: style.boxShadow,
 				};
@@ -428,7 +466,7 @@ async function inspectPage( cdp, page, viewport ) {
 				});
 			});
 
-			const digestHeading = document.querySelector('.hp-digest-cta h2');
+			const digestHeading = document.querySelector('.hp-digest-cta h2, .hp-placement-brief__closing h2');
 			return {
 				clientWidth: document.documentElement.clientWidth,
 				scrollWidth: document.documentElement.scrollWidth,
@@ -518,9 +556,9 @@ async function withChrome( callback ) {
 	}
 }
 
-async function verifyLiveContracts() {
+async function verifyLiveContracts( pages = LIVE_PAGES ) {
 	await withChrome( async ( cdp ) => {
-		for ( const page of LIVE_PAGES ) {
+		for ( const page of pages ) {
 			for ( const viewport of VIEWPORTS ) {
 				const result = await inspectPage( cdp, page, viewport );
 
@@ -543,17 +581,7 @@ async function verifyLiveContracts() {
 				assert( result.compactLeakCount === 0, `${ result.url } applied the prominent system to header Subscribe.` );
 
 				for ( const rail of result.rails ) {
-					if ( page.openRows ) {
-						assert( rail.borderTopWidth === 0 && rail.boxShadow === 'none', 'Home actions must use the prototype open row.' );
-						assert( rail.links.length === 2, 'Both Home action rows must have two destinations.' );
-					} else {
-						assert( rail.borderTopWidth >= 1, `${ result.url } action rail has no hairline border.` );
-						assert(
-							rail.backgroundImage !== 'none' || rail.backgroundColor !== 'rgba(0, 0, 0, 0)',
-							`${ result.url } action rail has no owned surface.`
-						);
-						assert( rail.boxShadow !== 'none', `${ result.url } action rail has no shadow.` );
-					}
+					assertRailPresentation( rail, page, result.url );
 					assert( rail.links.length >= 1, `${ result.url } action rail contains no links.` );
 					for ( const link of rail.links ) {
 						assert(
@@ -562,7 +590,7 @@ async function verifyLiveContracts() {
 						);
 					}
 
-					if ( ! page.openRows && viewport.width <= 600 && rail.links.length > 1 ) {
+					if ( ( ! page.openRows || page.digest ) && viewport.width <= 600 && rail.links.length > 1 ) {
 						for ( let index = 0; index < rail.links.length; index++ ) {
 							const link = rail.links[ index ];
 							assert(
@@ -580,9 +608,7 @@ async function verifyLiveContracts() {
 				}
 
 				for ( const panel of result.panels ) {
-					assert( panel.borderLeftWidth >= 3, `${ result.url } closing panel lost its fixed gold rule.` );
-					assert( panel.backgroundImage !== 'none', `${ result.url } closing panel lost its parchment surface.` );
-					assert( panel.boxShadow !== 'none', `${ result.url } closing panel lost its owned shadow.` );
+					assertPanelPresentation( panel, page, result.url );
 				}
 
 				const focusedLinks = result.rails.flatMap( ( rail ) => rail.links );
@@ -621,7 +647,11 @@ async function main() {
 	console.log( `prominent action screenshots: ${ CAPTURE_DIR }` );
 }
 
-main().catch( ( error ) => {
-	console.error( error.message );
-	process.exit( 1 );
-} );
+if ( require.main === module ) {
+	main().catch( ( error ) => {
+		console.error( error.message );
+		process.exit( 1 );
+	} );
+}
+
+module.exports = { deriveDigestActionPresentation, assertRailPresentation, assertPanelPresentation, verifyLiveContracts, LIVE_PAGES };

@@ -25,7 +25,8 @@ const DIGEST = fs.readFileSync(
 	'utf8'
 ).replace( /\r\n/g, '\n' );
 const APPENDIX = fs.readFileSync(
-	path.join( THEME_ROOT, 'content', 'page-drafts', 'placement-method-evidence.html' ),
+	// Preserve the historical appendix contract independently of archive copy edits.
+	path.join( THEME_ROOT, 'content', 'page-snapshots', 'placement-method-evidence.html' ),
 	'utf8'
 ).replace( /\r\n/g, '\n' );
 const FILTER_SCRIPT = fs.readFileSync(
@@ -345,7 +346,7 @@ test( 'never reintroduces a moving branch URL, stale Flavor release, or publicat
    the contract now depends on.
    ----------------------------------------------------------------------- */
 
-test( 'the accepted appendix candidate satisfies its own contract', () => {
+test( 'the accepted appendix snapshot satisfies its selected phase contract', () => {
 	assert.doesNotThrow( () => verifyAppendix( APPENDIX ) );
 } );
 
@@ -355,7 +356,8 @@ test( 'opens the Method appendix with a back-link and verifier-backed audit plat
 	assert( hasBlockClass( hero, 'hp-placement-masthead' ) );
 	assert( hasBlockClass( hero, 'hp-placement-masthead--method' ) );
 	assert.match( hero.outer, /class="wp-block-group hp-placement-audit"/ );
-	assert.match( hero.outer, /href="\/job-placement-digest\/">Back to the Job Placement Digest<\/a>/ );
+	const backLink = APPENDIX.includes( 'Archived placement research · July 2026' ) ? '← Back to Support Engineering' : 'Back to the Job Placement Digest';
+	assert( hero.outer.includes( 'href="/job-placement-digest/">' + backLink + '</a>' ) );
 	assert.deepEqual(
 		[ ...hero.outer.matchAll( /class="hp-placement-audit__value">(\d+)<\/p>/g ) ].map( ( match ) => Number( match[ 1 ] ) ),
 		[ 34, 20, 3 ]
@@ -411,10 +413,10 @@ test( 'keeps Method core/table cells schema-safe and phone labels CSS-backed', (
 	}
 } );
 
-test( 'configures the keyword ledger demonstrated-first while keeping All terms last', () => {
+test( 'opens the keyword ledger on all 34 terms while keeping its filter order', () => {
 	const ledger = /root: '\.hp-resume-keyword-bank',[\s\S]*?\n\s*\},\n\s*\{\n\s*root: '\.hp-live-states'/.exec( FILTER_SCRIPT );
 	assert( ledger, 'The filter script must expose one keyword-ledger configuration.' );
-	assert.match( ledger[ 0 ], /defaultState: 'demonstrated'/ );
+	assert.match( ledger[ 0 ], /defaultState: 'all'/ );
 	assert.deepEqual(
 		[ ...ledger[ 0 ].matchAll( /\{ key: '([^']+)', label: '([^']+)' \}/g ) ].map( ( match ) => [ match[ 1 ], match[ 2 ] ] ),
 		[ [ 'demonstrated', 'Demonstrated' ], [ 'partial', 'Partial' ], [ 'gap', 'Gap' ], [ 'all', 'All terms' ] ]

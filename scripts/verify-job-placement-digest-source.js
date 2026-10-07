@@ -670,6 +670,7 @@ function verifyMain( markup, _themeVersion, _deployedCommit, options = {} ) {
 }
 
 function verifyAppendix( markup ) {
+	const isArchive = markup.includes( 'Archived placement research · July 2026' );
 	verifyHeadingContract( 'Placement Method and Evidence draft', markup );
 	verifyNoPublicationPlaceholders( 'Placement Method and Evidence draft', markup );
 	verifyNoMovingGitHubLinks( 'Placement Method and Evidence draft', markup );
@@ -684,7 +685,7 @@ function verifyAppendix( markup ) {
 	assert( getClassCount( hero.outer, 'hp-placement-audit' ) === 1, 'The Method masthead must contain one audit figure plate.' );
 	assert( getClassCount( hero.outer, 'hp-method-scope' ) === 0, 'The retired Method scope chips must not survive beside the audit plate.' );
 	assert(
-		JSON.stringify( extractLinks( hero.outer ) ) === JSON.stringify( [ [ 'Back to the Job Placement Digest', '/job-placement-digest/' ] ] ),
+		JSON.stringify( extractLinks( hero.outer ) ) === JSON.stringify( [ [ isArchive ? '← Back to Support Engineering' : 'Back to the Job Placement Digest', '/job-placement-digest/' ] ] ),
 		'The Method masthead must provide one visible back-link to the Digest.'
 	);
 	for ( const [ label, value ] of METHOD_AUDIT_FIGURES ) {
@@ -730,7 +731,7 @@ function verifyAppendix( markup ) {
 		label: 'The keyword ledger',
 	} );
 	const keywordSection = topLevelBlocks.find( ( block ) => block.attrs.anchor === 'resume-keyword-bank' );
-	assert( hasBlockClass( keywordSection, 'hp-resume-keyword-bank' ), 'The keyword section must keep the Demonstrated-first filter root class.' );
+	assert( hasBlockClass( keywordSection, 'hp-resume-keyword-bank' ), 'The keyword section must keep the filter root class.' );
 	verifyCoreTableShape( markup, 'hp-keyword-table', [ 'Keyword', 'Posting signal', 'Evidence boundary' ] );
 	verifyUnfilteredSourceLedger( markup, 'hp-keyword-table' );
 	assert( getClassCount( markup, 'hp-placement-standing-tile' ) === 3, 'The keyword ledger must define three standing tiles.' );
@@ -842,6 +843,12 @@ function main() {
 
 	verifyMain( main );
 	verifyAppendix( appendix );
+	if ( main.includes( 'hp-placement-brief' ) ) {
+		require( './lib/placement-brief-contract' ).verifyPlacementArchive(
+			appendix,
+			readRequiredFile( path.join( themeRoot, 'content/page-snapshots/placement-method-evidence.html' ) )
+		);
+	}
 	verifyForbiddenCopy( `${ main }\n${ appendix }` );
 	assert( ! fs.existsSync( retiredPatternPath ), 'patterns/job-placement-digest.php must be retired, not maintained as a third full-page source.' );
 

@@ -39,7 +39,7 @@ def add_sized_hyperlink(paragraph, text, url, size, size_tag="w:sz"):
 class MinimumEffectiveBodySizeTests(unittest.TestCase):
     def make_document(self):
         document = Document()
-        document.styles["Normal"].font.size = Pt(9.5)
+        document.styles["Normal"].font.size = Pt(11.5)
         return document
 
     def test_detects_undersized_direct_run(self):
@@ -61,9 +61,9 @@ class MinimumEffectiveBodySizeTests(unittest.TestCase):
     def test_requires_exactly_one_scoped_resume_event(self):
         document = self.make_document()
         event_style = document.styles.add_style("Resume Event", 1)
-        event_style.font.size = Pt(8.5)
+        event_style.font.size = Pt(9.5)
         document.add_paragraph(UPDATER.EVENT, style=event_style)
-        self.assertEqual(UPDATER.assert_resume_event_contract(document), 8.5)
+        self.assertEqual(UPDATER.assert_resume_event_contract(document), 9.5)
 
         document.add_paragraph("unexpected second event", style=event_style)
         with self.assertRaisesRegex(ValueError, r"exactly one Resume Event"):
@@ -72,17 +72,78 @@ class MinimumEffectiveBodySizeTests(unittest.TestCase):
     def test_requires_exact_event_copy_and_minimum_size(self):
         wrong_copy = self.make_document()
         wrong_style = wrong_copy.styles.add_style("Resume Event", 1)
-        wrong_style.font.size = Pt(8.5)
+        wrong_style.font.size = Pt(9.5)
         wrong_copy.add_paragraph("unexpected event", style=wrong_style)
         with self.assertRaisesRegex(ValueError, r"approved WCUS event copy$"):
             UPDATER.assert_resume_event_contract(wrong_copy)
 
         undersized = self.make_document()
         undersized_style = undersized.styles.add_style("Resume Event", 1)
-        undersized_style.font.size = Pt(8)
+        undersized_style.font.size = Pt(9)
         undersized.add_paragraph(UPDATER.EVENT, style=undersized_style)
-        with self.assertRaisesRegex(ValueError, r"below 8\.5pt: 8\.0pt$"):
+        with self.assertRaisesRegex(ValueError, r"below 9\.5pt: 9\.0pt$"):
             UPDATER.assert_resume_event_contract(undersized)
+
+    def test_scoped_metadata_can_be_smaller_than_body_without_lowering_body_floor(self):
+        document = self.make_document()
+        document.add_paragraph("Readable body")
+        metadata_style = document.styles.add_style("Resume Metadata", 1)
+        metadata_style.font.size = Pt(9.5)
+        table = document.add_table(rows=1, cols=2)
+        table.cell(0, 0).paragraphs[0].text = "Claim"
+        paragraph = table.cell(0, 1).paragraphs[0]
+        paragraph.style = metadata_style
+        paragraph.text = "MERGED"
+        self.assertEqual(UPDATER.minimum_effective_body_size(document), 11.5)
+        self.assertEqual(UPDATER.assert_resume_metadata_size(document), 9.5)
+
+    def test_document_walker_preserves_nested_and_merged_cell_order(self):
+        document = self.make_document()
+        document.add_paragraph("Before")
+        table = document.add_table(rows=1, cols=2)
+        left, right = table.rows[0].cells
+        left.paragraphs[0].text = "Left"
+        nested = left.add_table(rows=1, cols=2)
+        nested.cell(0, 0).merge(nested.cell(0, 1)).text = "One merged cell"
+        right.paragraphs[0].text = "Right"
+        document.add_paragraph("After")
+        self.assertEqual(
+            [paragraph.text for paragraph in UPDATER.iter_document_paragraphs(document) if paragraph.text],
+            ["Before", "Left", "One merged cell", "Right", "After"],
+        )
+
+    def test_cell_body_hyperlinks_and_metadata_hyperlinks_are_audited(self):
+        document = self.make_document()
+        table = document.add_table(rows=1, cols=2)
+        body = table.cell(0, 0).paragraphs[0]
+        add_sized_hyperlink(body, "small evidence", "https://example.test/evidence", 10.5)
+        metadata_style = document.styles.add_style("Resume Contact", 1)
+        metadata_style.font.size = Pt(9.5)
+        metadata = table.cell(0, 1).paragraphs[0]
+        metadata.style = metadata_style
+        add_sized_hyperlink(metadata, "small contact", "mailto:person@example.test", 9)
+        with self.assertRaisesRegex(ValueError, r"10\.5pt$"):
+            UPDATER.assert_minimum_body_size(document)
+        with self.assertRaisesRegex(ValueError, r"below 9\.5pt: 9\.0pt$"):
+            UPDATER.assert_resume_metadata_size(document)
+
+    def test_event_contract_finds_event_in_a_table_cell(self):
+        document = self.make_document()
+        event_style = document.styles.add_style("Resume Event", 1)
+        event_style.font.size = Pt(9.5)
+        table = document.add_table(rows=1, cols=1)
+        paragraph = table.cell(0, 0).paragraphs[0]
+        paragraph.style = event_style
+        paragraph.text = UPDATER.EVENT
+        self.assertEqual(UPDATER.assert_resume_event_contract(document), 9.5)
+
+    def test_unrecognized_small_style_is_not_a_metadata_exemption(self):
+        document = self.make_document()
+        style = document.styles.add_style("Resume Other", 1)
+        style.font.size = Pt(9.5)
+        document.add_paragraph("Actual body", style=style)
+        with self.assertRaisesRegex(ValueError, r"9\.5pt$"):
+            UPDATER.assert_minimum_body_size(document)
 
 
 class ResumeRegenerationTests(unittest.TestCase):
