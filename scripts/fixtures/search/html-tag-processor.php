@@ -4,18 +4,24 @@ class WP_HTML_Tag_Processor {
 	private $parts;
 	private $index = -1;
 	private $tag = '';
+	private $closer = false;
 
 	public function __construct( $html ) {
 		$this->parts = preg_split( '/(<[^>]+>)/', $html, -1, PREG_SPLIT_DELIM_CAPTURE );
 	}
 
 	public function next_tag( $query = null ) {
-		$wanted = is_string( $query ) ? $query : ( $query['tag_name'] ?? null );
+		$wanted  = is_string( $query ) ? $query : ( $query['tag_name'] ?? null );
+		$closers = is_array( $query ) && 'visit' === ( $query['tag_closers'] ?? 'skip' );
 		while ( ++$this->index < count( $this->parts ) ) {
-			if ( ! preg_match( '/^<([a-z][a-z0-9-]*)\b/i', $this->parts[ $this->index ], $match ) ) {
+			if ( ! preg_match( '/^<(\/?)([a-z][a-z0-9-]*)\b/i', $this->parts[ $this->index ], $match ) ) {
 				continue;
 			}
-			$this->tag = strtoupper( $match[1] );
+			if ( '/' === $match[1] && ! $closers ) {
+				continue;
+			}
+			$this->closer = '/' === $match[1];
+			$this->tag    = strtoupper( $match[2] );
 			if ( $wanted && strtoupper( $wanted ) !== $this->tag ) {
 				continue;
 			}
@@ -29,6 +35,10 @@ class WP_HTML_Tag_Processor {
 
 	public function get_tag() {
 		return $this->tag;
+	}
+
+	public function is_tag_closer() {
+		return $this->closer;
 	}
 
 	private function attribute_pattern( $name ) {

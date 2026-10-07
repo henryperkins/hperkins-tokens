@@ -41,6 +41,17 @@ const SUB_FLOOR_TYPE = {
 	'.hp-council-digest-cue': 8,
 };
 const SEARCH_HINT_SIZE = 12;
+// Just above the drawer breakpoint the bar's side columns are narrowest, and
+// the wordmark ran into Work and was cut to an ellipsis. From 782 to 899.9px
+// the nav gap and the wordmark's tracking tighten; from 900px nothing changes.
+const MID_DESKTOP_WORDMARK = { navGap: 20, tracking: 0.12 };
+const WIDE_DESKTOP_WORDMARK = { navGap: 28, tracking: 0.17 };
+const WORDMARK_WIDTHS = [ 782, 810, 820, 834, 899, 900, 1024 ];
+// The iPad portrait widths above the breakpoint (10.2", Air, Pro 11") show
+// the whole wordmark. Below 810px it can still lose its last letters: the
+// bar sits inside the page's root padding, so its columns are 32px narrower
+// than the design project's, where these values were measured.
+const WHOLE_WORDMARK_FROM = 810;
 // The Work panel eyebrow left the exemption list: it sets at the 12px floor,
 // the size "View all work" already uses beside it.
 const EVIDENCE_EYEBROW_SIZE = 12;
@@ -188,6 +199,8 @@ function verifySource() {
 		'--hp-header-h: 68px;',
 		'--hp-header-h-compact: 62px;',
 		'--hp-nav-gap: 28px;',
+		'@media (min-width: 782px) and (max-width: 899.9px) {\n\t:root {\n\t\t--hp-nav-gap: 20px;\n\t}\n\n\t.hp-council-brand__name {\n\t\tletter-spacing: 0.12em;\n\t}\n}',
+		'.hp-council-search-form kbd {\n\tflex: none;\n\toverflow-wrap: normal;',
 		'--hp-nav-label: var(--wp--preset--font-size--sm);',
 		'.hp-council-nav {\n\tposition: relative;',
 		'.hp-council-work-panel',
@@ -339,7 +352,9 @@ function verifySource() {
 		'await verifySearchShortcut( cdp, sessionId );',
 		'await verifyMastheadLift( cdp, sessionId );',
 		'await verifyBrandStar( cdp, sessionId );',
+		'await verifyMidDesktopWordmark( cdp, sessionId, viewport );',
 		'await verifyCurrentPageRule( cdp, sessionId );',
+		'search.hint.atRest === 1 && search.hint.squeezed === 1',
 		'for ( const [ label, gesture ] of Object.entries( gestures ) ) {',
 		"type: 'mousePressed', x: 10, y: 300",
 		'fs.statSync( candidate ).isFile()',
@@ -936,12 +951,41 @@ async function verifyDesktopGeometry( cdp, sessionId, viewport, captureDir ) {
 			actionsRight: actions.right,
 			focused: document.activeElement === panel.querySelector('input[type="search"]'),
 			hintSize: parseFloat(getComputedStyle(panel.querySelector('kbd')).fontSize),
+			hint: (() => {
+				const kbd = panel.querySelector('kbd');
+				const form = panel.querySelector('.hp-council-search-form');
+				const lines = () => {
+					const range = document.createRange();
+					range.selectNodeContents(kbd);
+					return new Set(Array.from(range.getClientRects()).filter((box) => box.width > 0).map((box) => Math.round(box.top))).size;
+				};
+				const style = getComputedStyle(kbd);
+				const atRest = lines();
+				// Squeeze the form below the hint plus a usable field: the field
+				// has to give way, never the hint. A shrinkable hint broke here.
+				form.style.width = '120px';
+				form.style.maxWidth = '120px';
+				const squeezed = lines();
+				form.style.width = '';
+				form.style.maxWidth = '';
+				return { atRest, squeezed, flexShrink: style.flexShrink, overflowWrap: style.overflowWrap };
+			})(),
 		};
 	})()` );
 	assert( approximately( search.width, 278 ), `${ viewport.name } search panel is ${ search.width }px; expected 278px.` );
 	assert( approximately( search.right, search.actionsRight ), `${ viewport.name } search panel is not right-anchored.` );
 	assert( search.focused, `${ viewport.name } search input did not receive focus.` );
 	assert( approximately( search.hintSize, SEARCH_HINT_SIZE, 0.1 ), `${ viewport.name } search keyboard hint is ${ search.hintSize }px; expected the ${ SEARCH_HINT_SIZE }px text floor.` );
+	// The global inline-code rule sets overflow-wrap:anywhere on kbd, and the
+	// hint sits beside a flex:1 field, so a shrinkable hint broke into "ES / C".
+	assert(
+		search.hint.flexShrink === '0' && search.hint.overflowWrap === 'normal',
+		`${ viewport.name } search hint can shrink or break: flex-shrink ${ search.hint.flexShrink }, overflow-wrap ${ search.hint.overflowWrap }.`
+	);
+	assert(
+		search.hint.atRest === 1 && search.hint.squeezed === 1,
+		`${ viewport.name } search hint "esc" breaks across lines (${ search.hint.atRest } at rest, ${ search.hint.squeezed } in a squeezed form).`
+	);
 	assert( search.left >= -1 && search.right <= initial.clientWidth + 1, `${ viewport.name } search panel exceeds the viewport.` );
 	if ( viewport.name === 'desktop-1440' ) {
 		await capture( cdp, sessionId, captureDir, 'desktop-1440-search-open', viewport );
@@ -1963,6 +2007,55 @@ async function verifyBrandStar( cdp, sessionId ) {
 	}, sessionId );
 }
 
+// The mid-desktop wordmark: the tightened values apply exactly from 782 to
+// 899.9px, the nav keeps one row, the wordmark never runs under Work, and it
+// is whole from the narrowest iPad portrait width up. Scrollbars overlay the
+// page, as they do on those iPads: a classic 15px scrollbar narrows the bar's
+// columns by half its width and moves that point about 15px wider.
+async function verifyMidDesktopWordmark( cdp, sessionId, originalViewport ) {
+	await cdp.send( 'Emulation.setScrollbarsHidden', { hidden: true }, sessionId );
+	for ( const width of WORDMARK_WIDTHS ) {
+		await cdp.send( 'Emulation.setDeviceMetricsOverride', {
+			width, height: 900, deviceScaleFactor: 1, mobile: false,
+		}, sessionId );
+		await wait( 80 );
+		const probe = await evaluate( cdp, sessionId, `(() => {
+			const name = document.querySelector('.hp-council-brand__name');
+			const work = document.querySelector('[data-hp-header-trigger="work"] .hp-council-nav__label');
+			const range = document.createRange();
+			range.selectNodeContents(name);
+			const textRight = Math.max(...Array.from(range.getClientRects()).map((box) => box.right));
+			const style = getComputedStyle(name);
+			return {
+				navGap: parseFloat(getComputedStyle(document.querySelector('.hp-council-nav__list')).columnGap),
+				tracking: parseFloat(style.letterSpacing) / parseFloat(style.fontSize),
+				whole: name.scrollWidth <= name.clientWidth + 0.5,
+				gap: work.getBoundingClientRect().left - Math.min(textRight, name.getBoundingClientRect().right),
+				rows: new Set(Array.from(document.querySelectorAll('.hp-council-nav__list > li')).map((item) => Math.round(item.getBoundingClientRect().top))).size,
+			};
+		})()` );
+		const expected = width < 900 ? MID_DESKTOP_WORDMARK : WIDE_DESKTOP_WORDMARK;
+		assert(
+			approximately( probe.navGap, expected.navGap, 0.1 ) && approximately( probe.tracking, expected.tracking, 0.002 ),
+			`${ width }px header sets a ${ probe.navGap }px nav gap and ${ probe.tracking.toFixed( 3 ) }em wordmark tracking; expected ${ expected.navGap }px and ${ expected.tracking }em.`
+		);
+		assert( probe.rows === 1, `${ width }px header nav wraps to ${ probe.rows } rows.` );
+		assert( probe.gap >= -0.5, `${ width }px wordmark runs ${ ( -probe.gap ).toFixed( 1 ) }px under Work.` );
+		assert(
+			width < WHOLE_WORDMARK_FROM || probe.whole,
+			`${ width }px wordmark is cut to an ellipsis (${ probe.gap.toFixed( 1 ) }px from Work).`
+		);
+	}
+	await cdp.send( 'Emulation.setScrollbarsHidden', { hidden: false }, sessionId );
+	await cdp.send( 'Emulation.setDeviceMetricsOverride', {
+		width: originalViewport.width,
+		height: originalViewport.height,
+		deviceScaleFactor: 1,
+		mobile: false,
+	}, sessionId );
+	await wait( 80 );
+}
+
 async function verifyBoundarySettlement( cdp, sessionId, originalViewport ) {
 	await cdp.send( 'Emulation.setDeviceMetricsOverride', {
 		width: 782, height: 900, deviceScaleFactor: 1, mobile: false,
@@ -2146,6 +2239,7 @@ async function inspectViewport( cdp, viewport, captureDir ) {
 				await verifySearchShortcut( cdp, sessionId );
 				await verifyMastheadLift( cdp, sessionId );
 				await verifyBrandStar( cdp, sessionId );
+				await verifyMidDesktopWordmark( cdp, sessionId, viewport );
 				await verifyBoundarySettlement( cdp, sessionId, viewport );
 				// Navigates to /about/, so it runs last.
 				await verifyCurrentPageRule( cdp, sessionId );

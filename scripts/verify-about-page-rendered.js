@@ -913,6 +913,17 @@ function buildInspectionExpression( opts ) {
 			shellMain.remove();
 		}
 
+		// --- footer colophon: the dots, and the links they separate ---------
+		const colophon = document.querySelector('.hp-footer__colophon');
+		out.colophon = colophon ? {
+			text: colophon.innerText.replace(/\\s+/gu, ' ').trim(),
+			dots: Array.from(colophon.querySelectorAll(':scope > span[aria-hidden="true"]')).map((dot) => ({
+				afterLink: !!dot.previousElementSibling && dot.previousElementSibling.tagName === 'A',
+				shown: getComputedStyle(dot).display !== 'none',
+			})),
+			linkHeights: Array.from(colophon.querySelectorAll(':scope > a')).map((link) => link.getBoundingClientRect().height),
+		} : null;
+
 		const maximumSeconds = (value) => Math.max(...value.split(',').map((part) => {
 			const number = Number.parseFloat(part) || 0;
 			return part.trim().endsWith('ms') ? number / 1000 : number;
@@ -1271,6 +1282,27 @@ function verifyGeometry( result, viewport, expectations ) {
 			}
 			assert( result.filterRail.display === 'none', `${ label }: desktop filter rail is visible below 64rem.` );
 		}
+	}
+	// The v3 phone footer stacks the colophon's links as 48px rows and drops
+	// the dots between them, and only those: the tenure dot follows text, not
+	// a link, and has to survive at every width.
+	assert( result.colophon, `${ label }: the footer colophon is missing.` );
+	const tenureDots = result.colophon.dots.filter( ( dot ) => ! dot.afterLink );
+	const linkDots = result.colophon.dots.filter( ( dot ) => dot.afterLink );
+	assert(
+		tenureDots.length === 1 && tenureDots[ 0 ].shown &&
+			result.colophon.text.includes( 'member since 2007 · professional WordPress work since 2012.' ),
+		`${ label }: the colophon lost its tenure dot: "${ result.colophon.text }".`
+	);
+	assert( linkDots.length === 2, `${ label }: expected two dots between the colophon links, got ${ linkDots.length }.` );
+	if ( isV3 && width <= 600 ) {
+		assert( linkDots.every( ( dot ) => ! dot.shown ), `${ label }: the stacked colophon links still show their dots.` );
+		assert(
+			result.colophon.linkHeights.length === 3 && result.colophon.linkHeights.every( ( height ) => height >= 48 ),
+			`${ label }: the colophon links do not stack as 48px rows: ${ JSON.stringify( result.colophon.linkHeights ) }.`
+		);
+	} else {
+		assert( linkDots.every( ( dot ) => dot.shown ), `${ label }: the inline colophon hides a dot between its links.` );
 	}
 }
 

@@ -2073,34 +2073,73 @@ p.hp-contact-form__hint {
   background: radial-gradient(120% 140% at 80% -10%, var(--wp--preset--color--twilight-700) 0%, var(--wp--preset--color--twilight-800) 45%, var(--wp--preset--color--twilight-900) 100%);
 }
 /* Plate-cover fallback art (eight-point compass star). Shows for posts with no
-   featured image; a real featured image (z-index 2) sits above it and hides it. */
-.hp-postcard__media::after {
-  content: "";
+   featured image; a real featured image (z-index 2) and the inset frame
+   (z-index 1) both sit above it, so an image still hides it.
+
+   The star is the ::after of .hp-postcard__plate, an empty span that
+   inc/postcards.php appends as the media group's last child, so it can turn
+   about its own centre while the diagonal mask, on the plate, stays still. It
+   is placed by background-position's arithmetic: left/top p% of the plate,
+   then translate -p% of its own size, which lands it exactly where
+   `background-position: p%` put it when the star was painted on
+   .hp-postcard__media::after. */
+.hp-postcard__media > .hp-postcard__plate {
+  --hp-plate-x: 118%;
+  --hp-plate-y: 50%;
+  --hp-plate-size: 62%;
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cg stroke='%23C29A44' stroke-width='1.4' stroke-linejoin='round' stroke-linecap='round' opacity='0.9'%3E%3Cpath d='M50 3 L63.8 16.7 L83.2 16.8 L83.3 36.2 L97 50 L83.3 63.8 L83.2 83.2 L63.8 83.3 L50 97 L36.2 83.3 L16.8 83.2 L16.7 63.8 L3 50 L16.7 36.2 L16.8 16.8 L36.2 16.7 Z'/%3E%3Cpath d='M50 21 L57.5 42.5 L79 50 L57.5 57.5 L50 79 L42.5 57.5 L21 50 L42.5 42.5 Z' opacity='0.5'/%3E%3Ccircle cx='50' cy='50' r='4.5' fill='%23C29A44' stroke='none'/%3E%3C/g%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: 118% 50%;
-  background-size: 62% auto;
+  /* Core's flow layout gives every child after the first a block-gap margin. */
+  margin: 0;
   -webkit-mask-image: linear-gradient(105deg, transparent 2%, #000 52%);
   mask-image: linear-gradient(105deg, transparent 2%, #000 52%);
   pointer-events: none;
 }
-.hp-journal-grid .wp-block-post-template > li:nth-child(3n+1) .hp-postcard__media::after {
-  background-position: 118% 44%;
-  background-size: 62% auto;
+.hp-postcard__plate::after {
+  content: "";
+  position: absolute;
+  left: var(--hp-plate-x);
+  top: var(--hp-plate-y);
+  width: var(--hp-plate-size);
+  aspect-ratio: 1;
+  translate: calc(-1 * var(--hp-plate-x)) calc(-1 * var(--hp-plate-y));
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none'%3E%3Cg stroke='%23C29A44' stroke-width='1.4' stroke-linejoin='round' stroke-linecap='round' opacity='0.9'%3E%3Cpath d='M50 3 L63.8 16.7 L83.2 16.8 L83.3 36.2 L97 50 L83.3 63.8 L83.2 83.2 L63.8 83.3 L50 97 L36.2 83.3 L16.8 83.2 L16.7 63.8 L3 50 L16.7 36.2 L16.8 16.8 L36.2 16.7 Z'/%3E%3Cpath d='M50 21 L57.5 42.5 L79 50 L57.5 57.5 L50 79 L42.5 57.5 L21 50 L42.5 42.5 Z' opacity='0.5'/%3E%3Ccircle cx='50' cy='50' r='4.5' fill='%23C29A44' stroke='none'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+  transition: rotate var(--wp--custom--dur--slow) var(--wp--custom--ease--calm);
 }
-.hp-journal-grid .wp-block-post-template > li:nth-child(3n+2) .hp-postcard__media::after {
-  background-position: 88% 54%;
-  background-size: 54% auto;
+/* The media group no longer paints the star. Jetpack Boost's inlined critical
+   CSS carries the old ::after star until it is regenerated; its loader turns
+   that copy off at `load`, but without JavaScript it stays on beside this
+   sheet, and nothing else cancels it: every image-less card would draw two. */
+.hp-postcard__media::after { content: none; }
+.hp-journal-grid .wp-block-post-template > li:nth-child(3n+1) .hp-postcard__plate {
+  --hp-plate-y: 44%;
+}
+.hp-journal-grid .wp-block-post-template > li:nth-child(3n+2) .hp-postcard__plate {
+  --hp-plate-x: 88%;
+  --hp-plate-y: 54%;
+  --hp-plate-size: 54%;
   -webkit-mask-image: linear-gradient(95deg, transparent 4%, #000 58%);
   mask-image: linear-gradient(95deg, transparent 4%, #000 58%);
 }
-.hp-journal-grid .wp-block-post-template > li:nth-child(3n+3) .hp-postcard__media::after {
-  background-position: 134% 39%;
-  background-size: 72% auto;
+.hp-journal-grid .wp-block-post-template > li:nth-child(3n+3) .hp-postcard__plate {
+  --hp-plate-x: 134%;
+  --hp-plate-y: 39%;
+  --hp-plate-size: 72%;
   -webkit-mask-image: linear-gradient(115deg, transparent 0%, #000 48%);
   mask-image: linear-gradient(115deg, transparent 0%, #000 48%);
+}
+/* A quarter turn lands the eight-point star on itself, so it settles exactly
+   as drawn: the header brand star's and Home emblem's move. The title link is
+   the card's one tab stop, so its focus turns the star as hover does. */
+.hp-postcards .wp-block-post-template > li:hover .hp-postcard__plate::after,
+.hp-postcards .wp-block-post-template > li:has(.hp-postcard__title a:focus-visible) .hp-postcard__plate::after {
+  rotate: 90deg;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-postcard__plate::after {
+    transition: none;
+    rotate: none !important;
+  }
 }
 .hp-postcard__media::before {
   content: "";
@@ -2150,14 +2189,24 @@ p.hp-contact-form__hint {
   color: var(--wp--custom--text--accent);
   text-decoration: none;
 }
-.hp-postcard__title { margin: 0; }
-.hp-postcard__title a {
+/* The type is set on the heading and the link inherits it. Set on the link
+   alone, the heading kept theme.json's h2/h3 size and 1.22 leading: core makes
+   the post-title link inline-block, so the link still spaced its own lines,
+   but it sat on a line box with the heading's larger strut, which added 2–9px
+   under every title. */
+.hp-postcard__title {
+  margin: 0;
   font-family: var(--wp--preset--font-family--display);
   font-weight: 500;
   font-size: var(--wp--preset--font-size--xl);
   line-height: 1.15;
   letter-spacing: -0.01em;
   color: var(--wp--custom--text--strong);
+}
+.hp-postcard__title a {
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
   text-decoration: none;
 }
 .hp-postcard__title a:hover { color: var(--wp--custom--text--link); }
@@ -2213,7 +2262,7 @@ p.hp-contact-form__hint {
   grid-template-columns: 1fr;
 }
 .hp-journal-featured .wp-block-post-template > li { overflow: hidden; }
-.hp-journal-featured .hp-postcard__title a {
+.hp-journal-featured .hp-postcard__title {
   font-size: var(--wp--preset--font-size--2-xl);
   line-height: 1.1;
 }
@@ -2241,7 +2290,7 @@ p.hp-contact-form__hint {
   .hp-journal-featured .wp-block-post-template > li:first-child .hp-postcard__body {
     padding: var(--wp--preset--spacing--7);
   }
-  .hp-journal-featured .wp-block-post-template > li:first-child .hp-postcard__title a {
+  .hp-journal-featured .wp-block-post-template > li:first-child .hp-postcard__title {
     font-size: var(--wp--preset--font-size--3-xl);
   }
   /* Secondaries — horizontal plate cards stacked in the right column. */
@@ -2255,13 +2304,35 @@ p.hp-contact-form__hint {
   .hp-journal-featured .wp-block-post-template > li:nth-child(n+2) .hp-postcard__body {
     justify-content: center;
   }
-  .hp-journal-featured .wp-block-post-template > li:nth-child(n+2) .hp-postcard__title a {
+  .hp-journal-featured .wp-block-post-template > li:nth-child(n+2) .hp-postcard__title {
     font-size: var(--wp--preset--font-size--lg);
   }
   .hp-journal-featured .wp-block-post-template > li:nth-child(n+2) .hp-postcard__excerpt {
     /* base, not sm: excerpts are the primary descriptive copy of each card —
        17px floor (2026-07 typography review). */
     font-size: var(--wp--preset--font-size--base);
+  }
+}
+/* Mid-width steps. The secondaries keep their image at 42% of the card, so
+   at 1.5fr / 1fr their text column got narrow below 1181px. Each selector
+   matches the 782px rule it overrides exactly, so source order decides: keep
+   these after that block. Both also outrank core's one-class grid container
+   rule, as the 782px rule does. */
+@media (min-width: 782px) and (max-width: 900px) {
+  /* One column: the lead drops its span, and the secondaries stay horizontal
+     at full width. */
+  .hp-journal-featured .wp-block-post-template:has(> li:nth-child(2)) {
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: auto;
+  }
+  .hp-journal-featured .wp-block-post-template:has(> li:nth-child(3)) > li:first-child {
+    grid-row: auto;
+  }
+}
+@media (min-width: 901px) and (max-width: 1180px) {
+  /* Equal columns; the lead still spans both rows. */
+  .hp-journal-featured .wp-block-post-template:has(> li:nth-child(2)) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
@@ -8094,7 +8165,11 @@ html.has-about-v3-print-view footer.wp-block-template-part {
 		font: var(--wp--custom--type--ui);
 	}
 
-	body:has(.hp-about-resume-v3) .hp-footer__colophon > span[aria-hidden="true"] {
+	/* Only the dots between the stacked links. `+` compares element siblings
+	   and skips text, so each link's dot matches across the space before it,
+	   while the tenure dot ("member since 2007 · professional WordPress work
+	   since 2012") is the colophon's first element and has no link before it. */
+	body:has(.hp-about-resume-v3) .hp-footer__colophon > a + span[aria-hidden="true"] {
 		display: none;
 	}
 }

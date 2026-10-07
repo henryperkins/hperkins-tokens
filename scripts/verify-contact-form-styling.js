@@ -51,26 +51,27 @@ const ORIGIN = getOrigin();
 const CONTACT_EMAIL = 'htperkins@gmail.com';
 const SUBSCRIBE_ACTION = new URL( '/wp-admin/admin-post.php', ORIGIN ).href;
 
-// Derive the expected status copy from the subscribe pattern itself so this
-// verifier can never drift from the strings the pattern actually renders.
+// Derive the expected status copy from the status helper the subscribe pattern
+// renders (inc/subscribe-form.php) so this verifier can never drift from the
+// strings the form actually shows.
 function extractSubscribeMessage( source, status ) {
 	const match = source.match( new RegExp(
 		String.raw`'${ status }'\s*===\s*\$subscribe_status\s*\)\s*\{\s*\$subscribe_message\s*=\s*'((?:[^'\\]|\\.)*)';`
 	) );
 	if ( ! match ) {
 		throw new Error(
-			`patterns/imladris-subscribe.php no longer assigns $subscribe_message for the "${ status }" status; update the extractor in verify-contact-form-styling.js alongside the pattern.`
+			`inc/subscribe-form.php no longer assigns $subscribe_message for the "${ status }" status; update the extractor in verify-contact-form-styling.js alongside the helper.`
 		);
 	}
 	return match[1].replace( /\\(['\\])/g, '$1' );
 }
 
-const subscribePatternSource = readFileSync(
-	path.join( __dirname, '..', 'patterns/imladris-subscribe.php' ),
+const subscribeStatusSource = readFileSync(
+	path.join( __dirname, '..', 'inc/subscribe-form.php' ),
 	'utf8'
 );
-const SUBSCRIBE_RECEIVED = extractSubscribeMessage( subscribePatternSource, 'success' );
-const SUBSCRIBE_EMAIL_ERROR = extractSubscribeMessage( subscribePatternSource, 'invalid-email' );
+const SUBSCRIBE_RECEIVED = extractSubscribeMessage( subscribeStatusSource, 'success' );
+const SUBSCRIBE_EMAIL_ERROR = extractSubscribeMessage( subscribeStatusSource, 'invalid-email' );
 
 // Same idea for the contact confirmation: read the copy out of the script that
 // renders it instead of keeping a second, silently divergent copy here — no

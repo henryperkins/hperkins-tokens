@@ -34,6 +34,8 @@ require_once get_stylesheet_directory() . '/inc/about-gravatar-heading.php';
 require_once get_stylesheet_directory() . '/inc/component-styles.php';
 require_once get_stylesheet_directory() . '/inc/content-images.php';
 require_once get_stylesheet_directory() . '/inc/reader.php';
+require_once get_stylesheet_directory() . '/inc/postcards.php';
+require_once get_stylesheet_directory() . '/inc/subscribe-form.php';
 require_once get_stylesheet_directory() . '/inc/resume-route.php';
 require_once get_stylesheet_directory() . '/inc/search.php';
 require_once get_stylesheet_directory() . '/inc/react-19-opt-out.php';

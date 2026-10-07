@@ -95,6 +95,7 @@ jobs:
             scripts/lib/placement-artifact-contract.test.js \
             scripts/lib/placement-artifact-links.test.js \
             scripts/lib/placement-brief-contract.test.js \
+            scripts/lib/postcard-plate.test.js \
             scripts/lib/production-gates-workflow.test.js \
             scripts/lib/react-19-opt-out.test.js \
             scripts/lib/release-record.test.js \
@@ -104,6 +105,7 @@ jobs:
             scripts/lib/search-blocks.test.js \
             scripts/lib/site-url.test.js \
             scripts/lib/style-coverage.test.js \
+            scripts/lib/subscribe-form.test.js \
             scripts/lib/support-resume-cleanup.test.js \
             scripts/lib/wp-cli.test.js \
             scripts/lib/zip-archive.test.js

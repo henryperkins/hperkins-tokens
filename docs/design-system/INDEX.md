@@ -1520,3 +1520,150 @@ hyperlink. `/one-page-resume/` and its filemtime-based redirect stay unchanged.
 
 See `docs/verification/2026-10-06-resume-refinement.md` for local Letter/A4,
 grayscale, text/link/font evidence and the separate publication boundary.
+
+## 2026-10-07 — Unshipped-refinements hand-off (`design_handoff_unshipped_refinements` → postcards, About colophon, Council header, 0.3.74)
+
+Source: `Imladris Design System 7.zip`, SHA-256
+`27bdbf1f318ef44287de9e842e8c57bcade09ed25f596881d8e782d37940a084`, holding
+the design project's `design_handoff_unshipped_refinements/` brief, dated
+2026-10-06 and read against 0.3.73. Its two references,
+`Essays.reference.dc.html.txt` (`templates/essays/Essays.dc.html`) and
+`ArticleCard.reference.jsx.txt` (`components/content/ArticleCard.jsx`), are
+references, not dependencies. Every item was measured on 0.3.73 before the
+change and again after it: production's HTML served on a loopback origin with
+this working copy's theme files, the same Chromium rendering both.
+
+- **A1, postcard titles.** The type now sits on `.hp-postcard__title` and the
+  link inherits it (`font: inherit`); the three featured size rules moved from
+  the link to the heading with their values. *The brief's mechanism was not
+  what 0.3.73 showed.* Core sets the post-title link `display: inline-block`,
+  so a wrapped title's lines were already spaced at the link's own leading
+  (24.2px on a rail card, 32.2px in the grid). The fault was the box: the
+  inline-block sat on a line box with the heading's h2/h3 strut, which added
+  2–9px under every title (9.3px on a rail card at 1280px). Each title box is
+  now exactly its lines. The "stronger rule" the brief warned of exists:
+  `style.css`'s `body.archive` / `body.search` `.wp-block-query
+  .wp-block-post-title` role (0,3,1) would have reset archive and search
+  postcards to 1.2. It now skips `.hp-postcard__title`.
+- **A2, the featured band.** As specified: 1.5fr / 1fr from 1181px, two equal
+  columns from 901 to 1180px with the lead over both rows, one column from 782
+  to 900px with the secondaries still horizontal, and phones unchanged.
+- **A3, the star plate.** The CSS is the brief's. In computed values the star
+  lands exactly where `background-position` put it (at 1280px the lead's star
+  starts at 300.433px either way); rasterized, the two agree within about half
+  a pixel, because Chrome snaps a background tile to whole pixels and a
+  translated box keeps the fraction. Hover and title focus turn it a quarter
+  over `dur.slow` with `ease.calm`, a featured image still hides it, and
+  reduced motion keeps it still.
+- **B, About's phone colophon.** As specified: `> a + span[aria-hidden]`.
+- **C1, the mid-desktop wordmark.** The brief's values (20px nav gap, 0.12em
+  tracking, 782–899.9px) ship, but its result does not hold here. It was
+  measured in the design project, whose header bar is not inset by the page's
+  root padding; the theme's bar sits inside 32px of it on each side, which is
+  exactly the gap between the brief's "3px from Work at 782px" and 0.3.73's
+  ellipsis. Measured with overlay scrollbars: at 782px the wordmark loses 8.2px
+  (28.6px before); it is whole from 800px, 5.8px from Work at 810, 10.8 at 820,
+  17.8 at 834 and 25.8 at 850 (5.4 before); nothing changes from 900px. A
+  classic 15px scrollbar moves each of those points about 15px wider. Reaching
+  the brief's 23px at 782px would need a design decision this brief does not
+  make: the bar's inset or the wordmark's size.
+- **C2, the search hint.** As specified (`flex: none; overflow-wrap:
+  normal`). On 0.3.73 the hint held one line at the shipped 278px panel and
+  broke into "ES / C" only once the form was squeezed (reproduced at 120px);
+  it can no longer shrink.
+- **Deliberate divergences (recorded, not drift):**
+  - *The plate renders on the server.* The brief's first choice is an empty
+    group in each template. Production's `/essays/` rendered a Site Editor copy
+    of `home` (`source: custom`) until the reset recorded below, and template
+    markup can never reach such a copy, so
+    `inc/postcards.php` appends `<span class="hp-postcard__plate"
+    aria-hidden="true">` to every postcard media group through
+    `render_block_core/group`, the alternative the brief offers and the reader
+    hero plate's precedent. As with that plate, the Site Editor canvas shows
+    no star.
+  - *A reset for stale critical CSS.* Jetpack Boost inlines critical CSS
+    generated from this sheet, and production's copy still paints the old
+    `.hp-postcard__media::after` star. Its loader turns that copy off at
+    `load`, but without JavaScript it stays on beside the full sheet, so
+    `.hp-postcard__media::after { content: none; }` keeps those visitors from
+    seeing two stars until the copy is regenerated.
+- **Not ported**, as the brief says: the in-place re-filter fade and count, the
+  lead's faded backdrop and the unlinked cards, the Tweaks and `data-*` hooks,
+  and Home's kept deltas.
+- **D, page bodies: published to the database on 2026-10-07, not part of the
+  theme package.** Both bodies are database-owned. Both faults were confirmed on
+  the live pages first; WordPress/ai's tags are `1.0.0`, `1.0.1` and `1.0.2`,
+  with no `v`. Each edit replaced one top-level block under the connector's
+  optimistic locks, and each snapshot changed only after a fresh read proved
+  the live body equal to it. Hashes and timestamps are in
+  `docs/verification/2026-10-07-unshipped-refinements-publication.md`.
+  - *D1, `/work/` (page 13):* the WordPress AI release link now reads
+    `…/releases/tag/1.0.1">1.0.1</a>`. `patterns/work-index.php` takes the
+    same edit and stays byte-identical to the snapshot.
+  - *D2, `/ai-enablement/` (page 175):* the first maturity chip, "expose:
+    foundation shipped", is `"fontSize":"xs","fontFamily":"mono"` with
+    `has-mono-font-family has-xs-font-size`, like the other two.
+  - *A drift the mirror now carries.* Production's artifact row (block 2) had
+    gained `align: wide`, 60/50 padding, a 50 block gap and the
+    `artifact-row` anchor, none of which the snapshot had. The snapshot now
+    matches production, so the `ai-enablement` pattern adapter emits them too.
+- **Production findings outside the brief:**
+  - *The `/essays/` template copy: reset 2026-10-07.* Besides keeping template
+    markup away, production's `home` copy had drifted from
+    `templates/home.html`: its post templates used the default layout, which
+    also set the secondaries 24px below the lead's top; featured excerpts were
+    20 words at `sm` with a `spacing|30` margin this theme does not define; and
+    the subscribe pattern was frozen into a `core/html` block carrying the
+    nonce minted when the template was saved (its `_wp_http_referer` was the
+    editor's `/wp-json/wp/v2/templates/lookup?slug=home`). A nonce bound to an
+    editor's session cannot verify for a visitor, so the handler answered every
+    `/essays/` subscription `invalid-request`, and it redirected the visitor to
+    that frozen referer, a REST URL that answers 401 JSON (reproduced on a local
+    WordPress 7.1.3 install). With approval the copy was
+    reverted (the connector moved it to the trash); `home` now reports
+    `source: theme`, and `/essays/` renders the theme's grid post templates
+    with a nonce minted per request. `index` is still customized and was left
+    alone.
+  - *The freeze, and the refresh that answers it.* The REST templates endpoint
+    resolves `wp:pattern` blocks into their rendered markup (after the reset,
+    reading `home` returned the subscribe form with a nonce minted for that API
+    request), so saving `home`, `single` or `page-contact` (which reaches the
+    form through the `contact` pattern) in the Site Editor freezes the form
+    again. 0.3.74 adds `inc/subscribe-form.php`: a `render_block_core/html`
+    filter re-mints a frozen copy's nonce, `_wp_http_referer` and status line
+    for the request rendering it, and passes the live pattern through byte for
+    byte. On the local install, a visitor's submission from a REST-frozen
+    `home` returned to `/essays/?hperkins_subscribe=success#subscribe` with its
+    status line; with the filter off, the same submission went to the 401 REST
+    URL. A frozen copy still stops following the pattern's wording. Until 0.3.74
+    is deployed, do not save those templates in production's Site Editor.
+  - *The header model.* Every production page renders the Council header from
+    its `fallback` model, so `verify-header.js` stops at its source assertion
+    against production before any geometry check: menu 237 no longer
+    validates. The 0.3.74 header checks ran against the loopback copy with
+    that one attribute relabelled; the fallback's labels and URLs are
+    identical to the menu model's.
+  - *Critical CSS.* Regenerate Jetpack Boost's critical CSS after deploy; it
+    still carries pre-0.3.74 postcard and header rules.
+- **Verification.** `verify-journal-polish.js` simulates three featured and
+  three grid cards and checks the title metrics in the featured lead, the
+  rail, the grid, "Continue reading" and a term archive; the band at twelve
+  widths from 1440 to 781px; and the plate's rest geometry and four
+  treatments, one plate per card as the last child, a featured image hiding
+  it (pixel-identical with and without the plate), the quarter turn on hover
+  and title focus alone, reduced motion, and no second star with Boost's
+  critical CSS left on. `verify-header.js` sweeps the wordmark at 782, 810,
+  820, 834, 899, 900 and 1024px and opens search at every desktop width with a
+  squeezed-form probe. `verify-about-page-rendered.js` checks the colophon's
+  dots at every primary and boundary width. `verify-journal-templates.js`
+  pins the filter wiring, the reset, the heading-owned type and the band's
+  source order, and `scripts/lib/postcard-plate.test.js` runs the filter
+  under a PHP shim. Every new rendered check failed against 0.3.73, and a
+  mutation pass that removed the reset, the plate's margin reset, its
+  translate, the hover turn, the focus turn, the reduced-motion rule, the
+  band steps, the archive exclusion and the C1/C2 rules, or moved one plate
+  value or the C1 band's edge, failed the check written for each.
+- **Corrections to carry back to the design project:** A1's mechanism (the
+  inline-block link, so the fault is box height, not line spacing); C1's
+  measurement environment (the theme's root-padding inset, and classic
+  scrollbars); and C2's trigger (a squeezed form, not the shipped panel).

@@ -6,33 +6,17 @@
  * Description: Twilight newsletter block with inline email field and secure handoff.
  */
 
-$subscribe_status  = isset( $_GET['hperkins_subscribe'] ) ? sanitize_key( wp_unslash( $_GET['hperkins_subscribe'] ) ) : '';
-$subscribe_message = '';
-$subscribe_role    = 'status';
+// The status line for the handler's redirect. inc/subscribe-form.php owns the
+// wording, and re-mints this line, the nonce and the referer in any copy a
+// Site Editor save froze.
+$subscribe_state   = hperkins_tokens_subscribe_status();
+$subscribe_message = $subscribe_state['message'];
+$subscribe_role    = $subscribe_state['role'];
 
 // Per-render ids so a second mount on one page can't duplicate them; the
 // #subscribe section anchor stays static — it is the site-wide hash target.
 $subscribe_title_id = wp_unique_id( 'hp-subscribe-title-' );
 $subscribe_email_id = wp_unique_id( 'hp-subscribe-email-' );
-
-if ( 'success' === $subscribe_status ) {
-	$subscribe_message = 'Request received. I will review the address and add it to the occasional dispatch shortly.';
-} elseif ( 'invalid-email' === $subscribe_status ) {
-	$subscribe_message = 'Enter a valid email to join the dispatch.';
-	$subscribe_role    = 'alert';
-} elseif ( 'invalid-request' === $subscribe_status ) {
-	$subscribe_message = 'Refresh the page and try again so the request can be verified.';
-	$subscribe_role    = 'alert';
-} elseif ( 'rate-limited' === $subscribe_status ) {
-	$subscribe_message = 'Too many attempts just now. Wait a few minutes and try again.';
-	$subscribe_role    = 'alert';
-} elseif ( 'save-error' === $subscribe_status ) {
-	$subscribe_message = sprintf(
-		'Something went wrong recording the request. Email %s directly and I will add you manually.',
-		hperkins_tokens_contact_email()
-	);
-	$subscribe_role    = 'alert';
-}
 ?>
 <!-- wp:html -->
 <section id="subscribe" class="hp-subscribe" aria-labelledby="<?php echo esc_attr( $subscribe_title_id ); ?>">

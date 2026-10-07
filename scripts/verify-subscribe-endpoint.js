@@ -24,11 +24,13 @@ function assert( condition, message ) {
 }
 
 async function main() {
-	const subscribePattern = readFileSync( `${ THEME_PATH }/patterns/imladris-subscribe.php`, 'utf8' );
-	assert(
-		! subscribePattern.includes( 'already-requested' ),
-		'subscribe pattern still contains the unreachable already-requested status branch.'
-	);
+	// The status branches live in the helper the pattern renders.
+	for ( const file of [ 'patterns/imladris-subscribe.php', 'inc/subscribe-form.php' ] ) {
+		assert(
+			! readFileSync( `${ THEME_PATH }/${ file }`, 'utf8' ).includes( 'already-requested' ),
+			`${ file } still contains the unreachable already-requested status branch.`
+		);
+	}
 
 	const styleCss = readFileSync( `${ THEME_PATH }/style.css`, 'utf8' );
 	assert(

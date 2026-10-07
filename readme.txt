@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.73
+Stable tag: 0.3.74
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -412,6 +412,58 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.74 =
+* Unshipped-refinements hand-off (2026-10-06 design brief). Postcard titles
+  set their type on the heading, and the link inherits it. Core makes the
+  link inline-block, so it spaced its own lines, but it sat on a line box
+  with the heading's larger h2/h3 strut, which added 2-9px under every
+  title. Archive and search titles keep their 1.15 leading: style.css's
+  body-class title role now leaves postcard titles alone.
+* The /essays/ featured band steps at mid widths: two equal columns from
+  901 to 1180px, with the lead over both rows, and one column from 782 to
+  900px, with the secondaries still horizontal. 1181px and up, and phones,
+  are unchanged.
+* The postcard's compass star is its own element, appended to every
+  postcard media group by a render filter (new inc/postcards.php), so it
+  reaches a Site Editor copy of a template too. It turns a quarter on card
+  hover and title focus over dur.slow with ease.calm while its mask stays
+  still; at rest it sits where it did, a featured image still hides it, and
+  reduced motion keeps it still. A reset on .hp-postcard__media::after
+  stops a stale Jetpack Boost critical-CSS copy of the old star from
+  drawing a second one when JavaScript is off.
+* About's phone footer keeps the dot between "member since 2007" and
+  "professional WordPress work since 2012"; only the dots between the
+  stacked links go.
+* Council header: from 782 to 899.9px the nav gap is 20px and the wordmark
+  tracks at 0.12em. The wordmark is whole from 800px, where an ellipsis
+  used to cut it up to about 840px; at 782px it still loses its last
+  letters. The search panel's "esc" hint no longer shrinks or breaks.
+* Verification: verify-journal-polish.js checks postcard title metrics in
+  every loop, the featured band at twelve widths, and the plate's rest
+  geometry, stacking, turn and reduced motion. verify-header.js sweeps the
+  wordmark from 782 to 1024px and squeezes the search hint;
+  verify-about-page-rendered.js checks the colophon dots at every width;
+  verify-journal-templates.js pins the source couplings; and
+  scripts/lib/postcard-plate.test.js runs the filter under a PHP shim.
+* The hand-off's two page-body edits are database changes, published on
+  2026-10-07: the Work page's WordPress AI release link reads 1.0.1, and the
+  first AI Enablement maturity chip is set in xs mono like the other two. The
+  Work and AI Enablement snapshots and the work-index pattern mirror the new
+  bodies; the AI Enablement mirror also takes production's anchored, padded
+  artifact row. The same day, production's Site Editor copy of the home
+  template was reverted to templates/home.html, which restores the /essays/
+  grid and a subscribe form whose nonce is minted per request. See
+  docs/verification/2026-10-07-unshipped-refinements-publication.md.
+* The subscribe form re-mints its nonce, referer and status line when it
+  renders from a copy a Site Editor save froze (new inc/subscribe-form.php).
+  Saving a template resolves the pattern into a Custom HTML block that keeps
+  the editor's nonce and REST referer, so a visitor's subscription failed and
+  the handler sent them to a REST URL. The live pattern renders as before;
+  its status wording moves into the same file.
+  scripts/lib/subscribe-form.test.js runs the filter under a PHP shim, and
+  scripts/verify-subscribe-form.php freezes home through the REST templates
+  endpoint inside WordPress.
 
 = 0.3.73 =
 * Remove one further market entry from the blog on request, retain nine
