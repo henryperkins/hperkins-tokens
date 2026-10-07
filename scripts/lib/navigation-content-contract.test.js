@@ -2,6 +2,7 @@
 
 const crypto = require( 'node:crypto' );
 const fs = require( 'node:fs' );
+const path = require( 'node:path' );
 const test = require( 'node:test' );
 const assert = require( 'node:assert/strict' );
 
@@ -12,10 +13,21 @@ const {
 	normalizeNavigationContent,
 } = require( './navigation-content-contract' );
 const {
+	ACCEPTED_BEFORE_STATES,
 	buildNavigationUpdatePhp,
-	EXPECTED_BEFORE_SHA256,
 	NEW_CONTENT,
 } = require( '../apply-council-navigation' );
+
+function readPinnedBackup( state ) {
+	return fs.readFileSync( path.join( path.dirname( NAVIGATION_SNAPSHOT_PATH ), state.backup ), 'utf8' );
+}
+
+function getCanonicalSha256( content ) {
+	return crypto
+		.createHash( 'sha256' )
+		.update( normalizeNavigationContent( content, 'https://hperkins.blog' ) )
+		.digest( 'hex' );
+}
 
 function parseNavigationBlocks( content ) {
 	const roots = [];
@@ -122,22 +134,21 @@ test( 'normalization preserves selected-origin text outside URL fields', () => {
 } );
 
 test( 'Council migration exports the guarded exact navigation tree', () => {
-	// Tie the guard to a state we actually have on disk. Asserting the literal
-	// only restated the constant; this fails if the pin is ever moved to a hash
+	// Tie every pin to a state we actually have on disk. Asserting the literals
+	// only restated the constants; this fails if a pin is ever moved to a hash
 	// that matches no recorded navigation, which is exactly the mistake that let
 	// the pin sit on a synthetic local menu that production never had.
-	const productionBackup = fs.readFileSync(
-		NAVIGATION_SNAPSHOT_PATH.replace( 'nav-237.html', 'nav-237.production.html' ),
-		'utf8'
+	assert.deepEqual(
+		ACCEPTED_BEFORE_STATES.map( ( state ) => state.backup ),
+		[ 'nav-237.production.html', 'nav-237.production-2026-08-27.html' ]
 	);
-	assert.equal(
-		EXPECTED_BEFORE_SHA256,
-		crypto
-			.createHash( 'sha256' )
-			.update( normalizeNavigationContent( productionBackup, 'https://hperkins.blog' ) )
-			.digest( 'hex' ),
-		'The recut guard must pin the canonical hash of the tracked production backup.'
-	);
+	for ( const state of ACCEPTED_BEFORE_STATES ) {
+		assert.equal(
+			state.sha256,
+			getCanonicalSha256( readPinnedBackup( state ) ),
+			`The recut guard must pin the canonical hash of content/nav-snapshots/${ state.backup }.`
+		);
+	}
 	assert.doesNotMatch( NEW_CONTENT, /-->\s+<!--/, 'Navigation blocks must not carry blank text between them.' );
 
 	const topLevel = parseNavigationBlocks( NEW_CONTENT );
@@ -175,6 +186,21 @@ test( 'Council migration exports the guarded exact navigation tree', () => {
 			{ blockName: 'core/navigation-link', label: 'Job Placement Digest', url: '/job-placement-digest/', className: 'hp-nav-digest' },
 		]
 	);
+} );
+
+test( 'the 2026-08-27 pinned state is the recut target without its Subscribe link', () => {
+	// The renderer validates menu 237 all or nothing: with every other Council
+	// item in place, the missing hp-nav-subscribe link alone sends production to
+	// the fallback model. Pinning this state lets the recut restore one block,
+	// and the pin cannot quietly come to stand for a different drift.
+	const drifted = readPinnedBackup( ACCEPTED_BEFORE_STATES[1] );
+	const target = parseNavigationBlocks( NEW_CONTENT );
+	const subscribe = target[ target.length - 1 ];
+
+	assert.equal( subscribe.attrs.className, 'hp-nav-subscribe' );
+	assert.doesNotMatch( drifted, /hp-nav-subscribe/ );
+	assert.deepEqual( parseNavigationBlocks( drifted ), target.slice( 0, -1 ) );
+	assert.match( drifted, /-->\n\n<!--/, 'The drifted state carries the block editor serializer\'s blank lines.' );
 } );
 
 test( 'test block parser rejects a mismatched closing block name', () => {
