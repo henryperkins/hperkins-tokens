@@ -45,7 +45,9 @@ The full July screen originally contained three manual failures and 20 jobs.
 
 ## Candidate verification
 
-- The canonical 33-file Node inventory passes **396/396**, without skips.
+- The initial cleanup passes **396/396** in the canonical 33-file Node
+  inventory. The final download-link regressions extend this to **401/401**,
+  without skips.
 - All **42** tracked PHP files pass syntax checks. All 14 source-job gates
   pass; candidate-aware gates use `--drafts` before snapshot promotion.
 - The unsaved native WordPress preview passes seven widths from 320–1440px,
@@ -70,13 +72,17 @@ preserved. The API returned no content warnings.
 Fresh edit-context readbacks match the reviewed drafts exactly after the
 repository's line-ending/trailing-whitespace normalization. Snapshots were
 promoted only after these comparisons. The API modification timestamps are
-`2026-10-06T20:59:32` for page 599 and `2026-10-06T21:00:04` for page 433.
+`2026-10-06T20:59:32` for the initial page-599 cleanup and
+`2026-10-06T21:00:04` for page 433. A later hash-guarded section-3 update
+adds the verified versioned XLSX download; its exact readback was promoted
+at API timestamp `2026-10-06T21:08:45`. Final public ownership passes all
+three pages.
 Public ownership verification passes all three contracted pages, including
 unchanged About:
 
 | Page | Body SHA-256 |
 | --- | --- |
-| Archive 599 | `a1390ec209325634dc8a648771831f6b22d0b22ef6fbdf2bf2a4d9bd590309a4` |
+| Archive 599 (final download link) | `719551293f93d541f4d328f90eaa2ca14e5b972e59c07f984e04c4fb81874941` |
 | Digest 433 | `176490d3afb71996adcf14324e26f27c43c9d47203ef1a525365788a888b1b84` |
 | About (unchanged) | `465cf02cd67ff172bf9211c5ab6cac8865f279235953b469ed53a8ca8a8b5f90` |
 
@@ -88,7 +94,43 @@ primary checkout's `output/job-market-validation-2026-10-06/`.
 
 ## Theme deployment and final public checks
 
-The workbook theme deployment and public browser verification are pending.
-This record will be updated after checking the actual public file bytes and
-page behavior. Earlier redesign evidence and unrelated production-gate
+The normal push to `main` published source/workbook commit
+`f507c6717506e2f9f22a45d36409dd07275a36c2`; a fresh `git ls-remote` confirmed
+that ref. WordPress.com's independent deployment serves the new workbook:
+the public HTTP 200 response is 7,552 bytes and matches the committed XLSX
+SHA-256 above exactly. The vendor dashboard's deployment-run SHA was not
+observed; Git ref and actual public bytes are separate evidence.
+
+The bare workbook URL continued serving the previous 8,746-byte edge-cached
+copy during bounded checks. The archive therefore now links to
+`/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e`.
+The content-derived key avoids the stale response and leaves WooCommerce's
+`v` geolocation parameter available. Source contracts reject a stale key,
+missing/duplicate download, alternate file or external-host substitution.
+No caching, authentication or deployment configuration was changed.
+
+Fresh actual public browser gates, with explicit
+`HPERKINS_ORIGIN=https://hperkins.blog`, pass seven widths from 320–1440px:
+34 keyword/ten market defaults, keyboard filtering/restoration, focus,
+native disclosure, all five archive anchors, reduced motion, 200% text at
+1024/320px, and all 44 JavaScript-disabled research rows. No runtime
+exceptions were observed. SEO/share title, description, canonical and
+Open Graph image pass.
+
+After the download-link follow-up, a focused actual public check at
+1440/390/320px confirms one visible native XLSX link, keyboard focus,
+contained text, no document overflow, ten market rows, and a complete HTTP
+GET of the page's actual link matching the cleaned workbook byte for byte.
+The final no-flag artifact/source gates and public ownership readback pass.
+The follow-up source/snapshot and this final evidence record are published
+in a subsequent normal Git commit; the workbook bytes remain identical.
+
+GitHub Actions Verify and Publish Website runs for the source commit did not
+execute any steps. The Verify annotation says: "The job was not started
+because your account is locked due to a billing issue." This does not negate
+the independent WordPress.com file activation or manual public checks, and
+neither establishes hosted CI success. The relevant Verify run is
+https://github.com/henryperkins/hperkins-tokens/actions/runs/37560064800.
+
+Earlier redesign evidence and the unrelated full-site header/About gate
 limitations remain in `2026-10-06-placement-production-release.md`.

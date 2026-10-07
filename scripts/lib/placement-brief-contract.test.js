@@ -95,7 +95,7 @@ test( 'the archive keeps all five old targets and all 34 plus ten rows', () => {
 
 test( 'record parity catches changed standings, links and reasoning even with unchanged row counts', () => {
 	assert.throws( () => verifyPlacementArchive( mutate( archive, 'SIEM / log analytics', 'SIEM / analytics' ), acceptedArchive ), /byte parity/ );
-	assert.throws( () => verifyPlacementArchive( archive.replace( /(<tbody>[\s\S]*?href=")[^"]+/, '$1https://example.com/' ), acceptedArchive ), /byte parity/ );
+	assert.throws( () => verifyPlacementArchive( mutate( archive, 'https://fueled.com/careers/freelance-contract-senior-web-engineer/', 'https://example.com/' ), acceptedArchive ), /byte parity/ );
 	for ( const [ before, after ] of [
 		[ 'Live · Pass — manual review', 'Live · Pass' ],
 		[ 'inspectable, migrated live news site.', 'reliable news site.' ],
@@ -106,6 +106,25 @@ test( 'record parity catches changed standings, links and reasoning even with un
 test( 'the removal transition permits only reviewed cleanup copy and keeps layout ownership', () => {
 	assert.throws( () => verifyPlacementArchive( mutate( archive, 'current availability, Q1–Q3 role fit, and candidate qualification are separate judgments.', 'Every retained applicant is qualified.' ), acceptedArchive ), /cleanup copy/ );
 	assert.throws( () => verifyPlacementArchive( mutate( archive, 'alignwide hp-page-hero hp-method-hero', 'alignwide hp-page-hero hp-method-hero unexpected-layout' ), acceptedArchive ), /reviewed cleanup copy/ );
+} );
+
+test( 'the workbook download permits only its approved sentence and immutable cache key', () => {
+	const before = 'This is the sanitized public workbook’s ten retained market records after the 6 October 2026 availability cleanup.';
+	const after = 'Download the <a href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e">public market workbook (XLSX)</a> with ten retained records after the 6 October 2026 availability cleanup.';
+	const linked = archive.includes( after ) ? archive : mutate( archive, before, after );
+	const preceding = mutate( linked, after, before );
+	assert.doesNotThrow( () => verifyPlacementArchive( linked, preceding ), 'The approved one-sentence transition preserves the accepted ten-row body.' );
+	assert.doesNotThrow( () => verifyPlacementArchive( linked, linked ), 'The promoted linked archive remains valid.' );
+	for ( const [ original, replacement ] of [
+		[ after, before ],
+		[ after, 'Download the public market workbook (XLSX) with ten retained records after the 6 October 2026 availability cleanup.' ],
+		[ 'wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e', 'wordpress-job-market-screen.xlsx?market-version=3a1f91995f5e' ],
+		[ 'wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e', 'wordpress-job-market-screen-live-states.xlsx' ],
+		[ '?market-version=3a1f91995f5e', '?market-version=stale' ],
+		[ '?market-version=3a1f91995f5e', '?v=3a1f91995f5e' ],
+		[ 'href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx', 'href="https://example.com/wordpress-job-market-screen-live-states.xlsx' ],
+	] ) assert.throws( () => verifyPlacementArchive( mutate( linked, original, replacement ), preceding ), /cleanup copy/ );
+	assert.throws( () => verifyPlacementArchive( mutate( linked, 'alignwide hp-page-hero hp-method-hero', 'alignwide hp-page-hero hp-method-hero changed-layout' ), preceding ), /reviewed cleanup copy/ );
 } );
 
 test( 'Option A never loads the retired method redirect', () => {

@@ -1,4 +1,5 @@
 const assert = require( 'node:assert/strict' );
+const { createHash } = require( 'node:crypto' );
 const fs = require( 'node:fs' );
 const os = require( 'node:os' );
 const path = require( 'node:path' );
@@ -323,4 +324,39 @@ test( 'public workbook rejects a replacement URL promoted as the retained origin
 test( 'public workbook still rejects private application notes after cleanup', ( context ) => {
 	const fixture = mutatedWorkbook( context, ( source ) => source.replace( 'Q1 passes because the output', 'Interview status: Q1 passes because the output' ), 'xl/sharedStrings.xml' );
 	assert.throws( () => require( '../verify-placement-artifacts' ).verifyWorkbook( fixture ), /private interview progress data/ );
+} );
+
+test( 'public workbook download link accepts the current native theme-owned hash URL', () => {
+	const { verifyWorkbookDownloadLink } = require( '../verify-placement-artifacts' );
+	assert.equal( typeof verifyWorkbookDownloadLink, 'function' );
+	const prefix = createHash( 'sha256' ).update( fs.readFileSync( workbookPath ) ).digest( 'hex' ).slice( 0, 12 );
+	const href = `/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=${ prefix }`;
+	const html = `<!-- <a href="${ href }">Comment only</a> --><p><a href="${ href }">Download XLSX</a></p>`;
+	assert.doesNotThrow( () => verifyWorkbookDownloadLink( html, workbookPath ) );
+} );
+
+test( 'public workbook download link rejects stale hashes and external substitutions', () => {
+	const { verifyWorkbookDownloadLink } = require( '../verify-placement-artifacts' );
+	for ( const href of [
+		'/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=000000000000',
+		'https://example.test/wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e',
+		'/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?v=3a1f91995f5e',
+	] ) {
+		assert.throws( () => verifyWorkbookDownloadLink( `<a href="${ href }">XLSX</a>`, workbookPath ), /theme-owned URL with its current SHA256 prefix/ );
+	}
+} );
+
+test( 'public workbook download link rejects missing and duplicate native anchors', () => {
+	const { verifyWorkbookDownloadLink } = require( '../verify-placement-artifacts' );
+	const anchor = '<a href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e">XLSX</a>';
+	assert.throws( () => verifyWorkbookDownloadLink( '<p>Download XLSX</p>', workbookPath ), /exactly one native workbook download link/ );
+	assert.throws( () => verifyWorkbookDownloadLink( anchor + anchor, workbookPath ), /exactly one native workbook download link/ );
+} );
+
+test( 'public workbook download link becomes stale when the artifact bytes change', ( context ) => {
+	const { verifyWorkbookDownloadLink } = require( '../verify-placement-artifacts' );
+	const prefix = createHash( 'sha256' ).update( fs.readFileSync( workbookPath ) ).digest( 'hex' ).slice( 0, 12 );
+	const fixture = mutatedWorkbook( context, ( source ) => source.replace( 'Technical Account Manager, Newspack', 'Updated workbook fixture' ), 'xl/sharedStrings.xml' );
+	const html = `<a href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=${ prefix }">XLSX</a>`;
+	assert.throws( () => verifyWorkbookDownloadLink( html, fixture ), /theme-owned URL with its current SHA256 prefix/ );
 } );

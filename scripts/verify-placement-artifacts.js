@@ -952,6 +952,20 @@ function verifyWorkbook( path ) {
 	} ) );
 }
 
+function verifyWorkbookDownloadLink( appendixHtml, workbookPath ) {
+	const filename = artifactNames[2];
+	const markup = appendixHtml.replace( /<!--[\s\S]*?-->/g, '' );
+	const hrefs = [ ...markup.matchAll( /<a\b([^>]*)>/gi ) ]
+		.map( ( match ) => xmlAttributes( match[1] ).href )
+		.filter( ( href ) => href && href.includes( filename ) );
+	assert( hrefs.length === 1, `Appendix must contain exactly one native workbook download link; found ${ hrefs.length }.` );
+	const expected = `/wp-content/themes/hperkins-tokens/assets/documents/${ filename }?market-version=${ sha256( workbookPath ).slice( 0, 12 ) }`;
+	assert(
+		hrefs[0] === expected,
+		`Appendix workbook download must use its theme-owned URL with its current SHA256 prefix: ${ expected }.`
+	);
+}
+
 async function verifyLink( url ) {
 	if ( url.startsWith( 'mailto:' ) ) {
 		assert( /^mailto:[^@\s]+@[^@\s]+\.[^@\s]+$/i.test( url ), `Invalid mailto link: ${ url }.` );
@@ -1030,7 +1044,9 @@ async function main() {
 	const docxUrls = verifyDocx( paths[ artifactNames[0] ], themeVersion );
 	const pdfUrls = verifyPdf( paths[ artifactNames[1] ], docxUrls );
 	const workbookRows = verifyWorkbook( paths[ artifactNames[2] ] );
-	verifyAppendixWorkbookParity( workbookRows, readFileSync( selectPlacementMethodSource( args ), 'utf8' ) );
+	const appendixHtml = readFileSync( selectPlacementMethodSource( args ), 'utf8' );
+	verifyAppendixWorkbookParity( workbookRows, appendixHtml );
+	verifyWorkbookDownloadLink( appendixHtml, paths[ artifactNames[2] ] );
 	if ( checkLinks ) {
 		await verifyLinks( new Set( pdfUrls ) );
 	}
@@ -1061,6 +1077,7 @@ module.exports = {
 	verifyLinks,
 	verifyPdf,
 	verifyWorkbook,
+	verifyWorkbookDownloadLink,
 	xmlAttributes,
 	xmlText,
 };

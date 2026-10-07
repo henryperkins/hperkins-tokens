@@ -58,6 +58,10 @@ const RETAINED_MARKET_IDENTITIES = [
     "WP Engine"
   ]
 ];
+const WORKBOOK_DOWNLOAD_COPY_EDIT = [
+	'This is the sanitized public workbook’s ten retained market records after the 6 October 2026 availability cleanup.',
+	'Download the <a href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e">public market workbook (XLSX)</a> with ten retained records after the 6 October 2026 availability cleanup.',
+];
 const ARCHIVE_CLEANUP_COPY_EDITS = [
   [
     "<p class=\"hp-digest__dateline\">Method published 13 Jul 2026 · Ledger reconciled 21 Jul 2026 · No longer updated</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph {\"fontSize\":\"base\"} -->\n<p class=\"has-base-font-size\">This archive keeps the research behind the Support Engineering page: the full keyword ledger, the screen behind it, every row state, and the decisions I overturned. I no longer update it, so each posting state is a July 2026 observation, not a promise that a vacancy is still open.</p>",
@@ -69,7 +73,7 @@ const ARCHIVE_CLEANUP_COPY_EDITS = [
   ],
   [
     "<p>This is the sanitized public workbook reconciled on 21 July 2026, 20 data rows. The six non-URL fields reproduce the workbook’s displayed values verbatim; a non-empty canonical URL is rendered as a safe link to that exact value, and an empty workbook cell remains empty. Delisted, replaced, paused, pending, and screened-out rows stay visible, carrying the date I last checked them wherever the workbook recorded one, and they are not presented as current opportunities.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph {\"className\":\"hp-market-note\"} -->\n<p class=\"hp-market-note\">Every count is a share of the same 20-row denominator — filter the screen to hold one state at a time.</p>",
-    "<p>This is the sanitized public workbook’s ten retained market records after the 6 October 2026 availability cleanup. The six non-URL fields reproduce the workbook’s displayed values verbatim; a non-empty canonical URL is rendered as a safe link to that exact value, and an empty workbook cell remains empty. The table’s State, Last checked, and screening reasoning preserve the July research, including missing dates and unresolved original identities. They do not present these records as ten current opportunities.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph {\"className\":\"hp-market-note\"} -->\n<p class=\"hp-market-note\"><strong>6 October 2026 cleanup:</strong> Ten confirmed unavailable entries were removed. The ten retained records comprise two current named applications (Newspack and Syde), three future talent pools (Fueled, XWP, and Human Made), and five unresolved original listings. Syde’s current role page does not prove continuity with the historical requisition. The original July cell values remain intact; current availability, Q1–Q3 role fit, and candidate qualification are separate judgments.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph {\"className\":\"hp-market-note\"} -->\n<p class=\"hp-market-note\">Every filter count is a share of the same ten-row denominator and classifies the preserved July states — filter the screen to hold one historical state at a time.</p>"
+    "<p>" + WORKBOOK_DOWNLOAD_COPY_EDIT[ 1 ] + " The six non-URL fields reproduce the workbook’s displayed values verbatim; a non-empty canonical URL is rendered as a safe link to that exact value, and an empty workbook cell remains empty. The table’s State, Last checked, and screening reasoning preserve the July research, including missing dates and unresolved original identities. They do not present these records as ten current opportunities.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph {\"className\":\"hp-market-note\"} -->\n<p class=\"hp-market-note\"><strong>6 October 2026 cleanup:</strong> Ten confirmed unavailable entries were removed. The ten retained records comprise two current named applications (Newspack and Syde), three future talent pools (Fueled, XWP, and Human Made), and five unresolved original listings. Syde’s current role page does not prove continuity with the historical requisition. The original July cell values remain intact; current availability, Q1–Q3 role fit, and candidate qualification are separate judgments.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph {\"className\":\"hp-market-note\"} -->\n<p class=\"hp-market-note\">Every filter count is a share of the same ten-row denominator and classifies the preserved July states — filter the screen to hold one historical state at a time.</p>"
   ],
   [
     "<p class=\"hp-market-date-summary\">Last checked distribution: 2026-07-21 — 1 row; 2026-07-20 — 10 rows; 2026-07-18 — 4 rows; not recorded — 5 rows.</p>",
@@ -190,7 +194,10 @@ function verifyPlacementArchive( markup, acceptedMarkup ) {
 			let tableIndex = 0;
 			expected = expected.replace( /<tbody>([\s\S]*?)<\/tbody>/g, ( table ) => tableIndex++ === 1 ? '<tbody>' + tables[ 1 ] + '</tbody>' : table );
 		}
-		assert.equal( markup, expected, 'Archive allows only the reviewed cleanup copy and ten unavailable-row removals against its accepted snapshot.' );
+		if ( expected.includes( WORKBOOK_DOWNLOAD_COPY_EDIT[ 0 ] ) ) {
+			expected = expected.replace( ...WORKBOOK_DOWNLOAD_COPY_EDIT );
+		}
+		assert.equal( markup, expected, 'Archive allows only the reviewed cleanup copy, ten unavailable-row removals and workbook download sentence against its accepted snapshot.' );
 	}
 	return { researchAnchors: RESEARCH_ANCHORS, rows: [ 34, 10 ] };
 }
