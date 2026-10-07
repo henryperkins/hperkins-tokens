@@ -414,6 +414,8 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
 == Changelog ==
 
 = 0.3.73 =
+* Remove one further market entry from the blog on request, retain nine
+  selected records and refresh the versioned workbook download and counts.
 * Follow up the market availability audit: remove ten confirmed unavailable
   entries from the public archive and workbook; qualify the ten retained
   historical records with current application, talent-pool and unresolved

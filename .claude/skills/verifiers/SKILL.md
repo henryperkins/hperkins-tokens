@@ -105,9 +105,9 @@ widths from 320–1440px, the 40rem prose limit, H2/H3 outline, three equal
 numbered articles, paired contact and résumé actions, closed research, keyboard
 jumps, 15px facts/chips/evidence links, 44px controls, reduced motion and 200%
 text. Option A keeps the method route as a dated archive: its keyword ledger
-starts on all 34 terms, the authorized availability cleanup retains 10 market
+starts on all 34 terms, the authorized blog selection retains 9 market
 rows, and the five old section fragments stay reachable. No-JS checks retain
-all 44 research rows. Historical July states are qualified by the October
+all 43 research rows. Historical July states are qualified by the October
 availability note. Unflagged
 checks still test accepted snapshots. The method-to-Digest redirect and its
 PHP verifier are retired. Local preview proof does not promote a database body

@@ -111,7 +111,7 @@ const REGISTER_ROWS = 11;
 const REGISTER_GROUP_COUNTS = { released: 6, open: 3, unreleased: 2 };
 const KEYWORD_ROWS = 34;
 const KEYWORD_GROUP_COUNTS = { demonstrated: 10, partial: 11, gap: 13 };
-const MARKET_ROWS = 10;
+const MARKET_ROWS = 9;
 const PRIMARY_PROOF_MARKER = 'Primary proof · card above';
 const METHOD_AUDIT_FIGURES = [
 	[ 'Résumé terms audited', KEYWORD_ROWS ],
@@ -694,7 +694,7 @@ function verifyAppendix( markup ) {
 			`The Method audit plate must derive and display ${ value} for ${ label }.`
 		);
 	}
-	assert( hero.outer.includes( 'Ten confirmed unavailable entries removed in October.' ), 'The Method audit plate must use the accurate neutral market-row note.' );
+	assert( hero.outer.includes( 'Ten confirmed unavailable entries removed in October; one further entry removed on request.' ), 'The Method audit plate must distinguish unavailable entries from the requested removal.' );
 	assert( ! /Every state dated/i.test( hero.outer ), 'The Method audit plate must not claim that every market state has a recorded date.' );
 
 	// The four numbered parts form the appendix spine, and every fragment has to

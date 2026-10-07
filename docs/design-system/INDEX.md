@@ -1494,6 +1494,10 @@ named applications, three future talent pools and five unresolved originals.
 See `docs/verification/2026-10-06-market-cleanup-publication.md` for the
 publication and validation record.
 
+A subsequent requested blog-row removal leaves nine selected market records
+and a refreshed downloadable workbook. The original Google Sheet audit stays
+at ten rows. See `docs/verification/2026-10-06-market-row-removal.md`.
+
 ## One-page résumé refinement (2026-10-06)
 
 The supplied OnePageResume screenshot is the visual reference for the native

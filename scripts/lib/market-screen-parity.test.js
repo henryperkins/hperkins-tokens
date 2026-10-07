@@ -37,7 +37,7 @@ const matchingAppendix = `
 <section class="hp-page-hero hp-method-hero">
 	<aside class="hp-placement-audit">
 		<div class="hp-placement-audit__figure"><dt>Résumé terms audited</dt><dd class="hp-placement-audit__value">3</dd><dd class="hp-placement-audit__note">Each against five Solutions Engineer postings.</dd></div>
-<div class="hp-placement-audit__figure"><dt>Market rows retained</dt><dd class="hp-placement-audit__value">7</dd><dd class="hp-placement-audit__note">Ten confirmed unavailable entries removed in October.</dd></div>
+<div class="hp-placement-audit__figure"><dt>Market rows retained</dt><dd class="hp-placement-audit__value">7</dd><dd class="hp-placement-audit__note">Ten confirmed unavailable entries removed in October; one further entry removed on request.</dd></div>
 <div class="hp-placement-audit__figure"><dt>Retained rows failed by hand</dt><dd class="hp-placement-audit__value">2</dd><dd class="hp-placement-audit__note">One overturned an AI pass.</dd></div>
 	</aside>
 </section>

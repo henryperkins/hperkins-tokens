@@ -1,5 +1,9 @@
 # Job-market availability cleanup — 6 October 2026
 
+The subsequent requested blog-row removal is recorded in
+`2026-10-06-market-row-removal.md`. It supersedes the ten-record blog selection
+below; the original Sheet audit remains unchanged.
+
 The user authorized removal of unavailable applications and extended that
 cleanup to what is published on hperkins.blog. The previous action removed
 ten rows from the Google Sheet only. This follow-up synchronizes the archive,

@@ -346,7 +346,7 @@ test( 'never reintroduces a moving branch URL, stale Flavor release, or publicat
    the contract now depends on.
    ----------------------------------------------------------------------- */
 
-test( 'the reviewed ten-row archive satisfies its selected phase contract', () => {
+test( 'the reviewed nine-row archive satisfies its selected phase contract', () => {
 	assert.doesNotThrow( () => verifyAppendix( APPENDIX ) );
 } );
 
@@ -360,9 +360,9 @@ test( 'opens the Method appendix with a back-link and verifier-backed audit plat
 	assert( hero.outer.includes( 'href="/job-placement-digest/">' + backLink + '</a>' ) );
 	assert.deepEqual(
 		[ ...hero.outer.matchAll( /class="hp-placement-audit__value">(\d+)<\/p>/g ) ].map( ( match ) => Number( match[ 1 ] ) ),
-		[ 34, 10, 2 ]
+		[ 34, 9, 2 ]
 	);
-	assert.match( hero.outer, /Ten confirmed unavailable entries removed in October\./ );
+	assert.match( hero.outer, /Ten confirmed unavailable entries removed in October; one further entry removed on request\./ );
 	assert.doesNotMatch( hero.outer, /Every state dated/i );
 	assert.doesNotMatch( hero.outer, /hp-method-scope/ );
 } );
@@ -398,7 +398,7 @@ test( 'shows the 10 / 11 / 13 standing distribution in three teaching tiles', ()
 test( 'keeps Method core/table cells schema-safe and phone labels CSS-backed', () => {
 	for ( const [ className, labels, expectedRows ] of [
 		[ 'hp-keyword-table', [ 'Keyword', 'Posting signal', 'Evidence boundary' ], 34 ],
-		[ 'hp-market-table', [ 'Job title', 'Company', 'Posting', 'Last checked', 'State', 'Reasoning' ], 10 ],
+		[ 'hp-market-table', [ 'Job title', 'Company', 'Posting', 'Last checked', 'State', 'Reasoning' ], 9 ],
 	] ) {
 		const body = new RegExp( `${ className }[\\s\\S]*?<tbody>([\\s\\S]*?)<\\/tbody>` ).exec( APPENDIX )[ 1 ];
 		const rows = [ ...body.matchAll( /<tr>([\s\S]*?)<\/tr>/g ) ];

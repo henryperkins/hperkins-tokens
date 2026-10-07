@@ -36,8 +36,10 @@ const approvedColumns = [
 	'Screen verdict',
 	'Concise reasoning',
 ];
-// The 2026-10-06 cleanup removes ten unavailable originals. Pin the retained
-// identities and URLs so a same-title replacement cannot silently revive one.
+// The 2026-10-06 cleanup removed ten unavailable originals. WP Engine was
+// separately removed from the blog at the user's request; the Google Sheet
+// keeps its ten records. Pin this nine-row public selection's identities and
+// URLs so a replacement or removed record cannot silently reappear.
 const retainedMarketIdentities = [
 	[ 'Technical Account Manager, Newspack', 'Automattic (Newspack)', 'https://automattic.com/work-with-us/job/technical-account-manager-newspack/' ],
 	[ 'Senior Web Engineer (Contract)', 'Fueled (10up practice)', 'https://fueled.com/careers/freelance-contract-senior-web-engineer/' ],
@@ -48,7 +50,6 @@ const retainedMarketIdentities = [
 	[ 'Full Stack Web Engineer', '10up (Fueled)', '' ],
 	[ 'Customer support role (anonymized)', 'Target-ecosystem employer (anonymized)', '' ],
 	[ 'Staff Web Engineer', '10up (Fueled)', '' ],
-	[ 'Technical Support L1', 'WP Engine', '' ],
 ];
 const providerVersion = '2.1';
 // The résumé is rebuilt from scripts/update-support-resume.py; these strings pin
@@ -783,7 +784,7 @@ function lastCheckedSummary( workbookRows ) {
 		.sort( ( left, right ) => right[0].localeCompare( left[0] ) )
 		.map( ( [ date, count ] ) => `${ date } — ${ count } ${ count === 1 ? 'row' : 'rows' }` );
 	const count = workbookRows.length - 1;
-	const countLabel = count === 10 ? 'ten' : String( count );
+	const countLabel = count === 9 ? 'nine' : String( count );
 	return `Historical Last checked distribution among the ${ countLabel } retained rows: ${ [ ...dated, `not recorded — ${ missing } ${ missing === 1 ? 'row' : 'rows' }` ].join( '; ' ) }. The 6 October cleanup did not overwrite these July date cells.`;
 }
 
@@ -812,7 +813,7 @@ function verifyAppendixAuditFigures( workbookRows, appendixHtml, groups ) {
 		{
 			label: 'Market rows retained',
 			value: String( dataRows.length ),
-			note: 'Ten confirmed unavailable entries removed in October.',
+			note: 'Ten confirmed unavailable entries removed in October; one further entry removed on request.',
 		},
 		{
 			label: 'Retained rows failed by hand',
@@ -895,9 +896,9 @@ function verifyWorkbook( path ) {
 	const sharedStrings = spreadsheetStrings( archive );
 	const worksheetXml = archive.text( 'xl/worksheets/sheet1.xml' );
 	const dimension = worksheetXml.match( /<dimension\b[^>]*\bref="([^"]+)"/ );
-	assert( ! dimension || dimension[1] === 'A1:G11', `Public workbook used range must be exactly A1:G11 when declared; found ${ dimension ? dimension[1] : '<omitted>' }.` );
+	assert( ! dimension || dimension[1] === 'A1:G10', `Public workbook used range must be exactly A1:G10 when declared; found ${ dimension ? dimension[1] : '<omitted>' }.` );
 	const rows = worksheetRows( worksheetXml, sharedStrings );
-	assert( rows.length === 11, `Public workbook has ${ rows.length } rows; expected 11 including the header.` );
+	assert( rows.length === 10, `Public workbook has ${ rows.length } rows; expected 10 including the header.` );
 	for ( let index = 0; index < rows.length; index += 1 ) {
 		const row = rows[index];
 		assert( row.rowNumber === index + 1, `Public workbook skips or reorders row ${ index + 1 }.` );
@@ -913,7 +914,7 @@ function verifyWorkbook( path ) {
 	);
 	if ( archive.has( 'xl/tables/table1.xml' ) ) {
 		const tableXml = archive.text( 'xl/tables/table1.xml' );
-		assert( /<table\b[^>]*\bref="A1:G11"/.test( tableXml ), 'Public workbook table must be exactly A1:G11.' );
+		assert( /<table\b[^>]*\bref="A1:G10"/.test( tableXml ), 'Public workbook table must be exactly A1:G10.' );
 		assert(
 			approvedColumns.every( ( column ) => tableXml.includes( `name="${ column.replace( /&/g, '&amp;' ) }"` ) ),
 			'Public workbook table metadata does not match the seven approved columns.'

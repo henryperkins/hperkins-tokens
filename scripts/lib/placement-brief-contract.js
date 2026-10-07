@@ -15,7 +15,7 @@ const ARCHIVE_COPY_EDITS = [
 	[ 'Read the Job Placement Digest', 'Back to Support Engineering' ],
 ];
 
-// Reviewed October cleanup only; these identities retain their July cells.
+// Reviewed October cleanup and requested blog removal; July cells stay intact.
 const RETAINED_MARKET_IDENTITIES = [
   [
     "Technical Account Manager, Newspack",
@@ -52,10 +52,6 @@ const RETAINED_MARKET_IDENTITIES = [
   [
     "Staff Web Engineer",
     "10up (Fueled)"
-  ],
-  [
-    "Technical Support L1",
-    "WP Engine"
   ]
 ];
 const WORKBOOK_DOWNLOAD_COPY_EDIT = [
@@ -84,6 +80,27 @@ const ARCHIVE_CLEANUP_COPY_EDITS = [
     "<p>The October cleanup removed ten entries whose original applications were confirmed unavailable. Five retained original listings remain unresolved because their posting URLs are missing, so their historical delisted, replaced, removed, or live labels do not establish present availability. They remain visible rather than being substituted with similarly named jobs or removed on an unverified assumption.</p>\n<!-- /wp:paragraph -->\n\n<!-- wp:paragraph -->\n<p>In the original July screen, three rows failed on my judgment rather than the machine’s; two remain in the cleaned ledger, including the one the AI had passed. The employer’s brand matched my target ecosystem, so an employer-level association overrode row-level evidence about the customer. The failure was not missing data: the role text and the model’s own rationale both contained the consumer, single-site context that disqualified it. I overturned the result.</p>"
   ]
 ];
+
+// The additional removal is a user request, separate from availability findings.
+const BLOG_REMOVAL_COPY_EDITS = [
+	[ '<p class="hp-placement-audit__value">10</p>', '<p class="hp-placement-audit__value">9</p>' ],
+	[ 'Ten confirmed unavailable entries removed in October.', 'Ten confirmed unavailable entries removed in October; one further entry removed on request.' ],
+	[ WORKBOOK_DOWNLOAD_COPY_EDIT[ 1 ], 'Download the <a href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d">public market workbook (XLSX)</a> with nine retained records after the 6 October 2026 availability cleanup.' ],
+	[ 'They do not present these records as ten current opportunities.', 'They do not present these records as nine current opportunities.' ],
+	[ 'Ten confirmed unavailable entries were removed. The ten retained records comprise', 'Ten confirmed unavailable entries were removed. A further entry was removed from the blog at my request. The nine retained records comprise' ],
+	[ 'and five unresolved original listings.', 'and four unresolved original listings.' ],
+	[ 'the same ten-row denominator', 'the same nine-row denominator' ],
+	[ 'Historical Last checked distribution among the ten retained rows: 2026-07-20 — 4 rows; 2026-07-18 — 4 rows; not recorded — 2 rows.', 'Historical Last checked distribution among the nine retained rows: 2026-07-20 — 3 rows; 2026-07-18 — 4 rows; not recorded — 2 rows.' ],
+	[ 'Five retained original listings remain unresolved', 'Four retained original listings remain unresolved' ],
+];
+
+function applyBlogRemovalCopy( markup, requireBaseline = false ) {
+	for ( const [ before, after ] of BLOG_REMOVAL_COPY_EDITS ) {
+		if ( requireBaseline ) assert( markup.includes( before ), 'Accepted archive is missing the guarded requested-removal baseline.' );
+		markup = markup.replace( before, after );
+	}
+	return markup;
+}
 
 function marketRows( body ) {
 	return [ ...body.matchAll( /<tr>[\s\S]*?<\/tr>/g ) ].map( ( match ) => match[ 0 ] );
@@ -154,6 +171,7 @@ function verifyPlacementBrief( markup ) {
 		assert( links.some( ( link ) => link.href === href ), 'Missing selected evidence: ' + href );
 	}
 	const text = extractExactText( visible );
+	assert( extractExactText( details[ 2 ] ).includes( 'The archive keeps all 34 terms with their standings, 9 remaining posting records and the notes on each overturned decision. Ten confirmed unavailable listings were removed on 6 October 2026; one further entry was removed from the blog at my request. The retained July state labels are historical; the archive explains which applications are current, future talent pools or unresolved listings.' ), 'The brief keeps the reviewed nine-record archive reference and distinguishes the requested removal.' );
 	for ( const fact of [ 'Support Engineer', 'WordPress.com Happiness Engineer, 2012', 'Reported and tested by me · fix by Anubhav Anand', 'Fix in review', 'double-logged them', 'still dropped failures', 'eight files in PR #501', 'Built and maintained by me', 'local sidecar with ChatGPT-managed sign-in', 'I do not yet have a public enterprise-scale monitoring or incident record' ] ) {
 		assert( text.includes( fact ), 'Missing scope or attribution: ' + fact );
 	}
@@ -171,14 +189,20 @@ function verifyPlacementArchive( markup, acceptedMarkup ) {
 	for ( const anchor of RESEARCH_ANCHORS ) assert( markup.includes( 'id="' + anchor + '"' ), 'Archive retains #' + anchor + '.' );
 	assert.equal( findHeadings( markup, 'placement archive' )[ 0 ].text, 'Placement Method and Evidence' );
 	const tables = [ ...markup.matchAll( /<tbody>([\s\S]*?)<\/tbody>/g ) ].map( ( match ) => match[ 1 ] );
-	assert.deepEqual( tables.map( ( table ) => ( table.match( /<tr>/g ) || [] ).length ), [ 34, 10 ], 'The archive retains all 34 keyword and ten market records.' );
+	assert.deepEqual( tables.map( ( table ) => ( table.match( /<tr>/g ) || [] ).length ), [ 34, 9 ], 'The archive retains all 34 keyword and nine market records.' );
 	assert.deepEqual( marketRows( tables[ 1 ] ).map( marketIdentity ), RETAINED_MARKET_IDENTITIES, 'The archive keeps the exact retained market identities in worksheet order.' );
-	for ( const updated of [ ARCHIVE_COPY_EDITS[ 0 ][ 1 ], ...ARCHIVE_CLEANUP_COPY_EDITS.map( ( edit ) => edit[ 1 ] ) ] ) assert( markup.includes( updated ), 'Missing dated archive cleanup copy: ' + updated );
+	assert.doesNotMatch( markup, /\bWP Engine\b/, 'The requested employer is removed from the published archive.' );
+	for ( const updated of [ ARCHIVE_COPY_EDITS[ 0 ][ 1 ], ...ARCHIVE_CLEANUP_COPY_EDITS.map( ( edit ) => applyBlogRemovalCopy( edit[ 1 ] ) ) ] ) assert( markup.includes( updated ), 'Missing dated archive cleanup copy: ' + updated );
 	if ( acceptedMarkup !== undefined ) {
 		const acceptedTables = [ ...acceptedMarkup.matchAll( /<tbody>([\s\S]*?)<\/tbody>/g ) ].map( ( match ) => match[ 1 ] );
 		assert.equal( tables[ 0 ], acceptedTables[ 0 ], 'Keyword records retain byte parity with the accepted snapshot.' );
 		const retained = marketRows( acceptedTables[ 1 ] ).filter( ( row ) => RETAINED_MARKET_IDENTITIES.some( ( identity ) => JSON.stringify( identity ) === JSON.stringify( marketIdentity( row ) ) ) );
 		assert.deepEqual( marketRows( tables[ 1 ] ), retained, 'Retained market records preserve byte parity and order with the accepted snapshot.' );
+		const acceptedRows = marketRows( acceptedTables[ 1 ] );
+		if ( acceptedRows.length === 10 ) {
+			const removed = acceptedRows.filter( ( row ) => ! retained.includes( row ) );
+			assert.deepEqual( removed.map( marketIdentity ), [ [ 'Technical Support L1', 'WP Engine' ] ], 'The only additional removed record is the requested WP Engine row.' );
+		}
 		let expected = acceptedMarkup;
 		if ( ! acceptedMarkup.includes( 'Archived placement research · July 2026' ) ) {
 			for ( const [ before, after ] of ARCHIVE_COPY_EDITS ) {
@@ -191,15 +215,18 @@ function verifyPlacementArchive( markup, acceptedMarkup ) {
 				assert( expected.includes( before ), 'Accepted archive is missing the guarded cleanup baseline.' );
 				expected = expected.replace( before, after );
 			}
-			let tableIndex = 0;
-			expected = expected.replace( /<tbody>([\s\S]*?)<\/tbody>/g, ( table ) => tableIndex++ === 1 ? '<tbody>' + tables[ 1 ] + '</tbody>' : table );
 		}
 		if ( expected.includes( WORKBOOK_DOWNLOAD_COPY_EDIT[ 0 ] ) ) {
 			expected = expected.replace( ...WORKBOOK_DOWNLOAD_COPY_EDIT );
 		}
-		assert.equal( markup, expected, 'Archive allows only the reviewed cleanup copy, ten unavailable-row removals and workbook download sentence against its accepted snapshot.' );
+		if ( acceptedRows.length === 20 || acceptedRows.length === 10 ) {
+			expected = applyBlogRemovalCopy( expected, true );
+			let tableIndex = 0;
+			expected = expected.replace( /<tbody>([\s\S]*?)<\/tbody>/g, ( table ) => tableIndex++ === 1 ? '<tbody>' + tables[ 1 ] + '</tbody>' : table );
+		}
+		assert.equal( markup, expected, 'Archive allows only the reviewed cleanup copy, requested single-row removal and workbook download sentence against its accepted snapshot.' );
 	}
-	return { researchAnchors: RESEARCH_ANCHORS, rows: [ 34, 10 ] };
+	return { researchAnchors: RESEARCH_ANCHORS, rows: [ 34, 9 ] };
 }
 
 module.exports = { verifyPlacementBrief, verifyPlacementArchive, RESEARCH_ANCHORS, EXAMPLES };

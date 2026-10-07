@@ -14,8 +14,8 @@ function mutate( value, before, after ) {
 	return value.replace( before, after );
 }
 
-test( 'the canonical archive keeps precisely the ten retained market identities and 34 keyword terms', () => {
-	assert.deepEqual( verifyPlacementArchive( archive ).rows, [ 34, 10 ] );
+test( 'the canonical archive keeps precisely the nine retained market identities and 34 keyword terms', () => {
+	assert.deepEqual( verifyPlacementArchive( archive ).rows, [ 34, 9 ] );
 	assert.throws( () => verifyPlacementArchive( mutate( archive, '<th scope="row">Technical Account Manager, Newspack</th>', '<th scope="row">Support Engineer, VIP</th>' ) ), /retained market identities/ );
 	let tableIndex = 0;
 	const reordered = archive.replace( /<tbody>([\s\S]*?)<\/tbody>/g, ( table, body ) => {
@@ -38,6 +38,11 @@ test( 'rendered route matching accepts WooCommerce queries and rejects different
 
 test( 'Support Engineering has three equal examples, exact attribution and both action pairs', () => {
 	assert.doesNotThrow( () => verifyPlacementBrief( source ) );
+} );
+
+test( 'the Digest reference keeps nine records and separates requested removal from availability', () => {
+	assert.throws( () => verifyPlacementBrief( mutate( source, '9 remaining posting records', '10 remaining posting records' ) ), /archive reference/ );
+	assert.throws( () => verifyPlacementBrief( mutate( source, 'Ten confirmed unavailable listings were removed on 6 October 2026; one further entry was removed from the blog at my request.', 'Eleven confirmed unavailable listings were removed on 6 October 2026.' ) ), /archive reference/ );
 } );
 
 test( 'the dated archive retains every record and anchor against the accepted mirror', () => {
@@ -86,7 +91,7 @@ test( 'one dateline records the current evidence date without duplicate status d
 	assert.throws( () => verifyPlacementBrief( source.replace( /datetime="\d{4}-\d{2}-\d{2}"/, 'datetime="2026-07-21"' ) ), /dateline/ );
 } );
 
-test( 'the archive keeps all five old targets and all 34 plus ten rows', () => {
+test( 'the archive keeps all five old targets and all 34 plus nine rows', () => {
 	for ( const anchor of RESEARCH_ANCHORS ) {
 		assert.throws( () => verifyPlacementArchive( mutate( archive, 'id="' + anchor + '"', 'id="lost"' ) ), /retains/ );
 	}
@@ -108,20 +113,35 @@ test( 'the removal transition permits only reviewed cleanup copy and keeps layou
 	assert.throws( () => verifyPlacementArchive( mutate( archive, 'alignwide hp-page-hero hp-method-hero', 'alignwide hp-page-hero hp-method-hero unexpected-layout' ), acceptedArchive ), /reviewed cleanup copy/ );
 } );
 
+test( 'the requested blog removal cannot become another availability finding or remove a different job', () => {
+	assert.doesNotMatch( archive, /\bWP Engine\b/ );
+	for ( const [ before, after ] of [
+		[ 'Ten confirmed unavailable entries were removed. A further entry was removed from the blog at my request.', 'Eleven confirmed unavailable entries were removed.' ],
+		[ 'and four unresolved original listings.', 'and five unresolved original listings.' ],
+		[ '2026-07-20 — 3 rows', '2026-07-20 — 4 rows' ],
+	] ) assert.throws( () => verifyPlacementArchive( mutate( archive, before, after ), acceptedArchive ), /cleanup copy/ );
+	let tableIndex = 0;
+	const differentRemovalBaseline = archive.replace( /<tbody>([\s\S]*?)<\/tbody>/g, ( table, body ) => tableIndex++ === 1 ? '<tbody>' + body + '<tr><th scope="row">Other original job</th><td>Other employer</td><td></td><td></td><td>Live · Pass</td><td>Other reasoning.</td></tr></tbody>' : table );
+	assert.throws( () => verifyPlacementArchive( archive, differentRemovalBaseline ), /only additional removed record is the requested WP Engine row/ );
+	assert.throws( () => verifyPlacementArchive( mutate( archive, '<th scope="row">Technical Account Manager, Newspack</th>', '<th scope="row">Technical Support L1</th>' ), acceptedArchive ), /retained market identities/ );
+} );
+
 test( 'the workbook download permits only its approved sentence and immutable cache key', () => {
-	const before = 'This is the sanitized public workbook’s ten retained market records after the 6 October 2026 availability cleanup.';
-	const after = 'Download the <a href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e">public market workbook (XLSX)</a> with ten retained records after the 6 October 2026 availability cleanup.';
-	const linked = archive.includes( after ) ? archive : mutate( archive, before, after );
-	const preceding = mutate( linked, after, before );
-	assert.doesNotThrow( () => verifyPlacementArchive( linked, preceding ), 'The approved one-sentence transition preserves the accepted ten-row body.' );
+	const before = 'Download the <a href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e">public market workbook (XLSX)</a> with ten retained records after the 6 October 2026 availability cleanup.';
+	const after = 'Download the <a href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d">public market workbook (XLSX)</a> with nine retained records after the 6 October 2026 availability cleanup.';
+	const linked = archive;
+	const preceding = acceptedArchive;
+	assert( linked.includes( after ), 'The reviewed nine-row archive carries its new download key.' );
+	assert.doesNotThrow( () => verifyPlacementArchive( linked, preceding ), 'Only the requested removal and count/copy/download updates change the accepted body.' );
 	assert.doesNotThrow( () => verifyPlacementArchive( linked, linked ), 'The promoted linked archive remains valid.' );
 	for ( const [ original, replacement ] of [
 		[ after, before ],
-		[ after, 'Download the public market workbook (XLSX) with ten retained records after the 6 October 2026 availability cleanup.' ],
-		[ 'wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e', 'wordpress-job-market-screen.xlsx?market-version=3a1f91995f5e' ],
-		[ 'wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e', 'wordpress-job-market-screen-live-states.xlsx' ],
-		[ '?market-version=3a1f91995f5e', '?market-version=stale' ],
-		[ '?market-version=3a1f91995f5e', '?v=3a1f91995f5e' ],
+		[ after, 'Download the public market workbook (XLSX) with nine retained records after the 6 October 2026 availability cleanup.' ],
+		[ 'wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d', 'wordpress-job-market-screen.xlsx?market-version=93297bf33d5d' ],
+		[ 'wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d', 'wordpress-job-market-screen-live-states.xlsx' ],
+		[ '?market-version=93297bf33d5d', '?market-version=stale' ],
+		[ '?market-version=93297bf33d5d', '?market-version=3a1f91995f5e' ],
+		[ '?market-version=93297bf33d5d', '?v=93297bf33d5d' ],
 		[ 'href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx', 'href="https://example.com/wordpress-job-market-screen-live-states.xlsx' ],
 	] ) assert.throws( () => verifyPlacementArchive( mutate( linked, original, replacement ), preceding ), /cleanup copy/ );
 	assert.throws( () => verifyPlacementArchive( mutate( linked, 'alignwide hp-page-hero hp-method-hero', 'alignwide hp-page-hero hp-method-hero changed-layout' ), preceding ), /reviewed cleanup copy/ );

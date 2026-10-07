@@ -232,11 +232,11 @@ test( 'PDF is a tagged, searchable, one-page document with semantic headings', (
 	assert.ok( ( source.match( /\/H2\b/g ) || [] ).length >= 4 );
 } );
 
-test( 'public workbook accepts the ten retained jobs without restoring removed originals', () => {
+test( 'public workbook accepts the nine blog records without restoring removed originals', () => {
 	const { verifyWorkbook } = require( '../verify-placement-artifacts' );
 	assert.equal( typeof verifyWorkbook, 'function', 'The public workbook contract must be callable independently of résumé and appendix checks.' );
 	const rows = verifyWorkbook( workbookPath );
-	assert.equal( rows.length, 11 );
+	assert.equal( rows.length, 10 );
 	assert.deepEqual( rows.slice( 1 ).map( ( row ) => row.slice( 0, 2 ) ), [
 		[ 'Technical Account Manager, Newspack', 'Automattic (Newspack)' ],
 		[ 'Senior Web Engineer (Contract)', 'Fueled (10up practice)' ],
@@ -247,7 +247,6 @@ test( 'public workbook accepts the ten retained jobs without restoring removed o
 		[ 'Full Stack Web Engineer', '10up (Fueled)' ],
 		[ 'Customer support role (anonymized)', 'Target-ecosystem employer (anonymized)' ],
 		[ 'Staff Web Engineer', '10up (Fueled)' ],
-		[ 'Technical Support L1', 'WP Engine' ],
 	] );
 } );
 
@@ -308,11 +307,18 @@ function mutatedWorkbook( context, changeContents, changedEntry = 'xl/worksheets
 
 test( 'public workbook rejects a stale 20-row used range', ( context ) => {
 	const fixture = mutatedWorkbook( context, ( source ) => source.replace( /(<worksheet\b[^>]*>)/, '$1<dimension ref="A1:G21"/>' ) );
-	assert.throws( () => require( '../verify-placement-artifacts' ).verifyWorkbook( fixture ), /used range must be exactly A1:G11/ );
+	assert.throws( () => require( '../verify-placement-artifacts' ).verifyWorkbook( fixture ), /used range must be exactly A1:G10/ );
 } );
 
 test( 'public workbook rejects a removed job restored without changing row count', ( context ) => {
 	const fixture = mutatedWorkbook( context, ( source ) => source.replace( 'Technical Account Manager, Newspack', 'Support Engineer, VIP' ), 'xl/sharedStrings.xml' );
+	assert.throws( () => require( '../verify-placement-artifacts' ).verifyWorkbook( fixture ), /must retain job identity and canonical URL/ );
+} );
+
+test( 'public workbook rejects restoring the WP Engine record removed at the user’s request', ( context ) => {
+	const fixture = mutatedWorkbook( context, ( source ) => source
+		.replace( 'Technical Account Manager, Newspack', 'Technical Support L1' )
+		.replace( 'Automattic (Newspack)', 'WP Engine' ), 'xl/sharedStrings.xml' );
 	assert.throws( () => require( '../verify-placement-artifacts' ).verifyWorkbook( fixture ), /must retain job identity and canonical URL/ );
 } );
 
