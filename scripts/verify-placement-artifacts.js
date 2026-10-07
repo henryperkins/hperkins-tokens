@@ -960,10 +960,10 @@ function verifyWorkbookDownloadLink( appendixHtml, workbookPath ) {
 		.map( ( match ) => xmlAttributes( match[1] ).href )
 		.filter( ( href ) => href && href.includes( filename ) );
 	assert( hrefs.length === 1, `Appendix must contain exactly one native workbook download link; found ${ hrefs.length }.` );
-	const expected = `/wp-content/themes/hperkins-tokens/assets/documents/${ filename }?market-version=${ sha256( workbookPath ).slice( 0, 12 ) }`;
+	const expected = `/wp-content/themes/hperkins-tokens/assets/documents/${ filename }?market-version=${ sha256( workbookPath ) }`;
 	assert(
 		hrefs[0] === expected,
-		`Appendix workbook download must use its theme-owned URL with its current SHA256 prefix: ${ expected }.`
+		`Appendix workbook download must use its theme-owned URL with its current full SHA256: ${ expected }.`
 	);
 }
 

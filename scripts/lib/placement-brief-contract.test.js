@@ -126,9 +126,20 @@ test( 'the requested blog removal cannot become another availability finding or 
 	assert.throws( () => verifyPlacementArchive( mutate( archive, '<th scope="row">Technical Account Manager, Newspack</th>', '<th scope="row">Technical Support L1</th>' ), acceptedArchive ), /retained market identities/ );
 } );
 
+test( 'the nine-row cache recovery permits only the full-SHA link edit', () => {
+	const short = '?market-version=93297bf33d5d"';
+	const full = '?market-version=93297bf33d5d144c412ce1672169f203fec67a4208f76f20a52dc1fd33e3ef3b"';
+	const preceding = archive.includes( full ) ? mutate( archive, full, short ) : archive;
+	const updated = mutate( preceding, short, full );
+	assert.doesNotThrow( () => verifyPlacementArchive( updated, preceding ) );
+	assert.doesNotThrow( () => verifyPlacementArchive( updated, updated ) );
+	assert.throws( () => verifyPlacementArchive( preceding, updated ), /cleanup copy/ );
+	assert.throws( () => verifyPlacementArchive( mutate( updated, 'alignwide hp-page-hero hp-method-hero', 'alignwide hp-page-hero hp-method-hero altered' ), preceding ), /reviewed cleanup copy/ );
+} );
+
 test( 'the workbook download permits only its approved sentence and immutable cache key', () => {
 	const before = 'Download the <a href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=3a1f91995f5e">public market workbook (XLSX)</a> with ten retained records after the 6 October 2026 availability cleanup.';
-	const after = 'Download the <a href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d">public market workbook (XLSX)</a> with nine retained records after the 6 October 2026 availability cleanup.';
+	const after = 'Download the <a href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d144c412ce1672169f203fec67a4208f76f20a52dc1fd33e3ef3b">public market workbook (XLSX)</a> with nine retained records after the 6 October 2026 availability cleanup.';
 	const linked = archive;
 	const preceding = acceptedArchive;
 	assert( linked.includes( after ), 'The reviewed nine-row archive carries its new download key.' );
@@ -137,11 +148,11 @@ test( 'the workbook download permits only its approved sentence and immutable ca
 	for ( const [ original, replacement ] of [
 		[ after, before ],
 		[ after, 'Download the public market workbook (XLSX) with nine retained records after the 6 October 2026 availability cleanup.' ],
-		[ 'wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d', 'wordpress-job-market-screen.xlsx?market-version=93297bf33d5d' ],
-		[ 'wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d', 'wordpress-job-market-screen-live-states.xlsx' ],
-		[ '?market-version=93297bf33d5d', '?market-version=stale' ],
-		[ '?market-version=93297bf33d5d', '?market-version=3a1f91995f5e' ],
-		[ '?market-version=93297bf33d5d', '?v=93297bf33d5d' ],
+		[ 'wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d144c412ce1672169f203fec67a4208f76f20a52dc1fd33e3ef3b', 'wordpress-job-market-screen.xlsx?market-version=93297bf33d5d144c412ce1672169f203fec67a4208f76f20a52dc1fd33e3ef3b' ],
+		[ 'wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d144c412ce1672169f203fec67a4208f76f20a52dc1fd33e3ef3b', 'wordpress-job-market-screen-live-states.xlsx' ],
+		[ '?market-version=93297bf33d5d144c412ce1672169f203fec67a4208f76f20a52dc1fd33e3ef3b', '?market-version=stale' ],
+		[ '?market-version=93297bf33d5d144c412ce1672169f203fec67a4208f76f20a52dc1fd33e3ef3b', '?market-version=3a1f91995f5e' ],
+		[ '?market-version=93297bf33d5d144c412ce1672169f203fec67a4208f76f20a52dc1fd33e3ef3b', '?v=93297bf33d5d144c412ce1672169f203fec67a4208f76f20a52dc1fd33e3ef3b' ],
 		[ 'href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx', 'href="https://example.com/wordpress-job-market-screen-live-states.xlsx' ],
 	] ) assert.throws( () => verifyPlacementArchive( mutate( linked, original, replacement ), preceding ), /cleanup copy/ );
 	assert.throws( () => verifyPlacementArchive( mutate( linked, 'alignwide hp-page-hero hp-method-hero', 'alignwide hp-page-hero hp-method-hero changed-layout' ), preceding ), /reviewed cleanup copy/ );

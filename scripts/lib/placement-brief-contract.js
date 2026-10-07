@@ -93,13 +93,18 @@ const BLOG_REMOVAL_COPY_EDITS = [
 	[ 'Historical Last checked distribution among the ten retained rows: 2026-07-20 — 4 rows; 2026-07-18 — 4 rows; not recorded — 2 rows.', 'Historical Last checked distribution among the nine retained rows: 2026-07-20 — 3 rows; 2026-07-18 — 4 rows; not recorded — 2 rows.' ],
 	[ 'Five retained original listings remain unresolved', 'Four retained original listings remain unresolved' ],
 ];
+// The short key was cached before file activation; only this URL changes again.
+const WORKBOOK_CACHE_KEY_EDIT = [
+	'href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d"',
+	'href="/wp-content/themes/hperkins-tokens/assets/documents/wordpress-job-market-screen-live-states.xlsx?market-version=93297bf33d5d144c412ce1672169f203fec67a4208f76f20a52dc1fd33e3ef3b"',
+];
 
 function applyBlogRemovalCopy( markup, requireBaseline = false ) {
 	for ( const [ before, after ] of BLOG_REMOVAL_COPY_EDITS ) {
 		if ( requireBaseline ) assert( markup.includes( before ), 'Accepted archive is missing the guarded requested-removal baseline.' );
 		markup = markup.replace( before, after );
 	}
-	return markup;
+	return markup.replace( ...WORKBOOK_CACHE_KEY_EDIT );
 }
 
 function marketRows( body ) {
@@ -224,6 +229,7 @@ function verifyPlacementArchive( markup, acceptedMarkup ) {
 			let tableIndex = 0;
 			expected = expected.replace( /<tbody>([\s\S]*?)<\/tbody>/g, ( table ) => tableIndex++ === 1 ? '<tbody>' + tables[ 1 ] + '</tbody>' : table );
 		}
+		expected = expected.replace( ...WORKBOOK_CACHE_KEY_EDIT );
 		assert.equal( markup, expected, 'Archive allows only the reviewed cleanup copy, requested single-row removal and workbook download sentence against its accepted snapshot.' );
 	}
 	return { researchAnchors: RESEARCH_ANCHORS, rows: [ 34, 9 ] };
