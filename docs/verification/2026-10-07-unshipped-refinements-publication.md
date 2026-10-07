@@ -111,3 +111,23 @@ a separate theme release and writes neither change.
 - Not run here: `verify-content-ownership.js` and the WP-CLI half of
   `verify-no-duplicate-pages.js`, which need WP-CLI access to the production
   install. Run both from a checkout that has it.
+
+## Follow-up the same day: the render-time refresh
+
+0.3.74 adds `inc/subscribe-form.php`. It re-mints a frozen copy's nonce,
+`_wp_http_referer` and status line whenever the form renders. Until 0.3.74 is
+deployed, the recurrence caution above still holds in production.
+
+A throwaway WordPress 7.1.3 install (SQLite, this theme with a stub parent)
+replayed the failure end to end. An administrator's REST save of `home` froze
+the form. A logged-out visitor then submitted it twice:
+
+- With the filter off, the handler answered `invalid-request` and redirected
+  to `/wp-json/wp/v2/templates/lookup?slug=home&_locale=user&…`, which
+  returns 401 JSON (`rest_cannot_manage_templates`). Production's frozen copy
+  carried that same referer, so this is what its visitors met.
+- With the filter on, the visitor returned to
+  `/essays/?hperkins_subscribe=success#subscribe`, with the success line
+  shown.
+
+`scripts/verify-subscribe-form.php` passes its 35 checks on that install.

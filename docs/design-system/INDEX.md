@@ -1617,17 +1617,26 @@ this working copy's theme files, the same Chromium rendering both.
     nonce minted when the template was saved (its `_wp_http_referer` was the
     editor's `/wp-json/wp/v2/templates/lookup?slug=home`). A nonce bound to an
     editor's session cannot verify for a visitor, so the handler answered every
-    `/essays/` subscription `invalid-request`. With approval the copy was
+    `/essays/` subscription `invalid-request`, and it redirected the visitor to
+    that frozen referer, a REST URL that answers 401 JSON (reproduced on a local
+    WordPress 7.1.3 install). With approval the copy was
     reverted (the connector moved it to the trash); `home` now reports
     `source: theme`, and `/essays/` renders the theme's grid post templates
     with a nonce minted per request. `index` is still customized and was left
     alone.
-  - *The freeze can recur.* The REST templates endpoint resolves `wp:pattern`
-    blocks into their rendered markup (after the reset, reading `home` returned
-    the subscribe form with a nonce minted for that API request), so saving
-    `home`, `single` or `page-contact` (which reaches the form through the
-    `contact` pattern) in the Site Editor would freeze a nonce again. Until the
-    theme re-mints it at render time, do not save those templates there.
+  - *The freeze, and the refresh that answers it.* The REST templates endpoint
+    resolves `wp:pattern` blocks into their rendered markup (after the reset,
+    reading `home` returned the subscribe form with a nonce minted for that API
+    request), so saving `home`, `single` or `page-contact` (which reaches the
+    form through the `contact` pattern) in the Site Editor freezes the form
+    again. 0.3.74 adds `inc/subscribe-form.php`: a `render_block_core/html`
+    filter re-mints a frozen copy's nonce, `_wp_http_referer` and status line
+    for the request rendering it, and passes the live pattern through byte for
+    byte. On the local install, a visitor's submission from a REST-frozen
+    `home` returned to `/essays/?hperkins_subscribe=success#subscribe` with its
+    status line; with the filter off, the same submission went to the 401 REST
+    URL. A frozen copy still stops following the pattern's wording. Until 0.3.74
+    is deployed, do not save those templates in production's Site Editor.
   - *The header model.* Every production page renders the Council header from
     its `fallback` model, so `verify-header.js` stops at its source assertion
     against production before any geometry check: menu 237 no longer

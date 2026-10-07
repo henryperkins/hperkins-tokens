@@ -455,6 +455,15 @@ pattern category. It emits the .hp-work markup the stylesheet expects.
   template was reverted to templates/home.html, which restores the /essays/
   grid and a subscribe form whose nonce is minted per request. See
   docs/verification/2026-10-07-unshipped-refinements-publication.md.
+* The subscribe form re-mints its nonce, referer and status line when it
+  renders from a copy a Site Editor save froze (new inc/subscribe-form.php).
+  Saving a template resolves the pattern into a Custom HTML block that keeps
+  the editor's nonce and REST referer, so a visitor's subscription failed and
+  the handler sent them to a REST URL. The live pattern renders as before;
+  its status wording moves into the same file.
+  scripts/lib/subscribe-form.test.js runs the filter under a PHP shim, and
+  scripts/verify-subscribe-form.php freezes home through the REST templates
+  endpoint inside WordPress.
 
 = 0.3.73 =
 * Remove one further market entry from the blog on request, retain nine
