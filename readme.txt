@@ -3,7 +3,7 @@ Contributors: Henry Perkins
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 0.3.73
+Stable tag: 0.3.74
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Template: assembler
@@ -412,6 +412,43 @@ The Work ledger is a pattern: insert "Work entry (ledger)" from the hperkins.blo
 pattern category. It emits the .hp-work markup the stylesheet expects.
 
 == Changelog ==
+
+= 0.3.74 =
+* Unshipped-refinements hand-off (2026-10-06 design brief). Postcard titles
+  set their type on the heading, and the link inherits it. Core makes the
+  link inline-block, so it spaced its own lines, but it sat on a line box
+  with the heading's larger h2/h3 strut, which added 2-9px under every
+  title. Archive and search titles keep their 1.15 leading: style.css's
+  body-class title role now leaves postcard titles alone.
+* The /essays/ featured band steps at mid widths: two equal columns from
+  901 to 1180px, with the lead over both rows, and one column from 782 to
+  900px, with the secondaries still horizontal. 1181px and up, and phones,
+  are unchanged.
+* The postcard's compass star is its own element, appended to every
+  postcard media group by a render filter (new inc/postcards.php), so it
+  reaches a Site Editor copy of a template too. It turns a quarter on card
+  hover and title focus over dur.slow with ease.calm while its mask stays
+  still; at rest it sits where it did, a featured image still hides it, and
+  reduced motion keeps it still. A reset on .hp-postcard__media::after
+  stops a stale Jetpack Boost critical-CSS copy of the old star from
+  drawing a second one when JavaScript is off.
+* About's phone footer keeps the dot between "member since 2007" and
+  "professional WordPress work since 2012"; only the dots between the
+  stacked links go.
+* Council header: from 782 to 899.9px the nav gap is 20px and the wordmark
+  tracks at 0.12em. The wordmark is whole from 800px, where an ellipsis
+  used to cut it up to about 840px; at 782px it still loses its last
+  letters. The search panel's "esc" hint no longer shrinks or breaks.
+* Verification: verify-journal-polish.js checks postcard title metrics in
+  every loop, the featured band at twelve widths, and the plate's rest
+  geometry, stacking, turn and reduced motion. verify-header.js sweeps the
+  wordmark from 782 to 1024px and squeezes the search hint;
+  verify-about-page-rendered.js checks the colophon dots at every width;
+  verify-journal-templates.js pins the source couplings; and
+  scripts/lib/postcard-plate.test.js runs the filter under a PHP shim.
+* Not in this release: the hand-off's two page-body edits, the Work page's
+  WordPress AI release link and the first AI Enablement chip, are database
+  changes. See docs/design-system/INDEX.md.
 
 = 0.3.73 =
 * Remove one further market entry from the blog on request, retain nine

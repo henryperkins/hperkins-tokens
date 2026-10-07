@@ -3,9 +3,10 @@
  * Journal template source contract.
  *
  * The blog surfaces are the part of this theme with the thinnest rendered
- * coverage: verify-journal-polish.js loads /essays/ only, and until the
- * discovery pass was added to verify-typography.js nothing loaded a single post
- * or a term archive at all. This verifier is the static half of that gap. It
+ * coverage: verify-journal-polish.js works on /essays/ and visits one post and
+ * one term archive only for their postcard titles, and until the discovery
+ * pass was added to verify-typography.js nothing loaded a single post or a
+ * term archive at all. This verifier is the static half of that gap. It
  * needs neither Chrome nor a WordPress install, so it can run anywhere, and it
  * pins the couplings that are invisible in a rendered page: query IDs against
  * the filters in functions.php, the sticky-post mode, the seed offset, and the
@@ -165,6 +166,79 @@ check(
 check(
 	/\.hp-postcard__media \.wp-block-post-featured-image/.test( pagesCss ),
 	'assets/imladris-pages.css must keep the featured-image height rule; without it the cards\' object-fit is inert.'
+);
+
+// --- Postcard star plate (2026-10-06 hand-off, A3) -------------------------
+// The star turns on its own element, which inc/postcards.php appends to every
+// postcard media group at render time. A template-borne plate would never
+// reach a Site Editor copy of the template saved before it existed, and
+// production's /essays/ renders exactly such a copy.
+const postcardsPhp = fs.existsSync( path.join( THEME_PATH, 'inc/postcards.php' ) ) ? read( 'inc/postcards.php' ) : '';
+check( postcardsPhp !== '', 'inc/postcards.php, which appends the postcard star plate, is missing.' );
+check( /\/inc\/postcards\.php/.test( functions ), 'functions.php must require inc/postcards.php.' );
+check(
+	/add_filter\(\s*'render_block_core\/group',\s*'hperkins_tokens_postcard_plate',\s*10,\s*2\s*\)/.test( postcardsPhp ),
+	'inc/postcards.php must hook hperkins_tokens_postcard_plate to render_block_core/group with the parsed block.'
+);
+for ( const [ file, markup ] of [
+	[ 'templates/home.html', home ],
+	[ 'templates/single.html', single ],
+	[ 'templates/archive.html', archive ],
+] ) {
+	check(
+		markup.includes( '"className":"hp-postcard__media"' ),
+		`${ file } must keep its postcard media groups; the plate filter attaches to them.`
+	);
+	check(
+		! markup.includes( 'hp-postcard__plate' ),
+		`${ file } must not carry its own plate; inc/postcards.php appends the one plate each card gets.`
+	);
+}
+// Jetpack Boost inlines critical CSS generated from this sheet. Its stale copy
+// of the old ::after star stays on without JavaScript, and only this reset
+// keeps it from drawing a second star beside the plate's.
+check(
+	/\.hp-postcard__media::after\s*\{\s*content:\s*none;\s*\}/.test( pagesDeclarations ),
+	'assets/imladris-pages.css must reset .hp-postcard__media::after, or a stale inlined copy of the old star rule draws a second star.'
+);
+check(
+	! /\.hp-postcard__media::after\s*\{[^}]*background/.test( pagesDeclarations ),
+	'The compass star belongs to .hp-postcard__plate::after, not .hp-postcard__media::after.'
+);
+
+// --- Postcard titles (A1) ----------------------------------------------------
+// The type sits on the heading and the link inherits it. A size set on the link
+// alone still sits on a line box with the heading's h2/h3 strut.
+for ( const rule of pagesDeclarations.matchAll( /([^{}]*\.hp-postcard__title a[^{}]*)\{([^}]*)\}/g ) ) {
+	check(
+		! /font-size|line-height/.test( rule[ 2 ] ),
+		`assets/imladris-pages.css sets type on a postcard title link (${ rule[ 1 ].trim() }); set it on .hp-postcard__title and let the link inherit.`
+	);
+}
+const styleDeclarations = read( 'style.css' ).replace( /\/\*[\s\S]*?\*\//g, '' );
+for ( const context of [ 'archive', 'search' ] ) {
+	check(
+		new RegExp( `body\\.${ context } \\.wp-block-query \\.wp-block-post-title:not\\(\\.hp-postcard__title\\)` ).test( styleDeclarations ),
+		`style.css's body.${ context } title role must exclude .hp-postcard__title, or it loosens postcard titles from 1.15 to 1.2.`
+	);
+}
+
+// --- Featured band (A2) ------------------------------------------------------
+// The two mid-width steps repeat the 782px rules' selectors exactly, so source
+// order is what lets them win: both must come after the 782px block.
+const featuredWide = pagesDeclarations.search(
+	/\.hp-journal-featured \.wp-block-post-template:has\(> li:nth-child\(2\)\)\s*\{\s*grid-template-columns:\s*minmax\(0, 1\.5fr\) minmax\(0, 1fr\)/
+);
+const featuredOne = pagesDeclarations.search(
+	/@media \(min-width: 782px\) and \(max-width: 900px\)\s*\{\s*\.hp-journal-featured \.wp-block-post-template:has\(> li:nth-child\(2\)\)\s*\{\s*grid-template-columns:\s*minmax\(0, 1fr\);\s*grid-auto-rows:\s*auto;\s*\}\s*\.hp-journal-featured \.wp-block-post-template:has\(> li:nth-child\(3\)\) > li:first-child\s*\{\s*grid-row:\s*auto;/
+);
+const featuredEven = pagesDeclarations.search(
+	/@media \(min-width: 901px\) and \(max-width: 1180px\)\s*\{\s*\.hp-journal-featured \.wp-block-post-template:has\(> li:nth-child\(2\)\)\s*\{\s*grid-template-columns:\s*minmax\(0, 1fr\) minmax\(0, 1fr\);/
+);
+check( featuredWide !== -1, 'assets/imladris-pages.css must keep the 1.5fr / 1fr featured band from 782px.' );
+check(
+	featuredOne > featuredWide && featuredEven > featuredWide,
+	'assets/imladris-pages.css must step the featured band to one column at 782–900px and to two equal columns at 901–1180px, after the 782px block they override.'
 );
 
 // --- Reader hero ----------------------------------------------------------
@@ -331,5 +405,5 @@ if ( violations.length > 0 ) {
 }
 
 console.log(
-	'verified journal template contract: query identity + filter coupling, sticky mode, seed offset, postcard link shape, reader hero inside <main>, read-time binding, reader hooks + global reader.js, related columns in the wide column, per-loop empty states, arrow-free pagination labels, reader-hero dim ratio, data-URI palette hexes, pagination touch token'
+	'verified journal template contract: query identity + filter coupling, sticky mode, seed offset, postcard link shape, star-plate filter + stale-critical-CSS reset, title type on the heading, featured-band steps, reader hero inside <main>, read-time binding, reader hooks + global reader.js, related columns in the wide column, per-loop empty states, arrow-free pagination labels, reader-hero dim ratio, data-URI palette hexes, pagination touch token'
 );

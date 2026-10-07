@@ -6,7 +6,7 @@ Author: Henry Perkins
 Template: assembler
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Version: 0.3.73
+Version: 0.3.74
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -2711,6 +2711,20 @@ samp {
 	list-style: none;
 }
 
+/* Mid-desktop. The bar's side columns are narrowest just above the drawer
+   breakpoint, where the wordmark ran into Work and was cut to an ellipsis.
+   A tighter nav widens both columns and lighter tracking narrows the name;
+   from 900px up nothing changes. */
+@media (min-width: 782px) and (max-width: 899.9px) {
+	:root {
+		--hp-nav-gap: 20px;
+	}
+
+	.hp-council-brand__name {
+		letter-spacing: 0.12em;
+	}
+}
+
 .hp-council-nav__item--writing {
 	display: flex;
 	align-items: center;
@@ -3067,7 +3081,11 @@ samp {
 	outline-offset: 2px;
 }
 
+/* A fixed hint beside the flex field. Shrinkable, it took the global inline
+   code rule's `overflow-wrap: anywhere` and broke into "ES / C". */
 .hp-council-search-form kbd {
+	flex: none;
+	overflow-wrap: normal;
 	padding: 3px 5px;
 	font-family: var(--wp--preset--font-family--mono);
 	font-size: var(--wp--preset--font-size--2-xs);
@@ -3509,9 +3527,11 @@ body {
 /* (4) Inherited archive / search / 404 surfaces — role styles keyed to
 	 body classes so they hold for both the child templates in templates/
 	 and any DB-customised variant that keeps core block markup. Result
-	 titles read at card scale, excerpts at the 17px supporting floor. */
-body.archive .wp-block-query .wp-block-post-title,
-body.search .wp-block-query .wp-block-post-title {
+	 titles read at card scale, excerpts at the 17px supporting floor.
+	 Postcard titles set their own type on the heading, which this rule's
+	 body-class specificity would otherwise loosen from 1.15 to 1.2. */
+body.archive .wp-block-query .wp-block-post-title:not(.hp-postcard__title),
+body.search .wp-block-query .wp-block-post-title:not(.hp-postcard__title) {
 	font-size: var(--wp--preset--font-size--xl);
 	line-height: 1.2;
 	letter-spacing: -0.01em;
